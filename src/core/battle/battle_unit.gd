@@ -4,8 +4,6 @@ extends RefCounted
 ## Represents a unit instance inside a specific battle simulation.
 ## This is NOT a Godot Node. It is a pure data class.
 
-signal action_meter_full(unit: Object)
-
 var data: UnitData
 var stats: UnitStats
 var team_id: int = 0 # 0 for Player, 1 for Enemy/Opponent
