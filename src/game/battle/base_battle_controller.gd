@@ -3,6 +3,7 @@ extends Node2D
 
 ## Base class for battle controllers, providing simulation access and signals.
 
+@warning_ignore("unused_signal")
 signal log_message(text: String)
 
 var simulation: BattleSimulation
