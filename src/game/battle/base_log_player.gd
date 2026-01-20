@@ -4,7 +4,7 @@ extends Node
 ## Abstract base class for playing back logs simultaneously per tick.
 
 var board: Node2D
-var controller: Node
+var controller: Node # Using Node to avoid circular dependency, but we'll use string-less emission
 var vfx: Node2D
 
 func setup(p_board: Node2D, p_controller: Node, p_vfx: Node2D):
@@ -54,7 +54,8 @@ func _get_wait_time_for_batch(batch: Array[BattleLogEntry]) -> float:
 	return 0.2 # Fast movement
 
 func process_entry(entry: BattleLogEntry):
-	controller.emit_signal("log_message", entry.to_string())
+	if controller.has_signal("log_message"):
+		controller.log_message.emit(entry.to_string())
 
 func wait_for_entry(_entry: BattleLogEntry):
 	pass # Deprecated by batch logic

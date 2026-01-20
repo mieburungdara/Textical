@@ -7,4 +7,5 @@ func handle(entry: BattleLogEntry) -> void:
 			var view = board.get_view(entry.data["target_id"])
 			if view: await view.play_death_anim()
 		BattleLogEntry.Type.GAME_OVER:
-			controller.emit_signal("log_message", "[color=yellow]=== " + entry.message + " ===[/color]")
+			if controller.has_signal("log_message"):
+				controller.log_message.emit("[color=yellow]=== " + entry.message + " ===[/color]")
