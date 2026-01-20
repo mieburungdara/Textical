@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/game/unit/unit_view.gd" id="1_view"]
+[ext_resource type="Script" path="res://src/game/unit/components/unit_visual_component.gd" id="2_visual"]
+[ext_resource type="Script" path="res://src/game/unit/components/unit_ui_component.gd" id="3_ui"]
+[ext_resource type="Script" path="res://src/game/unit/components/unit_animator_component.gd" id="4_anim"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp"]
+bg_color = Color(0.26, 0.8, 0.26, 1)
+corner_radius_all = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action"]
+bg_color = Color(1, 0.84, 0, 1)
+corner_radius_all = 2
+
+[node name="UnitView" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 60.0
+offset_bottom = 60.0
+script = ExtResource("1_view")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Icon" type="TextureRect" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 12
+text = "Unit"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="HPBar" type="ProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp")
+value = 80.0
+show_percentage = false
+
+[node name="ActionBar" type="ProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -12.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/fill = SubResource("StyleBoxFlat_action")
+value = 50.0
+show_percentage = false
+
+[node name="VisualComponent" type="Node" parent="." node_paths=PackedStringArray("bg_panel", "icon_rect")]
+script = ExtResource("2_visual")
+bg_panel = NodePath("../Background")
+icon_rect = NodePath("../Background/Icon")
+
+[node name="UIComponent" type="Node" parent="." node_paths=PackedStringArray("name_label", "hp_bar", "action_bar")]
+script = ExtResource("3_ui")
+name_label = NodePath("../NameLabel")
+hp_bar = NodePath("../HPBar")
+action_bar = NodePath("../ActionBar")
+
+[node name="AnimatorComponent" type="Node" parent="."]
+script = ExtResource("4_anim")

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/core/data/hero_data.gd" id="1_hero"]
+[ext_resource type="Resource" path="res://data/skills/Skill_Fireball.tres" id="2_fireball"]
+[ext_resource type="Resource" path="res://data/skills/Skill_Frostbolt.tres" id="3_frost"]
+[ext_resource type="Script" path="res://src/core/skill/skill_data.gd" id="4_skill_base"]
+
+[resource]
+script = ExtResource("1_hero")
+hero_class = 2
+id = "hero_mage"
+name = "Flame Mage"
+model_color = Color(0.6, 0.2, 0.8, 1)
+model_scale = 0.95
+hp_base = 65
+mana_base = 120
+damage_base = 6
+defense_base = 0
+speed_base = 10
+range_base = 3
+skills = Array[ExtResource("4_skill_base")]([ExtResource("2_fireball"), ExtResource("3_frost")])
+traits = []

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="DamageSkill" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/core/skill/damage_skill.gd" id="1_skill"]
+[ext_resource type="PackedScene" path="res://assets/vfx/SmokeEffect.tscn" id="2_vfx"]
+
+[resource]
+script = ExtResource("1_skill")
+id = "skill_bash"
+name = "Shield Bash"
+description = "A heavy blow with the shield."
+mana_cost = 10
+cooldown_turns = 2
+range = 1
+target_type = 1
+aoe_pattern = 0
+aoe_size = 0
+animation_name = "bash"
+vfx_scene = ExtResource("2_vfx")
+damage_multiplier = 2.0
+flat_damage_bonus = 0
+hit_chance = 1.0

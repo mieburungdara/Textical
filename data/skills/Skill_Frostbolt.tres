@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EffectSkill" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/core/skill/effect_skill.gd" id="1_skill"]
+[ext_resource type="Resource" path="res://data/effects/Slow.tres" id="2_effect"]
+[ext_resource type="PackedScene" path="res://assets/projectiles/MagicBall.tscn" id="3_projectile"]
+
+[resource]
+script = ExtResource("1_skill")
+status_effect = ExtResource("2_effect")
+apply_chance = 1.0
+damage_multiplier = 1.0
+flat_damage_bonus = 0
+id = "skill_frostbolt"
+name = "Frostbolt"
+description = "Deals damage and slows target speed by 50%."
+element = 2
+mana_cost = 10
+cooldown_turns = 2
+range = 4
+target_type = 1
+aoe_pattern = 0
+aoe_size = 0
+animation_name = "cast"
+projectile_scene = ExtResource("3_projectile")
