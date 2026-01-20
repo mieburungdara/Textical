@@ -15,7 +15,7 @@ enum Element { NONE, FIRE, WATER, WIND, EARTH, LIGHTNING, ARCANE }
 @export_group("Costs & Rules")
 @export var mana_cost: int = 0
 @export var cooldown_turns: int = 3
-@export var range: int = 1
+@export var skill_range: int = 1
 @export var target_type: TargetType = TargetType.ENEMY
 
 @export_group("Area of Effect")
@@ -41,5 +41,5 @@ func get_element_color() -> Color:
 ## Returns a Dictionary containing log data.
 ## Note: We now pass 'target_pos' (Grid Coordinate) instead of a specific unit.
 ## We remove the explicit BattleUnit type hint to avoid circular dependency (BattleUnit -> UnitData -> SkillData -> BattleUnit)
-func execute(user: Object, target_pos: Vector2i, grid_ref: Object) -> Dictionary:
+func execute(_user: Object, _target_pos: Vector2i, _grid_ref: Object) -> Dictionary:
 	return {}

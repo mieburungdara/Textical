@@ -15,7 +15,7 @@ func decide_action(actor: Object, sim: Object) -> void:
 	var usable_skills = actor.get_usable_skills()
 	var chosen_skill: SkillData = null
 	for skill in usable_skills:
-		if skill.target_type == SkillData.TargetType.ENEMY and dist <= skill.range:
+		if skill.target_type == SkillData.TargetType.ENEMY and dist <= skill.skill_range:
 			chosen_skill = skill
 			break
 	
