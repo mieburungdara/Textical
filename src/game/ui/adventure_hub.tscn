@@ -1,0 +1,213 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/game/ui/adventure_hub.gd" id="1_hub"]
+[ext_resource type="PackedScene" path="res://src/game/ui/NPCPanel.tscn" id="2_npc"]
+[ext_resource type="Script" path="res://src/game/ui/quest_tracker.gd" id="3_quest"]
+
+[node name="AdventureHub" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hub")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Header" type="Panel" parent="UI"]
+custom_minimum_size = Vector2(0, 60)
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="RegionName" type="Label" parent="UI/Header"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -11.5
+offset_right = 100.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "REGION NAME"
+horizontal_alignment = 1
+
+[node name="Main" type="HBoxContainer" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 60.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="MonsterPanel" type="Panel" parent="UI/Main"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/Main/MonsterPanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 30.0
+grow_horizontal = 2
+text = "ENCOUNTERS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="UI/Main/MonsterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI/Main/MonsterPanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="NPCPanel" type="Panel" parent="UI/Main"]
+visible = false
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/Main/NPCPanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 30.0
+grow_horizontal = 2
+text = "PEOPLE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="UI/Main/NPCPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI/Main/NPCPanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="InfoPanel" type="Panel" parent="UI/Main"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Description" type="Label" parent="UI/Main/InfoPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Region description..."
+autowrap_mode = 2
+
+[node name="QuestTracker" type="Panel" parent="UI/Main"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+script = ExtResource("3_quest")
+
+[node name="VBox" type="VBoxContainer" parent="UI/Main/QuestTracker"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="UI/Main/QuestTracker/VBox"]
+layout_mode = 2
+text = "ACTIVE QUESTS"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="UI/Main/QuestTracker/VBox"]
+layout_mode = 2
+
+[node name="List" type="VBoxContainer" parent="UI/Main/QuestTracker/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Footer" type="Panel" parent="UI"]
+custom_minimum_size = Vector2(0, 80)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MenuButtons" type="HBoxContainer" parent="UI/Footer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Formation" type="Button" parent="UI/Footer/MenuButtons"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_vertical = 4
+text = "FORMATION"
+
+[node name="Inventory" type="Button" parent="UI/Footer/MenuButtons"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_vertical = 4
+text = "INVENTORY"
+
+[node name="WorldMap" type="Button" parent="UI/Footer/MenuButtons"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_vertical = 4
+text = "WORLD MAP"
+
+[node name="NPCInteractionPanel" parent="UI" instance=ExtResource("2_npc")]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[connection signal="pressed" from="UI/Footer/MenuButtons/Formation" to="." method="_on_formation_pressed"]
+[connection signal="pressed" from="UI/Footer/MenuButtons/Inventory" to="." method="_on_inventory_pressed"]

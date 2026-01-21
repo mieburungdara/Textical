@@ -1,10 +1,11 @@
 class_name BattleLogPlayer
 extends BaseLogPlayer
 
-## Orchestra class that delegates log processing to sub-components.
+## Orchestra class that delegates log processing to specialized sub-components.
 
 @onready var move_handler: LogMoveHandler = $MoveHandler
-@onready var combat_handler: LogCombatHandler = $CombatHandler
+@onready var attack_handler: LogAttackHandler = $AttackHandler
+@onready var skill_handler: LogSkillHandler = $SkillHandler
 @onready var state_handler: LogStateHandler = $StateHandler
 
 func setup(p_board: Node2D, p_controller: Node, p_vfx: Node2D):
@@ -23,8 +24,10 @@ func process_entry(entry: BattleLogEntry):
     match entry.type:
         BattleLogEntry.Type.MOVE:
             await move_handler.handle(entry)
-        BattleLogEntry.Type.CAST_SKILL, BattleLogEntry.Type.ATTACK:
-            await combat_handler.handle(entry)
+        BattleLogEntry.Type.ATTACK:
+            await attack_handler.handle(entry)
+        BattleLogEntry.Type.CAST_SKILL:
+            await skill_handler.handle(entry)
         BattleLogEntry.Type.DEATH, BattleLogEntry.Type.GAME_OVER:
             await state_handler.handle(entry)
         BattleLogEntry.Type.WAIT:

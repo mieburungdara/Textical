@@ -73,6 +73,10 @@ func resolve_deaths(sim: Object):
 			unit.is_dead = true
 			sim.grid.remove_unit(unit)
 			sim.log_entry(BattleLogEntry.Type.DEATH, "%s has died!" % unit.data.name, {"target_id": unit.data.id})
+			
+			# UPDATE QUEST PROGRESS
+			if unit.team_id == 1: # Enemy
+				GlobalGameManager.update_quest_progress(unit.data.id)
 
 func check_win_condition(sim: Object) -> bool:
 	var teams_alive = {}

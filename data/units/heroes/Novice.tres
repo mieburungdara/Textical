@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/core/data/hero_data.gd" id="1_hero"]
+
+[resource]
+script = ExtResource("1_hero")
+hero_class = 0
+id = "hero_novice"
+name = "Adventurer"
+model_color = Color(0.8, 0.8, 0.8, 1)
+model_scale = 1.0
+hp_base = 80
+mana_base = 30
+damage_base = 8
+defense_base = 1
+speed_base = 7
+range_base = 1
+skills = []
+traits = []

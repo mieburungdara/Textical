@@ -7,7 +7,7 @@
 
 [resource]
 script = ExtResource("1_hero")
-hero_class = 2
+hero_class = 3
 id = "hero_mage"
 name = "Flame Mage"
 model_color = Color(0.6, 0.2, 0.8, 1)

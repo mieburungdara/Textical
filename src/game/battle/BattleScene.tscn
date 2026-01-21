@@ -1,24 +1,29 @@
-[gd_scene load_steps=15 format=3 uid="uid://b6x3y208a1b2"]
+[gd_scene load_steps=17 format=3 uid="uid://b6x3y208a1b2"]
 
 [ext_resource type="Script" uid="uid://bcl0d2odpkr6q" path="res://src/game/battle/battle_controller.gd" id="1_ctrl"]
 [ext_resource type="Script" uid="uid://1l2hrbcix4eu" path="res://src/game/battle/battle_board.gd" id="2_board"]
 [ext_resource type="Script" uid="uid://rtre6vhmm21b" path="res://src/core/data/hero_data.gd" id="2_cuh63"]
+[ext_resource type="Resource" path="res://data/units/heroes/Mage.tres" id="3_6ko55"]
 [ext_resource type="Script" uid="uid://57i5vnjojaiu" path="res://src/game/battle/battle_log_player.gd" id="3_player"]
 [ext_resource type="Script" uid="uid://p1e3s43sh4wu" path="res://src/game/battle/vfx_manager.gd" id="4_vfx"]
 [ext_resource type="Resource" path="res://data/units/heroes/Knight.tres" id="5_3yrsq"]
 [ext_resource type="PackedScene" path="res://src/game/unit/UnitView.tscn" id="5_view"]
 [ext_resource type="Script" uid="uid://bycxleak6rbhg" path="res://src/game/battle/handlers/log_move_handler.gd" id="6_move"]
 [ext_resource type="Script" uid="uid://cl8hhlscuyjx3" path="res://src/core/data/monster_data.gd" id="6_ndxf2"]
-[ext_resource type="Script" uid="uid://gn7t34vh42hw" path="res://src/game/battle/handlers/log_combat_handler.gd" id="7_combat"]
+[ext_resource type="Script" uid="uid://c5q6ox2qyhls2" path="res://src/game/battle/handlers/log_attack_handler.gd" id="7_attack"]
 [ext_resource type="Resource" uid="uid://dg8fufaykypy0" path="res://data/units/monsters/Orc.tres" id="7_pnfjv"]
 [ext_resource type="PackedScene" path="res://assets/projectiles/Arrow.tscn" id="8_arrow"]
 [ext_resource type="PackedScene" path="res://assets/projectiles/MagicBall.tscn" id="9_magic"]
-[ext_resource type="Script" uid="uid://bh8eip4mrsbm5" path="res://src/game/battle/handlers/log_state_handler.gd" id="10_state"]
+[ext_resource type="Script" uid="uid://t5qgyws32yfi" path="res://src/game/battle/handlers/log_skill_handler.gd" id="10_skill"]
+[ext_resource type="Script" uid="uid://bh8eip4mrsbm5" path="res://src/game/battle/handlers/log_state_handler.gd" id="11_state"]
 
 [node name="BattleScene" type="Node2D"]
 script = ExtResource("1_ctrl")
-player_units = Array[ExtResource("2_cuh63")]([ExtResource("5_3yrsq"), ExtResource("5_3yrsq")])
-enemy_units = Array[ExtResource("6_ndxf2")]([ExtResource("7_pnfjv")])
+grid_width = null
+grid_height = null
+cell_size = null
+player_units = Array[ExtResource("2_cuh63")]([ExtResource("5_3yrsq"), ExtResource("3_6ko55"), ExtResource("3_6ko55")])
+enemy_units = Array[ExtResource("6_ndxf2")]([ExtResource("7_pnfjv"), ExtResource("7_pnfjv")])
 
 [node name="BattleBoard" type="Node2D" parent="."]
 script = ExtResource("2_board")
@@ -33,13 +38,16 @@ script = ExtResource("3_player")
 [node name="MoveHandler" type="Node" parent="BattleLogPlayer"]
 script = ExtResource("6_move")
 
-[node name="CombatHandler" type="Node" parent="BattleLogPlayer"]
-script = ExtResource("7_combat")
+[node name="AttackHandler" type="Node" parent="BattleLogPlayer"]
+script = ExtResource("7_attack")
 default_arrow_scene = ExtResource("8_arrow")
 default_magic_scene = ExtResource("9_magic")
 
+[node name="SkillHandler" type="Node" parent="BattleLogPlayer"]
+script = ExtResource("10_skill")
+
 [node name="StateHandler" type="Node" parent="BattleLogPlayer"]
-script = ExtResource("10_state")
+script = ExtResource("11_state")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

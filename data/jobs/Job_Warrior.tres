@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="JobData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/core/job/job_data.gd" id="1_job"]
+[ext_resource type="Resource" path="res://data/skills/Skill_Bash.tres" id="2_bash"]
+
+[resource]
+script = ExtResource("1_job")
+id = "job_warrior"
+display_name = "Warrior"
+tier = 1
+required_level = 10
+required_job_ids = ["job_novice"]
+hp_mult = 1.3
+mana_mult = 0.8
+damage_mult = 1.2
+speed_mult = 0.9
+range_bonus = 0
+granted_skills = [ExtResource("2_bash")]
+description = "A skilled combatant focused on physical strength and resilience."

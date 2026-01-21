@@ -1,0 +1,94 @@
+[gd_scene load_steps=6 format=3 uid="uid://bw3hjrdsivtc8"]
+
+[ext_resource type="Script" uid="uid://w87g3dsbp3we" path="res://src/game/ui/formation/formation_editor.gd" id="1_editor"]
+[ext_resource type="Script" uid="uid://mg2rj363mh1k" path="res://src/core/data/unit_data.gd" id="2_6ookd"]
+[ext_resource type="Resource" path="res://data/units/heroes/Mage.tres" id="3_0o01x"]
+[ext_resource type="Resource" uid="uid://bjiig751jndmp" path="res://data/units/heroes/Archer.tres" id="4_13ed2"]
+[ext_resource type="Resource" path="res://data/units/heroes/Knight.tres" id="5_obbd5"]
+
+[node name="FormationEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_editor")
+available_units = Array[ExtResource("2_6ookd")]([ExtResource("3_0o01x"), ExtResource("4_13ed2"), ExtResource("5_obbd5")])
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InventoryPanel" type="Panel" parent="HBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/InventoryPanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "Unit Collection"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="HBox/InventoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="HBox/InventoryPanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GridArea" type="Panel" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="HBox/GridArea"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "Formation Zone (Front ->)"
+horizontal_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="HBox/GridArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Grid" type="GridContainer" parent="HBox/GridArea/Center"]
+layout_mode = 2
+columns = 3
+
+[node name="StartButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -60.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "START BATTLE"
+
+[connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]

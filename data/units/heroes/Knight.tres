@@ -6,7 +6,7 @@
 
 [resource]
 script = ExtResource("1_hero")
-hero_class = 0
+hero_class = 1
 id = "hero_knight"
 name = "Royal Knight"
 model_color = Color(0, 1, 1, 1)

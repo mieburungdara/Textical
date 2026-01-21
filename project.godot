@@ -11,8 +11,15 @@ config_version=5
 [application]
 
 config/name="Textical"
+run/main_scene="res://src/game/ui/main_menu/MainMenu.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GlobalGameManager="*res://src/autoload/global_game_manager.gd"
+AdventureManager="*res://src/autoload/adventure_manager.gd"
+SaveManager="*res://src/autoload/save_manager.gd"
 
 [display]
 

@@ -1,0 +1,106 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/game/ui/formation/battle_preview_popup.gd" id="1_popup"]
+
+[node name="BattlePreviewPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_popup")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.588235)
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(500, 400)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Battle Intel"
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Enemy Forces Detected:"
+
+[node name="EnemyList" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="Stats" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GoldInfo" type="Label" parent="Panel/VBox/Stats"]
+layout_mode = 2
+text = "Gold: ???"
+
+[node name="ExpInfo" type="Label" parent="Panel/VBox/Stats"]
+layout_mode = 2
+text = "EXP: ???"
+
+[node name="LootInfo" type="Label" parent="Panel/VBox/Stats"]
+layout_mode = 2
+text = "Loot: ???"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox/Stats"]
+layout_mode = 2
+
+[node name="ScoutChance" type="Label" parent="Panel/VBox/Stats"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+text = "Accuracy: 30%"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="Cancel" type="Button" parent="Panel/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "RETREAT"
+
+[node name="Attack" type="Button" parent="Panel/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "ATTACK"
+
+[connection signal="pressed" from="Panel/VBox/Buttons/Cancel" to="." method="_on_cancel_pressed"]
+[connection signal="pressed" from="Panel/VBox/Buttons/Attack" to="." method="_on_attack_pressed"]
