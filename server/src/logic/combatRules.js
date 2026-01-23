@@ -17,17 +17,15 @@ class CombatRules {
             damage *= (attacker.stats.critical_damage || 1.5);
         }
 
-        // 4. ELEMENTAL RESISTANCE (RESTORED LOGIC)
-        // Use specific resistance from unit data if available
+        // 4. ELEMENTAL RESISTANCE (FIXED: Wind sync)
         const element = skillElement || attacker.data.element || 0;
         let resMult = 1.0;
-        
         switch(element) {
-            case 1: resMult = defender.data.res_fire ?? 1.0; break;    // Fire
-            case 2: resMult = defender.data.res_water ?? 1.0; break;   // Water
-            case 3: resMult = defender.data.res_nature ?? 1.0; break;  // Nature
-            case 4: resMult = defender.data.res_earth ?? 1.0; break;   // Earth
-            case 5: resMult = defender.data.res_lightning ?? 1.0; break; // Lightning
+            case 1: resMult = defender.data.res_fire ?? 1.0; break;
+            case 2: resMult = defender.data.res_water ?? 1.0; break;
+            case 3: resMult = defender.data.res_wind ?? 1.0; break; // Correct key
+            case 4: resMult = defender.data.res_earth ?? 1.0; break;
+            case 5: resMult = defender.data.res_lightning ?? 1.0; break;
         }
         damage *= resMult;
 
@@ -38,13 +36,7 @@ class CombatRules {
         if (attacker.traits && attacker.traits.includes("burn") && Math.random() < 0.3) effectApplied = "burn";
         if (attacker.traits && attacker.traits.includes("poison") && Math.random() < 0.3) effectApplied = "poison";
 
-        return { 
-            damage: damage, 
-            isHit: true, 
-            isCrit: isCrit, 
-            effect: effectApplied,
-            message: isCrit ? "CRITICAL!" : "HIT" 
-        };
+        return { damage, isHit, isCrit, effect: effectApplied, message: isCrit ? "CRITICAL!" : "HIT" };
     }
 }
 
