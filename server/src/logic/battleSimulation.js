@@ -209,6 +209,24 @@ class BattleSimulation {
                     if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
                 }
             }
+        } else if (pattern === "CROSS") {
+            for (let i = 1; i <= size; i++) {
+                const directions = [{x:i,y:0},{x:-i,y:0},{x:0,y:i},{x:0,y:-i}];
+                directions.forEach(d => {
+                    const p = { x: center.x + d.x, y: center.y + d.y };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                });
+            }
+        } else if (pattern === "CIRCLE") {
+            for (let x = -size; x <= size; x++) {
+                for (let y = -size; y <= size; y++) {
+                    if (x === 0 && y === 0) continue;
+                    if (Math.abs(x) + Math.abs(y) <= size) {
+                        const p = { x: center.x + x, y: center.y + y };
+                        if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                    }
+                }
+            }
         }
         return tiles;
     }
