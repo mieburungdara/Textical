@@ -20,6 +20,10 @@ class UserRepository {
     async updateGold(userId, amount) {
         return await prisma.user.update({ where: { id: userId }, data: { gold: amount } });
     }
+
+    async updateLocation(userId, regionId) {
+        return await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId } });
+    }
 }
 
 module.exports = new UserRepository();

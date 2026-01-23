@@ -12,6 +12,12 @@ const invList = document.getElementById('inv-list');
 const displayUser = document.getElementById('display-username');
 const displayGold = document.getElementById('display-gold');
 
+// World UI Elements
+const regionName = document.getElementById('region-name');
+const regionDesc = document.getElementById('region-desc');
+const connectionList = document.getElementById('connection-list');
+const locationCard = document.getElementById('location-card');
+
 const selectFather = document.getElementById('select-father');
 const selectMother = document.getElementById('select-mother');
 const btnBreed = document.getElementById('btn-breed');
@@ -22,10 +28,9 @@ const GRID_H = 10;
 
 let socket = new WebSocket('ws://localhost:3000');
 let currentUser = null;
-let currentHeroes = [];
 
 socket.onopen = () => console.log("Connected to Game Server");
-socket.onclose = () => showError("Disconnected from server. Please refresh.");
+socket.onclose = () => showError("Disconnected from server.");
 
 document.getElementById('btn-login').onclick = () => {
     const user = document.getElementById('login-user').value;
@@ -41,25 +46,11 @@ document.getElementById('btn-register').onclick = () => {
     socket.send(JSON.stringify({ type: "register", username: user, password: pass }));
 };
 
-btnBreed.onclick = () => {
-    const fId = selectFather.value;
-    const mId = selectMother.value;
-    if (!fId || !mId) return showError("Select parents");
-    socket.send(JSON.stringify({ type: "breed_heroes", account: currentUser, fatherId: fId, motherId: mId }));
-};
-
-document.getElementById('start-btn').onclick = () => {
-    if (!currentUser) return;
-    battleContainer.classList.remove('hidden');
-    socket.send(JSON.stringify({ type: "start_battle", account: currentUser }));
-};
-
 socket.onmessage = async (event) => {
     const msg = JSON.parse(event.data);
     if (msg.type === "login_success") {
         currentUser = msg.user.username;
-        currentHeroes = msg.user.heroes;
-        showDashboard(msg.user);
+        showDashboard(msg.user, msg.region_data);
     } else if (msg.type === "battle_replay") {
         await playReplay(msg);
     } else if (msg.type === "error") {
@@ -67,61 +58,61 @@ socket.onmessage = async (event) => {
     }
 };
 
-function showDashboard(user) {
+function showDashboard(user, region) {
     authScreen.classList.add('hidden');
     dashScreen.classList.remove('hidden');
+    
     displayUser.innerText = `Commander ${user.username}`;
     displayGold.innerText = `Gold: ${user.gold}`;
 
-    heroList.innerHTML = "";
-    selectFather.innerHTML = '<option value="">Select Father</option>';
-    selectMother.innerHTML = '<option value="">Select Mother</option>';
+    // --- WORLD & TRAVEL UI ---
+    if (region) {
+        regionName.innerText = region.name;
+        regionDesc.innerText = region.description;
+        locationCard.style.background = region.type === "TOWN" ? "#1b3d11" : "#3d1111";
+        
+        connectionList.innerHTML = "";
+        region.connections.forEach(connId => {
+            const btn = document.createElement('button');
+            btn.innerText = `To ${connId.replace('_', ' ')}`;
+            btn.className = "secondary";
+            btn.style.width = "auto";
+            btn.style.padding = "5px 10px";
+            btn.style.fontSize = "10px";
+            btn.onclick = () => {
+                socket.send(JSON.stringify({ type: "travel", account: currentUser, targetRegion: connId }));
+            };
+            connectionList.appendChild(btn);
+        });
+    }
 
+    // --- HEROES ---
+    heroList.innerHTML = "";
     user.heroes.forEach(h => {
         const row = document.createElement('div');
         row.className = "item-row";
-        const equip = JSON.parse(h.equipment || "{}");
-        const weapon = equip.weapon ? "⚔️" : "✋";
-        row.innerHTML = `<span>${h.gender === "MALE" ? "♂️" : "♀️"} ${h.name} [${weapon}]</span>`;
+        row.innerHTML = `<span>${h.name} (Gen ${h.generation})</span> <span>Lvl ${h.level}</span>`;
         heroList.appendChild(row);
-
-        const opt = document.createElement('option');
-        opt.value = h.id;
-        opt.innerText = h.name;
-        if (h.gender === "MALE") selectFather.appendChild(opt);
-        else selectMother.appendChild(opt);
     });
 
+    // --- INVENTORY ---
     invList.innerHTML = "";
     user.inventory.forEach(item => {
-        if (item.isEquipped) return;
+        if(item.isEquipped) return;
         const row = document.createElement('div');
         row.className = "item-row";
-        
-        const equipBtn = document.createElement('button');
-        equipBtn.innerText = "Equip";
-        equipBtn.style.width = "auto";
-        equipBtn.style.padding = "2px 10px";
-        equipBtn.onclick = () => {
-            const heroId = prompt("Enter Hero Index (0, 1, 2...) to equip this item:");
-            if (heroId !== null && user.heroes[heroId]) {
-                socket.send(JSON.stringify({
-                    type: "equip_item",
-                    account: currentUser,
-                    heroId: user.heroes[heroId].id,
-                    itemId: item.id,
-                    slot: "weapon" // Default for now
-                }));
-            }
-        };
-
         row.innerHTML = `<span>${item.templateId} x${item.quantity}</span>`;
-        row.appendChild(equipBtn);
         invList.appendChild(row);
     });
 }
 
-// ... (playReplay and Draw functions remain same) ...
+document.getElementById('start-btn').onclick = () => {
+    if (!currentUser) return;
+    battleContainer.classList.remove('hidden');
+    socket.send(JSON.stringify({ type: "start_battle", account: currentUser }));
+};
+
+// (Drawing functions remain same...)
 async function playReplay(replay) {
     const logs = replay.logs;
     const terrain = replay.terrain_grid;
@@ -155,15 +146,10 @@ function drawUnits(states) {
         const u = states[id];
         const px = u.pos.x * CELL_SIZE + CELL_SIZE/2;
         const py = u.pos.y * CELL_SIZE + CELL_SIZE/2;
-        ctx.beginPath();
-        ctx.arc(px, py, 20, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2);
         ctx.fillStyle = id.includes("e_") ? "red" : "cyan";
-        ctx.fill();
-        ctx.stroke();
+        ctx.fill(); ctx.stroke();
     }
 }
 
-function showError(text) {
-    errorDiv.innerText = text;
-    setTimeout(() => errorDiv.innerText = "", 3000);
-}
+function showError(text) { errorDiv.innerText = text; setTimeout(() => errorDiv.innerText = "", 3000); }

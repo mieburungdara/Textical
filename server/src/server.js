@@ -7,6 +7,8 @@ const authHandler = require('./handlers/authHandler');
 const inventoryHandler = require('./handlers/inventoryHandler');
 const breedingHandler = require('./handlers/breedingHandler');
 const battleHandler = require('./handlers/battleHandler');
+const worldHandler = require('./handlers/worldHandler'); // NEW
+const regionRepository = require('./repositories/regionRepository'); // NEW
 
 const app = express();
 app.use(express.static(path.join(__dirname, '../public')));
@@ -24,13 +26,20 @@ wss.on('connection', (ws) => {
         try {
             const request = JSON.parse(message);
 
+            if (request.type === "login") {
+                const user = await DB.verifyUser(request.username, request.password);
+                if (user) {
+                    const regionData = regionRepository.getRegion(user.currentRegion);
+                    ws.send(JSON.stringify({ type: "login_success", user, region_data: regionData }));
+                }
+                return;
+            }
+
             switch (request.type) {
+                case "travel":
+                    await worldHandler.handleTravel(ws, request);
+                    break;
                 case "register":
-                    await authHandler.handleRegister(ws, request);
-                    break;
-                case "login":
-                    await authHandler.handleLogin(ws, request);
-                    break;
                 case "equip_item":
                     await inventoryHandler.handleEquip(ws, request);
                     break;

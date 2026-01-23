@@ -1,4 +1,4 @@
-// AAA Permadeath & Hall of Fame Schema
+// AAA World Location Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,59 +9,55 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  password  String
-  gold      Int      @default(500)
-  fame      Int      @default(0)
-  heroes    Hero[]
-  inventory InventoryItem[]
+  id            String   @id @default(uuid())
+  username      String   @unique
+  password      String
+  gold          Int      @default(500)
+  fame          Int      @default(0)
+  
+  // NEW: Location tracking
+  currentRegion String   @default("starting_village")
+  
+  heroes        Hero[]
+  inventory     InventoryItem[]
 }
 
-// Database Utama (Hanya hero yang masih hidup)
 model Hero {
   id          String @id @default(uuid())
   userId      String
   user        User   @relation(fields: [userId], references: [id])
-  
   templateId  String
   name        String
   race        String
   gender      String   @default("MALE")
-  
   level       Int      @default(1)
   exp         Int      @default(0)
-  classTier   Int      @default(1) // Tingkat Class (1, 2, 3)
-  
+  classTier   Int      @default(1)
   baseStats   String @default("{}")
   naturalTraits    String @default("[]")
   acquiredTraits   String @default("[]")
   unlockedBehaviors String @default("[]")
   activeBehavior    String @default("balanced")
   deeds            String @default("{}")
-  
   hasReproduced Boolean @default(false)
   fatherId    String?
   motherId    String?
   generation  Int      @default(1)
-
+  equipment   String @default("{}")
   createdAt   DateTime @default(now())
 }
 
-// Database Hall of Fame (Arsip Hero Legendaris yang Gugur)
 model HallOfFame {
   id          String @id @default(uuid())
   originalId  String
-  ownerName   String // Nama user saat hero gugur
-  
+  ownerName   String
   name        String
   race        String
   gender      String
   level       Int
   classTier   Int
   generation  Int
-  
-  finalDeeds  String // Ringkasan pencapaian selama hidup
+  finalDeeds  String
   deathDate   DateTime @default(now())
   causeOfDeath String
 }

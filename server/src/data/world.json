@@ -1,0 +1,18 @@
+{
+  "regions": {
+    "starting_village": {
+      "name": "Oakshade Village",
+      "type": "TOWN",
+      "description": "A peaceful village surrounded by ancient oaks.",
+      "facilities": ["tavern", "inn", "shop"],
+      "connections": ["whispering_forest"]
+    },
+    "whispering_forest": {
+      "name": "Whispering Forest",
+      "type": "ADVENTURE_ZONE",
+      "description": "The trees here seem to talk in the wind. Danger lurks.",
+      "monsters": ["mob_orc", "mob_wolf"],
+      "connections": ["starting_village"]
+    }
+  }
+}
