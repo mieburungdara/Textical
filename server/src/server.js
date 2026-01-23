@@ -14,6 +14,7 @@ const marketHandler = require('./handlers/marketHandler');
 const buildingHandler = require('./handlers/buildingHandler');
 const questHandler = require('./handlers/questHandler');
 const dialogueHandler = require('./handlers/dialogueHandler'); // NEW
+const economyHandler = require('./handlers/economyHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 
 // Services
@@ -73,6 +74,7 @@ wss.on('connection', (ws) => {
                 case "craft_item": await buildingHandler.handleCraft(ws, request); break;
                 case "accept_quest": await questHandler.handleAcceptQuest(ws, request); break;
                 case "fetch_quests": await questHandler.handleFetchActiveQuests(ws, request); break;
+                case "convert_currency": await economyHandler.handleConvert(ws, request); break;
                 // NEW: DIALOGUE COMMANDS
                 case "start_dialogue": await dialogueHandler.handleDialogue(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
