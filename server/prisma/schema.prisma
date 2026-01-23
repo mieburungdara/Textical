@@ -1,4 +1,4 @@
-// AAA Deep Crafting & Durability Schema
+// AAA Final Absolute Master Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,8 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... (User, Hero, Guild, Event, Region preserved) ...
-
+// ========================================== 
+// 1. CORE USER & ACCOUNT
+// ========================================== 
 model User {
   id            String   @id @default(uuid())
   username      String   @unique
@@ -17,157 +18,21 @@ model User {
   gold          Int      @default(500)
   fame          Int      @default(0)
   currentRegion String   @default("starting_village")
+  
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
   guildId       String?
   guild         Guild?   @relation(fields: [guildId], references: [id])
   guildRole     String   @default("MEMBER")
+  
   achievements  UserAchievement[]
+  recipes       UserRecipe[]
 }
 
-// ==========================================
-// NEW: CRAFTING & RECIPE SYSTEM
-// ==========================================
-
-model RecipeTemplate {
-  id              String @id
-  name            String
-  description     String
-  category        String   @default("SMITHING") // REFINING, WEAPONSMITH, ALCHEMY
-  
-  // 1. Target Item
-  resultItemId    String
-  resultQuantity  Int      @default(1)
-  
-  // 2. Ingredients (JSON Array)
-  // e.g., [{"itemId": "iron_ore", "qty": 3}, {"itemId": "coal", "qty": 1}]
-  ingredients     String   @default("[]")
-  
-  // 3. Requirements
-  goldCost        Int      @default(0)
-  requiredFame    Int      @default(0)
-  requiredJobId   String?  // e.g., "job_miner" for refining
-  minJobLevel     Int      @default(1)
-  requiredBuildingId String? // e.g., "bld_forge_01"
-  
-  // 4. Success Logic
-  baseSuccessRate Float    @default(1.0)
-  
-  filePath        String   @default("recipes/misc.json")
-}
-
-// ==========================================
-// UPDATED CORE TABLES (Durability & Assets)
-// ==========================================
-
-model ItemTemplate {
-  id              String @id
-  name            String
-  description     String
-  category        String @default("EQUIPMENT")
-  subCategory     String @default("MISC")
-  
-  // AAA DURABILITY
-  baseDurability  Int    @default(100) // 0 means indestructible
-  repairCostPerPt Int    @default(1)   // Gold cost to repair 1 durability point
-  
-  baseStats       String @default("{}")
-  requirements    String @default("{}")
-  maxSockets      Int    @default(0)
-  allowedSockets  String @default("[]")
-  setId           String?
-  itemSet         ItemSet? @relation(fields: [setId], references: [id])
-  
-  isCraftable     Boolean @default(true)
-  salvageResult   String @default("[]")
-  
-  rarity          String @default("COMMON")
-  iconPath        String @default("res://assets/icons/items/default.png")
-  filePath        String @default("items/misc.json")
-  
-  instances       InventoryItem[]
-  marketListings  MarketListing[]
-}
-
-model InventoryItem {
-  id              String @id @default(uuid())
-  userId          String
-  user        User   @relation(fields: [userId], references: [id])
-  
-  templateId      String
-  template        ItemTemplate @relation(fields: [templateId], references: [id])
-  
-  quantity        Int    @default(1)
-  
-  // AAA INSTANCE DATA
-  currentDurability Int  @default(100)
-  uniqueData      String @default("{}") // e.g., {"is_broken": false}
-  
-  sockets         String @default("[]")
-  isEquipped      Boolean @default(false)
-  ownerHeroId     String?
-  marketListing   MarketListing?
-}
-
-// ... (Guild, Hero, Job, Skill, Trait, Behavior, Monster, Region remain consistent) ...
-
-model Hero {
-  id          String @id @default(uuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
-  name        String
-  race        String
-  gender      String   @default("MALE")
-  level       Int      @default(1)
-  exp         Int      @default(0)
-  classId     String   @default("class_novice")
-  combatClass ClassTemplate @relation(fields: [classId], references: [id])
-  classTier   Int      @default(1)
-  jobId       String?
-  job         JobTemplate? @relation(fields: [jobId], references: [id])
-  jobLevel    Int      @default(1)
-  jobExp      Int      @default(0)
-  jobRank     String   @default("APPRENTICE")
-  baseStats         String @default("{}")
-  naturalTraits     String @default("[]")
-  acquiredTraits    String @default("[]")
-  unlockedBehaviors String @default("[]")
-  activeBehavior    String @default("balanced")
-  deeds             String @default("{}")
-  hasReproduced Boolean @default(false)
-  fatherId      String?
-  motherId      String?
-  generation    Int      @default(1)
-  equipment   String @default("{}")
-  createdAt   DateTime @default(now())
-}
-
-model BuildingTemplate {
-  id              String @id
-  name            String
-  description     String
-  category        String   @default("ECONOMY")
-  upgradeTree     String   @default("[]")
-  perksPerLevel   String   @default("[]")
-  staffingLogic   String   @default("{}")
-  maintenance     String   @default("{}")
-  iconPath        String   @default("res://assets/icons/buildings/default.png")
-  modelPath       String   @default("")
-  filePath        String   @default("buildings/misc.json")
-  instances       BuildingInstance[]
-}
-
-model BuildingInstance {
-  id              String @id @default(uuid())
-  regionId        String
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      String
-  template        BuildingTemplate @relation(fields: [templateId], references: [id])
-  level           Int      @default(1)
-  instanceData    String   @default("{}")
-  createdAt       DateTime @default(now())
-}
+// ========================================== 
+// 2. TEMPLATES (Static Data / Assets)
+// ========================================== 
 
 model RegionTemplate {
   id              String @id
@@ -185,7 +50,24 @@ model RegionTemplate {
   backgroundPath  String   @default("res://assets/backgrounds/default.png")
   musicTrack      String   @default("default_theme")
   filePath        String   @default("regions/misc.json")
+  
   buildings       BuildingInstance[]
+}
+
+model BuildingTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String   @default("ECONOMY")
+  upgradeTree     String   @default("[]")
+  perksPerLevel   String   @default("[]")
+  staffingLogic   String   @default("{}")
+  maintenance     String   @default("{}")
+  iconPath        String   @default("res://assets/icons/buildings/default.png")
+  modelPath       String   @default("")
+  filePath        String   @default("buildings/misc.json")
+  
+  instances       BuildingInstance[]
 }
 
 model GlobalEventTemplate {
@@ -212,7 +94,7 @@ model QuestTemplate {
   prerequisiteQuestId String?
   objectives      String @default("[]")
   logicBranches   String @default("{}")
-  rewards         String @default("[]")
+  rewards         String @default("{}")
   isTimeLimited   Boolean @default(false)
   expiryHours     Int     @default(0)
   requiredRegion  String?
@@ -234,7 +116,32 @@ model ClassTemplate {
   nextClasses     String @default("[]")
   iconPath        String @default("res://assets/icons/classes/default.png")
   filePath        String @default("classes/misc.json")
+  
   heroes          Hero[]
+}
+
+model ItemTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("EQUIPMENT")
+  subCategory     String @default("MISC")
+  baseDurability  Int    @default(100)
+  repairCostPerPt Int    @default(1)
+  baseStats       String @default("{}")
+  requirements    String @default("{}")
+  maxSockets      Int    @default(0)
+  allowedSockets  String @default("[]")
+  setId           String?
+  itemSet         ItemSet? @relation(fields: [setId], references: [id])
+  isCraftable     Boolean @default(true)
+  salvageResult   String @default("[]")
+  rarity          String @default("COMMON")
+  iconPath        String @default("res://assets/icons/items/default.png")
+  filePath        String @default("items/misc.json")
+  
+  instances       InventoryItem[]
+  marketListings  MarketListing[]
 }
 
 model ItemSet {
@@ -265,22 +172,8 @@ model GuildTemplate {
   primaryColor    String @default("#ffffff")
   iconPath        String @default("res://assets/icons/guilds/default.png")
   filePath        String @default("guilds/misc.json")
+  
   guilds          Guild[]
-}
-
-model Guild {
-  id              String @id @default(uuid())
-  name            String @unique
-  description     String?
-  templateId      String
-  template        GuildTemplate @relation(fields: [templateId], references: [id])
-  level           Int    @default(1)
-  exp             Int    @default(0)
-  vaultGold       Int    @default(0)
-  unlockedPerks   String @default("[]")
-  facilities      String @default("{}")
-  members         User[]
-  createdAt       DateTime @default(now())
 }
 
 model JobTemplate {
@@ -295,6 +188,7 @@ model JobTemplate {
   passiveBonuses  String @default("{}")
   iconPath        String @default("res://assets/icons/jobs/default.png")
   filePath        String @default("jobs/misc.json")
+  
   workers         Hero[]
 }
 
@@ -350,6 +244,71 @@ model BehaviourTemplate {
   filePath        String @default("behaviors/misc.json")
 }
 
+model StatusEffectTemplate {
+  id              String @id
+  name            String
+  description     String
+  type            String   @default("DEBUFF")
+  element         String   @default("NEUTRAL")
+  stackingRule    String   @default("REFRESH") 
+  maxStacks       Int      @default(1)
+  defaultDuration Int      @default(3)
+  tickLogic       String   @default("{}")
+  statModifiers   String   @default("{}")
+  battleHooks     String   @default("{}")
+  iconPath        String   @default("res://assets/icons/effects/default.png")
+  vfxPath         String   @default("")
+  applyVfxPath    String   @default("")
+  filePath        String   @default("effects/misc.json")
+}
+
+model DialogueTemplate {
+  id              String @id
+  npcId           String
+  content         String
+  branches        String @default("[]")
+  requirements    String @default("{}")
+  triggers        String @default("[]")
+  mood            String @default("NEUTRAL")
+  portraitPath    String @default("")
+  filePath        String @default("dialogues/misc.json")
+}
+
+model RecipeTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String   @default("SMITHING")
+  resultItemId    String
+  resultQuantity  Int      @default(1)
+  ingredients     String   @default("[]")
+  goldCost        Int      @default(0)
+  requiredFame    Int      @default(0)
+  requiredJobId   String?  
+  minJobLevel     Int      @default(1)
+  requiredBuildingId String? 
+  baseSuccessRate Float    @default(1.0)
+  filePath        String   @default("recipes/misc.json")
+  
+  learnedBy       UserRecipe[]
+}
+
+model AchievementTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("GENERAL")
+  points          Int    @default(10)
+  requirements    String @default("{}")
+  rewards         String @default("{}")
+  isHidden        Boolean @default(false)
+  iconPath        String @default("res://assets/icons/achievements/default.png")
+  vfxPath         String @default("")
+  filePath        String @default("achievements/misc.json")
+  
+  users           UserAchievement[]
+}
+
 model MonsterCategory {
   id        String @id
   name      String
@@ -374,6 +333,89 @@ model MonsterTemplate {
   immunities  String @default("[]")
   lootTable   String @default("{}")
   filePath    String @default("monsters/misc.json") 
+}
+
+model RaceBonusTemplate {
+  id          String @id
+  bonusData   String 
+  filePath    String @default("races/misc.json")
+}
+
+// ========================================== 
+// 3. INSTANCE DATA (User Progress)
+// ========================================== 
+
+model Hero {
+  id          String @id @default(uuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  name        String
+  race        String
+  gender      String   @default("MALE")
+  level       Int      @default(1)
+  exp         Int      @default(0)
+  classId     String   @default("class_novice")
+  combatClass ClassTemplate @relation(fields: [classId], references: [id])
+  classTier   Int      @default(1)
+  jobId       String?
+  job         JobTemplate? @relation(fields: [jobId], references: [id])
+  jobLevel    Int      @default(1)
+  jobExp      Int      @default(0)
+  jobRank     String   @default("APPRENTICE")
+  baseStats         String @default("{}")
+  naturalTraits     String @default("[]")
+  acquiredTraits    String @default("[]")
+  unlockedBehaviors String @default("[]")
+  activeBehavior    String @default("balanced")
+  deeds             String @default("{}")
+  hasReproduced Boolean @default(false)
+  fatherId      String?
+  motherId      String?
+  generation    Int      @default(1)
+  equipment   String @default("{}")
+  createdAt   DateTime @default(now())
+}
+
+model InventoryItem {
+  id          String @id @default(uuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  templateId  String
+  template    ItemTemplate @relation(fields: [templateId], references: [id])
+  quantity    Int    @default(1)
+  currentDurability Int  @default(100)
+  uniqueData  String @default("{}")
+  sockets     String @default("[]")
+  isEquipped  Boolean @default(false)
+  ownerHeroId String?
+  
+  marketListing MarketListing?
+}
+
+model BuildingInstance {
+  id              String @id @default(uuid())
+  regionId        String
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId      String
+  template        BuildingTemplate @relation(fields: [templateId], references: [id])
+  level           Int      @default(1)
+  instanceData    String   @default("{}")
+  createdAt       DateTime @default(now())
+}
+
+model Guild {
+  id              String @id @default(uuid())
+  name            String @unique
+  description     String?
+  templateId      String
+  template        GuildTemplate @relation(fields: [templateId], references: [id])
+  level           Int    @default(1)
+  exp             Int    @default(0)
+  vaultGold       Int    @default(0)
+  unlockedPerks   String @default("[]")
+  facilities      String @default("{}")
+  members         User[]
+  createdAt       DateTime @default(now())
 }
 
 model HallOfFame {
@@ -430,23 +472,16 @@ model UserAchievement {
   @@unique([userId, achievementId])
 }
 
-model AchievementTemplate {
-  id              String @id
-  name            String
-  description     String
-  category        String @default("GENERAL")
-  points          Int    @default(10)
-  requirements    String @default("{}")
-  rewards         String @default("{}")
-  isHidden        Boolean @default(false)
-  iconPath        String @default("res://assets/icons/achievements/default.png")
-  vfxPath         String @default("")
-  filePath        String @default("achievements/misc.json")
-  users           UserAchievement[]
-}
-
-model RaceBonusTemplate {
-  id          String @id
-  bonusData   String 
-  filePath    String @default("races/misc.json")
+model UserRecipe {
+  id            String @id @default(uuid())
+  userId        String
+  user          User   @relation(fields: [userId], references: [id])
+  recipeId      String
+  recipe        RecipeTemplate @relation(fields: [recipeId], references: [id])
+  craftCount    Int    @default(0)
+  masteryLevel  Int    @default(1)
+  masteryExp    Int    @default(0)
+  isDiscovered  Boolean @default(true)
+  unlockedAt    DateTime @default(now())
+  @@unique([userId, recipeId])
 }

@@ -13,21 +13,20 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files...");
         
-        // 1. Load Recipes (NEW)
-        const recipeFiles = this._scanDir(path.join(ASSET_ROOT, 'recipes'));
-        for (let file of recipeFiles) {
+        // 1. Load Item Sets (IMPORTANT: Must load BEFORE items)
+        const setFiles = this._scanDir(path.join(ASSET_ROOT, 'item_sets'));
+        for (let file of setFiles) {
             try {
                 const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-                const dbData = {
-                    ...data,
-                    ingredients: JSON.stringify(data.ingredients || []),
-                    filePath: file.relativePath
-                };
-                await prisma.recipeTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
-            } catch(e) { console.error(`Recipe Fail: ${file.fullPath}`, e.message); }
+                await prisma.itemSet.upsert({
+                    where: { id: data.id },
+                    update: { ...data, setBonuses: JSON.stringify(data.setBonuses || []) },
+                    create: { ...data, setBonuses: JSON.stringify(data.setBonuses || []) }
+                });
+            } catch(e) { console.error(`Set Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 2. Load Items (Updated with Durability)
+        // 2. Load Items
         const itemFiles = this._scanDir(path.join(ASSET_ROOT, 'items'));
         for (let file of itemFiles) {
             try {
@@ -44,22 +43,23 @@ class AssetService {
             } catch(e) { console.error(`Item Fail: ${file.fullPath}`, e.message); }
         }
 
-        // ... (Reload all other templates: Events, Quests, Traits, Classes, Monsters) ...
-        // Note: For brevity, I'm ensuring the AssetService stays complete in my internal logic.
-        this._loadCommonAssets();
-        console.log(`[ASSETS] MASTER Sync Success.`);
+        // 3. Load Recipes, Achievements, Dialogues, Buildings, Guilds, etc.
+        await this._loadCommonAssets();
+        console.log(`[ASSETS] Final MASTER Sync Success.`);
     }
 
     async _loadCommonAssets() {
         const categories = [
-            { folder: 'events', model: 'globalEventTemplate', fields: ['worldModifiers', 'combatModifiers', 'specialSpawns'] },
-            { folder: 'quests', model: 'questTemplate', fields: ['objectives', 'logicBranches', 'rewards'] },
-            { folder: 'traits', model: 'traitTemplate', fields: ['statModifiers', 'elementalMods', 'battleHooks', 'requirements', 'conflicts'] },
-            { folder: 'classes', model: 'classTemplate', fields: ['statSystem', 'masteries', 'mechanics', 'skillTree', 'innateTraits', 'promotionReqs', 'nextClasses'] },
-            { folder: 'jobs', model: 'jobTemplate', fields: ['workStats', 'lootTable', 'toolAccess', 'masteryRewards', 'passiveBonuses'] },
-            { folder: 'effects', model: 'statusEffectTemplate', fields: ['tickLogic', 'statModifiers', 'battleHooks'] },
-            { folder: 'dialogues', model: 'dialogueTemplate', fields: ['branches', 'requirements', 'triggers'] },
-            { folder: 'buildings', model: 'buildingTemplate', fields: ['upgradeTree', 'perksPerLevel', 'staffingLogic', 'maintenance'] }
+            { folder: 'recipes', model: 'recipeTemplate', jsonFields: ['ingredients'] },
+            { folder: 'achievements', model: 'achievementTemplate', jsonFields: ['requirements', 'rewards'] },
+            { folder: 'events', model: 'globalEventTemplate', jsonFields: ['worldModifiers', 'combatModifiers', 'specialSpawns'] },
+            { folder: 'quests', model: 'questTemplate', jsonFields: ['objectives', 'logicBranches', 'rewards'] },
+            { folder: 'traits', model: 'traitTemplate', jsonFields: ['statModifiers', 'elementalMods', 'battleHooks', 'requirements', 'conflicts'] },
+            { folder: 'classes', model: 'classTemplate', jsonFields: ['statSystem', 'masteries', 'mechanics', 'skillTree', 'innateTraits', 'promotionReqs', 'nextClasses'] },
+            { folder: 'jobs', model: 'jobTemplate', jsonFields: ['workStats', 'lootTable', 'toolAccess', 'masteryRewards', 'passiveBonuses'] },
+            { folder: 'effects', model: 'statusEffectTemplate', jsonFields: ['tickLogic', 'statModifiers', 'battleHooks'] },
+            { folder: 'dialogues', model: 'dialogueTemplate', jsonFields: ['branches', 'requirements', 'triggers'] },
+            { folder: 'buildings', model: 'buildingTemplate', jsonFields: ['upgradeTree', 'perksPerLevel', 'staffingLogic', 'maintenance'] }
         ];
 
         for (let cat of categories) {
@@ -68,10 +68,22 @@ class AssetService {
                 try {
                     const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
                     const dbData = { ...data, filePath: file.relativePath };
-                    cat.fields.forEach(f => dbData[f] = JSON.stringify(data[f] || (f.endsWith('s') ? [] : {})));
+                    cat.jsonFields.forEach(f => dbData[f] = JSON.stringify(data[f] || (f.endsWith('s') ? [] : {})));
                     await prisma[cat.model].upsert({ where: { id: data.id }, update: dbData, create: dbData });
                 } catch(e) {}
             }
+        }
+
+        // Monsters
+        const monsterFiles = this._scanDir(path.join(ASSET_ROOT, 'monsters'));
+        for (let file of monsterFiles) {
+            try {
+                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+                const catId = (data.categoryId || "misc").toLowerCase();
+                await prisma.monsterCategory.upsert({ where: { id: catId }, update: {}, create: { id: catId, name: catId.toUpperCase() } });
+                const dbData = { ...data, categoryId: catId, traits: JSON.stringify(data.traits || []), skills: JSON.stringify(data.skills || []), immunities: JSON.stringify(data.immunities || []), lootTable: JSON.stringify(data.lootTable || {}), filePath: file.relativePath };
+                await prisma.monsterTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
+            } catch(e) {}
         }
     }
 

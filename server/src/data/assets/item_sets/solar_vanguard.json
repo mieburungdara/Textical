@@ -1,0 +1,9 @@
+{
+  "id": "set_solar_vanguard",
+  "name": "Solar Vanguard",
+  "description": "Equip the relics of the sun to burn your enemies with divine fire.",
+  "setBonuses": [
+    { "count": 2, "bonus": { "fire_res": 0.2, "holy_dmg": 50 } },
+    { "count": 3, "bonus": { "trait": "trait_sun_aura" } }
+  ]
+}
