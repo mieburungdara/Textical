@@ -1,0 +1,24 @@
+{
+  "id": "eff_corrosive_burn",
+  "name": "Corrosive Burn",
+  "description": "Magic fire that eats away at armor. Deals fire damage and reduces defense every turn.",
+  "type": "DEBUFF",
+  "element": "FIRE",
+  "stackingRule": "ADD",
+  "maxStacks": 5,
+  "defaultDuration": 4,
+  "tickLogic": {
+    "interval": 1,
+    "damage_scaling": { "stat": "magic_attack", "mult": 0.2 },
+    "type": "DOT"
+  },
+  "statModifiers": {
+    "defense_mult": 0.95
+  },
+  "battleHooks": {
+    "onTurnStart": "trigger_tick_damage",
+    "onStatusApplied": "vfx_embers"
+  },
+  "iconPath": "res://assets/icons/effects/corrosive_burn.png",
+  "vfxPath": "res://assets/vfx/effects/burn_loop.tscn"
+}
