@@ -1,10 +1,17 @@
 const CombatRules = require('./combatRules');
 
 class BattleRules {
+    /**
+     * @param {Object} sim 
+     */
     constructor(sim) {
         this.sim = sim;
     }
 
+    /**
+     * @param {Object} attacker 
+     * @param {Object} defender 
+     */
     performAttack(attacker, defender) {
         const result = CombatRules.calculateDamage(attacker, defender);
         defender.takeDamage(result.damage);
@@ -20,6 +27,11 @@ class BattleRules {
         });
     }
 
+    /**
+     * @param {Object} actor 
+     * @param {Object} skill 
+     * @param {Object} targetPos 
+     */
     performSkill(actor, skill, targetPos) {
         actor.consumeMana(skill.mana_cost || 0);
         actor.skillCooldowns[skill.id] = skill.cooldown || 3;
@@ -31,7 +43,7 @@ class BattleRules {
         affectedTiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (victim && victim.teamId !== actor.teamId) {
-                const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0);
+                const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0, skill.element || 0);
                 victim.takeDamage(result.damage);
                 hitIds.push(victim.instanceId);
                 individualHits[victim.instanceId] = result.damage;

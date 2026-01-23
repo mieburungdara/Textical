@@ -2,6 +2,9 @@ const Stat = require('./stat');
 const StatModifier = require('./statModifier');
 
 class StatProcessor {
+    /**
+     * @param {Object} heroData 
+     */
     static calculateHeroStats(heroData) {
         const stats = {
             health_max: new Stat(heroData.hp_base || 100),
@@ -16,7 +19,7 @@ class StatProcessor {
             hp_regen: new Stat(heroData.hp_regen || 0),
             mana_regen: new Stat(heroData.mana_regen || 2),
             block_chance: new Stat(heroData.block_chance || 0),
-            // Elemental Resistances (1.0 = Neutral)
+            // ELEMENTAL RESISTANCES (1.0 = Neutral)
             res_fire: new Stat(heroData.res_fire || 1.0),
             res_water: new Stat(heroData.res_water || 1.0),
             res_wind: new Stat(heroData.res_wind || 1.0),
@@ -37,8 +40,6 @@ class StatProcessor {
             if (job.mana_mult) stats.mana_max.addModifier(new StatModifier(job.mana_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
             if (job.speed_mult) stats.speed.addModifier(new StatModifier(job.speed_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
             if (job.range_bonus) stats.attack_range.addModifier(new StatModifier(job.range_bonus, StatModifier.Type.FLAT, "Job"));
-            
-            // Critical and Dodge Job Bonuses
             if (job.crit_mult) stats.crit_chance.addModifier(new StatModifier(job.crit_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
             if (job.dodge_mult) stats.dodge_rate.addModifier(new StatModifier(job.dodge_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
         }
@@ -61,21 +62,14 @@ class StatProcessor {
 
         const result = {};
         for (let key in stats) {
-            // Get raw value for non-integer stats (resistances, chances)
+            // For float-based stats, we use a specialized getter or handle here
             if (key.startsWith("res_") || key.includes("chance") || key.includes("rate") || key.includes("damage")) {
-                // For floats, we might want to keep the precision
+                // Get value without floor for multipliers
                 result[key] = stats[key].modifiers.length > 0 ? stats[key].getValue() : stats[key].baseValue;
-                // Note: getValue() floors the result. For float stats, we should use a different method.
             } else {
                 result[key] = stats[key].getValue();
             }
         }
-        
-        // Re-fix: Stat.getValue() uses Math.floor. We need a way to get float values for multipliers.
-        // Let's modify Stat.js or handle it here. 
-        // For now, let's just make sure resistances are handled correctly.
-        result["res_fire"] = stats["res_fire"].baseValue; // simplified for now
-        
         return result;
     }
 }

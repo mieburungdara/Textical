@@ -1,6 +1,10 @@
 const EasyStar = require('easystarjs');
 
 class BattleGrid {
+    /**
+     * @param {number} width 
+     * @param {number} height 
+     */
     constructor(width, height) {
         this.width = width;
         this.height = height;
@@ -17,6 +21,9 @@ class BattleGrid {
         this.easystar.setTileCost(3, 5.0); // Lava
     }
 
+    /**
+     * @param {Array} units 
+     */
     updateObstacles(units) {
         this.easystar.removeAllAdditionalPoints();
         units.forEach(u => {
@@ -24,6 +31,11 @@ class BattleGrid {
         });
     }
 
+    /**
+     * @param {Object} start 
+     * @param {Object} target 
+     * @param {Function} callback 
+     */
     findPath(start, target, callback) {
         this.easystar.stopAvoidingAdditionalPoint(start.x, start.y);
         this.easystar.findPath(start.x, start.y, target.x, target.y, callback);
@@ -31,15 +43,28 @@ class BattleGrid {
         this.easystar.avoidAdditionalPoint(start.x, start.y);
     }
 
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     */
     isTileOccupied(x, y) {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height) return true;
         return this.unitGrid[y][x] !== null;
     }
 
+    /**
+     * @param {Object} p1 
+     * @param {Object} p2 
+     */
     getDistance(p1, p2) {
         return Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
     }
 
+    /**
+     * @param {Object} center 
+     * @param {string} pattern 
+     * @param {number} size 
+     */
     getTilesInPattern(center, pattern, size) {
         const tiles = [center];
         if (pattern === "SQUARE") {

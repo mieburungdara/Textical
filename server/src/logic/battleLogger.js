@@ -3,6 +3,13 @@ class BattleLogger {
         this.logs = [];
     }
 
+    /**
+     * @param {number} tick 
+     * @param {string} type 
+     * @param {string} message 
+     * @param {Array} units 
+     * @param {Object} data 
+     */
     addEntry(tick, type, message, units, data = {}) {
         const states = {};
         units.forEach(u => {
@@ -23,6 +30,9 @@ class BattleLogger {
         });
     }
 
+    /**
+     * @returns {Array}
+     */
     getLogs() {
         return this.logs;
     }

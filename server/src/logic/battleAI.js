@@ -1,8 +1,14 @@
 class BattleAI {
+    /**
+     * @param {Object} sim 
+     */
     constructor(sim) {
         this.sim = sim;
     }
 
+    /**
+     * @param {Object} actor 
+     */
     decideAction(actor) {
         // Cooldowns
         for (let skillId in actor.skillCooldowns) { 
@@ -44,6 +50,9 @@ class BattleAI {
         }
     }
 
+    /**
+     * @param {Object} actor 
+     */
     findTarget(actor) {
         const enemies = this.sim.units.filter(u => !u.isDead && u.teamId !== actor.teamId);
         if (enemies.length === 0) return null;
@@ -61,6 +70,10 @@ class BattleAI {
         }
     }
 
+    /**
+     * @param {Object} actor 
+     * @param {number} dist 
+     */
     getBestUsableSkill(actor, dist) {
         if (!actor.data.skills) return null;
         return actor.data.skills.find(s => 
@@ -70,6 +83,10 @@ class BattleAI {
         );
     }
 
+    /**
+     * @param {Object} actor 
+     * @param {Object} target 
+     */
     moveTowards(actor, target) {
         this.sim.grid.findPath(actor.gridPos, target.gridPos, (path) => {
             if (path && path.length > 1) {
@@ -96,6 +113,10 @@ class BattleAI {
         });
     }
 
+    /**
+     * @param {Object} actor 
+     * @param {Object} enemy 
+     */
     executeFlee(actor, enemy) {
         const neighbors = [
             {x:0,y:1},{x:0,y:-1},{x:1,y:0},{x:-1,y:0},

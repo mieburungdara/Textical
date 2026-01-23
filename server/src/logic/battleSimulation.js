@@ -5,6 +5,10 @@ const BattleRules = require('./battleRules');
 const BattleAI = require('./battleAI');
 
 class BattleSimulation {
+    /**
+     * @param {number} width 
+     * @param {number} height 
+     */
     constructor(width, height) {
         this.width = width;
         this.height = height;
@@ -23,6 +27,12 @@ class BattleSimulation {
         this.ai = new BattleAI(this);
     }
 
+    /**
+     * @param {Object} data 
+     * @param {number} teamId 
+     * @param {Object} pos 
+     * @param {Object} stats 
+     */
     addUnit(data, teamId, pos, stats) {
         const safeX = Math.max(0, Math.min(this.width - 1, pos.x));
         const safeY = Math.max(0, Math.min(this.height - 1, pos.y));
