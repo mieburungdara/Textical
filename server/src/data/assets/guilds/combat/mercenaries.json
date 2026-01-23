@@ -1,0 +1,22 @@
+{
+  "id": "gt_mercenary_01",
+  "name": "Steel Aegis Mercenaries",
+  "description": "A guild for those who live by the sword. Focuses on physical combat and bounty hunting.",
+  "basePerks": {
+    "gold_gain_mult": 1.2,
+    "physical_damage_mult": 1.05,
+    "potion_cost_reduction": 0.1
+  },
+  "progressionTree": [
+    { "level": 2, "unlock": "guild_vault", "desc": "Shared storage for members" },
+    { "level": 10, "unlock": "training_grounds", "desc": "+10% EXP for low level heroes" },
+    { "level": 25, "unlock": "mercenary_contract", "desc": "Access to high-gold guild missions" }
+  ],
+  "creationReqs": {
+    "gold_cost": 5000,
+    "min_fame": 100,
+    "min_heroes": 5
+  },
+  "primaryColor": "#b0bec5",
+  "iconPath": "res://assets/icons/guilds/mercenary_shield.png"
+}

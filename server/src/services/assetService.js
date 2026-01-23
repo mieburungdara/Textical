@@ -13,7 +13,23 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files...");
         
-        // 1. Load Global Events (Ultra Complex)
+        // 1. Load Guild Templates (NEW)
+        const guildFiles = this._scanDir(path.join(ASSET_ROOT, 'guilds'));
+        for (let file of guildFiles) {
+            try {
+                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+                const dbData = {
+                    ...data,
+                    basePerks: JSON.stringify(data.basePerks || {}),
+                    progressionTree: JSON.stringify(data.progressionTree || []),
+                    creationReqs: JSON.stringify(data.creationReqs || {}),
+                    filePath: file.relativePath
+                };
+                await prisma.guildTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
+            } catch(e) { console.error(`Guild Load Fail: ${file.fullPath}`, e.message); }
+        }
+
+        // 2. Load Global Events
         const eventFiles = this._scanDir(path.join(ASSET_ROOT, 'events'));
         for (let file of eventFiles) {
             try {
@@ -29,7 +45,7 @@ class AssetService {
             } catch(e) { console.error(`Event Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 2. Load Quests
+        // 3. Load Quests
         const questFiles = this._scanDir(path.join(ASSET_ROOT, 'quests'));
         for (let file of questFiles) {
             try {
@@ -45,7 +61,7 @@ class AssetService {
             } catch(e) { console.error(`Quest Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 3. Load Classes
+        // 4. Load Classes
         const classFiles = this._scanDir(path.join(ASSET_ROOT, 'classes'));
         for (let file of classFiles) {
             try {
@@ -65,7 +81,7 @@ class AssetService {
             } catch(e) { console.error(`Class Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 4. Load Monsters
+        // 5. Load Monsters
         const monsterFiles = this._scanDir(path.join(ASSET_ROOT, 'monsters'));
         for (let file of monsterFiles) {
             try {

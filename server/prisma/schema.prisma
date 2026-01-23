@@ -1,4 +1,4 @@
-// AAA Deep World Event System Schema
+// AAA Deep Guild & Organization System Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,8 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... (User, Hero, HOF, Inventory, Quests, Items remain consistent) ...
-
+// 1. CORE USER & ACCOUNT
 model User {
   id            String   @id @default(uuid())
   username      String   @unique
@@ -17,44 +16,81 @@ model User {
   gold          Int      @default(500)
   fame          Int      @default(0)
   currentRegion String   @default("starting_village")
+  
+  // Relations
   heroes        Hero[]
   inventory     InventoryItem[]
+  
+  // GUILD MEMBERSHIP
+  guildId       String?
+  guild         Guild?   @relation(fields: [guildId], references: [id])
+  guildRole     String   @default("MEMBER") // MASTER, OFFICER, MEMBER
 }
 
-// --- NEW: GLOBAL EVENT SYSTEM ---
+// 2. GUILD INSTANCE (Actual guilds created by players)
+model Guild {
+  id              String @id @default(uuid())
+  name            String @unique
+  description     String?
+  
+  // Template relation (Determines starting perks and flavor)
+  templateId      String
+  template        GuildTemplate @relation(fields: [templateId], references: [id])
+  
+  level           Int    @default(1)
+  exp             Int    @default(0)
+  vaultGold       Int    @default(0)
+  
+  // JSON data for unlocked perks and built facilities
+  unlockedPerks   String @default("[]")
+  facilities      String @default("{}")
+  
+  members         User[]
+  createdAt       DateTime @default(now())
+}
+
+// --- NEW: GUILD TEMPLATE (The Blueprint) ---
+model GuildTemplate {
+  id              String @id
+  name            String // e.g., "Mercenary Company", "Arcane Circle"
+  description     String
+  
+  // 1. Initial Bonuses (JSON)
+  // e.g., {"gold_gain_mult": 1.1, "combat_exp_mult": 1.05}
+  basePerks       String @default("{}")
+  
+  // 2. Progression Tree (JSON Array)
+  // e.g., [{"level": 5, "unlock": "guild_bank"}, {"level": 10, "unlock": "shared_buff_str"}]
+  progressionTree String @default("[]")
+  
+  // 3. Requirements to Create (JSON)
+  // e.g., {"gold_cost": 10000, "min_fame": 500, "min_user_level": 25}
+  creationReqs    String @default("{}")
+  
+  // 4. Flavor & Color
+  primaryColor    String @default("#ffffff")
+  iconPath        String @default("res://assets/icons/guilds/default.png")
+  
+  filePath        String @default("guilds/misc.json")
+  
+  guilds          Guild[] // Relation back to instances
+}
+
+// --- PRESERVED MASTER TABLES ---
+
 model GlobalEventTemplate {
   id              String @id
   name            String
   description     String
-  category        String @default("WEATHER") // SEASON, INVASION, HOLIDAY, BONUS, WEATHER
-  
-  // 1. Activation & Timing
-  // e.g., "always", "random_chance", "scheduled"
+  category        String @default("WEATHER")
   triggerType     String @default("SCHEDULED")
-  
-  // 2. World Modifiers (JSON)
-  // Multipliers for the entire world or specific region
-  // e.g., {"exp_mult": 2.0, "spawn_rate_mult": 1.5, "move_cost_mult": 1.2}
   worldModifiers  String @default("{}")
-  
-  // 3. Combat & Stat Modifiers (JSON)
-  // e.g., {"fire_damage_mult": 0.5, "lightning_damage_mult": 1.5} (Rain effect)
   combatModifiers String @default("{}")
-  
-  // 4. Special Event Entities (JSON Array)
-  // Unique monsters or NPCs that appear ONLY during this event
-  // e.g., [{"monsterId": "boss_headless_horseman", "spawnChance": 0.05}]
   specialSpawns   String @default("[]")
-  
-  // 5. Scope
-  // e.g., "GLOBAL" or a specific regionId like "whispering_forest"
   targetScope     String @default("GLOBAL")
-  
   iconPath        String @default("res://assets/icons/events/default.png")
   filePath        String @default("events/misc.json")
 }
-
-// --- PRESERVED MASTER TABLES ---
 
 model QuestTemplate {
   id              String @id
@@ -119,16 +155,6 @@ model ItemSet {
   items           ItemTemplate[]
 }
 
-model ItemAffix {
-  id              String @id
-  name            String
-  type            String @default("PREFIX")
-  modifiers       String @default("{}")
-  allowedCategories String @default("[]")
-  minItemLevel      Int    @default(1)
-  rarity            String @default("COMMON")
-}
-
 model Hero {
   id          String @id @default(uuid())
   userId      String
@@ -155,7 +181,7 @@ model Hero {
   hasReproduced Boolean @default(false)
   fatherId      String?
   motherId      String?
-  generation    Int      @default(1)
+  generation  Int      @default(1)
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
 }
