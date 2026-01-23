@@ -2,42 +2,79 @@ const userRepository = require('../repositories/userRepository');
 const math = require('mathjs');
 
 class EconomyService {
-    static COPPER_PER_GOLD = 100;
+    /**
+     * Base-100 Progression
+     * 100 Copper   = 1 Silver
+     * 100 Silver   = 1 Gold
+     * 100 Gold     = 1 Platinum
+     * 100 Platinum = 1 Mithril
+     */
+    static CONVERSION_RATE = 100;
+
+    static TIERS = ['copper', 'silver', 'gold', 'platinum', 'mithril'];
 
     /**
-     * Converts Gold to Copper
+     * Converts a specific amount from one tier to another.
+     * @param {Int} userId 
+     * @param {String} fromTier - e.g., 'gold'
+     * @param {String} toTier - e.g., 'copper'
+     * @param {Int} amount 
      */
-    async convertGoldToCopper(userId, goldAmount) {
-        const user = await userRepository.findById(userId);
-        if (user.gold < goldAmount) throw new Error("Insufficient Gold.");
+    async convertCurrency(userId, fromTier, toTier, amount) {
+        const fromIdx = EconomyService.TIERS.indexOf(fromTier.toLowerCase());
+        const toIdx = EconomyService.TIERS.indexOf(toTier.toLowerCase());
 
-        const copperGained = math.multiply(goldAmount, EconomyService.COPPER_PER_GOLD);
+        if (fromIdx === -1 || toIdx === -1) throw new Error("Invalid currency tier.");
         
-        return await userRepository.update(userId, {
-            gold: math.subtract(user.gold, goldAmount),
-            copper: math.add(user.copper, copperGained)
-        });
+        const user = await userRepository.findById(userId);
+        if (user[fromTier] < amount) throw new Error(`Insufficient ${fromTier}.`);
+
+        let updatedData = { ...user };
+        delete updatedData.id;
+        delete updatedData.heroes;
+        delete updatedData.inventory;
+        // Clean up other relations for prisma update
+        ['listings', 'guild', 'achievements', 'recipes', 'activeQuests'].forEach(k => delete updatedData[k]);
+
+        // Calculate distance
+        const diff = toIdx - fromIdx;
+        const multiplier = math.pow(EconomyService.CONVERSION_RATE, Math.abs(diff));
+
+        if (diff > 0) {
+            // Converting UP (e.g., Copper to Silver)
+            if (amount < multiplier) throw new Error(`Minimum ${multiplier} ${fromTier} required to get 1 ${toTier}.`);
+            const gained = math.floor(math.divide(amount, multiplier));
+            const used = math.multiply(gained, multiplier);
+            
+            updatedData[fromTier] = math.subtract(user[fromTier], used);
+            updatedData[toTier] = math.add(user[toTier], gained);
+        } else {
+            // Converting DOWN (e.g., Gold to Silver)
+            const gained = math.multiply(amount, multiplier);
+            
+            updatedData[fromTier] = math.subtract(user[fromTier], amount);
+            updatedData[toTier] = math.add(user[toTier], gained);
+        }
+
+        return await userRepository.update(userId, updatedData);
     }
 
     /**
-     * Converts Copper to Gold (The "Banker" logic)
+     * Utility to check if a user can afford a total cost in Copper equivalent.
+     * Useful for complex pricing.
      */
-    async convertCopperToGold(userId, copperAmount) {
-        if (copperAmount < EconomyService.COPPER_PER_GOLD) {
-            throw new Error(`Minimum conversion is ${EconomyService.COPPER_PER_GOLD} Copper.`);
-        }
+    async canAffordInCopper(user, totalCopperCost) {
+        const userTotal = this.getTotalValueInCopper(user);
+        return userTotal >= totalCopperCost;
+    }
 
-        const user = await userRepository.findById(userId);
-        if (user.copper < copperAmount) throw new Error("Insufficient Copper.");
-
-        const goldGained = math.floor(math.divide(copperAmount, EconomyService.COPPER_PER_GOLD));
-        const copperRemaining = math.mod(copperAmount, EconomyService.COPPER_PER_GOLD);
-        const actualCopperUsed = math.subtract(copperAmount, copperRemaining);
-
-        return await userRepository.update(userId, {
-            gold: math.add(user.gold, goldGained),
-            copper: math.subtract(user.copper, actualCopperUsed)
-        });
+    getTotalValueInCopper(user) {
+        let total = math.bignumber(user.copper);
+        total = math.add(total, math.multiply(user.silver, 100));
+        total = math.add(total, math.multiply(user.gold, 10000));
+        total = math.add(total, math.multiply(user.platinum, 1000000));
+        total = math.add(total, math.multiply(user.mithril, 100000000));
+        return total;
     }
 }
 

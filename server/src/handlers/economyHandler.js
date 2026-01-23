@@ -5,20 +5,18 @@ class EconomyHandler {
     async handleConvert(ws, request) {
         try {
             const user = await userRepository.findByUsername(request.account);
-            let updatedUser;
-
-            if (request.direction === "G2C") {
-                updatedUser = await economyService.convertGoldToCopper(user.id, request.amount);
-            } else if (request.direction === "C2G") {
-                updatedUser = await economyService.convertCopperToGold(user.id, request.amount);
-            } else {
-                throw new Error("Invalid conversion direction.");
-            }
+            
+            const updatedUser = await economyService.convertCurrency(
+                user.id, 
+                request.from, 
+                request.to, 
+                request.amount
+            );
 
             ws.send(JSON.stringify({ 
                 type: "login_success", 
                 user: updatedUser,
-                message: "Currency converted successfully!" 
+                message: `Converted ${request.amount} ${request.from} into ${request.to}!` 
             }));
         } catch (e) {
             ws.send(JSON.stringify({ type: "error", message: e.message }));

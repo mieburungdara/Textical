@@ -1,4 +1,4 @@
-// AAA Final Absolute Master Schema
+// AAA 5-Tier Currency Master Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,9 +16,12 @@ model User {
   username      String   @unique
   password      String
   
-  // CURRENCIES
-  gold          Int      @default(500)
+  // 5-TIER CURRENCY SYSTEM
   copper        Int      @default(0)
+  silver        Int      @default(0)
+  gold          Int      @default(5)   // Starting with 5 Gold
+  platinum      Int      @default(0)
+  mithril       Int      @default(0)
   
   fame          Int      @default(0)
   currentRegion Int      @default(1)
@@ -26,18 +29,16 @@ model User {
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
-  
   guildId       Int?
   guild         Guild?   @relation(fields: [guildId], references: [id])
   guildRole     String   @default("MEMBER")
-  
   achievements  UserAchievement[]
   recipes       UserRecipe[]
   activeQuests  UserQuest[]
 }
 
 // ==========================================
-// 2. TEMPLATES (Master Data)
+// TEMPLATES & INSTANCE DATA (Preserved)
 // ==========================================
 
 model RegionTemplate {
@@ -56,7 +57,6 @@ model RegionTemplate {
   backgroundPath  String   @default("res://assets/backgrounds/default.png")
   musicTrack      String   @default("default_theme")
   filePath        String   @default("regions/misc.json")
-  
   buildings       BuildingInstance[]
 }
 
@@ -72,7 +72,6 @@ model BuildingTemplate {
   iconPath        String   @default("res://assets/icons/buildings/default.png")
   modelPath       String   @default("")
   filePath        String   @default("buildings/misc.json")
-  
   instances       BuildingInstance[]
 }
 
@@ -114,7 +113,6 @@ model QuestTemplate {
   requiredRegion  Int?
   iconPath        String   @default("res://assets/icons/quests/default.png")
   filePath        String   @default("quests/misc.json")
-  
   objectives      QuestObjective[]
   userQuests      UserQuest[]
 }
@@ -127,7 +125,6 @@ model QuestObjective {
   targetId        Int      
   amount          Int      @default(1)
   description     String
-  
   userProgress    UserQuestObjective[]
 }
 
@@ -145,7 +142,6 @@ model ClassTemplate {
   nextClasses     String   @default("[]")
   iconPath        String   @default("res://assets/icons/classes/default.png")
   filePath        String   @default("classes/misc.json")
-  
   heroes          Hero[]
 }
 
@@ -168,7 +164,6 @@ model ItemTemplate {
   rarity          String @default("COMMON")
   iconPath        String @default("res://assets/icons/items/default.png")
   filePath        String @default("items/misc.json")
-  
   instances       InventoryItem[]
   marketListings  MarketListing[]
 }
@@ -189,16 +184,6 @@ model ItemSetBonus {
   statModifiers   String   @default("{}")
 }
 
-model ItemAffix {
-  id              Int      @id
-  name            String
-  type            String @default("PREFIX")
-  modifiers       String @default("{}")
-  allowedCategories String @default("[]")
-  minItemLevel      Int    @default(1)
-  rarity            String @default("COMMON")
-}
-
 model GuildTemplate {
   id              Int      @id
   name            String
@@ -209,7 +194,6 @@ model GuildTemplate {
   primaryColor    String   @default("#ffffff")
   iconPath        String   @default("res://assets/icons/guilds/default.png")
   filePath        String   @default("guilds/misc.json")
-  
   guilds          Guild[]
 }
 
@@ -228,7 +212,6 @@ model TraitTemplate {
   iconPath        String   @default("res://assets/icons/traits/default.png")
   vfxPath         String   @default("")
   filePath        String   @default("traits/misc.json")
-  
   heroes          HeroTrait[]
 }
 
@@ -242,7 +225,6 @@ model BehaviourTemplate {
   cohesionWeight  Float    @default(0.5)
   requirements    String   @default("{}") 
   filePath        String   @default("behaviors/misc.json")
-  
   heroes          HeroBehavior[]
 }
 
@@ -258,7 +240,6 @@ model JobTemplate {
   passiveBonuses  String   @default("{}")
   iconPath        String   @default("res://assets/icons/jobs/default.png")
   filePath        String   @default("jobs/misc.json")
-  
   workers         Hero[]
 }
 
@@ -315,7 +296,6 @@ model AchievementTemplate {
   iconPath        String   @default("res://assets/icons/achievements/default.png")
   vfxPath         String   @default("")
   filePath        String   @default("achievements/misc.json")
-  
   users           UserAchievement[]
 }
 
@@ -371,7 +351,6 @@ model RecipeTemplate {
   requiredBuildingId Int? 
   baseSuccessRate Float    @default(1.0)
   filePath        String   @default("recipes/misc.json")
-  
   ingredients     RecipeIngredient[]
   learnedBy       UserRecipe[]
 }
@@ -390,9 +369,7 @@ model RaceBonusTemplate {
   filePath    String   @default("races/misc.json")
 }
 
-// ==========================================
-// 3. INSTANCE DATA (User Created)
-// ==========================================
+// 3. INSTANCE DATA
 
 model Hero {
   id          Int      @id @default(autoincrement())
@@ -403,28 +380,22 @@ model Hero {
   gender      String   @default("MALE")
   level       Int      @default(1)
   exp         Int      @default(0)
-  
   classId     Int      @default(1001)
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
-  
   jobId       Int?
   job         JobTemplate? @relation(fields: [jobId], references: [id])
   jobLevel    Int      @default(1)
   jobExp      Int      @default(0)
   jobRank     String   @default("APPRENTICE")
-
   baseStats         String @default("{}")
   activeBehavior    Int    @default(6001)
   deeds             String @default("{}")
-  
   hasReproduced Boolean @default(false)
   fatherId      Int?
   motherId      Int?
   generation    Int      @default(1)
-
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
-  
   traits      HeroTrait[]
   behaviors   HeroBehavior[]
 }
@@ -458,7 +429,6 @@ model InventoryItem {
   sockets     String   @default("[]")
   isEquipped  Boolean  @default(false)
   ownerHeroId Int?
-  
   marketListing MarketListing?
 }
 
