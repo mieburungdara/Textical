@@ -1,4 +1,4 @@
-// AAA Final Absolute Master Schema
+// AAA High-Performance Numeric ID Master Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,21 +8,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========================================== 
+// ==========================================
 // 1. CORE USER & ACCOUNT
-// ========================================== 
+// ==========================================
 model User {
-  id            String   @id @default(uuid())
+  id            Int      @id @default(autoincrement())
   username      String   @unique
   password      String
   gold          Int      @default(500)
   fame          Int      @default(0)
-  currentRegion String   @default("starting_village")
+  currentRegion Int      @default(1) // Default to region ID 1
   
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
-  guildId       String?
+  guildId       Int?
   guild         Guild?   @relation(fields: [guildId], references: [id])
   guildRole     String   @default("MEMBER")
   
@@ -30,17 +30,17 @@ model User {
   recipes       UserRecipe[]
 }
 
-// ========================================== 
+// ==========================================
 // 2. TEMPLATES (Static Data / Assets)
-// ========================================== 
+// ==========================================
 
 model RegionTemplate {
-  id              String @id
+  id              Int      @id // Numeric ID (e.g., 1, 2, 3)
   name            String
   description     String
   type            String   @default("TOWN")
   coordinates     String   @default("{\"x\": 0, \"y\": 0}")
-  connections     String   @default("[]")
+  connections     String   @default("[]") // JSON Array of Int IDs
   environment     String   @default("{}")
   economy         String   @default("{}")
   resourceYield   String   @default("[]")
@@ -55,7 +55,7 @@ model RegionTemplate {
 }
 
 model BuildingTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
   category        String   @default("ECONOMY")
@@ -71,181 +71,181 @@ model BuildingTemplate {
 }
 
 model GlobalEventTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("WEATHER")
-  triggerType     String @default("SCHEDULED")
-  worldModifiers  String @default("{}")
-  combatModifiers String @default("{}")
-  specialSpawns   String @default("[]")
-  targetScope     String @default("GLOBAL")
-  iconPath        String @default("res://assets/icons/events/default.png")
-  filePath        String @default("events/misc.json")
+  category        String   @default("WEATHER")
+  triggerType     String   @default("SCHEDULED")
+  worldModifiers  String   @default("{}")
+  combatModifiers String   @default("{}")
+  specialSpawns   String   @default("[]")
+  targetScope     String   @default("GLOBAL")
+  iconPath        String   @default("res://assets/icons/events/default.png")
+  filePath        String   @default("events/misc.json")
 }
 
 model QuestTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("SIDE")
-  difficulty      String @default("NORMAL")
-  minLevel        Int    @default(1)
-  prerequisiteQuestId String?
-  objectives      String @default("[]")
-  logicBranches   String @default("{}")
-  rewards         String @default("{}")
-  isTimeLimited   Boolean @default(false)
-  expiryHours     Int     @default(0)
-  requiredRegion  String?
-  iconPath        String @default("res://assets/icons/quests/default.png")
-  filePath        String @default("quests/misc.json")
+  category        String   @default("SIDE")
+  difficulty      String   @default("NORMAL")
+  minLevel        Int      @default(1)
+  prerequisiteQuestId Int?
+  objectives      String   @default("[]")
+  logicBranches   String   @default("{}")
+  rewards         String   @default("{}")
+  isTimeLimited   Boolean  @default(false)
+  expiryHours     Int      @default(0)
+  requiredRegion  Int?
+  iconPath        String   @default("res://assets/icons/quests/default.png")
+  filePath        String   @default("quests/misc.json")
 }
 
 model ClassTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  tier            Int    @default(1)
-  statSystem      String @default("{}")
-  masteries       String @default("{}")
-  mechanics       String @default("{}")
-  skillTree       String @default("[]")
-  innateTraits    String @default("[]")
-  promotionReqs   String @default("{}")
-  nextClasses     String @default("[]")
-  iconPath        String @default("res://assets/icons/classes/default.png")
-  filePath        String @default("classes/misc.json")
+  tier            Int      @default(1)
+  statSystem      String   @default("{}")
+  masteries       String   @default("{}")
+  mechanics       String   @default("{}")
+  skillTree       String   @default("[]")
+  innateTraits    String   @default("[]")
+  promotionReqs   String   @default("{}")
+  nextClasses     String   @default("[]")
+  iconPath        String   @default("res://assets/icons/classes/default.png")
+  filePath        String   @default("classes/misc.json")
   
   heroes          Hero[]
 }
 
 model ItemTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("EQUIPMENT")
-  subCategory     String @default("MISC")
-  baseDurability  Int    @default(100)
-  repairCostPerPt Int    @default(1)
-  baseStats       String @default("{}")
-  requirements    String @default("{}")
-  maxSockets      Int    @default(0)
-  allowedSockets  String @default("[]")
-  setId           String?
+  category        String   @default("EQUIPMENT")
+  subCategory     String   @default("MISC")
+  baseDurability  Int      @default(100)
+  repairCostPerPt Int      @default(1)
+  baseStats       String   @default("{}")
+  requirements    String   @default("{}")
+  maxSockets      Int      @default(0)
+  allowedSockets  String   @default("[]")
+  setId           Int?
   itemSet         ItemSet? @relation(fields: [setId], references: [id])
-  isCraftable     Boolean @default(true)
-  salvageResult   String @default("[]")
-  rarity          String @default("COMMON")
-  iconPath        String @default("res://assets/icons/items/default.png")
-  filePath        String @default("items/misc.json")
+  isCraftable     Boolean  @default(true)
+  salvageResult   String   @default("[]")
+  rarity          String   @default("COMMON")
+  iconPath        String   @default("res://assets/icons/items/default.png")
+  filePath        String   @default("items/misc.json")
   
   instances       InventoryItem[]
   marketListings  MarketListing[]
 }
 
 model ItemSet {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  setBonuses      String @default("[]")
+  setBonuses      String   @default("[]")
   items           ItemTemplate[]
 }
 
 model ItemAffix {
-  id              String @id
+  id              Int      @id
   name            String
-  type            String @default("PREFIX")
-  modifiers       String @default("{}")
+  type            String   @default("PREFIX")
+  modifiers       String   @default("{}")
   allowedCategories String @default("[]")
-  minItemLevel      Int    @default(1)
-  rarity            String @default("COMMON")
+  minItemLevel      Int      @default(1)
+  rarity            String   @default("COMMON")
 }
 
 model GuildTemplate {
-  id              String @id
+  id              Int      @id
   name            String
-  description     String
-  basePerks       String @default("{}")
-  progressionTree String @default("[]")
-  creationReqs    String @default("{}")
-  primaryColor    String @default("#ffffff")
-  iconPath        String @default("res://assets/icons/guilds/default.png")
-  filePath        String @default("guilds/misc.json")
+  description     String?
+  basePerks       String   @default("{}")
+  progressionTree String   @default("[]")
+  creationReqs    String   @default("{}")
+  primaryColor    String   @default("#ffffff")
+  iconPath        String   @default("res://assets/icons/guilds/default.png")
+  filePath        String   @default("guilds/misc.json")
   
   guilds          Guild[]
 }
 
 model JobTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("COLLECTION")
-  workStats       String @default("{}")
-  lootTable       String @default("[]")
-  toolAccess      String @default("{}")
-  masteryRewards  String @default("{}")
-  passiveBonuses  String @default("{}")
-  iconPath        String @default("res://assets/icons/jobs/default.png")
-  filePath        String @default("jobs/misc.json")
+  category        String   @default("COLLECTION")
+  workStats       String   @default("{}")
+  lootTable       String   @default("[]")
+  toolAccess      String   @default("{}")
+  masteryRewards  String   @default("{}")
+  passiveBonuses  String   @default("{}")
+  iconPath        String   @default("res://assets/icons/jobs/default.png")
+  filePath        String   @default("jobs/misc.json")
   
   workers         Hero[]
 }
 
 model SkillTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("ATTACK")
-  element         String @default("NEUTRAL")
-  manaCost        Int    @default(0)
-  staminaCost     Int    @default(0)
-  healthCost      Int    @default(0)
-  cooldown        Int    @default(3)
-  castTime        Int    @default(0)
-  damageFormula   String @default("{}")
-  targetType      String @default("ENEMY")
-  aoePattern      String @default("SINGLE")
-  aoeSize         Int    @default(0)
-  range           Int    @default(1)
-  statusEffects   String @default("[]")
-  vfxPath         String @default("")
-  animationName   String @default("attack")
-  requirements    String @default("{}")
-  filePath        String @default("skills/misc.json")
+  category        String   @default("ATTACK")
+  element         String   @default("NEUTRAL")
+  manaCost        Int      @default(0)
+  staminaCost     Int      @default(0)
+  healthCost      Int      @default(0)
+  cooldown        Int      @default(3)
+  castTime        Int      @default(0)
+  damageFormula   String   @default("{}")
+  targetType      String   @default("ENEMY")
+  aoePattern      String   @default("SINGLE")
+  aoeSize         Int      @default(0)
+  range           Int      @default(1)
+  statusEffects   String   @default("[]")
+  vfxPath         String   @default("")
+  animationName   String   @default("attack")
+  requirements    String   @default("{}")
+  filePath        String   @default("skills/misc.json")
 }
 
 model TraitTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("GENERAL")
-  type            String @default("NATURAL")
-  rarity          String @default("COMMON")
-  statModifiers   String @default("{}")
-  elementalMods   String @default("{}")
-  battleHooks     String @default("{}")
-  requirements    String @default("{}")
-  conflicts       String @default("[]")
-  iconPath        String @default("res://assets/icons/traits/default.png")
-  vfxPath         String @default("")
-  filePath        String @default("traits/misc.json")
+  category        String   @default("GENERAL")
+  type            String   @default("NATURAL")
+  rarity          String   @default("COMMON")
+  statModifiers   String   @default("{}")
+  elementalMods   String   @default("{}")
+  battleHooks     String   @default("{}")
+  requirements    String   @default("{}")
+  conflicts       String   @default("[]")
+  iconPath        String   @default("res://assets/icons/traits/default.png")
+  vfxPath         String   @default("")
+  filePath        String   @default("traits/misc.json")
 }
 
 model BehaviourTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  targetWeights   String @default("{}")
-  movementStyle   String @default("BALANCED")
-  tacticTriggers  String @default("[]")
-  cohesionWeight  Float  @default(0.5)
-  requirements    String @default("{}") 
-  filePath        String @default("behaviors/misc.json")
+  targetWeights   String   @default("{}")
+  movementStyle   String   @default("BALANCED")
+  tacticTriggers  String   @default("[]")
+  cohesionWeight  Float    @default(0.5)
+  requirements    String   @default("{}") 
+  filePath        String   @default("behaviors/misc.json")
 }
 
 model StatusEffectTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
   type            String   @default("DEBUFF")
@@ -263,30 +263,30 @@ model StatusEffectTemplate {
 }
 
 model DialogueTemplate {
-  id              String @id
+  id              Int      @id
   npcId           String
   content         String
-  branches        String @default("[]")
-  requirements    String @default("{}")
-  triggers        String @default("[]")
-  mood            String @default("NEUTRAL")
-  portraitPath    String @default("")
-  filePath        String @default("dialogues/misc.json")
+  branches        String   @default("[]")
+  requirements    String   @default("{}")
+  triggers        String   @default("[]")
+  mood            String   @default("NEUTRAL")
+  portraitPath    String   @default("")
+  filePath        String   @default("dialogues/misc.json")
 }
 
 model RecipeTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
   category        String   @default("SMITHING")
-  resultItemId    String
+  resultItemId    Int
   resultQuantity  Int      @default(1)
   ingredients     String   @default("[]")
   goldCost        Int      @default(0)
   requiredFame    Int      @default(0)
-  requiredJobId   String?  
+  requiredJobId   Int?
   minJobLevel     Int      @default(1)
-  requiredBuildingId String? 
+  requiredBuildingId Int? 
   baseSuccessRate Float    @default(1.0)
   filePath        String   @default("recipes/misc.json")
   
@@ -294,31 +294,31 @@ model RecipeTemplate {
 }
 
 model AchievementTemplate {
-  id              String @id
+  id              Int      @id
   name            String
   description     String
-  category        String @default("GENERAL")
-  points          Int    @default(10)
-  requirements    String @default("{}")
-  rewards         String @default("{}")
-  isHidden        Boolean @default(false)
-  iconPath        String @default("res://assets/icons/achievements/default.png")
-  vfxPath         String @default("")
-  filePath        String @default("achievements/misc.json")
+  category        String   @default("GENERAL")
+  points          Int      @default(10)
+  requirements    String   @default("{}")
+  rewards         String   @default("{}")
+  isHidden        Boolean  @default(false)
+  iconPath        String   @default("res://assets/icons/achievements/default.png")
+  vfxPath         String   @default("")
+  filePath        String   @default("achievements/misc.json")
   
   users           UserAchievement[]
 }
 
 model MonsterCategory {
-  id        String @id
+  id        Int      @id // Numeric ID
   name      String
   monsters  MonsterTemplate[]
 }
 
 model MonsterTemplate {
-  id          String @id
+  id          Int      @id
   name        String
-  categoryId  String
+  categoryId  Int
   category    MonsterCategory @relation(fields: [categoryId], references: [id])
   hp_base     Int
   damage_base Int
@@ -326,77 +326,82 @@ model MonsterTemplate {
   speed_base  Int
   range_base  Int
   exp_reward  Int
-  element     String @default("NEUTRAL")
-  size        String @default("MEDIUM")
-  traits      String @default("[]")
-  skills      String @default("[]")
-  immunities  String @default("[]")
-  lootTable   String @default("{}")
-  filePath    String @default("monsters/misc.json") 
+  element     String   @default("NEUTRAL")
+  size        String   @default("MEDIUM")
+  traits      String   @default("[]")
+  skills      String   @default("[]")
+  immunities  String   @default("[]")
+  lootTable   String   @default("{}")
+  filePath    String   @default("monsters/misc.json") 
 }
 
 model RaceBonusTemplate {
-  id          String @id
+  id          Int      @id
   bonusData   String 
-  filePath    String @default("races/misc.json")
+  filePath    String   @default("races/misc.json")
 }
 
-// ========================================== 
+// ==========================================
 // 3. INSTANCE DATA (User Progress)
-// ========================================== 
+// ==========================================
 
 model Hero {
-  id          String @id @default(uuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
   name        String
   race        String
   gender      String   @default("MALE")
   level       Int      @default(1)
   exp         Int      @default(0)
-  classId     String   @default("class_novice")
+  
+  classId     Int      @default(1) // Default Novice Class ID
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   classTier   Int      @default(1)
-  jobId       String?
+  
+  jobId       Int?
   job         JobTemplate? @relation(fields: [jobId], references: [id])
   jobLevel    Int      @default(1)
   jobExp      Int      @default(0)
   jobRank     String   @default("APPRENTICE")
+
   baseStats         String @default("{}")
   naturalTraits     String @default("[]")
   acquiredTraits    String @default("[]")
   unlockedBehaviors String @default("[]")
   activeBehavior    String @default("balanced")
   deeds             String @default("{}")
+  
   hasReproduced Boolean @default(false)
-  fatherId      String?
-  motherId      String?
+  fatherId      Int?
+  motherId      Int?
   generation    Int      @default(1)
+
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
 }
 
 model InventoryItem {
-  id          String @id @default(uuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
-  templateId  String
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  templateId  Int
   template    ItemTemplate @relation(fields: [templateId], references: [id])
-  quantity    Int    @default(1)
+  quantity    Int      @default(1)
   currentDurability Int  @default(100)
-  uniqueData  String @default("{}")
-  sockets     String @default("[]")
-  isEquipped  Boolean @default(false)
-  ownerHeroId String?
+  uniqueData  String   @default("{}")
+  sockets     String   @default("[]")
+  isEquipped  Boolean  @default(false)
+  ownerHeroId Int?
   
   marketListing MarketListing?
 }
 
 model BuildingInstance {
-  id              String @id @default(uuid())
-  regionId        String
+  id              Int      @id @default(autoincrement())
+  regionId        Int
   region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      String
+  templateId      Int
   template        BuildingTemplate @relation(fields: [templateId], references: [id])
   level           Int      @default(1)
   instanceData    String   @default("{}")
@@ -404,23 +409,23 @@ model BuildingInstance {
 }
 
 model Guild {
-  id              String @id @default(uuid())
-  name            String @unique
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
   description     String?
-  templateId      String
+  templateId      Int
   template        GuildTemplate @relation(fields: [templateId], references: [id])
-  level           Int    @default(1)
-  exp             Int    @default(0)
-  vaultGold       Int    @default(0)
-  unlockedPerks   String @default("[]")
-  facilities      String @default("{}")
+  level           Int      @default(1)
+  exp             Int      @default(0)
+  vaultGold       Int      @default(0)
+  unlockedPerks   String   @default("[]")
+  facilities      String   @default("{}")
   members         User[]
   createdAt       DateTime @default(now())
 }
 
 model HallOfFame {
-  id          String @id @default(uuid())
-  originalId  String
+  id          Int      @id @default(autoincrement())
+  originalId  Int
   ownerName   String
   name        String
   race        String
@@ -434,12 +439,12 @@ model HallOfFame {
 }
 
 model MarketListing {
-  id              String   @id @default(uuid())
-  sellerId        String
+  id              Int      @id @default(autoincrement())
+  sellerId        Int
   seller          User     @relation(fields: [sellerId], references: [id])
-  templateId      String
+  templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  itemInstanceId  String   @unique
+  itemInstanceId  Int      @unique
   itemInstance    InventoryItem @relation(fields: [itemInstanceId], references: [id])
   quantity        Int      @default(1)
   pricePerUnit    Int
@@ -450,38 +455,38 @@ model MarketListing {
 }
 
 model MarketHistory {
-  id              String   @id @default(uuid())
-  templateId      String
+  id              Int      @id @default(autoincrement())
+  templateId      Int
   quantity        Int
   soldPrice       Int
   taxPaid         Int      @default(0)
   soldAt          DateTime @default(now())
-  buyerId         String
-  sellerId        String
+  buyerId         Int
+  sellerId        Int
 }
 
 model UserAchievement {
-  id            String @id @default(uuid())
-  userId        String
-  user          User   @relation(fields: [userId], references: [id])
-  achievementId String
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  achievementId Int
   achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
-  progress      Int    @default(0)
-  isUnlocked    Boolean @default(false)
+  progress      Int      @default(0)
+  isUnlocked    Boolean  @default(false)
   unlockedAt    DateTime?
   @@unique([userId, achievementId])
 }
 
 model UserRecipe {
-  id            String @id @default(uuid())
-  userId        String
-  user          User   @relation(fields: [userId], references: [id])
-  recipeId      String
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  recipeId      Int
   recipe        RecipeTemplate @relation(fields: [recipeId], references: [id])
-  craftCount    Int    @default(0)
-  masteryLevel  Int    @default(1)
-  masteryExp    Int    @default(0)
-  isDiscovered  Boolean @default(true)
+  craftCount    Int      @default(0)
+  masteryLevel  Int      @default(1)
+  masteryExp    Int      @default(0)
+  isDiscovered  Boolean  @default(true)
   unlockedAt    DateTime @default(now())
   @@unique([userId, recipeId])
 }

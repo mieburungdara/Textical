@@ -1,5 +1,5 @@
 {
-  "id": "class_novice",
+  "id": 1001,
   "name": "Novice",
   "description": "A beginner embarking on their journey.",
   "tier": 1,
@@ -18,6 +18,6 @@
   "skillTree": [],
   "innateTraits": [],
   "promotionReqs": {},
-  "nextClasses": ["class_warrior", "class_mage", "class_archer"],
+  "nextClasses": [1002, 1003],
   "iconPath": "res://assets/icons/classes/novice.png"
 }
