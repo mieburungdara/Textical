@@ -1,6 +1,7 @@
 const userRepository = require('../repositories/userRepository');
 const heroRepository = require('../repositories/heroRepository');
 const inventoryRepository = require('../repositories/inventoryRepository');
+const repairService = require('../services/repairService'); // NEW
 
 class InventoryHandler {
     async handleEquip(ws, request) {
@@ -40,6 +41,30 @@ class InventoryHandler {
 
             const updatedUser = await userRepository.findByUsername(request.account);
             ws.send(JSON.stringify({ type: "login_success", user: updatedUser }));
+        } catch (e) {
+            ws.send(JSON.stringify({ type: "error", message: e.message }));
+        }
+    }
+
+    /**
+     * AAA REPAIR LOGIC:
+     * Restores item durability in exchange for Gold.
+     */
+    async handleRepair(ws, request) {
+        try {
+            const user = await userRepository.findByUsername(request.account);
+            const item = await inventoryRepository.findItemById(request.itemId, user.id);
+            
+            if (!item) throw new Error("Item not found.");
+
+            const result = await repairService.repair(user, item);
+            
+            const updatedUser = await userRepository.findByUsername(request.account);
+            ws.send(JSON.stringify({ 
+                type: "login_success", 
+                user: updatedUser,
+                message: `Item repaired for ${result.cost} Gold.`
+            }));
         } catch (e) {
             ws.send(JSON.stringify({ type: "error", message: e.message }));
         }

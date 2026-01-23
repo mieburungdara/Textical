@@ -16,17 +16,26 @@ class InventoryRepository {
     }
 
     async findItemById(itemId, userId) {
-        return await prisma.inventoryItem.findFirst({ where: { id: itemId, userId } });
+        return await prisma.inventoryItem.findFirst({
+            where: { id: itemId, userId },
+            include: { template: true }
+        });
     }
 
-    /**
-     * Transfers an item instance to a new user.
-     */
     async updateOwner(itemId, newUserId) {
         return await prisma.inventoryItem.update({
             where: { id: itemId },
             data: { userId: newUserId, isEquipped: false, ownerHeroId: null }
         });
+    }
+
+    async updateQuantity(itemId, quantity) {
+        if (quantity <= 0) return await prisma.inventoryItem.delete({ where: { id: itemId } });
+        return await prisma.inventoryItem.update({ where: { id: itemId }, data: { quantity } });
+    }
+
+    async updateDurability(itemId, durability) {
+        return await prisma.inventoryItem.update({ where: { id: itemId }, data: { currentDurability: durability } });
     }
 }
 

@@ -59,6 +59,7 @@ wss.on('connection', (ws) => {
                 case "travel": await worldHandler.handleTravel(ws, request); break;
                 case "equip_item": await inventoryHandler.handleEquip(ws, request); break;
                 case "unequip_item": await inventoryHandler.handleUnequip(ws, request); break;
+                case "repair_item": await inventoryHandler.handleRepair(ws, request); break;
                 case "breed_heroes": await breedingHandler.handleBreed(ws, request); break;
                 case "start_battle": await battleHandler.handleStartBattle(ws, request); break;
                 case "create_guild": await guildHandler.handleCreateGuild(ws, request); break;
