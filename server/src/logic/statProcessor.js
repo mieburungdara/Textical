@@ -1,11 +1,12 @@
 const Stat = require('./stat');
 const StatModifier = require('./statModifier');
 const raceBonuses = require('../data/race_bonuses.json');
+const Registry = require('../data/registry');
 
 class StatProcessor {
     /**
-     * Professional Stat Processor supporting 20+ races and complex multipliers.
-     * @param {Object} heroData 
+     * AAA-Grade Comprehensive Stat Processor.
+     * Rigorously calculates all modifiers from Base, Potentials, Race, Traits, Jobs, and Equipment.
      */
     static calculateHeroStats(heroData) {
         const stats = {
@@ -34,63 +35,68 @@ class StatProcessor {
             }
         };
 
-        // 1. Potentials (Flat)
+        // --- THE MASTER STAT MAP (Covers all possible bonus keys from data files) ---
+        const masterMap = {
+            // Percent Multipliers (Input 1.5 means +50%)
+            hp_mult: ['health_max', StatModifier.Type.PERCENT_ADD],
+            damage_mult: ['attack_damage', StatModifier.Type.PERCENT_ADD],
+            speed_mult: ['speed', StatModifier.Type.PERCENT_ADD],
+            defense_mult: ['defense', StatModifier.Type.PERCENT_ADD],
+            mana_mult: ['mana_max', StatModifier.Type.PERCENT_ADD],
+            dodge_mult: ['dodge_rate', StatModifier.Type.PERCENT_ADD],
+            crit_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
+            crit_chance_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
+            crit_damage_mult: ['crit_damage', StatModifier.Type.PERCENT_ADD],
+            
+            // Flat Bonuses
+            range_bonus: ['attack_range', StatModifier.Type.FLAT],
+            mana_regen_bonus: ['mana_regen', StatModifier.Type.FLAT],
+            hp_regen_bonus: ['hp_regen', StatModifier.Type.FLAT],
+            res_fire_bonus: ['res_fire', StatModifier.Type.FLAT],
+            res_water_bonus: ['res_water', StatModifier.Type.FLAT],
+            res_wind_bonus: ['res_wind', StatModifier.Type.FLAT],
+            res_earth_bonus: ['res_earth', StatModifier.Type.FLAT],
+            res_lightning_bonus: ['res_lightning', StatModifier.Type.FLAT]
+        };
+
+        // 1. Potentials (Always Flat)
         applyMod('health_max', heroData.hp_bonus, StatModifier.Type.FLAT, "Potential");
         applyMod('attack_damage', heroData.damage_bonus, StatModifier.Type.FLAT, "Potential");
         applyMod('speed', heroData.speed_bonus, StatModifier.Type.FLAT, "Potential");
 
-        // 2. Race Bonuses (Comprehensive)
+        // Helper to process a data object using the masterMap
+        const processDataMap = (dataSource, sourceLabel) => {
+            Object.entries(masterMap).forEach(([key, [target, type]]) => {
+                if (dataSource[key] !== undefined) {
+                    const val = (type === StatModifier.Type.PERCENT_ADD) ? (dataSource[key] - 1.0) : dataSource[key];
+                    applyMod(target, val, type, sourceLabel);
+                }
+            });
+        };
+
+        // 2. Race Bonuses
         if (heroData.race && raceBonuses[heroData.race]) {
-            const race = raceBonuses[heroData.race];
-            const raceMap = {
-                hp_mult: ['health_max', StatModifier.Type.PERCENT_ADD],
-                damage_mult: ['attack_damage', StatModifier.Type.PERCENT_ADD],
-                speed_mult: ['speed', StatModifier.Type.PERCENT_ADD],
-                defense_mult: ['defense', StatModifier.Type.PERCENT_ADD],
-                mana_mult: ['mana_max', StatModifier.Type.PERCENT_ADD],
-                dodge_mult: ['dodge_rate', StatModifier.Type.PERCENT_ADD],
-                crit_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
-                crit_chance_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
-                crit_damage_mult: ['crit_damage', StatModifier.Type.PERCENT_ADD],
-                range_bonus: ['attack_range', StatModifier.Type.FLAT],
-                mana_regen_bonus: ['mana_regen', StatModifier.Type.FLAT],
-                hp_regen_bonus: ['hp_regen', StatModifier.Type.FLAT],
-                res_fire_bonus: ['res_fire', StatModifier.Type.FLAT]
-            };
-
-            Object.entries(raceMap).forEach(([key, [target, type]]) => {
-                if (race[key] !== undefined) {
-                    const val = (type === StatModifier.Type.PERCENT_ADD) ? (race[key] - 1.0) : race[key];
-                    applyMod(target, val, type, "Race");
-                }
-            });
+            processDataMap(raceBonuses[heroData.race], `Race:${heroData.race}`);
         }
 
-        // 3. Job Multipliers
+        // 3. Trait Bonuses (Natural & Acquired)
+        const allTraits = [...(heroData.naturalTraits || []), ...(heroData.acquiredTraits || [])];
+        allTraits.forEach(traitId => {
+            const traitData = Registry.TRAITS[traitId];
+            if (traitData && traitData.bonuses) {
+                processDataMap(traitData.bonuses, `Trait:${traitData.name}`);
+            }
+        });
+
+        // 4. Job Multipliers
         if (heroData.current_job) {
-            const job = heroData.current_job;
-            const jobMap = {
-                hp_mult: ['health_max', StatModifier.Type.PERCENT_ADD],
-                damage_mult: ['attack_damage', StatModifier.Type.PERCENT_ADD],
-                mana_mult: ['mana_max', StatModifier.Type.PERCENT_ADD],
-                speed_mult: ['speed', StatModifier.Type.PERCENT_ADD],
-                range_bonus: ['attack_range', StatModifier.Type.FLAT],
-                crit_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
-                dodge_mult: ['dodge_rate', StatModifier.Type.PERCENT_ADD]
-            };
-
-            Object.entries(jobMap).forEach(([key, [target, type]]) => {
-                if (job[key] !== undefined) {
-                    const val = (type === StatModifier.Type.PERCENT_ADD) ? (job[key] - 1.0) : job[key];
-                    applyMod(target, val, type, "Job");
-                }
-            });
+            processDataMap(heroData.current_job, `Job:${heroData.current_job.id || 'Active'}`);
         }
 
-        // 4. Equipment
+        // 5. Equipment (Flat based on Item Data)
         if (heroData.equipment) {
             Object.values(heroData.equipment).forEach(item => {
-                const bonuses = item?.data?.stat_bonuses;
+                const bonuses = item?.data?.stat_bonuses || item?.stat_bonuses;
                 if (!bonuses) return;
                 Object.entries(bonuses).forEach(([sName, val]) => {
                     const target = sName === "hp_max" ? "health_max" : sName;
@@ -99,7 +105,9 @@ class StatProcessor {
             });
         }
 
+        // 6. Final Export
         return Object.fromEntries(Object.entries(stats).map(([k, s]) => {
+            // Keep float precision for percentages and resistances
             const isFloat = k.startsWith("res_") || k.includes("chance") || k.includes("rate") || k.includes("damage");
             return [k, (isFloat && s.modifiers.length === 0) ? s.baseValue : s.getValue()];
         }));

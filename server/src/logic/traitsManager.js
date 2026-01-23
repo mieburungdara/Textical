@@ -1,59 +1,42 @@
 /**
- * Professional AAA-Grade Traits Manager
- * Comprehensive Life-Cycle Hooks.
+ * AAA-Grade Trait Manager
+ * Standardized Hook Names for BattleRules.
  */
 class TraitsManager {
     constructor() {
         this.traits = {
             "vampire": {
-                onAfterAttack: (attacker, defender, result, sim) => {
-                    if (result.damage > 0) {
-                        const heal = Math.floor(result.damage * 0.30);
+                onLifesteal: (attacker, damage, sim) => {
+                    if (damage > 0) {
+                        const heal = Math.floor(damage * 0.30);
                         attacker.currentHealth = Math.min(attacker.stats.health_max, attacker.currentHealth + heal);
                         sim.logger.addEntry(sim.currentTick, "HEAL", `${attacker.data.name} leeches life`, sim.units, { actor_id: attacker.instanceId, amount: heal });
                     }
                 }
             },
+            "slime": {
+                onDeath: (unit, sim) => {
+                    if (!unit.data.is_mini) this._handleSlimeSplit(unit, sim);
+                }
+            },
             "orc": {
                 onKill: (attacker, victim, sim) => {
-                    // Bloodlust: Gain 20 Action Points on kill to act faster again
                     attacker.currentActionPoints += 20.0;
                     sim.logger.addEntry(sim.currentTick, "VFX", `${attacker.data.name} is energized by blood!`, sim.units, { actor_id: attacker.instanceId, vfx: "bloodlust" });
                 }
             },
-            "angel": {
-                onTurnEnd: (unit, sim) => {
-                    // Holy Aura: Heal nearby allies for 5% of their max HP
-                    const allies = sim.units.filter(u => !u.isDead && u.teamId === unit.teamId && u !== unit);
-                    allies.forEach(ally => {
-                        if (sim.grid.getDistance(unit.gridPos, ally.gridPos) <= 2) {
-                            const heal = Math.floor(ally.stats.health_max * 0.05);
-                            ally.currentHealth = Math.min(ally.stats.health_max, ally.currentHealth + heal);
-                            sim.logger.addEntry(sim.currentTick, "HEAL", `${unit.data.name}'s Holy Aura`, sim.units, { actor_id: ally.instanceId, amount: heal });
-                        }
-                    });
-                }
-            },
-            "slime": {
-                onDeath: (unit, sim) => {
-                    if (!unit.data.is_mini) this._handleSlimeSplit(unit, sim);
-                },
-                onMoveEnd: (unit, sim) => {
-                    // Leaves a trail of MUD (ID 1)
-                    sim.grid.terrainGrid[unit.gridPos.y][unit.gridPos.x] = 1;
-                }
-            },
-            "demon": {
+            "skeleton": {
                 onTurnStart: (unit, sim) => {
-                    // Demonic Pact: Lose 2% HP, gain 10% more Damage for this turn
-                    const sacrifice = Math.floor(unit.currentHealth * 0.02);
-                    unit.takeDamage(sacrifice);
-                    return { temporaryDamageMult: 1.10 };
-                }
-            },
-            "automaton": {
-                onTakeDamage: (victim, amount, sim) => {
-                    return { finalDamage: Math.max(1, amount - 5) };
+                    unit.activeEffects = unit.activeEffects.filter(e => e.type !== "poison" && e.type !== "burn");
+                },
+                onBeforeDeath: (unit, sim) => {
+                    if (!unit.data.did_revive && Math.random() < 0.20) {
+                        unit.currentHealth = 1;
+                        unit.data.did_revive = true;
+                        sim.logger.addEntry(sim.currentTick, "VFX", `${unit.data.name} refused to die!`, sim.units, { actor_id: unit.instanceId, vfx: "revive" });
+                        return true; // Cancel death
+                    }
+                    return false;
                 }
             }
         };
@@ -76,8 +59,7 @@ class TraitsManager {
             if (!sim.grid.isTileOccupied(pos.x, pos.y)) {
                 const miniStats = { ...parent.stats };
                 miniStats.health_max = Math.floor(parent.stats.health_max * 0.4);
-                const child = sim.addUnit({ ...parent.data, name: `Mini ${parent.data.name}`, is_mini: true, instance_id: `${parent.instanceId}_m${count}`, race: "slime" }, parent.teamId, pos, miniStats);
-                sim.logger.addEntry(sim.currentTick, "SUMMON", `${child.data.name} split from parent`, sim.units, { actor_id: child.instanceId });
+                sim.addUnit({ ...parent.data, name: `Mini ${parent.data.name}`, is_mini: true, instance_id: `${parent.instanceId}_m${count}`, race: "slime" }, parent.teamId, pos, miniStats);
                 count++;
             }
         });

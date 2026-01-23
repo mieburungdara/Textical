@@ -1,7 +1,8 @@
 class BattleUnit {
     constructor(data, teamId, pos, stats) {
         this.data = data; 
-        this.race = data.race || "human"; // NEW
+        this.race = data.race || "human";
+        this.behavior = data.activeBehavior || "balanced"; // NEW: AAA Behavior support
         this.instanceId = data.instance_id; 
         this.stats = stats; 
         this.teamId = teamId;
@@ -14,7 +15,7 @@ class BattleUnit {
         
         this.skillCooldowns = {};
         this.activeEffects = []; 
-        this.weaponTraits = []; // Aggregated from equipment
+        this.weaponTraits = [];
         
         if (data.equipment) {
             Object.values(data.equipment).forEach(item => {
