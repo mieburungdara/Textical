@@ -1,21 +1,25 @@
 const BattleSimulation = require('../logic/battleSimulation');
-const StatProcessor = require('../logic/statProcessor');
+const statService = require('./statService');
+const mapService = require('./mapService'); // NEW
 const monsters = require('../data/monsters.json');
 
 class BattleService {
-    async runSimulation(party) {
+    async runSimulation(party, dungeonId = "default") {
         const sim = new BattleSimulation(8, 10);
-        // Terrain setup
-        for (let x = 3; x <= 4; x++) for (let y = 4; y <= 6; y++) sim.grid.terrainGrid[y][x] = 3; 
+        
+        // 1. Generate Modular Map
+        sim.grid.terrainGrid = mapService.generateMap(sim.width, sim.height, dungeonId);
 
+        // 2. Add Players
         party.forEach((h, index) => {
-            const finalStats = StatProcessor.calculateHeroStats(h);
+            const finalStats = statService.calculateHeroStats(h);
             sim.addUnit({ ...h, instance_id: `p_hero_${h.id || index}` }, 0, { x: 1, y: 3 + (index * 2) }, finalStats);
         });
 
+        // 3. Add Enemies
         const enemyBlueprint = monsters["mob_orc"];
         for (let i = 0; i < 2; i++) {
-            const stats = StatProcessor.calculateHeroStats(enemyBlueprint);
+            const stats = statService.calculateHeroStats(enemyBlueprint);
             sim.addUnit({ ...enemyBlueprint, instance_id: `e_orc_${i}`, race: "orc" }, 1, { x: 6, y: 4 + (i * 2) }, stats);
         }
 
