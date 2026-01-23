@@ -1,0 +1,15 @@
+{
+  "id": "rec_refine_iron",
+  "name": "Refine Iron Ore",
+  "description": "Melt raw iron ore into pure ingots. Required for any serious smithing.",
+  "category": "REFINING",
+  "resultItemId": "itm_iron_ingot",
+  "resultQuantity": 1,
+  "ingredients": [
+    { "itemId": "item_iron_ore", "qty": 3 },
+    { "itemId": "item_coal", "qty": 1 }
+  ],
+  "goldCost": 50,
+  "requiredBuildingId": "bld_forge_01",
+  "baseSuccessRate": 1.0
+}

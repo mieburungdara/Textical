@@ -10,6 +10,7 @@ const breedingHandler = require('./handlers/breedingHandler');
 const battleHandler = require('./handlers/battleHandler');
 const worldHandler = require('./handlers/worldHandler');
 const guildHandler = require('./handlers/guildHandler'); // NEW
+const marketHandler = require('./handlers/marketHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 const dataSyncService = require('./services/dataSyncService');
 const assetService = require('./services/assetService'); // NEW
@@ -66,6 +67,9 @@ wss.on('connection', (ws) => {
                 case "start_battle": await battleHandler.handleStartBattle(ws, request); break;
                 case "create_guild": await guildHandler.handleCreateGuild(ws, request); break;
                 case "join_guild": await guildHandler.handleJoinGuild(ws, request); break;
+                case "market_fetch": await marketHandler.handleListItems(ws, request); break;
+                case "market_post": await marketHandler.handlePostListing(ws, request); break;
+                case "market_buy": await marketHandler.handleBuy(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
             }
 

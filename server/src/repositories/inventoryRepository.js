@@ -18,6 +18,16 @@ class InventoryRepository {
     async findItemById(itemId, userId) {
         return await prisma.inventoryItem.findFirst({ where: { id: itemId, userId } });
     }
+
+    /**
+     * Transfers an item instance to a new user.
+     */
+    async updateOwner(itemId, newUserId) {
+        return await prisma.inventoryItem.update({
+            where: { id: itemId },
+            data: { userId: newUserId, isEquipped: false, ownerHeroId: null }
+        });
+    }
 }
 
 module.exports = new InventoryRepository();

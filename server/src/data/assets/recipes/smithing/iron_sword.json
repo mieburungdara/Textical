@@ -1,0 +1,16 @@
+{
+  "id": "rec_craft_iron_sword",
+  "name": "Forge Iron Sword",
+  "description": "A standard reliable blade. Better than a novice stick.",
+  "category": "WEAPONSMITH",
+  "resultItemId": "itm_iron_sword",
+  "resultQuantity": 1,
+  "ingredients": [
+    { "itemId": "itm_iron_ingot", "qty": 2 },
+    { "itemId": "item_wood_stiff", "qty": 1 }
+  ],
+  "goldCost": 200,
+  "requiredBuildingId": "bld_weaponsmith_01",
+  "minJobLevel": 10,
+  "baseSuccessRate": 0.95
+}

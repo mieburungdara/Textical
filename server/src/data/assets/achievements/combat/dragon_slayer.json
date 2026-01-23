@@ -1,0 +1,19 @@
+{
+  "id": "ach_dragon_slayer_bronze",
+  "name": "Bane of Wyrms",
+  "description": "Prove your worth by defeating 100 dragons across the world.",
+  "category": "COMBAT",
+  "points": 50,
+  "requirements": {
+    "type": "KILL_COUNT",
+    "target": "dragon",
+    "amount": 100
+  },
+  "rewards": {
+    "gold": 5000,
+    "fame": 200,
+    "title": "Wyrm-Hunter"
+  },
+  "isHidden": false,
+  "iconPath": "res://assets/icons/achievements/dragon_bronze.png"
+}
