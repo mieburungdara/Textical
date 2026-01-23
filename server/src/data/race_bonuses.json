@@ -1,0 +1,22 @@
+{
+  "human": { "hp_mult": 1.05, "damage_mult": 1.05, "speed_mult": 1.05, "defense_mult": 1.05 },
+  "elf": { "speed_mult": 1.20, "range_bonus": 1 },
+  "dwarf": { "defense_mult": 1.25, "hp_mult": 1.10 },
+  "vampire": { "damage_mult": 1.15, "speed_mult": 1.10 },
+  "giant": { "hp_mult": 1.60, "damage_mult": 1.30, "speed_mult": 0.70 },
+  "orc": { "hp_mult": 1.15, "damage_mult": 1.20, "defense_mult": 0.90 },
+  "goblin": { "hp_mult": 0.80, "speed_mult": 1.15, "dodge_mult": 1.30 },
+  "angel": { "mana_mult": 1.20, "mana_regen_bonus": 5 },
+  "demon": { "damage_mult": 1.10, "crit_damage_mult": 1.25 },
+  "dragonkin": { "hp_mult": 1.15, "damage_mult": 1.15, "speed_mult": 1.15, "defense_mult": 1.15, "res_fire_bonus": 0.20 },
+  "skeleton": { "hp_mult": 0.80, "defense_mult": 1.50, "hp_regen_bonus": -10 },
+  "werewolf": { "damage_mult": 1.30, "speed_mult": 1.25, "defense_mult": 0.85 },
+  "automaton": { "defense_mult": 1.70, "mana_mult": 0.10, "speed_mult": 0.80 },
+  "fairy": { "hp_mult": 0.50, "mana_mult": 2.50, "dodge_mult": 1.50, "range_bonus": 2 },
+  "lizardman": { "hp_mult": 1.20, "defense_mult": 1.20, "speed_mult": 0.95 },
+  "dark_elf": { "damage_mult": 1.10, "crit_chance_mult": 1.50, "dodge_mult": 1.15 },
+  "slime": { "hp_mult": 2.20, "defense_mult": 0.40, "dodge_mult": 1.20 },
+  "halfling": { "dodge_mult": 1.40, "crit_mult": 1.30, "damage_mult": 0.85 },
+  "naga": { "range_bonus": 1, "speed_mult": 1.15, "mana_mult": 1.25 },
+  "cyborg": { "hp_mult": 1.10, "damage_mult": 1.10, "speed_mult": 1.10, "defense_mult": 1.10 }
+}

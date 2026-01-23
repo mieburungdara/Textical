@@ -1,0 +1,22 @@
+{
+  "brave": {
+    "name": "Brave",
+    "description": "+10% Damage when surrounded by enemies.",
+    "hooks": ["onBeforeAttack"]
+  },
+  "glass_cannon": {
+    "name": "Glass Cannon",
+    "description": "+50% DMG, -30% HP.",
+    "hooks": ["onStatCalculation"]
+  },
+  "loner": {
+    "name": "Loner",
+    "description": "+20% Evasion when no allies are nearby.",
+    "hooks": ["onTakeDamage"]
+  },
+  "giant_hunter": {
+    "name": "Giant Hunter",
+    "description": "+25% DMG against Giants.",
+    "hooks": ["onDamageCalculation"]
+  }
+}

@@ -1,15 +1,15 @@
+const _ = require('lodash');
+const { v4: uuidv4 } = require('uuid');
 const BattleUnit = require('./battleUnit');
 const BattleGrid = require('./battleGrid');
 const BattleLogger = require('./battleLogger');
 const BattleRules = require('./battleRules');
 const BattleAI = require('./battleAI');
+const TraitsManager = require('./traitsManager');
 
 class BattleSimulation {
-    /**
-     * @param {number} width 
-     * @param {number} height 
-     */
     constructor(width, height) {
+        this.battleId = uuidv4();
         this.width = width;
         this.height = height;
         this.units = [];
@@ -18,87 +18,73 @@ class BattleSimulation {
         this.winnerTeam = -1;
         this.MAX_TICKS = 1500;
         this.killedMonsterIds = [];
+        this.unitDeeds = {}; // NEW: { "p_hero_0": { "kills_orc": 5, "steps_lava": 10 } }
         this.rewards = { gold: 0, exp: 0 };
 
-        // Modular Components (Composition)
         this.grid = new BattleGrid(width, height);
         this.logger = new BattleLogger();
         this.rules = new BattleRules(this);
         this.ai = new BattleAI(this);
     }
 
-    /**
-     * @param {Object} data 
-     * @param {number} teamId 
-     * @param {Object} pos 
-     * @param {Object} stats 
-     */
     addUnit(data, teamId, pos, stats) {
-        const safeX = Math.max(0, Math.min(this.width - 1, pos.x));
-        const safeY = Math.max(0, Math.min(this.height - 1, pos.y));
-        
-        const unit = new BattleUnit(data, teamId, { x: safeX, y: safeY }, stats);
+        const unit = new BattleUnit(data, teamId, { x: _.clamp(pos.x, 0, this.width-1), y: _.clamp(pos.y, 0, this.height-1) }, stats);
         this.units.push(unit);
-        this.grid.unitGrid[safeY][safeX] = unit;
+        this.grid.unitGrid[unit.gridPos.y][unit.gridPos.x] = unit;
         return unit;
     }
 
     run() {
-        this.logger.addEntry(0, "GAME_START", "Modular Authoritative Master Engine Active!", this.units);
+        // 1. HOOK: Battle Start
+        this.units.forEach(u => TraitsManager.executeHook("onBattleStart", u, this));
+        
+        this.logger.addEntry(0, "GAME_START", `Battle [${this.battleId.substring(0,8)}] Engaged!`, this.units);
         
         while (!this.isFinished && this.currentTick < this.MAX_TICKS) {
             this.processTick();
         }
         
-        return { 
-            winner: this.winnerTeam, 
-            logs: this.logger.getLogs(), 
-            killed_monsters: this.killedMonsterIds, 
-            rewards: this.rewards 
-        };
+        return { winner: this.winnerTeam, logs: this.logger.getLogs(), killed_monsters: this.killedMonsterIds, rewards: this.rewards };
     }
 
     processTick() {
         this.currentTick++;
         
-        // 1. Update Sub-systems
+        // 2. HOOK: Tick Start
+        this.units.forEach(u => TraitsManager.executeHook("onTickStart", u, this));
+
         this.grid.updateObstacles(this.units);
         
-        // 2. Unit Maintenance
-        this.units.forEach(u => { 
+        _.forEach(this.units, (u) => { 
             if (!u.isDead) {
                 u.tick(1.0);
-                const dot = u.applyStatusDamage();
-                if (dot > 0) {
-                    this.logger.addEntry(this.currentTick, "VFX", `${u.data.name} status damage`, this.units, { 
-                        actor_id: u.instanceId, 
-                        vfx: "burn" 
-                    });
-                }
+                u.applyStatusDamage();
             }
         });
 
-        // 3. Turn Execution
-        const readyUnits = this.units
+        const readyUnits = _.chain(this.units)
             .filter(u => !u.isDead && u.isReady())
-            .sort((a, b) => b.currentActionPoints - a.currentActionPoints);
+            .orderBy(['currentActionPoints'], ['desc'])
+            .value();
 
         for (let actor of readyUnits) {
             if (actor.isDead) continue; 
             
+            // 3. HOOK: Turn Start
+            const turnMods = TraitsManager.executeHook("onTurnStart", actor, this) || {};
+            actor.tempDamageMult = turnMods.temporaryDamageMult || 1.0;
+
             this.ai.decideAction(actor);
             
+            // 19. HOOK: Turn End
+            TraitsManager.executeHook("onTurnEnd", actor, this);
+
             actor.currentActionPoints -= 100.0;
             actor.applyRegen();
-            
-            this.logger.addEntry(this.currentTick, "WAIT", `${actor.data.name} turn end`, this.units, { 
-                actor_id: actor.instanceId 
-            });
+            actor.tempDamageMult = 1.0;
             
             if (this.rules.checkWinCondition()) return;
         }
-
-        // 4. Resolve deaths at end of batch
         this.rules.resolveDeaths();
     }
 }

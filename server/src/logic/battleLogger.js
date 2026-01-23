@@ -17,7 +17,8 @@ class BattleLogger {
                 hp: u.currentHealth, 
                 mana: u.currentMana, 
                 ap: u.currentActionPoints, 
-                pos: u.gridPos 
+                // FIX: Clone the position object to prevent reference mutation
+                pos: { x: u.gridPos.x, y: u.gridPos.y } 
             };
         });
 

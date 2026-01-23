@@ -1,0 +1,84 @@
+{
+  "races": {
+    "human": {
+      "first_names": ["Aethelred", "Galen", "Silas", "Gideon", "Dante", "Arthur", "Marcus"],
+      "last_names": ["Ironfoot", "Oakheart", "Silverton", "Blackwood", "Brightwood"]
+    },
+    "elf": {
+      "first_names": ["Elowen", "Caelynn", "Idril", "Lorian", "Thalindra", "Faelivrin", "Aerith"],
+      "last_names": ["Moonwhisper", "Sunstrider", "Starleaf", "Dewshadow", "Windrunner"]
+    },
+    "dwarf": {
+      "first_names": ["Thorin", "Bram", "Gloin", "Murin", "Dwalin", "Hogar", "Urist"],
+      "last_names": ["Stonegrinder", "Deepstone", "Ironhelm", "Goldbeard", "Mountainback"]
+    },
+    "vampire": {
+      "first_names": ["Lucius", "Belladonna", "Valerius", "Carmilla", "Alucard", "Vesper", "Morticia"],
+      "last_names": ["Nightfall", "Shadowbound", "Crimsonblood", "Grimward", "VonEverec"]
+    },
+    "giant": {
+      "first_names": ["Grog", "Thrum", "Borm", "Korg", "Ymir", "Skrymir", "Golath"],
+      "last_names": ["Cloudstrider", "Stormborn", "Emberfell", "Earthshaker", "Skyrender"]
+    },
+    "orc": {
+      "first_names": ["Garosh", "Grom", "Throk", "Morg", "Urk", "Azog", "Durotan"],
+      "last_names": ["Bloodfury", "Skullcrush", "Ironwill", "Bonebreaker", "Warbringer"]
+    },
+    "goblin": {
+      "first_names": ["Snikt", "Griz", "Zeb", "Ratchet", "Gizmo", "Prik", "Stabb"],
+      "last_names": ["Quickfingers", "Backstabber", "Shadowstep", "Goldstealer", "Nosepicker"]
+    },
+    "angel": {
+      "first_names": ["Gabriel", "Uriel", "Auriel", "Tyrael", "Cassiel", "Seraph", "Ithuriel"],
+      "last_names": ["Lightbound", "Skyward", "Wingsong", "Pureheart", "Dawnherald"]
+    },
+    "demon": {
+      "first_names": ["Baal", "Mephisto", "Azazel", "Malphas", "Belial", "Xaphan", "Abaddon"],
+      "last_names": ["Hellfire", "Soulreaper", "Darkwhisper", "Voidborn", "Abyss-walker"]
+    },
+    "dragonkin": {
+      "first_names": ["Ignis", "Vermathrax", "Kalyth", "Draco", "Singe", "Valerion", "Bahamut"],
+      "last_names": ["Wyrmheart", "Scalesworn", "Firebreath", "Ancientblood", "Goldtalon"]
+    },
+    "skeleton": {
+      "first_names": ["Skully", "Bonez", "Rattle", "Marrow", "Grim", "Dryad", "Calcium"],
+      "last_names": ["Coldtouch", "Emptyribs", "Deadwalker", "Dustfoot", "Soul-less"]
+    },
+    "werewolf": {
+      "first_names": ["Fenrir", "Lupin", "Wolfgang", "Hati", "Skoll", "Remus", "Fang"],
+      "last_names": ["Moon-howler", "Silver-bane", "Wild-claw", "Blood-scent", "Forest-stalker"]
+    },
+    "automaton": {
+      "first_names": ["Unit-01", "Gearbox", "Bolt", "Spark", "Protocol", "Null", "Vector"],
+      "last_names": ["Steel-joint", "Clockwork", "Bronze-heart", "Steam-pipe", "Iron-logic"]
+    },
+    "fairy": {
+      "first_names": ["Pixie", "Tinker", "Glimmer", "Dewdrop", "Flora", "Nova", "Zarya"],
+      "last_names": ["Wing-flutter", "Dust-cloud", "Petal-fall", "Star-glow", "Dream-weaver"]
+    },
+    "lizardman": {
+      "first_names": ["Sszrak", "Krol", "Zuk", "Tizak", "Reptar", "Saurian", "Iguana"],
+      "last_names": ["Cold-scale", "Tail-whip", "Swamp-eye", "Mud-dweller", "Green-skin"]
+    },
+    "dark_elf": {
+      "first_names": ["Drizzt", "Malekith", "Viconia", "Z'rell", "Lolth", "Xas", "Nyx"],
+      "last_names": ["Spider-kin", "Abyss-gaze", "Night-blade", "Shadow-weaver", "Venom-heart"]
+    },
+    "slime": {
+      "first_names": ["Rimuru", "Goo", "Jelly", "Blob", "Ooze", "Puddles", "Squish"],
+      "last_names": ["Transparent", "Sticky-touch", "Shape-shifter", "Acid-drop", "Bouncy"]
+    },
+    "halfling": {
+      "first_names": ["Bilbo", "Frodo", "Sam", "Pippin", "Merry", "Lucky", "Penny"],
+      "last_names": ["Small-step", "Hill-dweller", "Short-stack", "Good-berry", "Light-foot"]
+    },
+    "naga": {
+      "first_names": ["Vashj", "Slither", "Coil", "Medusa", "Scylla", "Hydra", "Fang"],
+      "last_names": ["Sea-serpent", "Deep-diver", "Wave-rider", "Coral-reef", "Tide-caller"]
+    },
+    "cyborg": {
+      "first_names": ["Adam", "Eve", "Cy-01", "Interface", "Kernel", "Shell", "Process"],
+      "last_names": ["Upgrade", "Enhanced", "Beta-test", "Over-clock", "System-error"]
+    }
+  }
+}

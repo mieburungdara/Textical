@@ -1,6 +1,7 @@
 class BattleUnit {
     constructor(data, teamId, pos, stats) {
         this.data = data; 
+        this.race = data.race || "human"; // NEW
         this.instanceId = data.instance_id; 
         this.stats = stats; 
         this.teamId = teamId;
