@@ -1,5 +1,4 @@
-const Stat = require('../logic/stat');
-const StatModifier = require('../logic/statModifier');
+const { Stat, StatModifier } = require('../logic/statSystem'); // UPDATED
 const raceBonuses = require('../data/race_bonuses.json');
 const Registry = require('../data/registry');
 
@@ -42,11 +41,6 @@ class StatService {
             range_bonus: ['attack_range', StatModifier.Type.FLAT]
         };
 
-        // 1. Potentials
-        applyMod('health_max', heroData.hp_bonus, StatModifier.Type.FLAT, "Potential");
-        applyMod('attack_damage', heroData.damage_bonus, StatModifier.Type.FLAT, "Potential");
-        applyMod('speed', heroData.speed_bonus, StatModifier.Type.FLAT, "Potential");
-
         const processMap = (source, label) => {
             Object.entries(masterMap).forEach(([key, [target, type]]) => {
                 if (source[key] !== undefined) {
@@ -56,17 +50,16 @@ class StatService {
             });
         };
 
-        // 2. Race
         if (heroData.race && raceBonuses[heroData.race]) processMap(raceBonuses[heroData.race], "Race");
 
-        // 3. Traits
         const allTraits = [...(heroData.naturalTraits || []), ...(heroData.acquiredTraits || [])];
         allTraits.forEach(tid => {
             const t = Registry.TRAITS[tid];
             if (t?.bonuses) processMap(t.bonuses, `Trait:${t.name}`);
         });
 
-        // 4. Equipment
+        if (heroData.current_job) processMap(heroData.current_job, "Job");
+
         if (heroData.equipment) {
             Object.values(heroData.equipment).forEach(item => {
                 const bonuses = item?.data?.stat_bonuses || item?.stat_bonuses;
