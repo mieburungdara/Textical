@@ -1,0 +1,22 @@
+{
+  "mob_orc": {
+    "name": "Orc Grunt",
+    "hp_base": 100,
+    "damage_base": 10,
+    "defense_base": 2,
+    "speed_base": 8,
+    "range_base": 1,
+    "exp_reward": 20,
+    "color": "#ff4500"
+  },
+  "mob_wolf": {
+    "name": "Dire Wolf",
+    "hp_base": 60,
+    "damage_base": 15,
+    "defense_base": 0,
+    "speed_base": 12,
+    "range_base": 1,
+    "exp_reward": 15,
+    "color": "#708090"
+  }
+}

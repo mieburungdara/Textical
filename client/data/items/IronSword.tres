@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/core/item/equipment_data.gd" id="1_hvph1"]
+
+[resource]
+script = ExtResource("1_hvph1")
+stat_bonuses = {
+"attack_damage": 10
+}
+id = "wpn_iron_sword"
+name = "Iron Sword"
+description = "A basic blade. reliable."
+type = 1
+stackable = false
