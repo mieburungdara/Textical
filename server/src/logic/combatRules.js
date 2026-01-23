@@ -1,42 +1,35 @@
 class CombatRules {
-    static calculateDamage(attacker, defender, skillMult = 1.0, skillElement = 0) {
+    static calculateDamage(attacker, defender, skillMult = 1.0) {
         // 1. Dodge Check
-        const dodgeRate = (defender.stats.dodge_rate || 0); 
+        const dodgeRate = (defender.stats.dodge_rate || 0) / 100.0;
         if (Math.random() < dodgeRate) return { damage: 0, isHit: false, isCrit: false, message: "MISS!" };
 
         // 2. Base Damage
-        let rawDamage = (attacker.stats.attack_damage * skillMult);
-        let mitigation = defender.stats.defense || 0;
-        let damage = rawDamage - mitigation;
-
-        // 3. Critical Hit
-        const critChance = (attacker.stats.critical_chance || 0);
+        let damage = (attacker.stats.attack_damage * skillMult) - defender.stats.defense;
+        
+        // 3. Critical Hit Check (Restored Logic)
         let isCrit = false;
+        const critChance = attacker.stats.crit_chance || 0.05;
         if (Math.random() < critChance) {
             isCrit = true;
-            damage *= (attacker.stats.critical_damage || 1.5);
+            damage *= (attacker.stats.crit_damage || 1.5);
         }
 
-        // 4. ELEMENTAL RESISTANCE (FIXED: Wind sync)
-        const element = skillElement || attacker.data.element || 0;
-        let resMult = 1.0;
-        switch(element) {
-            case 1: resMult = defender.data.res_fire ?? 1.0; break;
-            case 2: resMult = defender.data.res_water ?? 1.0; break;
-            case 3: resMult = defender.data.res_wind ?? 1.0; break; // Correct key
-            case 4: resMult = defender.data.res_earth ?? 1.0; break;
-            case 5: resMult = defender.data.res_lightning ?? 1.0; break;
+        // 4. Elemental Matrix
+        const aEle = attacker.data.element || 0;
+        const dEle = defender.data.element || 0;
+        if (aEle !== 0 && dEle !== 0) {
+            if ((aEle === 1 && dEle === 2) || (aEle === 2 && dEle === 3) || (aEle === 3 && dEle === 1)) damage *= 1.5;
+            else if ((aEle === 2 && dEle === 1) || (aEle === 3 && dEle === 2) || (aEle === 1 && dEle === 3)) damage *= 0.75;
         }
-        damage *= resMult;
 
         damage = Math.floor(Math.max(1, damage));
-
-        // 5. TRAIT EFFECTS
-        let effectApplied = null;
-        if (attacker.traits && attacker.traits.includes("burn") && Math.random() < 0.3) effectApplied = "burn";
-        if (attacker.traits && attacker.traits.includes("poison") && Math.random() < 0.3) effectApplied = "poison";
-
-        return { damage, isHit, isCrit, effect: effectApplied, message: isCrit ? "CRITICAL!" : "HIT" };
+        return { 
+            damage: damage, 
+            isHit: true, 
+            isCrit: isCrit, 
+            message: isCrit ? "CRITICAL!" : "HIT" 
+        };
     }
 }
 
