@@ -3,6 +3,7 @@ class BattleAI {
      * @param {Object} sim 
      */
     constructor(sim) {
+        /** @type {Object} */
         this.sim = sim;
     }
 

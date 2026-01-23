@@ -35,11 +35,12 @@ func request_battle_from_server():
 	ServerConnector.request_battle(dungeon_id, GlobalGameManager.player_party)
 
 func _on_battle_result_received(result: Dictionary):
-	pending_rewards = result.get("rewards", {"gold": 0, "exp": 0})
-	pending_kills = result.get("killed_monsters", [])
+	# 1. Setup Terrain FIRST (CRITICAL FIX)
+	if result.has("terrain_grid"):
+		board.setup_terrain(result["terrain_grid"])
+		
 	_spawn_initial_views(result)
-	
-	await log_player.play_logs(result["logs"])
+	log_player.play_logs(result["logs"])
 	
 	_apply_rewards()
 

@@ -1,13 +1,34 @@
 class CombatRules {
-    static calculateDamage(attacker, defender, skillMult = 1.0, skillElement = 0) {
+    /**
+     * @param {Object} attacker 
+     * @param {Object} defender 
+     * @param {number} skillMult 
+     * @param {number} skillElement 
+     * @param {number} attackerTerrain (ID medan penyerang)
+     * @param {number} defenderTerrain (ID medan bertahan)
+     */
+    static calculateDamage(attacker, defender, skillMult = 1.0, skillElement = 0, attackerTerrain = 0, defenderTerrain = 0) {
         // 1. Dodge Check
-        const dodgeRate = (defender.stats.dodge_rate || 0) / 100.0;
-        if (Math.random() < dodgeRate) return { damage: 0, isHit: false, isCrit: false, message: "MISS!" };
+        let dodgeRate = (defender.stats.dodge_rate || 0);
+        
+        // TERRAIN EFFECT: Forest (5) gives +20% Evasion
+        if (defenderTerrain === 5) {
+            dodgeRate += 20;
+        }
+        
+        if (Math.random() < (dodgeRate / 100.0)) {
+            return { damage: 0, isHit: false, isCrit: false, message: "MISS!" };
+        }
 
         // 2. Base Damage
         let damage = (attacker.stats.attack_damage * skillMult) - defender.stats.defense;
         
-        // 3. Critical Hit Check
+        // TERRAIN EFFECT: Ruins (8) gives +15% Damage (High Ground)
+        if (attackerTerrain === 8) {
+            damage *= 1.15;
+        }
+
+        // 3. Critical Hit
         let isCrit = false;
         const critChance = attacker.stats.crit_chance || 0.05;
         if (Math.random() < critChance) {
@@ -15,7 +36,7 @@ class CombatRules {
             damage *= (attacker.stats.crit_damage || 1.5);
         }
 
-        // 4. Elemental Calculation using Resistances (Restored Logic)
+        // 4. Elemental Calculation
         const elementToCheck = skillElement !== 0 ? skillElement : (attacker.data.element || 0);
         let resMultiplier = 1.0;
         
@@ -28,14 +49,9 @@ class CombatRules {
         }
         damage *= resMultiplier;
 
-        // 5. Weapon Traits (Status Effects)
-        let appliedEffect = null;
-        if (attacker.weaponTraits && attacker.weaponTraits.length > 0) {
-            attacker.weaponTraits.forEach(trait => {
-                if ((trait === "burn" || trait === "poison") && Math.random() < 0.2) {
-                    appliedEffect = trait;
-                }
-            });
+        // TERRAIN EFFECT: Water (4) douses Fire (1) - Reduce fire damage by 30%
+        if (elementToCheck === 1 && defenderTerrain === 4) {
+            damage *= 0.7;
         }
 
         damage = Math.floor(Math.max(1, damage));
@@ -43,7 +59,6 @@ class CombatRules {
             damage: damage, 
             isHit: true, 
             isCrit: isCrit, 
-            effect: appliedEffect,
             message: isCrit ? "CRITICAL!" : "HIT" 
         };
     }

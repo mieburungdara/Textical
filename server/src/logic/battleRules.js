@@ -1,21 +1,17 @@
 const CombatRules = require('./combatRules');
 
 class BattleRules {
-    /**
-     * @param {Object} sim 
-     */
     constructor(sim) {
         this.sim = sim;
     }
 
-    /**
-     * @param {Object} attacker 
-     * @param {Object} defender 
-     */
     performAttack(attacker, defender) {
-        const result = CombatRules.calculateDamage(attacker, defender);
+        // Pass terrain info
+        const aTerrain = this.sim.grid.terrainGrid[attacker.gridPos.y][attacker.gridPos.x];
+        const dTerrain = this.sim.grid.terrainGrid[defender.gridPos.y][defender.gridPos.x];
+
+        const result = CombatRules.calculateDamage(attacker, defender, 1.0, 0, aTerrain, dTerrain);
         defender.takeDamage(result.damage);
-        if (result.effect) defender.activeEffects.push({ type: result.effect, duration: 3 });
 
         this.sim.logger.addEntry(this.sim.currentTick, "ATTACK", `${attacker.data.name} hit ${defender.data.name}`, this.sim.units, {
             actor_id: attacker.instanceId,
@@ -27,15 +23,11 @@ class BattleRules {
         });
     }
 
-    /**
-     * @param {Object} actor 
-     * @param {Object} skill 
-     * @param {Object} targetPos 
-     */
     performSkill(actor, skill, targetPos) {
         actor.consumeMana(skill.mana_cost || 0);
         actor.skillCooldowns[skill.id] = skill.cooldown || 3;
         
+        const aTerrain = this.sim.grid.terrainGrid[actor.gridPos.y][actor.gridPos.x];
         const affectedTiles = this.sim.grid.getTilesInPattern(targetPos, skill.aoe_pattern, skill.aoe_size);
         const hitIds = [];
         const individualHits = {};
@@ -43,18 +35,19 @@ class BattleRules {
         affectedTiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (victim && victim.teamId !== actor.teamId) {
-                const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0, skill.element || 0);
+                const dTerrain = this.sim.grid.terrainGrid[tile.y][tile.x];
+                const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0, skill.element || 0, aTerrain, dTerrain);
                 victim.takeDamage(result.damage);
                 hitIds.push(victim.instanceId);
                 individualHits[victim.instanceId] = result.damage;
-                if (result.effect) victim.activeEffects.push({ type: result.effect, duration: 3 });
             }
         });
 
         this.sim.logger.addEntry(this.sim.currentTick, "CAST_SKILL", `${actor.data.name} cast ${skill.name}`, this.sim.units, {
             actor_id: actor.instanceId,
-            target_pos: targetPos,
+            target_pos: target_pos,
             skill_name: skill.name,
+            vfx_path: skill.vfx_scene_path || "", // RESTORED
             result: { hit_ids: hitIds, individual_hits: individualHits }
         });
     }
@@ -67,10 +60,7 @@ class BattleRules {
                 if (u.teamId === 1) this.sim.killedMonsterIds.push(u.data.id);
                 this.sim.rewards.gold += 15;
                 this.sim.rewards.exp += (u.data.exp_reward || 10);
-                
-                this.sim.logger.addEntry(this.sim.currentTick, "DEATH", `${u.data.name} died`, this.sim.units, { 
-                    target_id: u.instanceId 
-                });
+                this.sim.logger.addEntry(this.sim.currentTick, "DEATH", `${u.data.name} died`, this.sim.units, { target_id: u.instanceId });
             }
         });
     }
@@ -80,9 +70,7 @@ class BattleRules {
         if (teamsAlive.size <= 1) {
             this.sim.isFinished = true;
             this.sim.winnerTeam = Array.from(teamsAlive)[0] ?? -1;
-            this.sim.logger.addEntry(this.sim.currentTick, "GAME_OVER", `Battle Finished`, this.sim.units, { 
-                winner: this.sim.winnerTeam 
-            });
+            this.sim.logger.addEntry(this.sim.currentTick, "GAME_OVER", `Battle Finished`, this.sim.units, { winner: this.sim.winnerTeam });
             return true;
         }
         return false;
