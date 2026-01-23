@@ -1,4 +1,4 @@
-// AAA Deep Town Building & Infrastructure Schema
+// AAA Deep Dialogue & Conversation Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... (User, Hero, Guild, Item, Quest, Event, Region preserved) ...
+// ... (User, Hero, Guild, Item, Quest, Event, Region, Building preserved) ...
 
 model User {
   id            String   @id @default(uuid())
@@ -17,49 +17,61 @@ model User {
   gold          Int      @default(500)
   fame          Int      @default(0)
   currentRegion String   @default("starting_village")
-  
   heroes        Hero[]
   inventory     InventoryItem[]
-  
   guildId       String?
   guild         Guild?   @relation(fields: [guildId], references: [id])
   guildRole     String   @default("MEMBER")
 }
 
-// ========================================== 
-// NEW: TOWN BUILDING SYSTEM
-// ========================================== 
+// ==========================================
+// NEW: DIALOGUE SYSTEM
+// ==========================================
+
+model DialogueTemplate {
+  id              String @id
+  npcId           String // e.g., "npc_elder_oak"
+  
+  // 1. Initial Greeting
+  content         String // The main text spoken by the NPC
+  
+  // 2. Conditional Branches (JSON Array)
+  // Options presented to the player based on requirements
+  // e.g., [{"text": "Who are you?", "next_node": "elder_intro"}, {"text": "[Brave] Face me!", "req_trait": "trait_brave", "next_node": "elder_fight"}]
+  branches        String @default("[]")
+  
+  // 3. Requirements to Trigger this Node (JSON)
+  // e.g., {"min_fame": 100, "completed_quest": "q_01", "has_item": "ancient_relic"}
+  requirements    String @default("{}")
+  
+  // 4. Action Triggers (JSON Array)
+  // What happens when this dialogue ends?
+  // e.g., [{"type": "START_QUEST", "target": "q_02"}, {"type": "GIVE_ITEM", "target": "itm_sword", "qty": 1}]
+  triggers        String @default("[]")
+  
+  // 5. Visuals & Tone
+  mood            String @default("NEUTRAL") // NEUTRAL, ANGRY, HAPPY, SAD, MYSTERIOUS
+  portraitPath    String @default("")        // Godot portrait asset path
+  
+  filePath        String @default("dialogues/misc.json")
+}
+
+// ==========================================
+// PRESERVED MASTER TABLES
+// ==========================================
 
 model BuildingTemplate {
   id              String @id
   name            String
   description     String
-  category        String   @default("ECONOMY") // ECONOMY, MILITARY, MAGIC, SOCIAL
-  
-  // 1. Upgrade Logic (JSON Array)
-  // Define costs and requirements for each level
-  // e.g., [{"level": 2, "cost": {"gold": 1000}, "req_building": "town_hall_1"}]
+  category        String   @default("ECONOMY")
   upgradeTree     String   @default("[]")
-  
-  // 2. Functional Perks (JSON Array)
-  // Define what each level provides
-  // e.g., [{"level": 5, "perk": "unlock_vampire_race"}, {"level": 10, "perk": "tax_bonus_5"}]
   perksPerLevel   String   @default("[]")
-  
-  // 3. Staffing Requirements (JSON)
-  // e.g., {"required_job": "job_miner", "min_job_level": 10}
   staffingLogic   String   @default("{}")
-  
-  // 4. Maintenance (JSON)
-  // Costs incurred per world-clock cycle
-  // e.g., {"gold_cost": 50, "materials": [{"id": "wood", "qty": 5}]}
   maintenance     String   @default("{}")
-  
-  // 5. Assets
   iconPath        String   @default("res://assets/icons/buildings/default.png")
-  modelPath       String   @default("") // Godot 3D/2D scene
+  modelPath       String   @default("")
   filePath        String   @default("buildings/misc.json")
-  
   instances       BuildingInstance[]
 }
 
@@ -67,22 +79,12 @@ model BuildingInstance {
   id              String @id @default(uuid())
   regionId        String
   region          RegionTemplate @relation(fields: [regionId], references: [id])
-  
   templateId      String
   template        BuildingTemplate @relation(fields: [templateId], references: [id])
-  
   level           Int      @default(1)
-  
-  // Dynamic State (JSON)
-  // e.g., {"is_ruined": false, "assigned_hero_ids": ["uuid1"]}
   instanceData    String   @default("{}")
-  
   createdAt       DateTime @default(now())
 }
-
-// ========================================== 
-// PRESERVED MASTER TABLES
-// ========================================== 
 
 model RegionTemplate {
   id              String @id
@@ -100,7 +102,6 @@ model RegionTemplate {
   backgroundPath  String   @default("res://assets/backgrounds/default.png")
   musicTrack      String   @default("default_theme")
   filePath        String   @default("regions/misc.json")
-  
   buildings       BuildingInstance[]
 }
 
@@ -364,7 +365,6 @@ model InventoryItem {
   user        User   @relation(fields: [userId], references: [id])
   templateId  String
   template    ItemTemplate @relation(fields: [templateId], references: [id])
-  
   quantity    Int    @default(1)
   uniqueData  String @default("{}")
   sockets     String @default("[]")

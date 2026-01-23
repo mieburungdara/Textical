@@ -1,0 +1,28 @@
+{
+  "id": "dlg_elder_intro",
+  "npcId": "npc_elder_oak",
+  "content": "Greetings, traveler. The winds carry a strange scent lately... a scent of crimson scales and ancient fire.",
+  "branches": [
+    { 
+      "text": "What do you mean by 'ancient fire'?", 
+      "next_node": "dlg_elder_dragon_lore" 
+    },
+    { 
+      "text": "[Brave] I do not fear any dragon!", 
+      "req_trait": "trait_brave",
+      "next_node": "dlg_elder_brave_reply" 
+    },
+    { 
+      "text": "I'm just passing through. (Exit)", 
+      "next_node": null 
+    }
+  ],
+  "requirements": {
+    "min_level": 5
+  },
+  "triggers": [
+    { "type": "DISCOVER_REGION", "target": "whispering_forest" }
+  ],
+  "mood": "MYSTERIOUS",
+  "portraitPath": "res://assets/portraits/elder_oak.png"
+}
