@@ -3,9 +3,11 @@ const StatModifier = require('./statModifier');
 
 class StatProcessor {
     /**
+     * Professional Stat Processor using mapping and functional patterns.
      * @param {Object} heroData 
      */
     static calculateHeroStats(heroData) {
+        // 1. Initialize Stat instances
         const stats = {
             health_max: new Stat(heroData.hp_base || 100),
             mana_max: new Stat(heroData.mana_base || 20),
@@ -19,7 +21,6 @@ class StatProcessor {
             hp_regen: new Stat(heroData.hp_regen || 0),
             mana_regen: new Stat(heroData.mana_regen || 2),
             block_chance: new Stat(heroData.block_chance || 0),
-            // ELEMENTAL RESISTANCES (1.0 = Neutral)
             res_fire: new Stat(heroData.res_fire || 1.0),
             res_water: new Stat(heroData.res_water || 1.0),
             res_wind: new Stat(heroData.res_wind || 1.0),
@@ -27,50 +28,56 @@ class StatProcessor {
             res_lightning: new Stat(heroData.res_lightning || 1.0)
         };
 
-        // 1. Potentials
-        if (heroData.hp_bonus) stats.health_max.addModifier(new StatModifier(heroData.hp_bonus, StatModifier.Type.FLAT, "Potential"));
-        if (heroData.damage_bonus) stats.attack_damage.addModifier(new StatModifier(heroData.damage_bonus, StatModifier.Type.FLAT, "Potential"));
-        if (heroData.speed_bonus) stats.speed.addModifier(new StatModifier(heroData.speed_bonus, StatModifier.Type.FLAT, "Potential"));
+        // Helper to apply modifiers cleanly
+        const applyMod = (statKey, val, type, src) => {
+            if (val != null && stats[statKey]) {
+                stats[statKey].addModifier(new StatModifier(val, type, src));
+            }
+        };
 
-        // 2. Job Multipliers
+        // 1. Apply Hero Potentials (Flat)
+        applyMod('health_max', heroData.hp_bonus, StatModifier.Type.FLAT, "Potential");
+        applyMod('attack_damage', heroData.damage_bonus, StatModifier.Type.FLAT, "Potential");
+        applyMod('speed', heroData.speed_bonus, StatModifier.Type.FLAT, "Potential");
+
+        // 2. Apply Job Multipliers (Mapped)
         if (heroData.current_job) {
             const job = heroData.current_job;
-            if (job.hp_mult) stats.health_max.addModifier(new StatModifier(job.hp_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
-            if (job.damage_mult) stats.attack_damage.addModifier(new StatModifier(job.damage_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
-            if (job.mana_mult) stats.mana_max.addModifier(new StatModifier(job.mana_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
-            if (job.speed_mult) stats.speed.addModifier(new StatModifier(job.speed_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
-            if (job.range_bonus) stats.attack_range.addModifier(new StatModifier(job.range_bonus, StatModifier.Type.FLAT, "Job"));
-            if (job.crit_mult) stats.crit_chance.addModifier(new StatModifier(job.crit_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
-            if (job.dodge_mult) stats.dodge_rate.addModifier(new StatModifier(job.dodge_mult - 1.0, StatModifier.Type.PERCENT_ADD, "Job"));
+            const jobMap = {
+                hp_mult: ['health_max', StatModifier.Type.PERCENT_ADD],
+                damage_mult: ['attack_damage', StatModifier.Type.PERCENT_ADD],
+                mana_mult: ['mana_max', StatModifier.Type.PERCENT_ADD],
+                speed_mult: ['speed', StatModifier.Type.PERCENT_ADD],
+                range_bonus: ['attack_range', StatModifier.Type.FLAT],
+                crit_mult: ['crit_chance', StatModifier.Type.PERCENT_ADD],
+                dodge_mult: ['dodge_rate', StatModifier.Type.PERCENT_ADD]
+            };
+
+            Object.entries(jobMap).forEach(([key, [target, type]]) => {
+                const val = (type === StatModifier.Type.PERCENT_ADD) ? (job[key] - 1.0) : job[key];
+                applyMod(target, val, type, "Job");
+            });
         }
 
-        // 3. Equipment
+        // 3. Apply Equipment (Loop)
         if (heroData.equipment) {
-            for (let slotId in heroData.equipment) {
-                const itemInst = heroData.equipment[slotId];
-                if (itemInst && itemInst.data && itemInst.data.stat_bonuses) {
-                    for (let sName in itemInst.data.stat_bonuses) {
-                        let targetKey = sName;
-                        if (sName === "hp_max") targetKey = "health_max";
-                        if (stats[targetKey]) {
-                            stats[targetKey].addModifier(new StatModifier(itemInst.data.stat_bonuses[sName], StatModifier.Type.FLAT, "Item"));
-                        }
-                    }
-                }
-            }
+            Object.values(heroData.equipment).forEach(item => {
+                const bonuses = item?.data?.stat_bonuses;
+                if (!bonuses) return;
+                
+                Object.entries(bonuses).forEach(([sName, val]) => {
+                    const target = sName === "hp_max" ? "health_max" : sName;
+                    applyMod(target, val, StatModifier.Type.FLAT, "Item");
+                });
+            });
         }
 
-        const result = {};
-        for (let key in stats) {
-            // For float-based stats, we use a specialized getter or handle here
-            if (key.startsWith("res_") || key.includes("chance") || key.includes("rate") || key.includes("damage")) {
-                // Get value without floor for multipliers
-                result[key] = stats[key].modifiers.length > 0 ? stats[key].getValue() : stats[key].baseValue;
-            } else {
-                result[key] = stats[key].getValue();
-            }
-        }
-        return result;
+        // 4. Transform to final values
+        return Object.fromEntries(Object.entries(stats).map(([k, s]) => {
+            const isFloat = k.startsWith("res_") || k.includes("chance") || k.includes("rate") || k.includes("damage");
+            // Preserve float precision for multipliers/chances if no modifiers exist
+            return [k, (isFloat && s.modifiers.length === 0) ? s.baseValue : s.getValue()];
+        }));
     }
 }
 
