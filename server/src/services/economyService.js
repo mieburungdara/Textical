@@ -3,22 +3,18 @@ const math = require('mathjs');
 
 class EconomyService {
     /**
-     * Base-100 Progression
-     * 100 Copper   = 1 Silver
-     * 100 Silver   = 1 Gold
-     * 100 Gold     = 1 Platinum
-     * 100 Platinum = 1 Mithril
+     * AAA Base-1000 Progression (Ideal for Idle RPG scaling)
+     * 1,000 Copper   = 1 Silver
+     * 1,000 Silver   = 1 Gold
+     * 1,000 Gold     = 1 Platinum
+     * 1,000 Platinum = 1 Mithril
      */
-    static CONVERSION_RATE = 100;
+    static CONVERSION_RATE = 1000;
 
     static TIERS = ['copper', 'silver', 'gold', 'platinum', 'mithril'];
 
     /**
-     * Converts a specific amount from one tier to another.
-     * @param {Int} userId 
-     * @param {String} fromTier - e.g., 'gold'
-     * @param {String} toTier - e.g., 'copper'
-     * @param {Int} amount 
+     * Converts a specific amount from one tier to another using Base-1000 logic.
      */
     async convertCurrency(userId, fromTier, toTier, amount) {
         const fromIdx = EconomyService.TIERS.indexOf(fromTier.toLowerCase());
@@ -33,15 +29,14 @@ class EconomyService {
         delete updatedData.id;
         delete updatedData.heroes;
         delete updatedData.inventory;
-        // Clean up other relations for prisma update
         ['listings', 'guild', 'achievements', 'recipes', 'activeQuests'].forEach(k => delete updatedData[k]);
 
-        // Calculate distance
         const diff = toIdx - fromIdx;
+        // multiplier = 1000 ^ distance
         const multiplier = math.pow(EconomyService.CONVERSION_RATE, Math.abs(diff));
 
         if (diff > 0) {
-            // Converting UP (e.g., Copper to Silver)
+            // Converting UP (e.g., 1000 Copper -> 1 Silver)
             if (amount < multiplier) throw new Error(`Minimum ${multiplier} ${fromTier} required to get 1 ${toTier}.`);
             const gained = math.floor(math.divide(amount, multiplier));
             const used = math.multiply(gained, multiplier);
@@ -49,7 +44,7 @@ class EconomyService {
             updatedData[fromTier] = math.subtract(user[fromTier], used);
             updatedData[toTier] = math.add(user[toTier], gained);
         } else {
-            // Converting DOWN (e.g., Gold to Silver)
+            // Converting DOWN (e.g., 1 Gold -> 1000 Silver)
             const gained = math.multiply(amount, multiplier);
             
             updatedData[fromTier] = math.subtract(user[fromTier], amount);
@@ -60,20 +55,15 @@ class EconomyService {
     }
 
     /**
-     * Utility to check if a user can afford a total cost in Copper equivalent.
-     * Useful for complex pricing.
+     * Calculates the absolute net worth of a user in Copper.
+     * 1 Mithril = 1,000,000,000,000 Copper.
      */
-    async canAffordInCopper(user, totalCopperCost) {
-        const userTotal = this.getTotalValueInCopper(user);
-        return userTotal >= totalCopperCost;
-    }
-
     getTotalValueInCopper(user) {
         let total = math.bignumber(user.copper);
-        total = math.add(total, math.multiply(user.silver, 100));
-        total = math.add(total, math.multiply(user.gold, 10000));
-        total = math.add(total, math.multiply(user.platinum, 1000000));
-        total = math.add(total, math.multiply(user.mithril, 100000000));
+        total = math.add(total, math.multiply(user.silver, 1000));
+        total = math.add(total, math.multiply(user.gold, 1000000));
+        total = math.add(total, math.multiply(user.platinum, 1000000000));
+        total = math.add(total, math.multiply(user.mithril, 1000000000000));
         return total;
     }
 }
