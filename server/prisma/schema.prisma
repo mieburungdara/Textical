@@ -1,4 +1,4 @@
-// AAA Deep Guild & Organization System Schema
+// AAA Deep Town Building & Infrastructure Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +8,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. CORE USER & ACCOUNT
+// ... (User, Hero, Guild, Item, Quest, Event, Region preserved) ...
+
 model User {
   id            String   @id @default(uuid())
   username      String   @unique
@@ -17,66 +18,91 @@ model User {
   fame          Int      @default(0)
   currentRegion String   @default("starting_village")
   
-  // Relations
   heroes        Hero[]
   inventory     InventoryItem[]
   
-  // GUILD MEMBERSHIP
   guildId       String?
   guild         Guild?   @relation(fields: [guildId], references: [id])
-  guildRole     String   @default("MEMBER") // MASTER, OFFICER, MEMBER
+  guildRole     String   @default("MEMBER")
 }
 
-// 2. GUILD INSTANCE (Actual guilds created by players)
-model Guild {
+// ========================================== 
+// NEW: TOWN BUILDING SYSTEM
+// ========================================== 
+
+model BuildingTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String   @default("ECONOMY") // ECONOMY, MILITARY, MAGIC, SOCIAL
+  
+  // 1. Upgrade Logic (JSON Array)
+  // Define costs and requirements for each level
+  // e.g., [{"level": 2, "cost": {"gold": 1000}, "req_building": "town_hall_1"}]
+  upgradeTree     String   @default("[]")
+  
+  // 2. Functional Perks (JSON Array)
+  // Define what each level provides
+  // e.g., [{"level": 5, "perk": "unlock_vampire_race"}, {"level": 10, "perk": "tax_bonus_5"}]
+  perksPerLevel   String   @default("[]")
+  
+  // 3. Staffing Requirements (JSON)
+  // e.g., {"required_job": "job_miner", "min_job_level": 10}
+  staffingLogic   String   @default("{}")
+  
+  // 4. Maintenance (JSON)
+  // Costs incurred per world-clock cycle
+  // e.g., {"gold_cost": 50, "materials": [{"id": "wood", "qty": 5}]}
+  maintenance     String   @default("{}")
+  
+  // 5. Assets
+  iconPath        String   @default("res://assets/icons/buildings/default.png")
+  modelPath       String   @default("") // Godot 3D/2D scene
+  filePath        String   @default("buildings/misc.json")
+  
+  instances       BuildingInstance[]
+}
+
+model BuildingInstance {
   id              String @id @default(uuid())
-  name            String @unique
-  description     String?
+  regionId        String
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
   
-  // Template relation (Determines starting perks and flavor)
   templateId      String
-  template        GuildTemplate @relation(fields: [templateId], references: [id])
+  template        BuildingTemplate @relation(fields: [templateId], references: [id])
   
-  level           Int    @default(1)
-  exp             Int    @default(0)
-  vaultGold       Int    @default(0)
+  level           Int      @default(1)
   
-  // JSON data for unlocked perks and built facilities
-  unlockedPerks   String @default("[]")
-  facilities      String @default("{}")
+  // Dynamic State (JSON)
+  // e.g., {"is_ruined": false, "assigned_hero_ids": ["uuid1"]}
+  instanceData    String   @default("{}")
   
-  members         User[]
   createdAt       DateTime @default(now())
 }
 
-// --- NEW: GUILD TEMPLATE (The Blueprint) ---
-model GuildTemplate {
-  id              String @id
-  name            String // e.g., "Mercenary Company", "Arcane Circle"
-  description     String
-  
-  // 1. Initial Bonuses (JSON)
-  // e.g., {"gold_gain_mult": 1.1, "combat_exp_mult": 1.05}
-  basePerks       String @default("{}")
-  
-  // 2. Progression Tree (JSON Array)
-  // e.g., [{"level": 5, "unlock": "guild_bank"}, {"level": 10, "unlock": "shared_buff_str"}]
-  progressionTree String @default("[]")
-  
-  // 3. Requirements to Create (JSON)
-  // e.g., {"gold_cost": 10000, "min_fame": 500, "min_user_level": 25}
-  creationReqs    String @default("{}")
-  
-  // 4. Flavor & Color
-  primaryColor    String @default("#ffffff")
-  iconPath        String @default("res://assets/icons/guilds/default.png")
-  
-  filePath        String @default("guilds/misc.json")
-  
-  guilds          Guild[] // Relation back to instances
-}
+// ========================================== 
+// PRESERVED MASTER TABLES
+// ========================================== 
 
-// --- PRESERVED MASTER TABLES ---
+model RegionTemplate {
+  id              String @id
+  name            String
+  description     String
+  type            String   @default("TOWN")
+  coordinates     String   @default("{\"x\": 0, \"y\": 0}")
+  connections     String   @default("[]")
+  environment     String   @default("{}")
+  economy         String   @default("{}")
+  resourceYield   String   @default("[]")
+  encounterPool   String   @default("[]")
+  entryReqs       String   @default("{}")
+  dangerLevel     Int      @default(1)
+  backgroundPath  String   @default("res://assets/backgrounds/default.png")
+  musicTrack      String   @default("default_theme")
+  filePath        String   @default("regions/misc.json")
+  
+  buildings       BuildingInstance[]
+}
 
 model GlobalEventTemplate {
   id              String @id
@@ -155,6 +181,44 @@ model ItemSet {
   items           ItemTemplate[]
 }
 
+model ItemAffix {
+  id              String @id
+  name            String
+  type            String @default("PREFIX")
+  modifiers       String @default("{}")
+  allowedCategories String @default("[]")
+  minItemLevel      Int    @default(1)
+  rarity            String @default("COMMON")
+}
+
+model GuildTemplate {
+  id              String @id
+  name            String
+  description     String
+  basePerks       String @default("{}")
+  progressionTree String @default("[]")
+  creationReqs    String @default("{}")
+  primaryColor    String @default("#ffffff")
+  iconPath        String @default("res://assets/icons/guilds/default.png")
+  filePath        String @default("guilds/misc.json")
+  guilds          Guild[]
+}
+
+model Guild {
+  id              String @id @default(uuid())
+  name            String @unique
+  description     String?
+  templateId      String
+  template        GuildTemplate @relation(fields: [templateId], references: [id])
+  level           Int    @default(1)
+  exp             Int    @default(0)
+  vaultGold       Int    @default(0)
+  unlockedPerks   String @default("[]")
+  facilities      String @default("{}")
+  members         User[]
+  createdAt       DateTime @default(now())
+}
+
 model Hero {
   id          String @id @default(uuid())
   userId      String
@@ -181,7 +245,7 @@ model Hero {
   hasReproduced Boolean @default(false)
   fatherId      String?
   motherId      String?
-  generation  Int      @default(1)
+  generation    Int      @default(1)
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
 }
@@ -279,15 +343,6 @@ model MonsterTemplate {
   filePath    String @default("monsters/misc.json") 
 }
 
-model RegionTemplate {
-  id          String @id
-  name        String
-  type        String 
-  description String
-  connections String 
-  filePath    String @default("regions/misc.json")
-}
-
 model HallOfFame {
   id          String @id @default(uuid())
   originalId  String
@@ -309,6 +364,7 @@ model InventoryItem {
   user        User   @relation(fields: [userId], references: [id])
   templateId  String
   template    ItemTemplate @relation(fields: [templateId], references: [id])
+  
   quantity    Int    @default(1)
   uniqueData  String @default("{}")
   sockets     String @default("[]")

@@ -1,0 +1,23 @@
+{
+  "id": "bld_tavern_01",
+  "name": "Ancient Oak Tavern",
+  "description": "The heart of the village. Heroes gather here to rest and find new employment.",
+  "category": "ECONOMY",
+  "upgradeTree": [
+    { "level": 2, "cost": { "gold": 500, "wood": 20 }, "req_fame": 10 },
+    { "level": 3, "cost": { "gold": 2000, "stone": 50 }, "req_fame": 50 }
+  ],
+  "perksPerLevel": [
+    { "level": 1, "perk": "unlock_recruitment_basic", "desc": "Can recruit Humans and Elves" },
+    { "level": 2, "perk": "unlock_recruitment_advanced", "desc": "Can recruit Dwarves and Orcs" },
+    { "level": 3, "perk": "unlock_luxury_rest", "desc": "Heroes recover Fatigue 50% faster" }
+  ],
+  "staffingLogic": {
+    "required_job": "job_innkeeper",
+    "bonus_per_staff_level": { "gold_yield": 0.05 }
+  },
+  "maintenance": {
+    "gold_cost": 10
+  },
+  "iconPath": "res://assets/icons/buildings/tavern.png"
+}
