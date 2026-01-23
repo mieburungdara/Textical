@@ -2,10 +2,8 @@ extends Node
 
 ## Singleton for managing global state, player progression, and economy.
 
-# Economy & Collection
+# Economy
 var gold: int = 500
-var owned_heroes: Array[HeroData] = []
-var inventory: Array[ItemData] = [] # Player's bag
 
 # Party & Battle State
 var player_party: Dictionary = {} # Pos (Vector2i) -> UnitData
