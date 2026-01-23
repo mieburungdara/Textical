@@ -1,22 +1,32 @@
 {
-  "mob_orc": {
+  "mob_orc_grunt": {
+    "id": "mob_orc_grunt",
+    "category": "orc",
     "name": "Orc Grunt",
-    "hp_base": 100,
-    "damage_base": 10,
-    "defense_base": 2,
-    "speed_base": 8,
-    "range_base": 1,
-    "exp_reward": 20,
-    "color": "#ff4500"
+    "hp_base": 120, "damage_base": 15, "defense_base": 5, "speed_base": 8, "range_base": 1, "exp_reward": 25
   },
-  "mob_wolf": {
-    "name": "Dire Wolf",
-    "hp_base": 60,
-    "damage_base": 15,
-    "defense_base": 0,
-    "speed_base": 12,
-    "range_base": 1,
-    "exp_reward": 15,
-    "color": "#708090"
+  "mob_orc_king": {
+    "id": "mob_orc_king",
+    "category": "orc",
+    "name": "Orc King",
+    "hp_base": 1500, "damage_base": 80, "defense_base": 40, "speed_base": 6, "range_base": 1, "exp_reward": 800
+  },
+  "mob_slime_green": {
+    "id": "mob_slime_green",
+    "category": "slime",
+    "name": "Green Slime",
+    "hp_base": 250, "damage_base": 8, "defense_base": 1, "speed_base": 5, "range_base": 1, "exp_reward": 15
+  },
+  "mob_skeleton_warrior": {
+    "id": "mob_skeleton_warrior",
+    "category": "undead",
+    "name": "Skeleton Warrior",
+    "hp_base": 90, "damage_base": 20, "defense_base": 15, "speed_base": 7, "range_base": 1, "exp_reward": 30
+  },
+  "mob_dragon_red": {
+    "id": "mob_dragon_red",
+    "category": "dragon",
+    "name": "Ancient Red Dragon",
+    "hp_base": 2500, "damage_base": 120, "defense_base": 60, "speed_base": 10, "range_base": 5, "exp_reward": 1500
   }
 }

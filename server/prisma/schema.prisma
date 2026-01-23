@@ -1,4 +1,4 @@
-// AAA World Location Schema
+// AAA Ultra-Complex Item Ecosystem Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,43 +8,256 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ... (User, Hero, HOF, Monster, Region, Trait, Behavior, Skill, Class, Job preserved) ...
+
 model User {
   id            String   @id @default(uuid())
   username      String   @unique
   password      String
   gold          Int      @default(500)
   fame          Int      @default(0)
-  
-  // NEW: Location tracking
   currentRegion String   @default("starting_village")
-  
   heroes        Hero[]
   inventory     InventoryItem[]
 }
+
+// --- NEW: THE ITEM BLUEPRINT ---
+model ItemTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("EQUIPMENT") // WEAPON, ARMOR, CONSUMABLE, MATERIAL, CURRENCY
+  subCategory     String @default("MISC")      // SWORD, STAFF, PLATE_ARMOR, CRYSTAL, STONE
+  
+  // 1. Base Stats (JSON)
+  // e.g., {"atk": 50, "spd": -2, "durability": 100}
+  baseStats       String @default("{}")
+  
+  // 2. Scaling & Mastery (JSON)
+  // e.g., {"scaling": {"str": 0.8}, "min_level": 20, "req_class": "knight"}
+  requirements    String @default("{}")
+  
+  // 3. Socketing Configuration
+  maxSockets      Int    @default(0)
+  allowedSockets  String @default("[]") // List of allowed crystal types
+  
+  // 4. Set Relation
+  setId           String?
+  itemSet         ItemSet? @relation(fields: [setId], references: [id])
+  
+  // 5. Crafting & Salvage
+  isCraftable     Boolean @default(true)
+  salvageResult   String @default("[]") // List of materials returned on dismantle
+  
+  rarity          String @default("COMMON") // COMMON, RARE, EPIC, LEGENDARY, ARTIFACT
+  iconPath        String @default("res://assets/icons/items/default.png")
+  filePath        String @default("items/misc.json")
+  
+  instances       InventoryItem[]
+}
+
+// --- NEW: ITEM SETS ---
+model ItemSet {
+  id              String @id
+  name            String
+  description     String
+  
+  // Set Bonuses (JSON Array)
+  // e.g., [{"count": 2, "bonus": {"hp": 100}}, {"count": 4, "bonus": {"trait": "dragon_breath"}}]
+  setBonuses      String @default("[]")
+  
+  items           ItemTemplate[]
+}
+
+// --- NEW: RANDOM AFFIXES (Prefix/Suffix) ---
+model ItemAffix {
+  id              String @id
+  name            String // e.g., "Flaming", "of Protection"
+  type            String @default("PREFIX") // PREFIX or SUFFIX
+  
+  // Affix Stats (JSON)
+  // e.g., {"fire_damage": 15, "crit_chance": 0.05}
+  modifiers       String @default("{}")
+  
+  // Constraints
+  allowedCategories String @default("[]") // e.g., ["WEAPON"]
+  minItemLevel      Int    @default(1)
+  rarity            String @default("COMMON")
+}
+
+// --- UPDATED: INVENTORY INSTANCE (The Actual Item Player Holds) ---
+model InventoryItem {
+  id              String @id @default(uuid())
+  userId          String
+  user            User   @relation(fields: [userId], references: [id])
+  
+  templateId      String
+  template        ItemTemplate @relation(fields: [templateId], references: [id])
+  
+  quantity        Int    @default(1)
+  
+  // DYNAMIC DATA (The "DNA" of this specific instance)
+  // e.g., {"affixes": ["affix_flaming"], "current_durability": 85, "refine_level": 5}
+  uniqueData      String @default("{}")
+  
+  // SOCKETED ITEMS (Link to other InventoryItem IDs)
+  // e.g., ["uuid_of_crystal_1", "uuid_of_crystal_2"]
+  sockets         String @default("[]")
+  
+  isEquipped      Boolean @default(false)
+  ownerHeroId     String?
+}
+
+// --- (Silsilah and other models below remain unchanged) ---
 
 model Hero {
   id          String @id @default(uuid())
   userId      String
   user        User   @relation(fields: [userId], references: [id])
-  templateId  String
   name        String
   race        String
   gender      String   @default("MALE")
   level       Int      @default(1)
   exp         Int      @default(0)
+  classId     String   @default("class_novice")
+  combatClass ClassTemplate @relation(fields: [classId], references: [id])
   classTier   Int      @default(1)
-  baseStats   String @default("{}")
-  naturalTraits    String @default("[]")
-  acquiredTraits   String @default("[]")
+  jobId       String?
+  job         JobTemplate? @relation(fields: [jobId], references: [id])
+  jobLevel    Int      @default(1)
+  jobExp      Int      @default(0)
+  jobRank     String   @default("APPRENTICE")
+  baseStats         String @default("{}")
+  naturalTraits     String @default("[]")
+  acquiredTraits    String @default("[]")
   unlockedBehaviors String @default("[]")
   activeBehavior    String @default("balanced")
-  deeds            String @default("{}")
+  deeds             String @default("{}")
   hasReproduced Boolean @default(false)
-  fatherId    String?
+  fatherId      String?
   motherId    String?
   generation  Int      @default(1)
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
+}
+
+model ClassTemplate {
+  id              String @id
+  name            String
+  description     String
+  tier            Int    @default(1)
+  statSystem      String @default("{}")
+  masteries       String @default("{}")
+  mechanics       String @default("{}")
+  skillTree       String @default("[]")
+  innateTraits    String @default("[]")
+  promotionReqs   String @default("{}")
+  nextClasses     String @default("[]")
+  iconPath        String @default("res://assets/icons/classes/default.png")
+  filePath        String @default("classes/misc.json")
+  heroes          Hero[]
+}
+
+model JobTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("COLLECTION")
+  workStats       String @default("{}")
+  lootTable       String @default("[]")
+  toolAccess      String @default("{}")
+  masteryRewards  String @default("{}")
+  passiveBonuses  String @default("{}")
+  iconPath        String @default("res://assets/icons/jobs/default.png")
+  filePath        String @default("jobs/misc.json")
+  workers         Hero[]
+}
+
+model SkillTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("ATTACK")
+  element         String @default("NEUTRAL")
+  manaCost        Int    @default(0)
+  staminaCost     Int    @default(0)
+  healthCost      Int    @default(0)
+  cooldown        Int    @default(3)
+  castTime        Int    @default(0)
+  damageFormula   String @default("{}")
+  targetType      String @default("ENEMY")
+  aoePattern      String @default("SINGLE")
+  aoeSize         Int    @default(0)
+  range           Int    @default(1)
+  statusEffects   String @default("[]")
+  vfxPath         String @default("")
+  animationName   String @default("attack")
+  requirements    String @default("{}")
+  filePath        String @default("skills/misc.json")
+}
+
+model TraitTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("GENERAL")
+  type            String @default("NATURAL")
+  rarity          String @default("COMMON")
+  statModifiers   String @default("{}")
+  elementalMods   String @default("{}")
+  battleHooks     String @default("{}")
+  requirements    String @default("{}")
+  conflicts       String @default("[]")
+  iconPath        String @default("res://assets/icons/traits/default.png")
+  vfxPath         String @default("")
+  filePath        String @default("traits/misc.json")
+}
+
+model BehaviourTemplate {
+  id              String @id
+  name            String
+  description     String
+  targetWeights   String @default("{}")
+  movementStyle   String @default("BALANCED")
+  tacticTriggers  String @default("[]")
+  cohesionWeight  Float  @default(0.5)
+  requirements    String @default("{}") 
+  filePath        String @default("behaviors/misc.json")
+}
+
+model MonsterCategory {
+  id        String @id
+  name      String
+  monsters  MonsterTemplate[]
+}
+
+model MonsterTemplate {
+  id          String @id
+  name        String
+  categoryId  String
+  category    MonsterCategory @relation(fields: [categoryId], references: [id])
+  hp_base     Int
+  damage_base Int
+  defense_base Int
+  speed_base  Int
+  range_base  Int
+  exp_reward  Int
+  element     String @default("NEUTRAL")
+  size        String @default("MEDIUM")
+  traits      String @default("[]")
+  skills      String @default("[]")
+  immunities  String @default("[]")
+  lootTable   String @default("{}")
+  filePath    String @default("monsters/misc.json") 
+}
+
+model RegionTemplate {
+  id          String @id
+  name        String
+  type        String 
+  description String
+  connections String 
+  filePath    String @default("regions/misc.json")
 }
 
 model HallOfFame {
@@ -62,12 +275,8 @@ model HallOfFame {
   causeOfDeath String
 }
 
-model InventoryItem {
-  id          String @id @default(uuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
-  templateId  String
-  quantity    Int    @default(1)
-  uniqueData  String @default("{}")
-  isEquipped  Boolean @default(false)
+model RaceBonusTemplate {
+  id          String @id
+  bonusData   String 
+  filePath    String @default("races/misc.json")
 }

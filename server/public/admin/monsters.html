@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/admin/css/style.css">
+    <title>Monsters - Admin</title>
+</head>
+<body>
+    <nav>
+        <div class="brand">🛡️ TEXTICAL</div>
+        <a href="/admin/monsters" class="nav-link active">👾 Monsters</a>
+        <a href="/admin/regions" class="nav-link">🗺️ Regions</a>
+        <a href="/admin/sync" class="nav-link">⚙️ Sync</a>
+    </nav>
+    <main>
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h2>Monster Database</h2>
+            <button class="btn-primary" onclick="openEditor()">+ Add New</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>HP</th><th>ATK</th><th>Action</th></tr></thead>
+                <tbody id="list"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="editor" class="hidden" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
+        <div class="card" style="width:500px;">
+            <h3>Monster Editor</h3>
+            <input type="text" id="m-id" placeholder="ID">
+            <input type="text" id="m-name" placeholder="Name">
+            <input type="number" id="m-hp" placeholder="HP">
+            <input type="number" id="m-dmg" placeholder="Damage">
+            <button class="btn-primary" onclick="save()">SAVE</button>
+            <button onclick="document.getElementById('editor').classList.add('hidden')">CANCEL</button>
+        </div>
+    </div>
+
+    <script src="/admin/js/shared.js"></script>
+    <script>
+        window.onload = () => { setTimeout(() => send({type: "admin_fetch_data"}), 500); };
+        window.handleServerMessage = (msg) => {
+            if (msg.type === "admin_data_load") {
+                const tbody = document.getElementById('list');
+                tbody.innerHTML = msg.monsters.map(m => `<tr><td>${m.id}</td><td>${m.name}</td><td>${m.hp_base}</td><td>${m.damage_base}</td><td><button onclick='openEditor(${JSON.stringify(m)})'>EDIT</button></td></tr>`).join('');
+            }
+        };
+        function openEditor(m = null) {
+            document.getElementById('editor').classList.remove('hidden');
+            if(m) { document.getElementById('m-id').value = m.id; document.getElementById('m-name').value = m.name; document.getElementById('m-hp').value = m.hp_base; document.getElementById('m-dmg').value = m.damage_base; }
+        }
+        function save() {
+            const data = { id: document.getElementById('m-id').value, name: document.getElementById('m-name').value, hp: parseInt(document.getElementById('m-hp').value), dmg: parseInt(document.getElementById('m-dmg').value), spd: 10, exp: 50 };
+            send({ type: "admin_save_monster", data });
+            document.getElementById('editor').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

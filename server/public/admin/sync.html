@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/admin/css/style.css">
+    <title>Sync - Admin</title>
+</head>
+<body>
+    <nav>
+        <div class="brand">🛡️ TEXTICAL</div>
+        <a href="/admin/monsters" class="nav-link">👾 Monsters</a>
+        <a href="/admin/regions" class="nav-link">🗺️ Regions</a>
+        <a href="/admin/sync" class="nav-link active">⚙️ Sync</a>
+    </nav>
+    <main>
+        <h2>System Synchronization</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div class="card">
+                <h3>📥 Import JSON</h3>
+                <p>Ambil data awal dari file JSON ke Database.</p>
+                <button class="btn-primary" style="width:100%" onclick="send({type: 'admin_sync_import'})">IMPORT NOW</button>
+            </div>
+            <div class="card">
+                <h3>📤 Export JSON</h3>
+                <p>Terapkan semua perubahan di DB ke file JSON.</p>
+                <button class="btn-primary" style="width:100%; background:#ff9800" onclick="send({type: 'admin_sync_export'})">EXPORT NOW</button>
+            </div>
+        </div>
+        <div id="status" class="card" style="margin-top:20px; text-align:center; color:#4caf50">Ready.</div>
+    </main>
+    <script src="/admin/js/shared.js"></script>
+    <script>
+        window.handleServerMessage = (msg) => {
+            if (msg.type === "sync_result") {
+                document.getElementById('status').innerText = "Sync Success: " + JSON.stringify(msg.stats);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "id": "class_knight",
+  "name": "Knight",
+  "description": "A stalwart protector of the realm.",
+  "tier": 2,
+  "statSystem": {
+    "hp": { "gain": 25, "cap": 5000 },
+    "damage": { "gain": 6, "cap": 500 },
+    "defense": { "gain": 10, "cap": 1500 },
+    "speed": { "gain": 0.4, "cap": 25 }
+  },
+  "masteries": {
+    "sword": { "dmg_mod": 1.2 },
+    "shield": { "def_mod": 1.25 }
+  },
+  "mechanics": {
+    "energy_type": "STAMINA"
+  },
+  "skillTree": [
+    { "skillId": "skill_shield_bash", "req_level": 1, "dependencies": [] }
+  ],
+  "innateTraits": ["trait_brave"],
+  "promotionReqs": {
+    "prev_class": "class_warrior",
+    "min_level": 30
+  },
+  "nextClasses": ["class_paladin"],
+  "iconPath": "res://assets/icons/classes/knight.png"
+}

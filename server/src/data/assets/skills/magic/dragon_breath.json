@@ -1,0 +1,29 @@
+{
+  "id": "skill_dragon_breath",
+  "name": "Ancient Fire Breath",
+  "description": "Exhale a massive cone of primordial fire. Scorches everything in its path.",
+  "category": "MAGIC",
+  "element": "FIRE",
+  "manaCost": 50,
+  "cooldown": 5,
+  "castTime": 1,
+  "damageFormula": {
+    "multiplier": 2.5,
+    "scaling_stat": "intelligence",
+    "flat_bonus": 50
+  },
+  "targetType": "AREA",
+  "aoePattern": "CONE",
+  "aoeSize": 3,
+  "range": 4,
+  "statusEffects": [
+    { "type": "BURN", "chance": 0.8, "duration": 5, "intensity": 10 },
+    { "type": "FEAR", "chance": 0.3, "duration": 2 }
+  ],
+  "vfxPath": "res://assets/vfx/skills/fire_breath.tscn",
+  "animationName": "cast_breath",
+  "requirements": {
+    "min_level": 50,
+    "traits": ["trait_dragon_blood"]
+  }
+}

@@ -1,9 +1,8 @@
 const userRepository = require('../repositories/userRepository');
 const heroRepository = require('../repositories/heroRepository');
 const inventoryRepository = require('../repositories/inventoryRepository');
-const EvolutionEngine = require('../logic/evolutionEngine');
-const ProgressionManager = require('../logic/progressionManager');
-const LootFactory = require('../logic/lootFactory');
+const evolutionService = require('./evolutionService');
+const lootService = require('./lootService');
 
 class RewardService {
     async processPostBattle(user, result, mode) {
@@ -28,17 +27,33 @@ class RewardService {
             const currentDeeds = JSON.parse(hero.deeds || "{}");
             Object.entries(simDeeds).forEach(([key, val]) => { currentDeeds[key] = (currentDeeds[key] || 0) + val; });
 
-            const update = EvolutionEngine.processEvolution({ ...hero, deeds: JSON.stringify(currentDeeds) });
+            const update = evolutionService.processEvolution({ ...hero, deeds: JSON.stringify(currentDeeds) });
             if (update.newlyUnlocked.length > 0) alerts.evolution.push({ name: hero.name, unlocked: update.newlyUnlocked });
             
+            // Handle XP and Level Up (Logic moved here from progressionManager)
+            let currentExp = hero.exp + (result.rewards.exp || 0);
+            let currentLevel = hero.level;
+            while (currentExp >= currentLevel * 100) {
+                currentExp -= currentLevel * 100;
+                currentLevel++;
+            }
+
+            // Save updates
             await heroRepository.updateProgression(hero.id, currentDeeds, update.acquiredTraits, update.unlockedBehaviors);
+            // Need a new method or use updateLineage for XP
+            await heroRepository.updateLineage(hero.id, { level: currentLevel, exp: currentExp });
         }
 
         // 3. Gold & Items
-        const droppedItems = LootFactory.generateLoot(result.killed_monsters);
-        const progResult = await ProgressionManager.processRewards(user, result, droppedItems);
+        const totalGold = user.gold + (result.rewards.gold || 0);
+        await userRepository.updateGold(user.id, totalGold);
 
-        return { alerts, progression: progResult };
+        const droppedItems = lootService.generateLoot(result.killed_monsters);
+        for (let item of droppedItems) {
+            await inventoryRepository.addItem(user.id, item.id, 1, item.uniqueData || {});
+        }
+
+        return { alerts, goldGained: result.rewards.gold, droppedItems };
     }
 }
 

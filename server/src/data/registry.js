@@ -3,6 +3,9 @@
  * Centralizes all Traits, Behaviors, and soon Skills/Classes.
  */
 const Registry = {
+    MONSTER_CATEGORIES: [
+        "ORC", "SLIME", "UNDEAD", "DRAGON", "BEAST", "GOLEM", "DEMON", "MISC"
+    ],
     TRAITS: {
         // --- NATURAL TRAITS ---
         "giant_blood": {

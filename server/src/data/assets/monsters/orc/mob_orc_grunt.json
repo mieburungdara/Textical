@@ -1,0 +1,11 @@
+{
+  "id": "mob_orc_grunt",
+  "categoryId": "orc",
+  "name": "Orc Grunt",
+  "hp_base": 120,
+  "damage_base": 15,
+  "defense_base": 5,
+  "speed_base": 8,
+  "range_base": 1,
+  "exp_reward": 25
+}

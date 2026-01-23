@@ -1,0 +1,25 @@
+body { background: #0f0f0f; color: #e0e0e0; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; }
+.hidden { display: none !important; }
+
+/* Sidebar */
+nav { width: 240px; background: #161616; border-right: 1px solid #333; display: flex; flex-direction: column; padding: 20px 0; }
+.brand { padding: 0 20px 20px; color: #4caf50; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid #333; margin-bottom: 20px; }
+.nav-link { padding: 12px 20px; color: #888; text-decoration: none; display: block; border-left: 4px solid transparent; }
+.nav-link:hover { background: #222; color: white; }
+.nav-link.active { background: #1a2e1a; color: #4caf50; border-left-color: #4caf50; }
+
+/* Main */
+main { flex: 1; padding: 40px; overflow-y: auto; }
+.card { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
+
+/* Forms & Buttons */
+input, select, textarea { width: 100%; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; }
+button { padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-primary { background: #4caf50; color: white; }
+.btn-primary:hover { background: #45a049; }
+.btn-secondary { background: #333; color: #ccc; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; color: #888; font-size: 12px; padding: 15px; border-bottom: 2px solid #333; }
+td { padding: 15px; border-bottom: 1px solid #222; }

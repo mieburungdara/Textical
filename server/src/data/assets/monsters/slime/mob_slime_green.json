@@ -1,0 +1,27 @@
+{
+  "id": "mob_slime_green",
+  "categoryId": "slime",
+  "name": "Green Slime",
+  "hp_base": 300,
+  "damage_base": 10,
+  "defense_base": 2,
+  "speed_base": 5,
+  "range_base": 1,
+  "exp_reward": 20,
+  "element": "WATER",
+  "size": "SMALL",
+  "traits": [
+    "split_on_death",
+    "acidic_body"
+  ],
+  "skills": [
+    "jump_attack"
+  ],
+  "immunities": [
+    "blunt_damage"
+  ],
+  "lootTable": {
+    "gold_min": 5,
+    "gold_max": 15
+  }
+}

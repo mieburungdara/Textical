@@ -5,6 +5,18 @@ const unitNames = require('../data/unit_names.json');
 const bcrypt = require('bcryptjs');
 
 class AuthHandler {
+    constructor() {
+        this.ensureAdminExists();
+    }
+
+    async ensureAdminExists() {
+        const admin = await userRepository.findByUsername("admin");
+        if (!admin) {
+            console.log("[INIT] Creating default developer admin account...");
+            await userRepository.create("admin", "admin_dev_pass_123");
+        }
+    }
+
     async handleRegister(ws, request) {
         const newUser = await userRepository.create(request.username, request.password);
         if (newUser) {

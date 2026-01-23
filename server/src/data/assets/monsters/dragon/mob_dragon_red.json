@@ -1,0 +1,11 @@
+{
+  "id": "mob_dragon_red",
+  "categoryId": "dragon",
+  "name": "Ancient Red Dragon",
+  "hp_base": 2500,
+  "damage_base": 120,
+  "defense_base": 60,
+  "speed_base": 10,
+  "range_base": 5,
+  "exp_reward": 1500
+}

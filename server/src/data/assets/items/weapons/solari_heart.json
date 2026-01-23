@@ -1,0 +1,27 @@
+{
+  "id": "itm_solari_heart",
+  "name": "Solari's Heart",
+  "description": "A blade forged in the sun's core. Pulsates with solar energy.",
+  "category": "EQUIPMENT",
+  "subCategory": "SWORD",
+  "rarity": "ARTIFACT",
+  "baseStats": {
+    "attack_damage": 120,
+    "crit_chance": 0.15,
+    "durability_max": 500
+  },
+  "requirements": {
+    "min_level": 80,
+    "min_stats": { "strength": 50, "intelligence": 30 },
+    "req_class": "class_paladin"
+  },
+  "maxSockets": 3,
+  "allowedSockets": ["CRYSTAL_FIRE", "CRYSTAL_HOLY"],
+  "setId": "set_solar_vanguard",
+  "isCraftable": false,
+  "salvageResult": [
+    { "itemId": "item_ancient_stone", "quantity": 5 },
+    { "itemId": "item_solar_dust", "quantity": 1 }
+  ],
+  "iconPath": "res://assets/icons/items/weapons/solari_heart.png"
+}

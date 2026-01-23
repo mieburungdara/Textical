@@ -1,4 +1,4 @@
-const ItemDatabase = require('../logic/itemDatabase');
+const itemRepository = require('../repositories/itemRepository');
 
 class HeroService {
     prepareBattleParty(user) {
@@ -9,7 +9,10 @@ class HeroService {
 
             Object.entries(equipMapping).forEach(([slot, itemId]) => {
                 const invItem = user.inventory.find(item => item.id === itemId);
-                if (invItem) resolvedEquip[slot] = ItemDatabase.getItem(invItem.templateId);
+                if (invItem) {
+                    // FIX: Use itemRepository.getById
+                    resolvedEquip[slot] = itemRepository.getById(invItem.templateId);
+                }
             });
 
             return {

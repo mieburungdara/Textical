@@ -1,0 +1,24 @@
+{
+  "id": "trait_dragon_slayer",
+  "name": "Dragon Slayer",
+  "description": "A title earned through the blood of ancient wyrms. Massive damage against dragonkind.",
+  "category": "COMBAT",
+  "type": "ACQUIRED",
+  "rarity": "LEGENDARY",
+  "statModifiers": {
+    "crit_mult": 1.25,
+    "damage_mult": 1.1
+  },
+  "elementalMods": {
+    "fire_res": 1.5
+  },
+  "battleHooks": {
+    "onDamageCalculation": "slayer_vs_dragon"
+  },
+  "requirements": {
+    "deeds": { "kills_dragon": 1000 },
+    "min_level": 75
+  },
+  "iconPath": "res://assets/icons/traits/dragon_slayer.png",
+  "vfxPath": "res://assets/vfx/dragon_slayer_aura.tscn"
+}

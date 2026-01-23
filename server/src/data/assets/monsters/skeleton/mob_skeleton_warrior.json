@@ -1,0 +1,28 @@
+{
+  "id": "mob_skeleton_warrior",
+  "categoryId": "skeleton",
+  "name": "Skeleton Warrior",
+  "hp_base": 90,
+  "damage_base": 22,
+  "defense_base": 15,
+  "speed_base": 7,
+  "range_base": 1,
+  "exp_reward": 35,
+  "element": "DARK",
+  "size": "MEDIUM",
+  "traits": [
+    "undead_resilience"
+  ],
+  "skills": [
+    "thrust"
+  ],
+  "immunities": [
+    "poison",
+    "bleed",
+    "fear"
+  ],
+  "lootTable": {
+    "gold_min": 10,
+    "gold_max": 30
+  }
+}

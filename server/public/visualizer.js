@@ -1,155 +1,163 @@
-const canvas = document.getElementById('battleCanvas');
-const ctx = canvas.getContext('2d');
-const logDiv = document.getElementById('logs');
-const errorDiv = document.getElementById('error-msg');
-
-const authScreen = document.getElementById('auth-screen');
-const dashScreen = document.getElementById('dashboard-screen');
-const battleContainer = document.getElementById('battle-container');
-
-const heroList = document.getElementById('hero-list');
-const invList = document.getElementById('inv-list');
-const displayUser = document.getElementById('display-username');
-const displayGold = document.getElementById('display-gold');
-
-// World UI Elements
-const regionName = document.getElementById('region-name');
-const regionDesc = document.getElementById('region-desc');
-const connectionList = document.getElementById('connection-list');
-const locationCard = document.getElementById('location-card');
-
-const selectFather = document.getElementById('select-father');
-const selectMother = document.getElementById('select-mother');
-const btnBreed = document.getElementById('btn-breed');
-
-const CELL_SIZE = 64;
-const GRID_W = 8;
-const GRID_H = 10;
-
 let socket = new WebSocket('ws://localhost:3000');
 let currentUser = null;
+let selectedImageData = null;
 
-socket.onopen = () => console.log("Connected to Game Server");
-socket.onclose = () => showError("Disconnected from server.");
+const authScreen = document.getElementById('auth-screen');
+const sidebar = document.getElementById('admin-sidebar');
+const mainWrapper = document.getElementById('main-wrapper');
+const monsterList = document.getElementById('monster-list');
+const regionList = document.getElementById('region-list');
+const raceGrid = document.getElementById('race-grid');
+const syncStatus = document.getElementById('sync-status');
 
+// Modals
+const monsterModal = document.getElementById('monster-modal');
+const regionModal = document.getElementById('region-modal');
+
+// --- AUTH ---
+document.getElementById('btn-dev-login').onclick = () => socket.send(JSON.stringify({ type: "admin_bypass_login" }));
 document.getElementById('btn-login').onclick = () => {
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
-    if(!user || !pass) return showError("Please fill all fields");
-    socket.send(JSON.stringify({ type: "login", username: user, password: pass }));
+    socket.send(JSON.stringify({ type: "login", username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value }));
 };
 
-document.getElementById('btn-register').onclick = () => {
-    const user = document.getElementById('reg-user').value;
-    const pass = document.getElementById('reg-pass').value;
-    if(!user || !pass) return showError("Please fill all fields");
-    socket.send(JSON.stringify({ type: "register", username: user, password: pass }));
+// --- NAVIGATION ---
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(`page-${pageId}`).classList.remove('hidden');
+    // Mark active link
+    const links = document.querySelectorAll('.nav-link');
+    links.forEach(l => { if(l.innerText.toLowerCase().includes(pageId)) l.classList.add('active'); });
+}
+
+// --- SYNC ACTIONS ---
+document.getElementById('btn-import').onclick = () => {
+    if(confirm("IMPORT: Overwrite DB with JSON files? Current unsaved DB changes will be lost.")) {
+        syncStatus.innerHTML = "<span style='color:#ffd700'>Processing Import... Please wait.</span>";
+        socket.send(JSON.stringify({ type: "admin_sync_import" }));
+    }
 };
 
+document.getElementById('btn-export').onclick = () => {
+    if(confirm("EXPORT: Overwrite JSON files with DB data? Mesin game akan menggunakan data ini.")) {
+        syncStatus.innerHTML = "<span style='color:#ffd700'>Processing Export... Please wait.</span>";
+        socket.send(JSON.stringify({ type: "admin_sync_export" }));
+    }
+};
+
+// --- MONSTERS ---
+function openMonsterEditor(m = null) {
+    monsterModal.classList.remove('hidden');
+    if(m) {
+        document.getElementById('m-id').value = m.id; document.getElementById('m-id').disabled = true;
+        document.getElementById('m-name').value = m.name; document.getElementById('m-hp').value = m.hp_base;
+        document.getElementById('m-dmg').value = m.damage_base; document.getElementById('m-spd').value = m.speed_base;
+        document.getElementById('m-exp').value = m.exp_reward;
+    } else {
+        document.getElementById('m-id').value = ""; document.getElementById('m-id').disabled = false;
+        document.getElementById('m-name').value = "";
+    }
+}
+
+document.getElementById('btn-save-monster').onclick = () => {
+    const data = {
+        id: document.getElementById('m-id').value, name: document.getElementById('m-name').value,
+        hp: parseInt(document.getElementById('m-hp').value), dmg: parseInt(document.getElementById('m-dmg').value),
+        spd: parseInt(document.getElementById('m-spd').value), exp: parseInt(document.getElementById('m-exp').value)
+    };
+    socket.send(JSON.stringify({ type: "admin_save_monster", data }));
+    closeModal();
+};
+
+// --- REGIONS ---
+function openRegionEditor(r = null) {
+    regionModal.classList.remove('hidden');
+    if(r) {
+        document.getElementById('r-id').value = r.id; document.getElementById('r-id').disabled = true;
+        document.getElementById('r-name').value = r.name; document.getElementById('r-type').value = r.type;
+        document.getElementById('r-desc').value = r.description; document.getElementById('r-conn').value = r.connections;
+    } else {
+        document.getElementById('r-id').value = ""; document.getElementById('r-id').disabled = false;
+        document.getElementById('r-name').value = ""; document.getElementById('r-conn').value = "";
+    }
+}
+
+document.getElementById('btn-save-region').onclick = () => {
+    const data = {
+        id: document.getElementById('r-id').value, name: document.getElementById('r-name').value,
+        type: document.getElementById('r-type').value, description: document.getElementById('r-desc').value,
+        connections: document.getElementById('r-conn').value
+    };
+    socket.send(JSON.stringify({ type: "admin_save_region", data }));
+    closeModal();
+};
+
+// --- RACES ---
+function renderRaces(races) {
+    raceGrid.innerHTML = "";
+    races.forEach(r => {
+        const card = document.createElement('div');
+        card.style = "background:#161616; padding:15px; border-radius:8px; border:1px solid #333;";
+        card.innerHTML = `
+            <strong style="color:#4caf50">${r.id.toUpperCase()}</strong>
+            <textarea id="race-data-${r.id}" style="height:100px; font-family:monospace; font-size:11px; margin-top:10px; background:#222; color:#fff; border:1px solid #444; width:100%;">${JSON.stringify(JSON.parse(r.bonusData), null, 2)}</textarea>
+        `;
+        raceGrid.appendChild(card);
+    });
+}
+
+document.getElementById('btn-save-all-races').onclick = () => {
+    const raceCards = raceGrid.querySelectorAll('textarea');
+    const data = Array.from(raceCards).map(ta => ({
+        id: ta.id.replace('race-data-', ''),
+        bonusData: JSON.stringify(JSON.parse(ta.value))
+    }));
+    socket.send(JSON.stringify({ type: "admin_save_all_races", data }));
+};
+
+// --- GLOBAL ---
+function closeModal() {
+    monsterModal.classList.add('hidden');
+    regionModal.classList.add('hidden');
+}
+
+// --- SERVER MESSAGE HANDLER ---
 socket.onmessage = async (event) => {
     const msg = JSON.parse(event.data);
-    if (msg.type === "login_success") {
-        currentUser = msg.user.username;
-        showDashboard(msg.user, msg.region_data);
-    } else if (msg.type === "battle_replay") {
-        await playReplay(msg);
-    } else if (msg.type === "error") {
-        showError(msg.message);
+    if (msg.type === "login_success" && msg.user.username === "admin") {
+        authScreen.classList.add('hidden'); sidebar.classList.remove('hidden'); mainWrapper.classList.remove('hidden');
+        socket.send(JSON.stringify({ type: "admin_fetch_data" }));
+    } 
+    else if (msg.type === "admin_data_load") {
+        renderMonsters(msg.monsters); renderRegions(msg.regions); renderRaces(msg.races);
+    }
+    else if (msg.type === "sync_result") {
+        const s = msg.stats;
+        syncStatus.innerHTML = `<span style='color:#4caf50'>SUCCESS:</span> ${s.monsters} Monsters, ${s.regions} Regions, ${s.races} Races, ${s.items} Items synced.`;
+        setTimeout(() => syncStatus.innerText = "Ready.", 5000);
+    }
+    else if (msg.type === "success") {
+        syncStatus.innerText = msg.message;
+        setTimeout(() => syncStatus.innerText = "Ready.", 3000);
     }
 };
 
-function showDashboard(user, region) {
-    authScreen.classList.add('hidden');
-    dashScreen.classList.remove('hidden');
-    
-    displayUser.innerText = `Commander ${user.username}`;
-    displayGold.innerText = `Gold: ${user.gold}`;
-
-    // --- WORLD & TRAVEL UI ---
-    if (region) {
-        regionName.innerText = region.name;
-        regionDesc.innerText = region.description;
-        locationCard.style.background = region.type === "TOWN" ? "#1b3d11" : "#3d1111";
-        
-        connectionList.innerHTML = "";
-        region.connections.forEach(connId => {
-            const btn = document.createElement('button');
-            btn.innerText = `To ${connId.replace('_', ' ')}`;
-            btn.className = "secondary";
-            btn.style.width = "auto";
-            btn.style.padding = "5px 10px";
-            btn.style.fontSize = "10px";
-            btn.onclick = () => {
-                socket.send(JSON.stringify({ type: "travel", account: currentUser, targetRegion: connId }));
-            };
-            connectionList.appendChild(btn);
-        });
-    }
-
-    // --- HEROES ---
-    heroList.innerHTML = "";
-    user.heroes.forEach(h => {
-        const row = document.createElement('div');
-        row.className = "item-row";
-        row.innerHTML = `<span>${h.name} (Gen ${h.generation})</span> <span>Lvl ${h.level}</span>`;
-        heroList.appendChild(row);
-    });
-
-    // --- INVENTORY ---
-    invList.innerHTML = "";
-    user.inventory.forEach(item => {
-        if(item.isEquipped) return;
-        const row = document.createElement('div');
-        row.className = "item-row";
-        row.innerHTML = `<span>${item.templateId} x${item.quantity}</span>`;
-        invList.appendChild(row);
+function renderMonsters(monsters) {
+    monsterList.innerHTML = "";
+    monsters.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><code>${m.id}</code></td><td>${m.name}</td><td>${m.hp_base}</td><td>${m.damage_base}</td>
+            <td><button class="btn-secondary" style="font-size:10px;" onclick='openMonsterEditor(${JSON.stringify(m)})'>EDIT</button></td>`;
+        monsterList.appendChild(tr);
     });
 }
 
-document.getElementById('start-btn').onclick = () => {
-    if (!currentUser) return;
-    battleContainer.classList.remove('hidden');
-    socket.send(JSON.stringify({ type: "start_battle", account: currentUser }));
-};
-
-// (Drawing functions remain same...)
-async function playReplay(replay) {
-    const logs = replay.logs;
-    const terrain = replay.terrain_grid;
-    battleContainer.classList.remove('hidden');
-    logDiv.innerHTML = "";
-    for (let i = 0; i < logs.length; i++) {
-        const log = logs[i];
-        drawTerrain(terrain);
-        drawUnits(log.unit_states);
-        if (log.type !== "WAIT") {
-            const p = document.createElement('div');
-            p.innerText = `[${log.tick}] ${log.message}`;
-            logDiv.prepend(p);
-        }
-        if (i < logs.length - 1 && logs[i+1].tick !== log.tick) await new Promise(r => setTimeout(r, 100));
-    }
+function renderRegions(regions) {
+    regionList.innerHTML = "";
+    regions.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><code>${r.id}</code></td><td>${r.name}</td><td>${r.type}</td><td>${r.connections}</td>
+            <td><button class="btn-secondary" style="font-size:10px;" onclick='openRegionEditor(${JSON.stringify(r)})'>EDIT</button></td>`;
+        regionList.appendChild(tr);
+    });
 }
-
-function drawTerrain(grid) {
-    const colors = { 0: "#2d5a27", 3: "#ff4500", 5: "#1b3d11" };
-    for (let y = 0; y < GRID_H; y++) {
-        for (let x = 0; x < GRID_W; x++) {
-            ctx.fillStyle = colors[grid[y][x]] || "#111";
-            ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-    }
-}
-
-function drawUnits(states) {
-    for (let id in states) {
-        const u = states[id];
-        const px = u.pos.x * CELL_SIZE + CELL_SIZE/2;
-        const py = u.pos.y * CELL_SIZE + CELL_SIZE/2;
-        ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2);
-        ctx.fillStyle = id.includes("e_") ? "red" : "cyan";
-        ctx.fill(); ctx.stroke();
-    }
-}
-
-function showError(text) { errorDiv.innerText = text; setTimeout(() => errorDiv.innerText = "", 3000); }

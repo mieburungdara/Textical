@@ -1,0 +1,11 @@
+{
+  "id": "mob_skeleton_archer",
+  "categoryId": "skeleton",
+  "name": "Skeleton Archer",
+  "hp_base": 70,
+  "damage_base": 18,
+  "defense_base": 5,
+  "speed_base": 10,
+  "range_base": 4,
+  "exp_reward": 35
+}

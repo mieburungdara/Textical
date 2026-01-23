@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/admin/css/style.css">
+    <title>Admin Login</title>
+</head>
+<body style="align-items:center; justify-content:center;">
+    <div class="card" style="width:400px; text-align:center;">
+        <h1 style="color:#4caf50">TEXTICAL ADMIN</h1>
+        <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="bypass()">🚀 START DEVELOPER CONSOLE</button>
+    </div>
+    <script src="/admin/js/shared.js"></script>
+    <script>
+        function bypass() { send({ type: "admin_bypass_login" }); }
+    </script>
+</body>
+</html>

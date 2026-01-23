@@ -1,0 +1,23 @@
+{
+  "id": "class_novice",
+  "name": "Novice",
+  "description": "A beginner embarking on their journey.",
+  "tier": 1,
+  "statSystem": {
+    "hp": { "gain": 10, "cap": 1000 },
+    "damage": { "gain": 2, "cap": 100 },
+    "defense": { "gain": 1, "cap": 50 },
+    "speed": { "gain": 0.2, "cap": 15 }
+  },
+  "masteries": {
+    "all": { "dmg_mod": 1.0 }
+  },
+  "mechanics": {
+    "energy_type": "MANA"
+  },
+  "skillTree": [],
+  "innateTraits": [],
+  "promotionReqs": {},
+  "nextClasses": ["class_warrior", "class_mage", "class_archer"],
+  "iconPath": "res://assets/icons/classes/novice.png"
+}

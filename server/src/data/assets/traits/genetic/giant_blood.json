@@ -1,0 +1,26 @@
+{
+  "id": "trait_giant_blood",
+  "name": "Giant Blood",
+  "description": "Immense strength flows through your veins. High health and damage, but heavy and slow.",
+  "category": "GENETIC",
+  "type": "NATURAL",
+  "rarity": "RARE",
+  "statModifiers": {
+    "hp_mult": 1.5,
+    "damage_mult": 1.3,
+    "speed_mult": 0.7
+  },
+  "elementalMods": {
+    "earth_dmg": 1.1,
+    "lightning_res": 0.8
+  },
+  "battleHooks": {
+    "onMoveStep": "vfx_earthquake",
+    "onActionImpact": "heavy_stagger"
+  },
+  "requirements": {
+    "race": "giant"
+  },
+  "conflicts": ["trait_airy_body"],
+  "iconPath": "res://assets/icons/traits/giant_blood.png"
+}

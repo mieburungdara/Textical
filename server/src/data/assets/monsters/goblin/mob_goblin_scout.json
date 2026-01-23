@@ -1,0 +1,11 @@
+{
+  "id": "mob_goblin_scout",
+  "categoryId": "goblin",
+  "name": "Goblin Scout",
+  "hp_base": 60,
+  "damage_base": 12,
+  "defense_base": 0,
+  "speed_base": 18,
+  "range_base": 1,
+  "exp_reward": 18
+}

@@ -1,0 +1,36 @@
+{
+  "id": "class_paladin",
+  "name": "Paladin",
+  "description": "A holy warrior who channels divine energy to protect the weak and smite the wicked.",
+  "tier": 3,
+  "statSystem": {
+    "hp": { "gain": 45, "cap": 10000 },
+    "damage": { "gain": 12, "cap": 1500 },
+    "defense": { "gain": 20, "cap": 3000 },
+    "mana": { "gain": 15, "cap": 2000 }
+  },
+  "masteries": {
+    "sword": { "dmg_mod": 1.25, "block_bonus": 5 },
+    "mace": { "dmg_mod": 1.15, "stun_bonus": 10 },
+    "heavy_shield": { "def_mod": 1.5, "speed_pen": -5 }
+  },
+  "mechanics": {
+    "energy_type": "MANA",
+    "unique_gauge": "holy_power",
+    "gauge_max": 5,
+    "special_aura": "aura_of_devotion"
+  },
+  "skillTree": [
+    { "skillId": "skill_divine_shield", "req_level": 1, "dependencies": [] },
+    { "skillId": "skill_holy_smite", "req_level": 10, "dependencies": [] },
+    { "skillId": "skill_lay_on_hands", "req_level": 50, "dependencies": ["skill_divine_shield"] }
+  ],
+  "innateTraits": ["trait_holy_resolve", "trait_undead_bane"],
+  "promotionReqs": {
+    "prev_class": "class_knight",
+    "min_level": 60,
+    "deeds": { "ally_healed": 1000, "undead_kills": 500 }
+  },
+  "nextClasses": [],
+  "iconPath": "res://assets/icons/classes/paladin.png"
+}

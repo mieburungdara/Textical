@@ -3,144 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Textical RPG - Database Demo</title>
+    <title>Textical RPG - Admin Center</title>
     <style>
-        body { background: #1a1a1a; color: #eee; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
-        
-        h1 { color: #4caf50; letter-spacing: 2px; }
-        
-        /* Container Styles */
-        .container { background: #222; border: 1px solid #333; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); width: 100%; max-width: 800px; margin-bottom: 20px; }
+        body { background: #0f0f0f; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
-
-        /* Auth Forms */
-        .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #aaa; font-size: 14px; }
-        input { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; font-size: 16px; cursor: pointer; background: #4caf50; border: none; color: white; border-radius: 4px; transition: background 0.2s; }
-        button:hover { background: #45a049; }
-        button.secondary { background: #555; }
-        button.secondary:hover { background: #666; }
-
-        /* Dashboard */
-        .user-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 20px; }
-        .stat-badge { background: #333; padding: 5px 10px; border-radius: 4px; font-weight: bold; color: #ffd700; border: 1px solid #555; }
         
-        /* Inventory / Heroes */
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; }
-        .data-box { background: #111; padding: 10px; border-radius: 4px; border: 1px solid #333; height: 150px; overflow-y: auto; }
-        .item-row { padding: 4px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        /* SIDEBAR */
+        #admin-sidebar { width: 240px; background: #161616; border-right: 1px solid #333; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-brand { padding: 0 20px 20px; border-bottom: 1px solid #333; margin-bottom: 20px; color: #4caf50; font-weight: bold; font-size: 1.2em; }
+        .nav-link { padding: 12px 20px; color: #888; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+        .nav-link:hover { background: #222; color: white; }
+        .nav-link.active { background: #1a2e1a; color: #4caf50; border-left-color: #4caf50; }
+        .sidebar-footer { margin-top: auto; padding: 20px; }
 
-        /* Visualizer */
-        #battle-container { display: flex; gap: 20px; justify-content: center; }
-        canvas { background: #000; border: 2px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        #log-panel { width: 300px; height: 640px; background: #111; border: 1px solid #444; overflow-y: auto; padding: 10px; font-size: 12px; color: #aaa; font-family: monospace; }
+        /* MAIN CONTENT AREA */
+        #main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .page { padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
-        #error-msg { color: #ff5555; margin-top: 10px; text-align: center; height: 20px; }
+        /* AUTH SCREEN OVERLAY */
+        #auth-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f0f0f; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: #1e1e1e; padding: 40px; border-radius: 12px; width: 400px; border: 1px solid #333; }
+
+        /* COMPONENTS */
+        input, select, textarea { width: 100%; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 6px; margin-bottom: 15px; }
+        button { padding: 12px 20px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; }
+        .btn-primary { background: #4caf50; color: white; }
+        .btn-danger { background: #d32f2f; color: white; }
+        
+        /* DATA TABLES */
+        .data-table { width: 100%; border-collapse: collapse; background: #161616; border-radius: 8px; overflow: hidden; }
+        .data-table th { background: #222; padding: 15px; text-align: left; color: #888; font-size: 12px; text-transform: uppercase; }
+        .data-table td { padding: 15px; border-bottom: 1px solid #222; }
+        .row-hover:hover { background: #1d1d1d; }
+
+        /* MODAL */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: #1e1e1e; padding: 30px; border-radius: 12px; width: 500px; border: 1px solid #444; }
     </style>
 </head>
 <body>
-    <h1>TEXTICAL AUTHORITATIVE DEMO</h1>
-    
-    <!-- ERROR MESSAGE FEEDBACK -->
-    <div id="error-msg"></div>
 
-    <!-- 1. AUTH SCREEN -->
-    <div id="auth-screen" class="container">
-        <div class="auth-grid">
-            <!-- Login -->
-            <div>
-                <h2 style="margin-top:0">Login</h2>
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="login-user" placeholder="Enter username">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="login-pass" placeholder="Enter password">
-                </div>
-                <button id="btn-login">Login to Database</button>
+    <!-- LOGIN OVERLAY -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h1 style="color:#4caf50; text-align:center;">TEXTICAL ADMIN</h1>
+            <div style="background: #2a1111; border: 1px solid #ff5555; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <p style="font-size: 12px; color: #ff5555; margin: 0 0 10px 0;">[DEVELOPMENT MODE ACTIVE]</p>
+                <button id="btn-dev-login" style="background: #ff5555; color: white; width: 100%; border-radius: 4px;">🚀 QUICK DEV LOGIN</button>
             </div>
-            
-            <!-- Register -->
-            <div style="border-left: 1px solid #333; padding-left: 40px;">
-                <h2 style="margin-top:0">Register</h2>
-                <div class="form-group">
-                    <label>New Username</label>
-                    <input type="text" id="reg-user" placeholder="Choose username">
-                </div>
-                <div class="form-group">
-                    <label>New Password</label>
-                    <input type="password" id="reg-pass" placeholder="Choose password">
-                </div>
-                <button id="btn-register" class="secondary">Create Account</button>
-            </div>
+            <input type="text" id="login-user" placeholder="Admin Username">
+            <input type="password" id="login-pass" placeholder="Password">
+            <button id="btn-login" class="btn-primary" style="width:100%">LOGIN TO CONTROL CENTER</button>
+            <div id="error-msg" style="color:#ff5555; text-align:center; margin-top:15px; font-size:13px;"></div>
         </div>
     </div>
 
-    <!-- 2. GAME DASHBOARD -->
-    <div id="dashboard-screen" class="container hidden">
-        <div class="user-header">
-            <div>
-                <span style="font-size: 1.2em; font-weight: bold;" id="display-username">Hero</span>
-            </div>
-            <div>
-                <span class="stat-badge" id="display-gold">Gold: 0</span>
-                <button id="btn-logout" style="width: auto; padding: 5px 15px; margin-left: 10px; font-size: 12px; background: #d32f2f;">Logout</button>
-            </div>
-        </div>
-
-        <!-- NEW: CURRENT LOCATION CARD -->
-        <div id="location-card" style="background: #1b3d11; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #4caf50;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h3 id="region-name" style="margin: 0; color: #4caf50;">Location Name</h3>
-                    <p id="region-desc" style="font-size: 13px; margin: 5px 0; color: #ccc;">Location Description</p>
-                </div>
-                <div id="travel-panel">
-                    <span style="font-size: 11px; color: #888;">Travel to:</span>
-                    <div id="connection-list" style="display: flex; gap: 5px; margin-top: 5px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="data-grid">
-            <div>
-                <strong>My Heroes (In Database)</strong>
-                <div class="data-box" id="hero-list">Loading...</div>
-            </div>
-            <div>
-                <strong>Inventory</strong>
-                <div class="data-box" id="inv-list">Loading...</div>
-            </div>
-        </div>
-
-        <!-- NEW: BREEDING CENTER -->
-        <div style="margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 8px; border: 1px solid #444;">
-            <strong style="color: #ff4081;">🧬 Breeding Center</strong>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <select id="select-father" style="flex: 1; padding: 8px; background: #333; color: white; border: 1px solid #555;">
-                    <option value="">Select Father (Male)</option>
-                </select>
-                <select id="select-mother" style="flex: 1; padding: 8px; background: #333; color: white; border: 1px solid #555;">
-                    <option value="">Select Mother (Female)</option>
-                </select>
-                <button id="btn-breed" style="width: auto; padding: 0 20px; background: #ff4081;">BREED</button>
-            </div>
-        </div>
+    <!-- ADMIN SIDEBAR -->
+    <nav id="admin-sidebar" class="hidden">
+        <div class="sidebar-brand">🛡️ ADMIN PANEL</div>
+        <div class="nav-link active" onclick="showPage('monsters')">👾 Monsters Database</div>
+        <div class="nav-link" onclick="showPage('regions')">🗺️ World Regions</div>
+        <div class="nav-link" onclick="showPage('races')">🧬 Race Bonuses</div>
+        <div class="nav-link" onclick="showPage('sync')">⚙️ System Sync</div>
         
-        <div style="margin-top: 20px; text-align: center;">
-            <button id="start-btn" style="max-width: 300px;">⚔️ START BATTLE ⚔️</button>
+        <div class="sidebar-footer">
+            <button onclick="location.reload()" class="btn-danger" style="width:100%">LOGOUT</button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-wrapper" class="hidden">
+        
+        <!-- PAGE: MONSTERS -->
+        <section id="page-monsters" class="page">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2>Monster Templates</h2>
+                <button class="btn-primary" onclick="openMonsterEditor()">+ Create New Monster</button>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Display Name</th><th>HP</th><th>ATK</th><th>Actions</th></tr></thead>
+                <tbody id="monster-list"></tbody>
+            </table>
+        </section>
+
+        <!-- PAGE: REGIONS -->
+        <section id="page-regions" class="page hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2>World Regions</h2>
+                <button class="btn-primary" onclick="openRegionEditor()">+ Create New Region</button>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Connections</th><th>Actions</th></tr></thead>
+                <tbody id="region-list"></tbody>
+            </table>
+        </section>
+
+        <!-- PAGE: RACES -->
+        <section id="page-races" class="page hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2>Race Stat Multipliers</h2>
+                <button class="btn-primary" id="btn-save-all-races">SAVE ALL CHANGES</button>
+            </div>
+            <div id="race-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"></div>
+        </section>
+
+        <!-- PAGE: SYNC -->
+        <section id="page-sync" class="page hidden">
+            <h2>System Synchronization</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:30px;">
+                <div style="background:#161616; padding:30px; border-radius:12px; border:1px solid #333;">
+                    <h3 style="color:#4caf50">📥 Import Data</h3>
+                    <p style="color:#888;">Ambil data dari file <code>.json</code> lokal dan masukkan ke Database SQLite. Gunakan ini saat pertama kali setup.</p>
+                    <button id="btn-import" class="btn-primary" style="width:100%">START IMPORT</button>
+                </div>
+                <div style="background:#161616; padding:30px; border-radius:12px; border:1px solid #333;">
+                    <h3 style="color:#ff9800">📤 Export Data</h3>
+                    <p style="color:#888;">Simpan perubahan dari Database ke file <code>.json</code>. Mesin game akan langsung menggunakan data terbaru.</p>
+                    <button id="btn-export" class="btn-primary" style="background:#ff9800; width:100%">START EXPORT</button>
+                </div>
+            </div>
+            <div id="sync-status" style="margin-top:20px; text-align:center; font-family:monospace; color:#4caf50;">Ready.</div>
+        </section>
+
+    </main>
+
+    <!-- REGION MODAL -->
+    <div id="region-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Edit Region</h2>
+            <label>Region ID</label><input type="text" id="r-id">
+            <label>Name</label><input type="text" id="r-name">
+            <label>Type</label>
+            <select id="r-type">
+                <option value="TOWN">TOWN</option>
+                <option value="ADVENTURE_ZONE">ADVENTURE_ZONE</option>
+            </select>
+            <label>Description</label><textarea id="r-desc" style="height:80px;"></textarea>
+            <label>Connections (comma separated)</label><input type="text" id="r-conn">
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="btn-save-region" class="btn-primary" style="flex:1">SAVE REGION</button>
+                <button onclick="closeModal()" style="background:#444; color:white;">CANCEL</button>
+            </div>
         </div>
     </div>
 
-    <!-- 3. BATTLE VISUALIZER -->
-    <div id="battle-container" class="hidden">
-        <canvas id="battleCanvas" width="512" height="640"></canvas>
-        <div id="log-panel">
-            <div style="color: #4caf50; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 5px;">> System Online</div>
-            <div id="logs"></div>
+    <!-- MONSTER MODAL -->
+    <div id="monster-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Edit Monster</h2>
+            <div style="text-align:center; margin-bottom:15px;">
+                <img id="m-preview" src="" style="width:100px; height:100px; object-fit:contain; background:#111; border-radius:8px; border:1px solid #444;">
+                <input type="file" id="m-image-input" style="font-size:11px; margin-top:10px;">
+            </div>
+            <label>Template ID</label><input type="text" id="m-id" placeholder="mob_orc">
+            <label>Name</label><input type="text" id="m-name" placeholder="Orc Grunt">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div><label>HP</label><input type="number" id="m-hp"></div>
+                <div><label>Damage</label><input type="number" id="m-dmg"></div>
+                <div><label>Speed</label><input type="number" id="m-spd"></div>
+                <div><label>EXP Reward</label><input type="number" id="m-exp"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="btn-save-monster" class="btn-primary" style="flex:1">SAVE TO DATABASE</button>
+                <button onclick="closeModal()" style="background:#444; color:white;">CANCEL</button>
+            </div>
         </div>
     </div>
 

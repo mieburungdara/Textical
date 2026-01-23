@@ -1,0 +1,32 @@
+{
+  "id": "mob_orc_king",
+  "categoryId": "orc",
+  "name": "Orc King",
+  "hp_base": 1500,
+  "damage_base": 85,
+  "defense_base": 40,
+  "speed_base": 6,
+  "range_base": 1,
+  "exp_reward": 800,
+  "element": "EARTH",
+  "size": "LARGE",
+  "traits": [
+    "fearless",
+    "commander_aura"
+  ],
+  "skills": [
+    "war_cry",
+    "heavy_bash"
+  ],
+  "immunities": [
+    "stun",
+    "fear"
+  ],
+  "lootTable": {
+    "gold_min": 500,
+    "gold_max": 1200,
+    "drops": [
+      "stn_ruby_05"
+    ]
+  }
+}

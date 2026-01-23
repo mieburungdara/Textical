@@ -1,0 +1,11 @@
+{
+  "id": "mob_zombie_shambler",
+  "categoryId": "zombie",
+  "name": "Zombie Shambler",
+  "hp_base": 200,
+  "damage_base": 12,
+  "defense_base": 2,
+  "speed_base": 4,
+  "range_base": 1,
+  "exp_reward": 22
+}

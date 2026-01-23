@@ -1,0 +1,31 @@
+{
+  "id": "job_miner",
+  "name": "Master Miner",
+  "description": "Deep-earth specialists skilled in extracting legendary minerals and rare gemstones.",
+  "category": "COLLECTION",
+  "workStats": {
+    "base_yield": 1.5,
+    "stamina_per_action": 10,
+    "mining_speed_mult": 1.25
+  },
+  "lootTable": [
+    { "itemId": "item_iron_ore", "weight": 60, "min_level": 1 },
+    { "itemId": "item_gold_nugget", "weight": 20, "min_level": 25 },
+    { "itemId": "item_ruby_rough", "weight": 10, "min_level": 50 },
+    { "itemId": "item_ancient_mithril", "weight": 2, "min_level": 100 }
+  ],
+  "toolAccess": {
+    "required_type": "pickaxe",
+    "can_mine_obsidian": true
+  },
+  "masteryRewards": {
+    "JOURNEYMAN": { "yield_bonus": 0.1, "stamina_save": 0.05 },
+    "MASTER": { "unlocks_deep_tunneling": true, "exclusive_drop_rate": 1.05 },
+    "GRANDMASTER": { "masteryTraitId": "trait_unbreakable_will" }
+  },
+  "passiveBonuses": {
+    "town_forge_cost_reduction": 0.15,
+    "stone_market_sell_bonus": 0.10
+  },
+  "iconPath": "res://assets/icons/jobs/miner_pro.png"
+}
