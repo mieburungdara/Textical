@@ -1,4 +1,4 @@
-// AAA Deep Quest System Schema
+// AAA Deep World Event System Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... (User, Hero, HOF, Inventory, Templates remain consistent) ...
+// ... (User, Hero, HOF, Inventory, Quests, Items remain consistent) ...
 
 model User {
   id            String   @id @default(uuid())
@@ -21,41 +21,58 @@ model User {
   inventory     InventoryItem[]
 }
 
-// --- NEW: ULTRA-COMPLEX QUEST SYSTEM ---
+// --- NEW: GLOBAL EVENT SYSTEM ---
+model GlobalEventTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("WEATHER") // SEASON, INVASION, HOLIDAY, BONUS, WEATHER
+  
+  // 1. Activation & Timing
+  // e.g., "always", "random_chance", "scheduled"
+  triggerType     String @default("SCHEDULED")
+  
+  // 2. World Modifiers (JSON)
+  // Multipliers for the entire world or specific region
+  // e.g., {"exp_mult": 2.0, "spawn_rate_mult": 1.5, "move_cost_mult": 1.2}
+  worldModifiers  String @default("{}")
+  
+  // 3. Combat & Stat Modifiers (JSON)
+  // e.g., {"fire_damage_mult": 0.5, "lightning_damage_mult": 1.5} (Rain effect)
+  combatModifiers String @default("{}")
+  
+  // 4. Special Event Entities (JSON Array)
+  // Unique monsters or NPCs that appear ONLY during this event
+  // e.g., [{"monsterId": "boss_headless_horseman", "spawnChance": 0.05}]
+  specialSpawns   String @default("[]")
+  
+  // 5. Scope
+  // e.g., "GLOBAL" or a specific regionId like "whispering_forest"
+  targetScope     String @default("GLOBAL")
+  
+  iconPath        String @default("res://assets/icons/events/default.png")
+  filePath        String @default("events/misc.json")
+}
+
+// --- PRESERVED MASTER TABLES ---
+
 model QuestTemplate {
   id              String @id
   name            String
   description     String
-  category        String @default("SIDE")    // MAIN, SIDE, DAILY, EVENT, GUILD
-  difficulty      String @default("NORMAL")  // EASY, NORMAL, HARD, ELITE, LEGENDARY
+  category        String @default("SIDE")
+  difficulty      String @default("NORMAL")
   minLevel        Int    @default(1)
-  
-  // 1. Chaining & Dependencies
-  // e.g., Quest B requires Quest A to be completed
   prerequisiteQuestId String?
-  
-  // 2. Multi-Stage Objectives (JSON Array)
-  // e.g., [{"type": "KILL", "target": "mob_orc", "amount": 10}, {"type": "TRAVEL", "target": "whispering_forest"}]
   objectives      String @default("[]")
-  
-  // 3. Branching & Choice Logic (JSON)
-  // e.g., {"choice_a": {"next_quest": "quest_hero_path"}, "choice_b": {"next_quest": "quest_villain_path"}}
   logicBranches   String @default("{}")
-  
-  // 4. Rewards System (JSON)
-  // e.g., {"gold": 1000, "exp": 5000, "fame": 50, "items": [{"id": "itm_ruby", "qty": 1}]}
   rewards         String @default("{}")
-  
-  // 5. World State & Time
   isTimeLimited   Boolean @default(false)
-  expiryHours     Int     @default(0) // Duration in hours once accepted
-  requiredRegion  String? // Region where the quest must be taken/performed
-  
+  expiryHours     Int     @default(0)
+  requiredRegion  String?
   iconPath        String @default("res://assets/icons/quests/default.png")
   filePath        String @default("quests/misc.json")
 }
-
-// --- PRESERVED MASTER TABLES ---
 
 model ClassTemplate {
   id              String @id
@@ -138,7 +155,7 @@ model Hero {
   hasReproduced Boolean @default(false)
   fatherId      String?
   motherId      String?
-  generation  Int      @default(1)
+  generation    Int      @default(1)
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
 }

@@ -13,7 +13,23 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files...");
         
-        // 1. Load Quests (Ultra Complex)
+        // 1. Load Global Events (Ultra Complex)
+        const eventFiles = this._scanDir(path.join(ASSET_ROOT, 'events'));
+        for (let file of eventFiles) {
+            try {
+                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+                const dbData = {
+                    ...data,
+                    worldModifiers: JSON.stringify(data.worldModifiers || {}),
+                    combatModifiers: JSON.stringify(data.combatModifiers || {}),
+                    specialSpawns: JSON.stringify(data.specialSpawns || []),
+                    filePath: file.relativePath
+                };
+                await prisma.globalEventTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
+            } catch(e) { console.error(`Event Load Fail: ${file.fullPath}`, e.message); }
+        }
+
+        // 2. Load Quests
         const questFiles = this._scanDir(path.join(ASSET_ROOT, 'quests'));
         for (let file of questFiles) {
             try {
@@ -29,7 +45,7 @@ class AssetService {
             } catch(e) { console.error(`Quest Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 2. Load Classes
+        // 3. Load Classes
         const classFiles = this._scanDir(path.join(ASSET_ROOT, 'classes'));
         for (let file of classFiles) {
             try {
@@ -49,7 +65,7 @@ class AssetService {
             } catch(e) { console.error(`Class Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        // 3. Load Monsters
+        // 4. Load Monsters
         const monsterFiles = this._scanDir(path.join(ASSET_ROOT, 'monsters'));
         for (let file of monsterFiles) {
             try {

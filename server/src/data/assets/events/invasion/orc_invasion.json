@@ -1,0 +1,20 @@
+{
+  "id": "event_orc_invasion_01",
+  "name": "The Great Orc Invasion",
+  "description": "The green tide rises! Orcs are swarming the village. All heroes are called to defense.",
+  "category": "INVASION",
+  "triggerType": "RANDOM_CHANCE",
+  "worldModifiers": {
+    "exp_mult": 1.5,
+    "gold_mult": 1.2,
+    "orc_spawn_rate": 5.0
+  },
+  "combatModifiers": {
+    "damage_vs_orc": 1.1,
+    "orc_defense_bonus": 1.2
+  },
+  "specialSpawns": [
+    { "monsterId": "mob_orc_king", "spawnChance": 0.1, "location": "starting_village" }
+  ],
+  "targetScope": "starting_village"
+}
