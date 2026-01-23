@@ -12,7 +12,8 @@ const worldHandler = require('./handlers/worldHandler');
 const guildHandler = require('./handlers/guildHandler');
 const marketHandler = require('./handlers/marketHandler');
 const buildingHandler = require('./handlers/buildingHandler');
-const questHandler = require('./handlers/questHandler'); // NEW
+const questHandler = require('./handlers/questHandler');
+const dialogueHandler = require('./handlers/dialogueHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 
 // Services
@@ -68,12 +69,12 @@ wss.on('connection', (ws) => {
                 case "market_fetch": await marketHandler.handleListItems(ws, request); break;
                 case "market_post": await marketHandler.handlePostListing(ws, request); break;
                 case "market_buy": await marketHandler.handleBuy(ws, request); break;
-                // NEW: BUILDING INTERACTIONS
                 case "fetch_recipes": await buildingHandler.handleFetchRecipes(ws, request); break;
                 case "craft_item": await buildingHandler.handleCraft(ws, request); break;
-                // NEW: QUEST COMMANDS
                 case "accept_quest": await questHandler.handleAcceptQuest(ws, request); break;
                 case "fetch_quests": await questHandler.handleFetchActiveQuests(ws, request); break;
+                // NEW: DIALOGUE COMMANDS
+                case "start_dialogue": await dialogueHandler.handleDialogue(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
             }
 
