@@ -13,7 +13,23 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files...");
         
-        // 1. Load Classes (Ultra Complex)
+        // 1. Load Quests (Ultra Complex)
+        const questFiles = this._scanDir(path.join(ASSET_ROOT, 'quests'));
+        for (let file of questFiles) {
+            try {
+                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+                const dbData = {
+                    ...data,
+                    objectives: JSON.stringify(data.objectives || []),
+                    logicBranches: JSON.stringify(data.logicBranches || {}),
+                    rewards: JSON.stringify(data.rewards || {}),
+                    filePath: file.relativePath
+                };
+                await prisma.questTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
+            } catch(e) { console.error(`Quest Load Fail: ${file.fullPath}`, e.message); }
+        }
+
+        // 2. Load Classes
         const classFiles = this._scanDir(path.join(ASSET_ROOT, 'classes'));
         for (let file of classFiles) {
             try {
@@ -30,25 +46,7 @@ class AssetService {
                     filePath: file.relativePath
                 };
                 await prisma.classTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
-            } catch(e) { console.error(`Failed to load Class: ${file.fullPath}`, e.message); }
-        }
-
-        // 2. Load Traits
-        const traitFiles = this._scanDir(path.join(ASSET_ROOT, 'traits'));
-        for (let file of traitFiles) {
-            try {
-                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-                const dbData = {
-                    ...data,
-                    statModifiers: JSON.stringify(data.statModifiers || {}),
-                    elementalMods: JSON.stringify(data.elementalMods || {}),
-                    battleHooks: JSON.stringify(data.battleHooks || {}),
-                    requirements: JSON.stringify(data.requirements || {}),
-                    conflicts: JSON.stringify(data.conflicts || []),
-                    filePath: file.relativePath
-                };
-                await prisma.traitTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
-            } catch(e) { console.error(`Failed Trait: ${file.fullPath}`, e.message); }
+            } catch(e) { console.error(`Class Load Fail: ${file.fullPath}`, e.message); }
         }
 
         // 3. Load Monsters
@@ -67,10 +65,10 @@ class AssetService {
                     filePath: file.relativePath
                 };
                 await prisma.monsterTemplate.upsert({ where: { id: data.id }, update: dbData, create: dbData });
-            } catch(e) { console.error(`Failed Monster: ${file.fullPath}`, e.message); }
+            } catch(e) { console.error(`Monster Load Fail: ${file.fullPath}`, e.message); }
         }
 
-        console.log(`[ASSETS] Final MASTER Sync Complete.`);
+        console.log(`[ASSETS] MASTER Sync Success.`);
     }
 
     _scanDir(dir, fileList = [], rootDir = dir) {

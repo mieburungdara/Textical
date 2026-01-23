@@ -1,0 +1,22 @@
+{
+  "id": "q_dragon_shadow_01",
+  "name": "The Dragon's Shadow",
+  "description": "Rumors of a crimson dragon have terrified the villagers. Investigate the Whispering Forest.",
+  "category": "MAIN",
+  "difficulty": "NORMAL",
+  "minLevel": 5,
+  "objectives": [
+    { "type": "TRAVEL", "target": "whispering_forest", "desc": "Go to the forest" },
+    { "type": "KILL", "target": "mob_orc_grunt", "amount": 5, "desc": "Defeat the Orc scouts" }
+  ],
+  "logicBranches": {
+    "spare_orc": { "next_quest": "q_mercy_path_02", "reward_modifier": { "fame": 20 } },
+    "kill_orc": { "next_quest": "q_slayer_path_02", "reward_modifier": { "gold": 500 } }
+  },
+  "rewards": {
+    "gold": 200,
+    "exp": 1000,
+    "items": [{ "id": "itm_iron_sword", "qty": 1 }]
+  },
+  "requiredRegion": "starting_village"
+}

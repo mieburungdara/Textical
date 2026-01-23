@@ -1,4 +1,4 @@
-// AAA Ultra-Complex Item Ecosystem Schema
+// AAA Deep Quest System Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... (User, Hero, HOF, Monster, Region, Trait, Behavior, Skill, Class, Job preserved) ...
+// ... (User, Hero, HOF, Inventory, Templates remain consistent) ...
 
 model User {
   id            String   @id @default(uuid())
@@ -21,94 +21,96 @@ model User {
   inventory     InventoryItem[]
 }
 
-// --- NEW: THE ITEM BLUEPRINT ---
+// --- NEW: ULTRA-COMPLEX QUEST SYSTEM ---
+model QuestTemplate {
+  id              String @id
+  name            String
+  description     String
+  category        String @default("SIDE")    // MAIN, SIDE, DAILY, EVENT, GUILD
+  difficulty      String @default("NORMAL")  // EASY, NORMAL, HARD, ELITE, LEGENDARY
+  minLevel        Int    @default(1)
+  
+  // 1. Chaining & Dependencies
+  // e.g., Quest B requires Quest A to be completed
+  prerequisiteQuestId String?
+  
+  // 2. Multi-Stage Objectives (JSON Array)
+  // e.g., [{"type": "KILL", "target": "mob_orc", "amount": 10}, {"type": "TRAVEL", "target": "whispering_forest"}]
+  objectives      String @default("[]")
+  
+  // 3. Branching & Choice Logic (JSON)
+  // e.g., {"choice_a": {"next_quest": "quest_hero_path"}, "choice_b": {"next_quest": "quest_villain_path"}}
+  logicBranches   String @default("{}")
+  
+  // 4. Rewards System (JSON)
+  // e.g., {"gold": 1000, "exp": 5000, "fame": 50, "items": [{"id": "itm_ruby", "qty": 1}]}
+  rewards         String @default("{}")
+  
+  // 5. World State & Time
+  isTimeLimited   Boolean @default(false)
+  expiryHours     Int     @default(0) // Duration in hours once accepted
+  requiredRegion  String? // Region where the quest must be taken/performed
+  
+  iconPath        String @default("res://assets/icons/quests/default.png")
+  filePath        String @default("quests/misc.json")
+}
+
+// --- PRESERVED MASTER TABLES ---
+
+model ClassTemplate {
+  id              String @id
+  name            String
+  description     String
+  tier            Int    @default(1)
+  statSystem      String @default("{}")
+  masteries       String @default("{}")
+  mechanics       String @default("{}")
+  skillTree       String @default("[]")
+  innateTraits    String @default("[]")
+  promotionReqs   String @default("{}")
+  nextClasses     String @default("[]")
+  iconPath        String @default("res://assets/icons/classes/default.png")
+  filePath        String @default("classes/misc.json")
+  heroes          Hero[]
+}
+
 model ItemTemplate {
   id              String @id
   name            String
   description     String
-  category        String @default("EQUIPMENT") // WEAPON, ARMOR, CONSUMABLE, MATERIAL, CURRENCY
-  subCategory     String @default("MISC")      // SWORD, STAFF, PLATE_ARMOR, CRYSTAL, STONE
-  
-  // 1. Base Stats (JSON)
-  // e.g., {"atk": 50, "spd": -2, "durability": 100}
+  category        String @default("EQUIPMENT")
+  subCategory     String @default("MISC")
   baseStats       String @default("{}")
-  
-  // 2. Scaling & Mastery (JSON)
-  // e.g., {"scaling": {"str": 0.8}, "min_level": 20, "req_class": "knight"}
   requirements    String @default("{}")
-  
-  // 3. Socketing Configuration
   maxSockets      Int    @default(0)
-  allowedSockets  String @default("[]") // List of allowed crystal types
-  
-  // 4. Set Relation
+  allowedSockets  String @default("[]")
   setId           String?
   itemSet         ItemSet? @relation(fields: [setId], references: [id])
-  
-  // 5. Crafting & Salvage
   isCraftable     Boolean @default(true)
-  salvageResult   String @default("[]") // List of materials returned on dismantle
-  
-  rarity          String @default("COMMON") // COMMON, RARE, EPIC, LEGENDARY, ARTIFACT
+  salvageResult   String @default("[]")
+  rarity          String @default("COMMON")
   iconPath        String @default("res://assets/icons/items/default.png")
   filePath        String @default("items/misc.json")
-  
   instances       InventoryItem[]
 }
 
-// --- NEW: ITEM SETS ---
 model ItemSet {
   id              String @id
   name            String
   description     String
-  
-  // Set Bonuses (JSON Array)
-  // e.g., [{"count": 2, "bonus": {"hp": 100}}, {"count": 4, "bonus": {"trait": "dragon_breath"}}]
   setBonuses      String @default("[]")
-  
   items           ItemTemplate[]
 }
 
-// --- NEW: RANDOM AFFIXES (Prefix/Suffix) ---
 model ItemAffix {
   id              String @id
-  name            String // e.g., "Flaming", "of Protection"
-  type            String @default("PREFIX") // PREFIX or SUFFIX
-  
-  // Affix Stats (JSON)
-  // e.g., {"fire_damage": 15, "crit_chance": 0.05}
+  name            String
+  type            String @default("PREFIX")
   modifiers       String @default("{}")
-  
-  // Constraints
-  allowedCategories String @default("[]") // e.g., ["WEAPON"]
+  allowedCategories String @default("[]")
   minItemLevel      Int    @default(1)
   rarity            String @default("COMMON")
 }
-
-// --- UPDATED: INVENTORY INSTANCE (The Actual Item Player Holds) ---
-model InventoryItem {
-  id              String @id @default(uuid())
-  userId          String
-  user            User   @relation(fields: [userId], references: [id])
-  
-  templateId      String
-  template        ItemTemplate @relation(fields: [templateId], references: [id])
-  
-  quantity        Int    @default(1)
-  
-  // DYNAMIC DATA (The "DNA" of this specific instance)
-  // e.g., {"affixes": ["affix_flaming"], "current_durability": 85, "refine_level": 5}
-  uniqueData      String @default("{}")
-  
-  // SOCKETED ITEMS (Link to other InventoryItem IDs)
-  // e.g., ["uuid_of_crystal_1", "uuid_of_crystal_2"]
-  sockets         String @default("[]")
-  
-  isEquipped      Boolean @default(false)
-  ownerHeroId     String?
-}
-
-// --- (Silsilah and other models below remain unchanged) ---
 
 model Hero {
   id          String @id @default(uuid())
@@ -135,27 +137,10 @@ model Hero {
   deeds             String @default("{}")
   hasReproduced Boolean @default(false)
   fatherId      String?
-  motherId    String?
+  motherId      String?
   generation  Int      @default(1)
   equipment   String @default("{}")
   createdAt   DateTime @default(now())
-}
-
-model ClassTemplate {
-  id              String @id
-  name            String
-  description     String
-  tier            Int    @default(1)
-  statSystem      String @default("{}")
-  masteries       String @default("{}")
-  mechanics       String @default("{}")
-  skillTree       String @default("[]")
-  innateTraits    String @default("[]")
-  promotionReqs   String @default("{}")
-  nextClasses     String @default("[]")
-  iconPath        String @default("res://assets/icons/classes/default.png")
-  filePath        String @default("classes/misc.json")
-  heroes          Hero[]
 }
 
 model JobTemplate {
@@ -273,6 +258,19 @@ model HallOfFame {
   finalDeeds  String
   deathDate   DateTime @default(now())
   causeOfDeath String
+}
+
+model InventoryItem {
+  id          String @id @default(uuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  templateId  String
+  template    ItemTemplate @relation(fields: [templateId], references: [id])
+  quantity    Int    @default(1)
+  uniqueData  String @default("{}")
+  sockets     String @default("[]")
+  isEquipped  Boolean @default(false)
+  ownerHeroId String?
 }
 
 model RaceBonusTemplate {
