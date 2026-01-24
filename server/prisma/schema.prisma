@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Absolute Reconstruction)
+// AAA Truly Absolute Relational Master Schema (No JSON Strings)
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,26 +15,21 @@ model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
   password      String
-  
   copper        Int      @default(0)
   silver        Int      @default(0)
   gold          Int      @default(5)
   platinum      Int      @default(0)
   mithril       Int      @default(0)
-  
   fame          Int      @default(0)
   currentRegion Int      @default(1)
-  
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
   auctionListings HeroAuctionListing[] @relation("SellerRelation")
   bids            HeroBid[]
-  
   guildId       Int?
   guild         Guild?   @relation(fields: [guildId], references: [id])
   guildRole     String   @default("MEMBER")
-  
   achievements  UserAchievement[]
   recipes       UserRecipe[]
   activeQuests  UserQuest[]
@@ -59,7 +54,6 @@ model RegionTemplate {
   backgroundPath  String   @default("res://assets/backgrounds/default.png")
   musicTrack      String   @default("default_theme")
   filePath        String   @default("regions/misc.json")
-  
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   buildings       BuildingInstance[]
@@ -96,24 +90,39 @@ model ItemTemplate {
   iconPath        String   @default("res://assets/icons/items/default.png")
   baseDurability  Int      @default(100)
   repairCostPerPt Int      @default(1)
-  
   maxSockets      Int      @default(0)
-  allowedSockets  String   @default("[]")
   isCraftable     Boolean  @default(true)
-  salvageResult   String   @default("[]")
-  
   setId           Int?
   itemSet         ItemSet? @relation(fields: [setId], references: [id])
   filePath        String   @default("items/misc.json")
   
+  // Fully Normalized Lists
+  allowedSockets  ItemAllowedSocket[]
+  salvageResult   ItemSalvageEntry[]
   stats           ItemStat[]
   requirements    ItemRequirement[]
+  
   instances       InventoryItem[]
   marketListings  MarketListing[]
   auctionListings HeroAuctionListing[]
   recipeResult    RecipeTemplate[]
   ingredients     RecipeIngredient[]
   regionResources RegionResource[]
+}
+
+model ItemAllowedSocket {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  socketType      String   // FIRE, HOLY, MAGIC, etc.
+}
+
+model ItemSalvageEntry {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  materialId      Int      // Item ID of the resulting material
+  quantity        Int      @default(1)
 }
 
 model ItemStat {
@@ -155,7 +164,6 @@ model ClassTemplate {
   description     String
   tier            Int      @default(1)
   filePath        String   @default("classes/misc.json")
-  
   stats           ClassStatGrowth[]
   skillUnlocks    ClassSkillUnlock[]
   promotions      ClassPromotionPath[] @relation("PreviousClass")
@@ -196,7 +204,6 @@ model TraitTemplate {
   type            String   @default("NATURAL")
   rarity          String   @default("COMMON")
   filePath        String   @default("traits/misc.json")
-  
   statModifiers   TraitStatModifier[]
   heroes          HeroTrait[]
 }
@@ -223,7 +230,6 @@ model MonsterTemplate {
   element     String   @default("NEUTRAL")
   size        String   @default("MEDIUM")
   filePath    String   @default("monsters/misc.json") 
-  
   traits      MonsterTraitUnlock[]
   loot        MonsterLootEntry[]
 }
@@ -257,7 +263,6 @@ model BuildingTemplate {
   description     String   @default("")
   category        String   @default("ECONOMY")
   filePath        String   @default("buildings/misc.json")
-  
   upgrades        BuildingUpgrade[]
   perks           BuildingPerk[]
   instances       BuildingInstance[]
@@ -287,7 +292,6 @@ model GuildTemplate {
   description     String
   primaryColor    String   @default("#ffffff")
   filePath        String   @default("guilds/misc.json")
-  
   guilds          Guild[]
 }
 
@@ -306,7 +310,6 @@ model RecipeTemplate {
   requiredBuildingId Int? 
   baseSuccessRate Float    @default(1.0)
   filePath        String   @default("recipes/misc.json")
-  
   ingredients     RecipeIngredient[]
   learnedBy       UserRecipe[]
 }
@@ -328,16 +331,26 @@ model QuestTemplate {
   difficulty      String   @default("NORMAL")
   minLevel        Int      @default(1)
   prerequisiteQuestId Int?
-  logicBranches   String   @default("{}") // RESTORED
-  rewards         String   @default("{}") // RESTORED (for complex logic)
   isTimeLimited   Boolean  @default(false)
   expiryHours     Int      @default(0)
   requiredRegion  Int?
   filePath        String   @default("quests/misc.json")
   
+  // Fully Normalized
+  branches        QuestBranch[]
   objectives      QuestObjective[]
-  questRewards    QuestReward[]
+  rewards         QuestReward[]
   userQuests      UserQuest[]
+}
+
+model QuestBranch {
+  id              Int      @id @default(autoincrement())
+  questId         Int
+  quest           QuestTemplate @relation(fields: [questId], references: [id])
+  choiceKey       String   // spare, kill, etc.
+  nextNodeId      Int?     // Next Quest ID
+  fameReward      Int      @default(0)
+  goldReward      Int      @default(0)
 }
 
 model QuestObjective {
@@ -387,15 +400,6 @@ model EventSpawn {
   spawnChance     Float
 }
 
-model JobTemplate {
-  id              Int      @id
-  name            String
-  description     String   @default("")
-  category        String   @default("COLLECTION")
-  filePath        String   @default("jobs/misc.json")
-  workers         Hero[]
-}
-
 model SkillTemplate {
   id              Int      @id
   name            String
@@ -419,7 +423,33 @@ model DialogueTemplate {
 
 model RaceBonusTemplate {
   id              Int      @id
-  bonusData       String   @default("{}")
+  filePath        String   @default("races/misc.json")
+  statBonuses     RaceStatBonus[]
+}
+
+model RaceStatBonus {
+  id              Int      @id @default(autoincrement())
+  raceTemplateId  Int
+  raceTemplate    RaceBonusTemplate @relation(fields: [raceTemplateId], references: [id])
+  statKey         String
+  bonusValue      Float
+}
+
+model BehaviourTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  filePath        String   @default("behaviors/misc.json")
+  heroes          HeroBehavior[]
+}
+
+model JobTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  category        String   @default("COLLECTION")
+  filePath        String   @default("jobs/misc.json")
+  workers         Hero[]
 }
 
 // ==========================================
@@ -433,19 +463,18 @@ model Hero {
   name        String
   level       Int      @default(1)
   exp         Int      @default(0)
-  
   classId     Int      @default(1001)
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
-  
   jobId       Int?
   job         JobTemplate? @relation(fields: [jobId], references: [id])
   jobLevel    Int      @default(1)
   jobExp      Int      @default(0)
   jobRank     String   @default("APPRENTICE")
   masteryPoints Int    @default(0)
-
   createdAt   DateTime @default(now())
+  
   stats       HeroStat[]
+  deeds       HeroDeed[]
   traits      HeroTrait[]
   behaviors   HeroBehavior[]
   equipment   HeroEquipment[]
@@ -458,6 +487,14 @@ model HeroStat {
   hero        Hero     @relation(fields: [heroId], references: [id])
   statKey     String
   value       Int
+}
+
+model HeroDeed {
+  id          Int      @id @default(autoincrement())
+  heroId      Int
+  hero        Hero     @relation(fields: [heroId], references: [id])
+  deedKey     String   // monster_kills, items_crafted, etc.
+  value       Int      @default(0)
 }
 
 model HeroEquipment {
@@ -482,14 +519,6 @@ model HeroBehavior {
   hero        Hero     @relation(fields: [heroId], references: [id])
   behaviorId  Int
   behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
-}
-
-model BehaviourTemplate {
-  id              Int      @id
-  name            String
-  description     String   @default("")
-  filePath        String   @default("behaviors/misc.json")
-  heroes          HeroBehavior[]
 }
 
 model InventoryItem {
@@ -524,6 +553,25 @@ model Guild {
   territories     RegionTemplate[]
   attackingSieges Siege[]  @relation("AttackerRelation")
   defendingSieges Siege[]  @relation("DefenderRelation")
+  
+  perks           GuildPerk[]
+  facilities      GuildFacility[]
+}
+
+model GuildPerk {
+  id              Int      @id @default(autoincrement())
+  guildId         Int
+  guild           Guild    @relation(fields: [guildId], references: [id])
+  perkKey         String
+  level           Int      @default(1)
+}
+
+model GuildFacility {
+  id              Int      @id @default(autoincrement())
+  guildId         Int
+  guild           Guild    @relation(fields: [guildId], references: [id])
+  facilityKey     String
+  level           Int      @default(1)
 }
 
 model Siege {
@@ -535,6 +583,15 @@ model Siege {
   defenderGuildId Int?
   defender        Guild?   @relation("DefenderRelation", fields: [defenderGuildId], references: [id])
   status          String   @default("PENDING")
+  logs            SiegeLog[]
+}
+
+model SiegeLog {
+  id              Int      @id @default(autoincrement())
+  siegeId         Int
+  siege           Siege    @relation(fields: [siegeId], references: [id])
+  event           String
+  timestamp       DateTime @default(now())
 }
 
 model MarketListing {
@@ -584,9 +641,7 @@ model HeroAuctionListing {
   hero            Hero     @relation(fields: [heroId], references: [id])
   templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  startingPrice   Int
   expiresAt       DateTime
-  isFinished      Boolean  @default(false)
   bids            HeroBid[]
 }
 
@@ -605,7 +660,6 @@ model UserAchievement {
   user          User     @relation(fields: [userId], references: [id])
   achievementId Int
   achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
-  isUnlocked    Boolean  @default(false)
   @@unique([userId, achievementId])
 }
 
@@ -642,11 +696,8 @@ model UserQuestObjective {
 
 model HallOfFame {
   id            Int      @id @default(autoincrement())
-  originalId    Int      @default(0)
 }
 
 model MarketHistory {
   id            Int      @id @default(autoincrement())
-  soldPrice     Int      @default(0)
-  taxPaid       Int      @default(0)
 }
