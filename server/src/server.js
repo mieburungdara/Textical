@@ -15,7 +15,8 @@ const buildingHandler = require('./handlers/buildingHandler');
 const questHandler = require('./handlers/questHandler');
 const dialogueHandler = require('./handlers/dialogueHandler');
 const economyHandler = require('./handlers/economyHandler');
-const siegeHandler = require('./handlers/siegeHandler'); // NEW
+const siegeHandler = require('./handlers/siegeHandler');
+const leaderboardHandler = require('./handlers/leaderboardHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 
 // Services
@@ -60,9 +61,10 @@ wss.on('connection', (ws) => {
                 case "fetch_quests": await questHandler.handleFetchActiveQuests(ws, request); break;
                 case "convert_currency": await economyHandler.handleConvert(ws, request); break;
                 case "start_dialogue": await dialogueHandler.handleDialogue(ws, request); break;
-                // NEW: SIEGE COMMANDS
                 case "get_siege_status": await siegeHandler.handleGetSiegeStatus(ws, request); break;
                 case "trigger_siege": await siegeHandler.handleTriggerSiege(ws, request); break;
+                // NEW: LEADERBOARD
+                case "fetch_leaderboard": await leaderboardHandler.handleFetchLeaderboard(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
             }
         } catch (err) { console.error(err); }
