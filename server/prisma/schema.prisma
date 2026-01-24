@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Time-Based Gathering Overhaul)
+// AAA Deep Master Relational Schema (Fixed Relational Opposites)
 generator client {
   provider = "prisma-client-js"
 }
@@ -41,8 +41,8 @@ model User {
   formationPresets FormationPreset[]
   activePresetId   Int?
   
-  // NEW: Active Gathering Session
-  gatheringTasks GatheringTask[]
+  gatheringTasks GatheringTask[] // FIXED
+  travelTasks   TravelTask[]    // FIXED
 }
 
 model TransactionLedger {
@@ -154,6 +154,18 @@ model RegionTemplate {
   buildings       BuildingInstance[]
   sieges          Siege[]
   resources       RegionResource[]
+  
+  travelOrigin    TravelTask[] @relation("TravelOrigin")
+  travelTarget    TravelTask[] @relation("TravelTarget")
+}
+
+model RegionConnection {
+  id              Int      @id @default(autoincrement())
+  originRegionId  Int
+  origin          RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
+  targetRegionId  Int
+  target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
+  travelTimeSeconds Int    @default(10)
 }
 
 model RegionResource {
@@ -165,17 +177,7 @@ model RegionResource {
   requiredJobId   Int?     
   spawnChance     Float    @default(1.0)
   gatherDifficulty Int     @default(1)
-  
-  // NEW: AAA TIME-BASED GATHERING
   gatherTimeSeconds Int    @default(10)
-}
-
-model RegionConnection {
-  id              Int      @id @default(autoincrement())
-  originRegionId  Int
-  origin          RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
-  targetRegionId  Int
-  target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
 }
 
 model MonsterTemplate {
@@ -468,26 +470,33 @@ model Hero {
   auction     HeroAuctionListing?
   formationSlots FormationSlot[]
   
-  // Link to active work
-  gatheringTasks GatheringTask[]
+  gatheringTasks GatheringTask[] // FIXED
 }
 
-// NEW: GATHERING TASKS (TIMER TRACKING)
 model GatheringTask {
   id            Int      @id @default(autoincrement())
-  
   userId        Int
   user          User     @relation(fields: [userId], references: [id])
-  
   heroId        Int
   hero          Hero     @relation(fields: [heroId], references: [id])
-  
   itemId        Int
   item          ItemTemplate @relation(fields: [itemId], references: [id])
-  
   startedAt     DateTime @default(now())
   finishesAt    DateTime
   isCompleted   Boolean  @default(false)
+}
+
+model TravelTask {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  originRegionId  Int
+  originRegion    RegionTemplate @relation("TravelOrigin", fields: [originRegionId], references: [id])
+  targetRegionId  Int
+  targetRegion    RegionTemplate @relation("TravelTarget", fields: [targetRegionId], references: [id])
+  startedAt       DateTime @default(now())
+  finishesAt      DateTime
+  isCompleted     Boolean  @default(false)
 }
 
 model FormationPreset {

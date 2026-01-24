@@ -19,5 +19,7 @@
       "gatherTimeSeconds": 30 
     }
   ],
-  "connections": []
+  "connections": [
+    { "targetRegionId": 2, "travelTimeSeconds": 15 }
+  ]
 }

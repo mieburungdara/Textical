@@ -14,15 +14,21 @@ class AssetService {
         console.log("[ASSETS] Scanning Master Files (Truly Normalized)...");
         
         try {
+            // 1. Static Reference Tables
             await this._loadItemSets();
             await this._loadJobs();
             await this._loadMonsterCategories();
+
+            // 2. Templates
             await this._loadItems();
             await this._loadMonsters();
-            await this._loadRegions();
             await this._loadQuests();
             
-            console.log(`[ASSETS] MASTER Advanced Systems Sync Success.`);
+            // 3. Regions (Two-Pass Sync)
+            await this._loadRegionsPass1();
+            await this._loadRegionsPass2();
+
+            console.log(`[ASSETS] MASTER Two-Pass Relational Sync Success.`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
         }
@@ -71,30 +77,23 @@ class AssetService {
         for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
-            
             await prisma.itemTemplate.upsert({
                 where: { id: data.id },
                 update: { ...itemData, filePath: file.relativePath },
                 create: { ...itemData, filePath: file.relativePath }
             });
-
-            // 1. Sockets (Junction)
             await prisma.itemAllowedSocket.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(allowedSockets)) {
                 for (let socketType of allowedSockets) {
                     await prisma.itemAllowedSocket.create({ data: { itemId: data.id, socketType } });
                 }
             }
-
-            // 2. Salvage (Junction)
             await prisma.itemSalvageEntry.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(salvageResult)) {
                 for (let entry of salvageResult) {
                     await prisma.itemSalvageEntry.create({ data: { itemId: data.id, materialId: entry.itemId, quantity: entry.qty || 1 } });
                 }
             }
-
-            // 3. Stats (Junction)
             await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
             if (baseStats) {
                 for (let [key, val] of Object.entries(baseStats)) {
@@ -116,31 +115,12 @@ class AssetService {
         }
     }
 
-    async _loadRegions() {
-        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
-        for (let file of files) {
-            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { resources, connections, ...regionData } = data;
-            await prisma.regionTemplate.upsert({ where: { id: data.id }, update: { ...regionData, filePath: file.relativePath }, create: { ...regionData, filePath: file.relativePath } });
-            
-            await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
-            if (resources) {
-                for (let res of resources) {
-                    await prisma.regionResource.create({
-                        data: { regionId: data.id, itemId: res.itemId, spawnChance: res.spawnChance, gatherDifficulty: res.gatherDifficulty, requiredJobId: res.requiredJobId || null }
-                    });
-                }
-            }
-        }
-    }
-
     async _loadQuests() {
         const files = this._scanDir(path.join(ASSET_ROOT, 'quests'));
         for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             const { objectives, rewards, ...questData } = data;
             await prisma.questTemplate.upsert({ where: { id: data.id }, update: { ...questData, filePath: file.relativePath }, create: { ...questData, filePath: file.relativePath } });
-            
             await prisma.questObjective.deleteMany({ where: { questId: data.id } });
             if (objectives) {
                 for (let obj of objectives) {
@@ -160,7 +140,57 @@ class AssetService {
         }
     }
 
-    async _loadOthers() {}
+    async _loadRegionsPass1() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { resources, connections, ...regionData } = data;
+            await prisma.regionTemplate.upsert({
+                where: { id: data.id },
+                update: { ...regionData, filePath: file.relativePath },
+                create: { ...regionData, filePath: file.relativePath }
+            });
+        }
+    }
+
+    async _loadRegionsPass2() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { resources, connections } = data;
+
+            // 1. Sync Resources
+            await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
+            if (resources) {
+                for (let res of resources) {
+                    await prisma.regionResource.create({
+                        data: { 
+                            regionId: data.id, 
+                            itemId: res.itemId, 
+                            spawnChance: res.spawnChance, 
+                            gatherDifficulty: res.gatherDifficulty, 
+                            gatherTimeSeconds: res.gatherTimeSeconds || 10, 
+                            requiredJobId: res.requiredJobId || null 
+                        }
+                    });
+                }
+            }
+
+            // 2. Sync Connections (Safe now because all regions exist)
+            await prisma.regionConnection.deleteMany({ where: { originRegionId: data.id } });
+            if (connections) {
+                for (let conn of connections) {
+                    await prisma.regionConnection.create({
+                        data: { 
+                            originRegionId: data.id, 
+                            targetRegionId: conn.targetRegionId, 
+                            travelTimeSeconds: conn.travelTimeSeconds || 10 
+                        }
+                    });
+                }
+            }
+        }
+    }
 
     _scanDir(dir, fileList = [], rootDir = dir) {
         if (!fs.existsSync(dir)) return [];
