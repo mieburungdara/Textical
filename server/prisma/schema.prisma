@@ -522,7 +522,6 @@ model TaskQueue {
   
   status          String   @default("PENDING") // ACTIVE, PENDING, COMPLETED
   priority        Int      @default(0) // Order in queue
-  autoRepeat      Boolean  @default(false) // If true, restarts same task on completion
   
   startedAt       DateTime?
   finishesAt      DateTime?
