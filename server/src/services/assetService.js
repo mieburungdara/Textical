@@ -14,23 +14,38 @@ class AssetService {
         console.log("[ASSETS] Scanning Master Files (Truly Normalized)...");
         
         try {
-            // 1. Static Reference Tables
+            await this._loadPremiumTiers();
             await this._loadItemSets();
             await this._loadJobs();
             await this._loadMonsterCategories();
-
-            // 2. Templates
             await this._loadItems();
             await this._loadMonsters();
-            await this._loadQuests();
-            
-            // 3. Regions (Two-Pass Sync)
             await this._loadRegionsPass1();
             await this._loadRegionsPass2();
-
-            console.log(`[ASSETS] MASTER Two-Pass Relational Sync Success.`);
+            await this._loadQuests();
+            
+            console.log(`[ASSETS] MASTER Final Relational Sync Success (Premium & Queue).`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
+        }
+    }
+
+    async _loadPremiumTiers() {
+        const tiers = [
+            { id: 0, name: "Free", queueSlots: 0, speedBonus: 0.0 },
+            { id: 1, name: "Bronze", queueSlots: 1, speedBonus: 0.0 },
+            { id: 2, name: "Silver", queueSlots: 2, speedBonus: 0.05 },
+            { id: 3, name: "Gold", queueSlots: 3, speedBonus: 0.10 },
+            { id: 4, name: "Platinum", queueSlots: 5, speedBonus: 0.15 },
+            { id: 5, name: "Diamond", queueSlots: 10, speedBonus: 0.25 }
+        ];
+
+        for (let tier of tiers) {
+            await prisma.premiumTierTemplate.upsert({
+                where: { id: tier.id },
+                update: tier,
+                create: tier
+            });
         }
     }
 
@@ -115,6 +130,43 @@ class AssetService {
         }
     }
 
+    async _loadRegionsPass1() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { resources, connections, ...regionData } = data;
+            await prisma.regionTemplate.upsert({
+                where: { id: data.id },
+                update: { ...regionData, filePath: file.relativePath },
+                create: { ...regionData, filePath: file.relativePath }
+            });
+        }
+    }
+
+    async _loadRegionsPass2() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { resources, connections } = data;
+            await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
+            if (resources) {
+                for (let res of resources) {
+                    await prisma.regionResource.create({
+                        data: { regionId: data.id, itemId: res.itemId, spawnChance: res.spawnChance, gatherDifficulty: res.gatherDifficulty, gatherTimeSeconds: res.gatherTimeSeconds || 10, requiredJobId: res.requiredJobId || null }
+                    });
+                }
+            }
+            await prisma.regionConnection.deleteMany({ where: { originRegionId: data.id } });
+            if (connections) {
+                for (let conn of connections) {
+                    await prisma.regionConnection.create({
+                        data: { originRegionId: data.id, targetRegionId: conn.targetRegionId, travelTimeSeconds: conn.travelTimeSeconds || 10 }
+                    });
+                }
+            }
+        }
+    }
+
     async _loadQuests() {
         const files = this._scanDir(path.join(ASSET_ROOT, 'quests'));
         for (let file of files) {
@@ -134,58 +186,6 @@ class AssetService {
                 for (let rew of rewards) {
                     await prisma.questReward.create({
                         data: { questId: data.id, type: rew.type, targetId: rew.targetId, amount: rew.amount || 1 }
-                    });
-                }
-            }
-        }
-    }
-
-    async _loadRegionsPass1() {
-        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
-        for (let file of files) {
-            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { resources, connections, ...regionData } = data;
-            await prisma.regionTemplate.upsert({
-                where: { id: data.id },
-                update: { ...regionData, filePath: file.relativePath },
-                create: { ...regionData, filePath: file.relativePath }
-            });
-        }
-    }
-
-    async _loadRegionsPass2() {
-        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
-        for (let file of files) {
-            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { resources, connections } = data;
-
-            // 1. Sync Resources
-            await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
-            if (resources) {
-                for (let res of resources) {
-                    await prisma.regionResource.create({
-                        data: { 
-                            regionId: data.id, 
-                            itemId: res.itemId, 
-                            spawnChance: res.spawnChance, 
-                            gatherDifficulty: res.gatherDifficulty, 
-                            gatherTimeSeconds: res.gatherTimeSeconds || 10, 
-                            requiredJobId: res.requiredJobId || null 
-                        }
-                    });
-                }
-            }
-
-            // 2. Sync Connections (Safe now because all regions exist)
-            await prisma.regionConnection.deleteMany({ where: { originRegionId: data.id } });
-            if (connections) {
-                for (let conn of connections) {
-                    await prisma.regionConnection.create({
-                        data: { 
-                            originRegionId: data.id, 
-                            targetRegionId: conn.targetRegionId, 
-                            travelTimeSeconds: conn.travelTimeSeconds || 10 
-                        }
                     });
                 }
             }
