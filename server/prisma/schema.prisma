@@ -1,4 +1,4 @@
-// AAA Deep Master Schema (Absolute Final Item Fields)
+// AAA Deep Job Progression Master Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +7,10 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+// ==========================================
+// 1. CORE MODELS (Updated)
+// ==========================================
 
 model User {
   id            Int      @id @default(autoincrement())
@@ -33,6 +37,70 @@ model User {
   receivedMail  Mail[]   @relation("ReceiverRelation")
   sentMail      Mail[]   @relation("SenderRelation")
   notifications Notification[]
+}
+
+model Hero {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  level       Int      @default(1)
+  exp         Int      @default(0)
+  
+  classId     Int      @default(1001)
+  combatClass ClassTemplate @relation(fields: [classId], references: [id])
+  
+  // NEW: Multi-Job Progression Relation
+  jobs        HeroJobProgress[]
+  
+  createdAt   DateTime @default(now())
+  stats       HeroStat[]
+  traits      HeroTrait[]
+  behaviors   HeroBehavior[]
+  equipment   HeroEquipment[]
+  auction     HeroAuctionListing?
+}
+
+// ==========================================
+// NEW: GRANULAR JOB PROGRESSION
+// ==========================================
+
+model HeroJobProgress {
+  id            Int      @id @default(autoincrement())
+  
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  
+  jobId         Int
+  job           JobTemplate @relation(fields: [jobId], references: [id])
+  
+  level         Int      @default(1)
+  exp           Int      @default(0)
+  
+  // AAA MECHANIC: Mastery points to spend on job-specific talent trees
+  masteryPoints Int      @default(0)
+  
+  // Mark if this is the hero's current active profession
+  isActive      Boolean  @default(false)
+  
+  unlockedAt    DateTime @default(now())
+
+  @@unique([heroId, jobId])
+}
+
+// ==========================================
+// 2. TEMPLATES (Normalized)
+// ==========================================
+
+model JobTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  category        String   @default("COLLECTION")
+  filePath        String   @default("jobs/misc.json")
+  
+  // Relation to progression instances
+  progressions    HeroJobProgress[]
 }
 
 model RegionTemplate {
@@ -79,7 +147,7 @@ model ItemTemplate {
   category        String   @default("EQUIPMENT")
   subCategory     String   @default("MISC")
   rarity          String   @default("COMMON")
-  iconPath        String   @default("res://assets/icons/items/default.png") // NEW: Missing field
+  iconPath        String   @default("res://assets/icons/items/default.png")
   baseDurability  Int      @default(100)
   repairCostPerPt Int      @default(1)
   maxSockets      Int      @default(0)
@@ -287,23 +355,36 @@ model AchievementTemplate {
   users           UserAchievement[]
 }
 
-model Hero {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  level       Int      @default(1)
-  classId     Int      @default(1001)
-  combatClass ClassTemplate @relation(fields: [classId], references: [id])
-  jobId       Int?
-  job         JobTemplate? @relation(fields: [jobId], references: [id])
-  createdAt   DateTime @default(now())
-  stats       HeroStat[]
-  traits      HeroTrait[]
-  behaviors   HeroBehavior[]
-  equipment   HeroEquipment[]
-  auction     HeroAuctionListing?
+model SkillTemplate {
+  id              Int @id
+  name            String
+  filePath        String @default("skills/misc.json")
 }
+
+model StatusEffectTemplate {
+  id Int @id
+  name String @default("None")
+}
+
+model DialogueTemplate {
+  id Int @id
+  npcId String @default("Unknown")
+}
+
+model RaceBonusTemplate {
+  id Int @id
+  bonusData String @default("{}")
+}
+
+model BehaviourTemplate {
+  id              Int @id
+  name            String
+  heroes          HeroBehavior[]
+}
+
+// ==========================================
+// 3. INSTANCE DATA (Remaining)
+// ==========================================
 
 model HeroStat {
   id          Int      @id @default(autoincrement())
@@ -335,18 +416,6 @@ model HeroBehavior {
   hero        Hero     @relation(fields: [heroId], references: [id])
   behaviorId  Int
   behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
-}
-
-model BehaviourTemplate {
-  id              Int @id
-  name            String
-  heroes          HeroBehavior[]
-}
-
-model JobTemplate {
-  id              Int @id
-  name            String
-  workers         Hero[]
 }
 
 model InventoryItem {
@@ -440,7 +509,6 @@ model HeroAuctionListing {
   templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
   expiresAt       DateTime
-  isFinished      Boolean  @default(false)
   bids            HeroBid[]
 }
 
@@ -500,19 +568,4 @@ model HallOfFame {
 model MarketHistory {
   id            Int      @id @default(autoincrement())
   soldPrice     Int      @default(0)
-}
-
-model RaceBonusTemplate {
-  id            Int      @id
-  bonusData     String   @default("{}")
-}
-
-model StatusEffectTemplate {
-  id            Int      @id
-  name          String   @default("None")
-}
-
-model DialogueTemplate {
-  id            Int      @id
-  npcId         String   @default("Unknown")
 }
