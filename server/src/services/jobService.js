@@ -2,26 +2,21 @@ const prisma = new (require('@prisma/client').PrismaClient)();
 
 class JobService {
     /**
-     * Adds experience to a specific job for a hero.
-     * Handles leveling up and mastery point distribution.
+     * Adds experience to a hero's single, specialized job.
      */
-    async addJobExp(heroId, jobId, amount) {
-        let progress = await prisma.heroJobProgress.findUnique({
-            where: { heroId_jobId: { heroId, jobId } }
+    async addJobExp(heroId, amount) {
+        const hero = await prisma.hero.findUnique({
+            where: { id: heroId },
+            include: { job: true }
         });
 
-        // 1. If hero doesn't have this job yet, unlock it
-        if (!progress) {
-            progress = await prisma.heroJobProgress.create({
-                data: { heroId, jobId, level: 1, exp: 0 }
-            });
-        }
+        if (!hero || !hero.jobId) throw new Error("Hero does not have a specialized job assigned.");
 
-        let newExp = progress.exp + amount;
-        let newLevel = progress.level;
-        let newMasteryPoints = progress.masteryPoints;
+        let newExp = hero.jobExp + amount;
+        let newLevel = hero.jobLevel;
+        let newMasteryPoints = hero.masteryPoints;
 
-        // 2. AAA Leveling Logic: 100 * level^1.5 EXP required
+        // AAA Leveling Logic: 100 * level^1.5 EXP
         while (newExp >= Math.floor(100 * Math.pow(newLevel, 1.5))) {
             newExp -= Math.floor(100 * Math.pow(newLevel, 1.5));
             newLevel++;
@@ -29,29 +24,34 @@ class JobService {
             // Gain 1 Mastery Point every 5 levels
             if (newLevel % 5 === 0) newMasteryPoints++;
             
-            console.log(`[JOB] Hero ${heroId} reached ${jobId} Level ${newLevel}!`);
+            console.log(`[JOB] Specialist ${hero.name} reached ${hero.job.name} Level ${newLevel}!`);
         }
 
-        return await prisma.heroJobProgress.update({
-            where: { id: progress.id },
-            data: { exp: newExp, level: newLevel, masteryPoints: newMasteryPoints }
+        return await prisma.hero.update({
+            where: { id: heroId },
+            data: { 
+                jobExp: newExp, 
+                jobLevel: newLevel, 
+                masteryPoints: newMasteryPoints 
+            }
         });
     }
 
     /**
-     * Set a job as the active profession for a hero.
+     * Permanent Job Assignment (The hero focuses on this forever)
      */
-    async setActiveJob(heroId, jobId) {
-        // Deactivate all jobs for this hero first
-        await prisma.heroJobProgress.updateMany({
-            where: { heroId },
-            data: { isActive: false }
-        });
+    async assignPermanentJob(heroId, jobId) {
+        const hero = await prisma.hero.findUnique({ where: { id: heroId } });
+        if (hero.jobId) throw new Error("Hero already has a specialized profession.");
 
-        // Activate the chosen one
-        return await prisma.heroJobProgress.update({
-            where: { heroId_jobId: { heroId, jobId } },
-            data: { isActive: true }
+        return await prisma.hero.update({
+            where: { id: heroId },
+            data: { 
+                jobId: jobId,
+                jobLevel: 1,
+                jobExp: 0,
+                jobRank: "APPRENTICE"
+            }
         });
     }
 }

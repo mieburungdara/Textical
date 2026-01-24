@@ -1,4 +1,4 @@
-// AAA Deep Job Progression Master Schema
+// AAA Deep Specialist Job Master Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,9 +9,8 @@ datasource db {
 }
 
 // ==========================================
-// 1. CORE MODELS (Updated)
+// 1. CORE USER & ACCOUNT
 // ==========================================
-
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
@@ -39,6 +38,9 @@ model User {
   notifications Notification[]
 }
 
+// ==========================================
+// 2. HERO (The Specialist)
+// ==========================================
 model Hero {
   id          Int      @id @default(autoincrement())
   userId      Int
@@ -47,12 +49,18 @@ model Hero {
   level       Int      @default(1)
   exp         Int      @default(0)
   
+  // COMBAT IDENTITY
   classId     Int      @default(1001)
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   
-  // NEW: Multi-Job Progression Relation
-  jobs        HeroJobProgress[]
-  
+  // JOB IDENTITY (ONE HERO = ONE JOB)
+  jobId       Int?
+  job         JobTemplate? @relation(fields: [jobId], references: [id])
+  jobLevel    Int      @default(1)
+  jobExp      Int      @default(0)
+  jobRank     String   @default("APPRENTICE")
+  masteryPoints Int    @default(0)
+
   createdAt   DateTime @default(now())
   stats       HeroStat[]
   traits      HeroTrait[]
@@ -62,34 +70,7 @@ model Hero {
 }
 
 // ==========================================
-// NEW: GRANULAR JOB PROGRESSION
-// ==========================================
-
-model HeroJobProgress {
-  id            Int      @id @default(autoincrement())
-  
-  heroId        Int
-  hero          Hero     @relation(fields: [heroId], references: [id])
-  
-  jobId         Int
-  job           JobTemplate @relation(fields: [jobId], references: [id])
-  
-  level         Int      @default(1)
-  exp           Int      @default(0)
-  
-  // AAA MECHANIC: Mastery points to spend on job-specific talent trees
-  masteryPoints Int      @default(0)
-  
-  // Mark if this is the hero's current active profession
-  isActive      Boolean  @default(false)
-  
-  unlockedAt    DateTime @default(now())
-
-  @@unique([heroId, jobId])
-}
-
-// ==========================================
-// 2. TEMPLATES (Normalized)
+// 3. TEMPLATES (Static Game Data)
 // ==========================================
 
 model JobTemplate {
@@ -99,8 +80,7 @@ model JobTemplate {
   category        String   @default("COLLECTION")
   filePath        String   @default("jobs/misc.json")
   
-  // Relation to progression instances
-  progressions    HeroJobProgress[]
+  workers         Hero[]
 }
 
 model RegionTemplate {
@@ -286,22 +266,22 @@ model MonsterLootEntry {
 }
 
 model BuildingTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
-  filePath        String @default("buildings/misc.json")
+  filePath        String   @default("buildings/misc.json")
   instances       BuildingInstance[]
 }
 
 model GuildTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
   description     String
-  filePath        String @default("guilds/misc.json")
+  filePath        String   @default("guilds/misc.json")
   guilds          Guild[]
 }
 
 model RecipeTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
   resultItemId    Int
   resultItem      ItemTemplate @relation(fields: [resultItemId], references: [id])
@@ -310,7 +290,7 @@ model RecipeTemplate {
 }
 
 model RecipeIngredient {
-  id              Int @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   recipeId        Int
   recipe          RecipeTemplate @relation(fields: [recipeId], references: [id])
   itemId          Int
@@ -319,14 +299,14 @@ model RecipeIngredient {
 }
 
 model QuestTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
   objectives      QuestObjective[]
   userQuests      UserQuest[]
 }
 
 model QuestObjective {
-  id              Int @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   questId         Int
   quest           QuestTemplate @relation(fields: [questId], references: [id])
   type            String
@@ -336,13 +316,13 @@ model QuestObjective {
 }
 
 model GlobalEventTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
   specialSpawns   EventSpawn[]
 }
 
 model EventSpawn {
-  id              Int @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   eventId         Int
   event           GlobalEventTemplate @relation(fields: [eventId], references: [id])
   monsterId       Int
@@ -350,41 +330,12 @@ model EventSpawn {
 }
 
 model AchievementTemplate {
-  id              Int @id
+  id              Int      @id
   name            String
   users           UserAchievement[]
 }
 
-model SkillTemplate {
-  id              Int @id
-  name            String
-  filePath        String @default("skills/misc.json")
-}
-
-model StatusEffectTemplate {
-  id Int @id
-  name String @default("None")
-}
-
-model DialogueTemplate {
-  id Int @id
-  npcId String @default("Unknown")
-}
-
-model RaceBonusTemplate {
-  id Int @id
-  bonusData String @default("{}")
-}
-
-model BehaviourTemplate {
-  id              Int @id
-  name            String
-  heroes          HeroBehavior[]
-}
-
-// ==========================================
-// 3. INSTANCE DATA (Remaining)
-// ==========================================
+// ... (Rest of instances: Stat, Equipment, Inventory, etc preserved) ...
 
 model HeroStat {
   id          Int      @id @default(autoincrement())
@@ -416,6 +367,12 @@ model HeroBehavior {
   hero        Hero     @relation(fields: [heroId], references: [id])
   behaviorId  Int
   behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
+}
+
+model BehaviourTemplate {
+  id              Int      @id
+  name            String
+  heroes          HeroBehavior[]
 }
 
 model InventoryItem {
@@ -496,8 +453,6 @@ model Notification {
   userId          Int
   user            User     @relation(fields: [userId], references: [id])
   type            String
-  message         String
-  createdAt       DateTime @default(now())
 }
 
 model HeroAuctionListing {
@@ -568,4 +523,19 @@ model HallOfFame {
 model MarketHistory {
   id            Int      @id @default(autoincrement())
   soldPrice     Int      @default(0)
+}
+
+model RaceBonusTemplate {
+  id            Int      @id
+  bonusData     String   @default("{}")
+}
+
+model StatusEffectTemplate {
+  id            Int      @id
+  name          String   @default("None")
+}
+
+model DialogueTemplate {
+  id            Int      @id
+  npcId         String   @default("Unknown")
 }
