@@ -1,4 +1,4 @@
-// AAA Deep Master Schema (Fixed JobTemplate & QuestTemplate)
+// AAA Deep Master Schema (Fixed QuestObjective Description)
 generator client {
   provider = "prisma-client-js"
 }
@@ -268,6 +268,7 @@ model QuestObjective {
   type            String
   targetId        Int
   amount          Int      @default(1)
+  description     String   @default("") // FIXED: Restored description field
   userProgress    UserQuestObjective[]
 }
 
@@ -278,6 +279,12 @@ model QuestReward {
   type            String   
   targetId        Int?     
   amount          Int      @default(1)
+}
+
+model AchievementTemplate {
+  id              Int @id
+  name            String
+  users           UserAchievement[]
 }
 
 model GlobalEventTemplate {
@@ -292,12 +299,6 @@ model EventSpawn {
   event           GlobalEventTemplate @relation(fields: [eventId], references: [id])
   monsterId       Int
   spawnChance     Float
-}
-
-model AchievementTemplate {
-  id              Int @id
-  name            String
-  users           UserAchievement[]
 }
 
 model Hero {
@@ -511,10 +512,12 @@ model UserQuestObjective {
 
 model HallOfFame {
   id            Int      @id @default(autoincrement())
+  originalId    Int      @default(0)
 }
 
 model MarketHistory {
   id            Int      @id @default(autoincrement())
+  soldPrice     Int      @default(0)
 }
 
 model RaceBonusTemplate {
@@ -524,10 +527,12 @@ model RaceBonusTemplate {
 
 model StatusEffectTemplate {
   id Int @id
+  name String @default("None")
 }
 
 model DialogueTemplate {
   id Int @id
+  npcId String @default("Unknown")
 }
 
 model SkillTemplate {
