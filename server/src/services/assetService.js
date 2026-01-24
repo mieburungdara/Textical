@@ -21,9 +21,8 @@ class AssetService {
             await this._loadMonsters();
             await this._loadRegions();
             await this._loadQuests();
-            await this._loadOthers();
-
-            console.log(`[ASSETS] MASTER Final Relational Sync Success.`);
+            
+            console.log(`[ASSETS] MASTER Advanced Systems Sync Success.`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
         }
@@ -73,14 +72,13 @@ class AssetService {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
             
-            // Sync Core Item
             await prisma.itemTemplate.upsert({
                 where: { id: data.id },
                 update: { ...itemData, filePath: file.relativePath },
                 create: { ...itemData, filePath: file.relativePath }
             });
 
-            // 1. Sync Sockets (Junction)
+            // 1. Sockets (Junction)
             await prisma.itemAllowedSocket.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(allowedSockets)) {
                 for (let socketType of allowedSockets) {
@@ -88,7 +86,7 @@ class AssetService {
                 }
             }
 
-            // 2. Sync Salvage (Junction)
+            // 2. Salvage (Junction)
             await prisma.itemSalvageEntry.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(salvageResult)) {
                 for (let entry of salvageResult) {
@@ -96,7 +94,7 @@ class AssetService {
                 }
             }
 
-            // 3. Sync Stats (Junction)
+            // 3. Stats (Junction)
             await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
             if (baseStats) {
                 for (let [key, val] of Object.entries(baseStats)) {
@@ -112,8 +110,8 @@ class AssetService {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             await prisma.monsterTemplate.upsert({
                 where: { id: data.id },
-                update: { id: data.id, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath },
-                create: { id: data.id, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath }
+                update: { name: data.name, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath },
+                create: { id: data.id, name: data.name, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath }
             });
         }
     }
@@ -147,7 +145,7 @@ class AssetService {
             if (objectives) {
                 for (let obj of objectives) {
                     await prisma.questObjective.create({
-                        data: { questId: data.id, type: obj.type, targetId: obj.targetId, amount: obj.amount || 1, description: obj.desc || "" }
+                        data: { questId: data.id, type: obj.type, targetId: obj.targetId, amount: obj.amount || 1, description: obj.description || "" }
                     });
                 }
             }
