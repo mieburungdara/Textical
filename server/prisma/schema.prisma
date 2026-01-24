@@ -428,27 +428,71 @@ model GuildTemplate {
 }
 
 model Hero {
+
   id          Int      @id @default(autoincrement())
+
   userId      Int
+
   user        User     @relation(fields: [userId], references: [id])
+
   name        String
+
   level       Int      @default(1)
+
   exp         Int      @default(0)
+
+  
+
   classId     Int      @default(1001)
+
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
+
+  
+
   jobId       Int?
+
   job         JobTemplate? @relation(fields: [jobId], references: [id])
+
   jobLevel    Int      @default(1)
+
   jobExp      Int      @default(0)
+
   jobRank     String   @default("APPRENTICE")
+
   masteryPoints Int    @default(0)
+
+
+
+  // TACTICAL FORMATION (3x3 Grid)
+
+  // null means hero is not currently deployed in the party
+
+  gridX       Int?
+
+  gridY       Int?
+
+
+
   createdAt   DateTime @default(now())
+
+  
+
   stats       HeroStat[]
+
   deeds       HeroDeed[]
+
   traits      HeroTrait[]
+
   behaviors   HeroBehavior[]
+
   equipment   HeroEquipment[]
+
   auction     HeroAuctionListing?
+
+
+
+  @@unique([userId, gridX, gridY])
+
 }
 
 model HeroStat {
