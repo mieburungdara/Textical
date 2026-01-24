@@ -457,6 +457,8 @@ model HeroStat {
   hero        Hero     @relation(fields: [heroId], references: [id])
   statKey     String
   value       Int
+
+  @@unique([heroId, statKey])
 }
 
 model HeroDeed {
@@ -465,6 +467,8 @@ model HeroDeed {
   hero        Hero     @relation(fields: [heroId], references: [id])
   deedKey     String   
   value       Int      @default(0)
+
+  @@unique([heroId, deedKey])
 }
 
 model HeroEquipment {
@@ -473,6 +477,9 @@ model HeroEquipment {
   hero        Hero     @relation(fields: [heroId], references: [id])
   slotKey     String
   itemInstanceId Int
+
+  @@unique([heroId, slotKey])
+  @@unique([itemInstanceId]) // An item instance can only be equipped by one hero at a time
 }
 
 model HeroTrait {
@@ -481,6 +488,8 @@ model HeroTrait {
   hero        Hero     @relation(fields: [heroId], references: [id])
   traitId     Int
   trait       TraitTemplate @relation(fields: [traitId], references: [id])
+
+  @@unique([heroId, traitId])
 }
 
 model HeroBehavior {
@@ -489,6 +498,8 @@ model HeroBehavior {
   hero        Hero     @relation(fields: [heroId], references: [id])
   behaviorId  Int
   behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
+
+  @@unique([heroId, behaviorId])
 }
 
 model InventoryItem {
