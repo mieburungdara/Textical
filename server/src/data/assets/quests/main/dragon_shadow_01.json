@@ -1,18 +1,11 @@
 {
   "id": 7001,
   "name": "The Dragon's Shadow",
-  "description": "Rumors of a crimson dragon have terrified the villagers.",
-  "category": "MAIN",
-  "difficulty": "NORMAL",
-  "minLevel": 5,
+  "description": "Investigate rumors of crimson scales.",
   "objectives": [
-    { "type": "TRAVEL", "targetId": 1, "desc": "Go to the forest" },
-    { "type": "KILL", "targetId": 1001, "amount": 5, "desc": "Defeat Orc scouts" }
+    { "type": "TRAVEL", "targetId": 1, "amount": 1, "desc": "Visit the Elder" }
   ],
-  "logicBranches": {
-    "spare": { "next_quest": 7002 },
-    "kill": { "next_quest": 7003 }
-  },
-  "rewards": { "gold": 200, "exp": 1000 },
-  "requiredRegion": 1
+  "rewards": [
+    { "type": "GOLD", "amount": 500 }
+  ]
 }

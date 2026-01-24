@@ -13,71 +13,88 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files (Truly Normalized)...");
         
-        // 1. Load Item Sets first
-        const setFiles = this._scanDir(path.join(ASSET_ROOT, 'item_sets'));
-        for (let file of setFiles) {
+        // 1. Load Quests & Rewards
+        const questFiles = this._scanDir(path.join(ASSET_ROOT, 'quests'));
+        for (let file of questFiles) {
+            try {
+                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+                const { objectives, rewards, ...questData } = data;
+                
+                await prisma.questTemplate.upsert({
+                    where: { id: data.id },
+                    update: questData,
+                    create: questData
+                });
+
+                // Sync Objectives
+                await prisma.questObjective.deleteMany({ where: { questId: data.id } });
+                if (objectives) {
+                    for (let obj of objectives) {
+                        await prisma.questObjective.create({
+                            data: { questId: data.id, type: obj.type, targetId: obj.targetId, amount: obj.amount || 1 }
+                        });
+                    }
+                }
+
+                // Sync Rewards
+                await prisma.questReward.deleteMany({ where: { questId: data.id } });
+                if (rewards) {
+                    for (let rew of rewards) {
+                        await prisma.questReward.create({
+                            data: { questId: data.id, type: rew.type, targetId: rew.targetId, amount: rew.amount || 1 }
+                        });
+                    }
+                }
+            } catch(e) { console.error(`Quest Fail: ${file.fullPath}`, e.message); }
+        }
+
+        // 2. Load Items & Resources
+        await this._loadItemsAndResources();
+        
+        // 3. Load Jobs
+        const jobFiles = this._scanDir(path.join(ASSET_ROOT, 'jobs'));
+        for (let file of jobFiles) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            await prisma.itemSet.upsert({
+            await prisma.jobTemplate.upsert({
                 where: { id: data.id },
-                update: { name: data.name, description: data.description },
-                create: { id: data.id, name: data.name, description: data.description }
+                update: data,
+                create: data
             });
         }
 
-        // 2. Load Items
+        console.log(`[ASSETS] MASTER Herbalist Path Success.`);
+    }
+
+    async _loadItemsAndResources() {
         const itemFiles = this._scanDir(path.join(ASSET_ROOT, 'items'));
         for (let file of itemFiles) {
             try {
                 const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-                const { baseStats, requirements, allowedSockets, salvageResult, setId, ...itemData } = data;
-                
-                const dbData = {
-                    ...itemData,
-                    setId: setId || null,
-                    allowedSockets: JSON.stringify(allowedSockets || []),
-                    salvageResult: JSON.stringify(salvageResult || []),
-                    filePath: file.relativePath
-                };
-
+                const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
                 await prisma.itemTemplate.upsert({
                     where: { id: data.id },
-                    update: dbData,
-                    create: dbData
+                    update: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []) },
+                    create: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []) }
                 });
-
-                // Sync Detail Tables
-                await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
-                if (baseStats) {
-                    for (let [key, val] of Object.entries(baseStats)) {
-                        await prisma.itemStat.create({ data: { itemId: data.id, statKey: key, statValue: parseFloat(val) } });
-                    }
-                }
-            } catch(e) { console.error(`Item Fail: ${file.fullPath}`, e.message); }
+            } catch(e) {}
         }
 
-        // 3. Load Regions
         const regionFiles = this._scanDir(path.join(ASSET_ROOT, 'regions'));
         for (let file of regionFiles) {
             try {
                 const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
                 const { resources, connections, ...regionData } = data;
-                await prisma.regionTemplate.upsert({
-                    where: { id: data.id },
-                    update: regionData,
-                    create: regionData
-                });
+                await prisma.regionTemplate.upsert({ where: { id: data.id }, update: regionData, create: regionData });
                 await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
                 if (resources) {
                     for (let res of resources) {
                         await prisma.regionResource.create({
-                            data: { regionId: data.id, itemId: res.itemId, spawnChance: res.spawnChance, gatherDifficulty: res.gatherDifficulty }
+                            data: { regionId: data.id, itemId: res.itemId, spawnChance: res.spawnChance, gatherDifficulty: res.gatherDifficulty, requiredJobId: res.requiredJobId || null }
                         });
                     }
                 }
-            } catch(e) { console.error(`Region Fail: ${file.fullPath}`, e.message); }
+            } catch(e) {}
         }
-
-        console.log(`[ASSETS] MASTER Botanical Sync Success.`);
     }
 
     _scanDir(dir, fileList = [], rootDir = dir) {
