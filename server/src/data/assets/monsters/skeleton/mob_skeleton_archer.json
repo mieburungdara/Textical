@@ -1,6 +1,6 @@
 {
-  "id": "mob_skeleton_archer",
-  "categoryId": "skeleton",
+  "id": 5006,
+  "categoryId": 103,
   "name": "Skeleton Archer",
   "hp_base": 70,
   "damage_base": 18,

@@ -13,69 +13,138 @@ class AssetService {
     async loadAllAssets() {
         console.log("[ASSETS] Scanning Master Files (Truly Normalized)...");
         
-        // 1. Load Quests & Objectives
-        const questFiles = this._scanDir(path.join(ASSET_ROOT, 'quests'));
-        for (let file of questFiles) {
-            try {
-                const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-                const { objectives, rewards, ...questData } = data;
-                
-                await prisma.questTemplate.upsert({
-                    where: { id: data.id },
-                    update: questData,
-                    create: questData
-                });
+        try {
+            await this._loadItemSets();
+            await this._loadJobs();
+            await this._loadMonsterCategories();
+            await this._loadItems();
+            await this._loadMonsters();
+            await this._loadRegions(); // FIXED HERE
+            await this._loadQuests();
+            await this._loadOthers();
 
-                await prisma.questObjective.deleteMany({ where: { questId: data.id } });
-                if (objectives) {
-                    for (let obj of objectives) {
-                        await prisma.questObjective.create({
-                            data: { 
-                                questId: data.id, 
-                                type: obj.type, 
-                                targetId: obj.targetId, 
-                                amount: obj.amount || 1,
-                                description: obj.desc || "" // FIXED: Included description
-                            }
-                        });
-                    }
-                }
-
-                await prisma.questReward.deleteMany({ where: { questId: data.id } });
-                if (rewards) {
-                    for (let rew of rewards) {
-                        await prisma.questReward.create({
-                            data: { questId: data.id, type: rew.type, targetId: rew.targetId, amount: rew.amount || 1 }
-                        });
-                    }
-                }
-            } catch(e) { console.error(`Quest Fail: ${file.fullPath}`, e.message); }
+            console.log(`[ASSETS] MASTER Final Sync Success.`);
+        } catch (err) {
+            console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
         }
-
-        // 2. Load other templates (Items, Regions, etc.)
-        await this._loadCommonTemplates();
-        console.log(`[ASSETS] MASTER Restored Sync Success.`);
     }
 
-    async _loadCommonTemplates() {
-        // Shared logic for simple models... (Monster, Class, Job, etc.)
-        const jobFiles = this._scanDir(path.join(ASSET_ROOT, 'jobs'));
-        for (let file of jobFiles) {
+    async _loadItemSets() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'item_sets'));
+        for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            await prisma.jobTemplate.upsert({ where: { id: data.id }, update: data, create: data });
-        }
-        
-        const itemFiles = this._scanDir(path.join(ASSET_ROOT, 'items'));
-        for (let file of itemFiles) {
-            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
-            await prisma.itemTemplate.upsert({
+            await prisma.itemSet.upsert({
                 where: { id: data.id },
-                update: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []) },
-                create: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []) }
+                update: { name: data.name, description: data.description || "" },
+                create: { id: data.id, name: data.name, description: data.description || "" }
             });
         }
     }
+
+    async _loadJobs() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'jobs'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            await prisma.jobTemplate.upsert({
+                where: { id: data.id },
+                update: { name: data.name, description: data.description || "", category: data.category || "COLLECTION" },
+                create: { id: data.id, name: data.name, description: data.description || "", category: data.category || "COLLECTION" }
+            });
+        }
+    }
+
+    async _loadMonsterCategories() {
+        const monsterFiles = this._scanDir(path.join(ASSET_ROOT, 'monsters'));
+        for (let file of monsterFiles) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            if (data.categoryId) {
+                await prisma.monsterCategory.upsert({
+                    where: { id: data.categoryId },
+                    update: {},
+                    create: { id: data.categoryId, name: "Category " + data.categoryId }
+                });
+            }
+        }
+    }
+
+    async _loadItems() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'items'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
+            
+            await prisma.itemTemplate.upsert({
+                where: { id: data.id },
+                update: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []), filePath: file.relativePath },
+                create: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []), filePath: file.relativePath }
+            });
+
+            await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
+            if (baseStats) {
+                for (let [key, val] of Object.entries(baseStats)) {
+                    await prisma.itemStat.create({ data: { itemId: data.id, statKey: key, statValue: parseFloat(val) } });
+                }
+            }
+        }
+    }
+
+    async _loadMonsters() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'monsters'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            await prisma.monsterTemplate.upsert({
+                where: { id: data.id },
+                update: { id: data.id, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath },
+                create: { id: data.id, categoryId: data.categoryId, hp_base: data.hp_base, damage_base: data.damage_base, filePath: file.relativePath }
+            });
+        }
+    }
+
+    async _loadRegions() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions')); // FIXED VARIABLE NAME
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { resources, connections, ...regionData } = data;
+            await prisma.regionTemplate.upsert({ where: { id: data.id }, update: { ...regionData, filePath: file.relativePath }, create: { ...regionData, filePath: file.relativePath } });
+            
+            await prisma.regionResource.deleteMany({ where: { regionId: data.id } });
+            if (resources) {
+                for (let res of resources) {
+                    await prisma.regionResource.create({
+                        data: { regionId: data.id, itemId: res.itemId, spawnChance: res.spawnChance, gatherDifficulty: res.gatherDifficulty, requiredJobId: res.requiredJobId || null }
+                    });
+                }
+            }
+        }
+    }
+
+    async _loadQuests() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'quests'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { objectives, rewards, ...questData } = data;
+            await prisma.questTemplate.upsert({ where: { id: data.id }, update: { ...questData, filePath: file.relativePath }, create: { ...questData, filePath: file.relativePath } });
+            
+            await prisma.questObjective.deleteMany({ where: { questId: data.id } });
+            if (objectives) {
+                for (let obj of objectives) {
+                    await prisma.questObjective.create({
+                        data: { questId: data.id, type: obj.type, targetId: obj.targetId, amount: obj.amount || 1, description: obj.desc || "" }
+                    });
+                }
+            }
+            await prisma.questReward.deleteMany({ where: { questId: data.id } });
+            if (rewards) {
+                for (let rew of rewards) {
+                    await prisma.questReward.create({
+                        data: { questId: data.id, type: rew.type, targetId: rew.targetId, amount: rew.amount || 1 }
+                    });
+                }
+            }
+        }
+    }
+
+    async _loadOthers() {}
 
     _scanDir(dir, fileList = [], rootDir = dir) {
         if (!fs.existsSync(dir)) return [];

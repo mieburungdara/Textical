@@ -1,6 +1,6 @@
 {
-  "id": "mob_slime_green",
-  "categoryId": "slime",
+  "id": 5007,
+  "categoryId": 105,
   "name": "Green Slime",
   "hp_base": 300,
   "damage_base": 10,

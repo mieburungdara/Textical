@@ -1,6 +1,6 @@
 {
-  "id": "mob_skeleton_warrior",
-  "categoryId": "skeleton",
+  "id": 5005,
+  "categoryId": 103,
   "name": "Skeleton Warrior",
   "hp_base": 90,
   "damage_base": 22,

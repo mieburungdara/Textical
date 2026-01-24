@@ -1,6 +1,6 @@
 {
-  "id": "mob_orc_grunt",
-  "categoryId": "orc",
+  "id": 5002,
+  "categoryId": 101,
   "name": "Orc Grunt",
   "hp_base": 120,
   "damage_base": 15,

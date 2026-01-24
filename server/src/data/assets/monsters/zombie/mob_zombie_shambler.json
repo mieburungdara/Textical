@@ -1,6 +1,6 @@
 {
-  "id": "mob_zombie_shambler",
-  "categoryId": "zombie",
+  "id": 5008,
+  "categoryId": 104,
   "name": "Zombie Shambler",
   "hp_base": 200,
   "damage_base": 12,

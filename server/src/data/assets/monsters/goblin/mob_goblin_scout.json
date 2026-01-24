@@ -1,6 +1,6 @@
 {
-  "id": "mob_goblin_scout",
-  "categoryId": "goblin",
+  "id": 5004,
+  "categoryId": 102,
   "name": "Goblin Scout",
   "hp_base": 60,
   "damage_base": 12,

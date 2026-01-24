@@ -1,6 +1,6 @@
 {
-  "id": "mob_orc_king",
-  "categoryId": "orc",
+  "id": 5003,
+  "categoryId": 101,
   "name": "Orc King",
   "hp_base": 1500,
   "damage_base": 85,
