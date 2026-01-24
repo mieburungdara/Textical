@@ -14,7 +14,6 @@ class AssetService {
         console.log("[ASSETS] Scanning Master Files (Truly Normalized)...");
         
         try {
-            await this._loadPremiumTiers();
             await this._loadItemSets();
             await this._loadJobs();
             await this._loadMonsterCategories();
@@ -24,28 +23,9 @@ class AssetService {
             await this._loadRegionsPass2();
             await this._loadQuests();
             
-            console.log(`[ASSETS] MASTER Final Relational Sync Success (Premium & Queue).`);
+            console.log(`[ASSETS] MASTER Final Relational Sync Success (Hybrid Combat).`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
-        }
-    }
-
-    async _loadPremiumTiers() {
-        const tiers = [
-            { id: 0, name: "Free", queueSlots: 0, speedBonus: 0.0 },
-            { id: 1, name: "Bronze", queueSlots: 1, speedBonus: 0.0 },
-            { id: 2, name: "Silver", queueSlots: 2, speedBonus: 0.05 },
-            { id: 3, name: "Gold", queueSlots: 3, speedBonus: 0.10 },
-            { id: 4, name: "Platinum", queueSlots: 5, speedBonus: 0.15 },
-            { id: 5, name: "Diamond", queueSlots: 10, speedBonus: 0.25 }
-        ];
-
-        for (let tier of tiers) {
-            await prisma.premiumTierTemplate.upsert({
-                where: { id: tier.id },
-                update: tier,
-                create: tier
-            });
         }
     }
 
@@ -91,24 +71,39 @@ class AssetService {
         const files = this._scanDir(path.join(ASSET_ROOT, 'items'));
         for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
+            const { baseStats, requirements, allowedSockets, allowedSlots, salvageResult, ...itemData } = data;
+            
             await prisma.itemTemplate.upsert({
                 where: { id: data.id },
                 update: { ...itemData, filePath: file.relativePath },
                 create: { ...itemData, filePath: file.relativePath }
             });
+
+            // 1. Equip Slots (Junction)
+            await prisma.itemEquipSlot.deleteMany({ where: { itemId: data.id } });
+            if (Array.isArray(allowedSlots)) {
+                for (let slotKey of allowedSlots) {
+                    await prisma.itemEquipSlot.create({ data: { itemId: data.id, slotKey } });
+                }
+            }
+
+            // 2. Sockets (Junction)
             await prisma.itemAllowedSocket.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(allowedSockets)) {
                 for (let socketType of allowedSockets) {
                     await prisma.itemAllowedSocket.create({ data: { itemId: data.id, socketType } });
                 }
             }
+
+            // 3. Salvage (Junction)
             await prisma.itemSalvageEntry.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(salvageResult)) {
                 for (let entry of salvageResult) {
                     await prisma.itemSalvageEntry.create({ data: { itemId: data.id, materialId: entry.itemId, quantity: entry.qty || 1 } });
                 }
             }
+
+            // 4. Stats (Junction)
             await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
             if (baseStats) {
                 for (let [key, val] of Object.entries(baseStats)) {

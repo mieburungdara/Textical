@@ -1,10 +1,12 @@
 {
   "id": 2004,
   "name": "Solari's Heart",
-  "description": "A blade forged in the sun's core.",
+  "description": "A blade forged in the sun's core. Can be dual-wielded by masters.",
   "category": "EQUIPMENT",
   "subCategory": "SWORD",
   "rarity": "ARTIFACT",
+  "isTwoHanded": false,
+  "allowedSlots": ["MAIN_HAND", "OFF_HAND"],
   "baseStats": {
     "attack_damage": 120,
     "crit_chance": 0.15,
@@ -18,7 +20,7 @@
   "setId": 4001,
   "isCraftable": false,
   "salvageResult": [
-    { "itemId": 2005, "quantity": 5 }
+    { "itemId": 2005, "qty": 5 }
   ],
   "iconPath": "res://assets/icons/items/weapons/solari_heart.png"
 }
