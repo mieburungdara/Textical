@@ -1,0 +1,41 @@
+-- CreateTable
+CREATE TABLE "Mail" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "senderId" INTEGER,
+    "receiverId" INTEGER NOT NULL,
+    "subject" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "copper" INTEGER NOT NULL DEFAULT 0,
+    "silver" INTEGER NOT NULL DEFAULT 0,
+    "gold" INTEGER NOT NULL DEFAULT 0,
+    "platinum" INTEGER NOT NULL DEFAULT 0,
+    "mithril" INTEGER NOT NULL DEFAULT 0,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "isClaimed" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" DATETIME NOT NULL,
+    CONSTRAINT "Mail_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "Mail_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "MailAttachment" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "mailId" INTEGER NOT NULL,
+    "templateId" INTEGER NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
+    "uniqueData" TEXT NOT NULL DEFAULT '{}',
+    CONSTRAINT "MailAttachment_mailId_fkey" FOREIGN KEY ("mailId") REFERENCES "Mail" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" INTEGER NOT NULL,
+    "type" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "isSeen" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

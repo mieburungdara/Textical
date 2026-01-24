@@ -16,7 +16,8 @@ const questHandler = require('./handlers/questHandler');
 const dialogueHandler = require('./handlers/dialogueHandler');
 const economyHandler = require('./handlers/economyHandler');
 const siegeHandler = require('./handlers/siegeHandler');
-const leaderboardHandler = require('./handlers/leaderboardHandler'); // NEW
+const leaderboardHandler = require('./handlers/leaderboardHandler');
+const mailHandler = require('./handlers/mailHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 
 // Services
@@ -63,8 +64,10 @@ wss.on('connection', (ws) => {
                 case "start_dialogue": await dialogueHandler.handleDialogue(ws, request); break;
                 case "get_siege_status": await siegeHandler.handleGetSiegeStatus(ws, request); break;
                 case "trigger_siege": await siegeHandler.handleTriggerSiege(ws, request); break;
-                // NEW: LEADERBOARD
                 case "fetch_leaderboard": await leaderboardHandler.handleFetchLeaderboard(ws, request); break;
+                // NEW: MAIL SYSTEM
+                case "fetch_inbox": await mailHandler.handleFetchInbox(ws, request); break;
+                case "claim_mail": await mailHandler.handleClaimMail(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
             }
         } catch (err) { console.error(err); }
