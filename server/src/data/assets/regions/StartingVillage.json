@@ -1,0 +1,12 @@
+{
+  "id": 1,
+  "name": "Starting Village",
+  "description": "A peaceful hamlet at the edge of the world. Rich in basic flora.",
+  "type": "TOWN",
+  "dangerLevel": 1,
+  "resources": [
+    { "itemId": 2101, "spawnChance": 0.8, "gatherDifficulty": 1 },
+    { "itemId": 2102, "spawnChance": 0.2, "gatherDifficulty": 5 }
+  ],
+  "connections": [2]
+}
