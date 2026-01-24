@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Absolute Final Reconstruction)
+// AAA Deep Master Relational Schema (Absolute Reconstruction)
 generator client {
   provider = "prisma-client-js"
 }
@@ -328,13 +328,15 @@ model QuestTemplate {
   difficulty      String   @default("NORMAL")
   minLevel        Int      @default(1)
   prerequisiteQuestId Int?
+  logicBranches   String   @default("{}") // RESTORED
+  rewards         String   @default("{}") // RESTORED (for complex logic)
   isTimeLimited   Boolean  @default(false)
   expiryHours     Int      @default(0)
   requiredRegion  Int?
   filePath        String   @default("quests/misc.json")
   
   objectives      QuestObjective[]
-  rewards         QuestReward[]
+  questRewards    QuestReward[]
   userQuests      UserQuest[]
 }
 
@@ -342,7 +344,7 @@ model QuestObjective {
   id              Int      @id @default(autoincrement())
   questId         Int
   quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String   // KILL, TRAVEL, etc.
+  type            String   
   targetId        Int      
   amount          Int      @default(1)
   description     String   @default("")
@@ -353,7 +355,7 @@ model QuestReward {
   id              Int      @id @default(autoincrement())
   questId         Int
   quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String   // GOLD, ITEM, FAME, JOB
+  type            String   
   targetId        Int?     
   amount          Int      @default(1)
 }
@@ -646,4 +648,5 @@ model HallOfFame {
 model MarketHistory {
   id            Int      @id @default(autoincrement())
   soldPrice     Int      @default(0)
+  taxPaid       Int      @default(0)
 }
