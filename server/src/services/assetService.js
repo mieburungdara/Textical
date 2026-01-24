@@ -19,11 +19,11 @@ class AssetService {
             await this._loadMonsterCategories();
             await this._loadItems();
             await this._loadMonsters();
-            await this._loadRegions(); // FIXED HERE
+            await this._loadRegions();
             await this._loadQuests();
             await this._loadOthers();
 
-            console.log(`[ASSETS] MASTER Final Sync Success.`);
+            console.log(`[ASSETS] MASTER Final Relational Sync Success.`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
         }
@@ -73,12 +73,30 @@ class AssetService {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             const { baseStats, requirements, allowedSockets, salvageResult, ...itemData } = data;
             
+            // Sync Core Item
             await prisma.itemTemplate.upsert({
                 where: { id: data.id },
-                update: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []), filePath: file.relativePath },
-                create: { ...itemData, allowedSockets: JSON.stringify(allowedSockets || []), salvageResult: JSON.stringify(salvageResult || []), filePath: file.relativePath }
+                update: { ...itemData, filePath: file.relativePath },
+                create: { ...itemData, filePath: file.relativePath }
             });
 
+            // 1. Sync Sockets (Junction)
+            await prisma.itemAllowedSocket.deleteMany({ where: { itemId: data.id } });
+            if (Array.isArray(allowedSockets)) {
+                for (let socketType of allowedSockets) {
+                    await prisma.itemAllowedSocket.create({ data: { itemId: data.id, socketType } });
+                }
+            }
+
+            // 2. Sync Salvage (Junction)
+            await prisma.itemSalvageEntry.deleteMany({ where: { itemId: data.id } });
+            if (Array.isArray(salvageResult)) {
+                for (let entry of salvageResult) {
+                    await prisma.itemSalvageEntry.create({ data: { itemId: data.id, materialId: entry.itemId, quantity: entry.qty || 1 } });
+                }
+            }
+
+            // 3. Sync Stats (Junction)
             await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
             if (baseStats) {
                 for (let [key, val] of Object.entries(baseStats)) {
@@ -101,7 +119,7 @@ class AssetService {
     }
 
     async _loadRegions() {
-        const files = this._scanDir(path.join(ASSET_ROOT, 'regions')); // FIXED VARIABLE NAME
+        const files = this._scanDir(path.join(ASSET_ROOT, 'regions'));
         for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
             const { resources, connections, ...regionData } = data;

@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Transaction Ledger Update)
+// AAA Truly Absolute Relational Master Schema (Full Fields Reconstruction)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,23 +8,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
-// 1. CORE USER & ACCOUNT
-// ==========================================
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
   password      String
-  
   copper        Int      @default(0)
   silver        Int      @default(0)
   gold          Int      @default(5)
   platinum      Int      @default(0)
   mithril       Int      @default(0)
-  
   fame          Int      @default(0)
   currentRegion Int      @default(1)
-  
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
@@ -39,34 +33,141 @@ model User {
   receivedMail  Mail[]   @relation("ReceiverRelation")
   sentMail      Mail[]   @relation("SenderRelation")
   notifications Notification[]
-  
-  // NEW: Economic Audit Trail
   ledger        TransactionLedger[]
 }
 
-// ==========================================
-// NEW: TRANSACTION LEDGER (Audit & Anti-Cheat)
-// ==========================================
-
 model TransactionLedger {
   id            Int      @id @default(autoincrement())
-  
   userId        Int
   user          User     @relation(fields: [userId], references: [id])
-  
-  type          String   // e.g., "MARKET_BUY", "QUEST_REWARD", "CRAFT_COST", "ADMIN_ADJUST"
-  currencyTier  String   // e.g., "COPPER", "GOLD", etc.
-  
-  amountDelta   Int      // positive for gain, negative for loss
-  newBalance    Int      // current balance after this transaction
-  
-  metadata      String   @default("{}") // Extra JSON context (e.g., item ID or buyer name)
+  type          String   
+  currencyTier  String   
+  amountDelta   Int      
+  newBalance    Int      
+  metadata      String   @default("{}") 
   createdAt     DateTime @default(now())
 }
 
-// ==========================================
-// 2. TEMPLATES (Static Game Data)
-// ==========================================
+model ItemTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  category        String   @default("EQUIPMENT")
+  subCategory     String   @default("MISC")
+  rarity          String   @default("COMMON")
+  iconPath        String   @default("res://assets/icons/items/default.png")
+  baseDurability  Int      @default(100)
+  repairCostPerPt Int      @default(1)
+  maxSockets      Int      @default(0)
+  isCraftable     Boolean  @default(true)
+  setId           Int?
+  itemSet         ItemSet? @relation(fields: [setId], references: [id])
+  filePath        String   @default("items/misc.json")
+  allowedSockets  ItemAllowedSocket[]
+  salvageResults  ItemSalvageEntry[]
+  stats           ItemStat[]
+  requirements    ItemRequirement[]
+  instances       InventoryItem[]
+  marketListings  MarketListing[]
+  auctionListings HeroAuctionListing[]
+  recipeResult    RecipeTemplate[]
+  ingredients     RecipeIngredient[]
+  regionResources RegionResource[]
+}
+
+model ItemAllowedSocket {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  socketType      String   
+}
+
+model ItemSalvageEntry {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  materialId      Int      
+  quantity        Int      @default(1)
+}
+
+model ItemStat {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  statKey         String
+  statValue       Float
+}
+
+model ItemRequirement {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  reqKey          String
+  reqValue        Int
+}
+
+model ItemSet {
+  id              Int      @id
+  name            String
+  description     String
+  items           ItemTemplate[]
+  bonuses         ItemSetBonus[]
+}
+
+model ItemSetBonus {
+  id              Int      @id @default(autoincrement())
+  setId           Int
+  itemSet         ItemSet  @relation(fields: [setId], references: [id])
+  requiredCount   Int
+  statKey         String
+  statValue       Float
+}
+
+model QuestTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  category        String   @default("SIDE")
+  difficulty      String   @default("NORMAL")
+  minLevel        Int      @default(1)
+  prerequisiteQuestId Int?
+  isTimeLimited   Boolean  @default(false)
+  expiryHours     Int      @default(0)
+  requiredRegion  Int?
+  filePath        String   @default("quests/misc.json")
+  branches        QuestBranch[]
+  objectives      QuestObjective[]
+  rewards         QuestReward[]
+  userQuests      UserQuest[]
+}
+
+model QuestBranch {
+  id              Int      @id @default(autoincrement())
+  questId         Int
+  quest           QuestTemplate @relation(fields: [questId], references: [id])
+  choiceKey       String   
+  nextNodeId      Int?     
+}
+
+model QuestObjective {
+  id              Int      @id @default(autoincrement())
+  questId         Int
+  quest           QuestTemplate @relation(fields: [questId], references: [id])
+  type            String   
+  targetId        Int      
+  amount          Int      @default(1)
+  description     String   @default("")
+  userProgress    UserQuestObjective[]
+}
+
+model QuestReward {
+  id              Int      @id @default(autoincrement())
+  questId         Int
+  quest           QuestTemplate @relation(fields: [questId], references: [id])
+  type            String   
+  targetId        Int?     
+  amount          Int      @default(1)
+}
 
 model RegionTemplate {
   id              Int      @id
@@ -106,136 +207,9 @@ model RegionConnection {
   target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
 }
 
-model ItemTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  category        String   @default("EQUIPMENT")
-  subCategory     String   @default("MISC")
-  rarity          String   @default("COMMON")
-  iconPath        String   @default("res://assets/icons/items/default.png")
-  baseDurability  Int      @default(100)
-  repairCostPerPt Int      @default(1)
-  maxSockets      Int      @default(0)
-  isCraftable     Boolean  @default(true)
-  setId           Int?
-  itemSet         ItemSet? @relation(fields: [setId], references: [id])
-  filePath        String   @default("items/misc.json")
-  stats           ItemStat[]
-  requirements    ItemRequirement[]
-  instances       InventoryItem[]
-  marketListings  MarketListing[]
-  auctionListings HeroAuctionListing[]
-  recipeResult    RecipeTemplate[]
-  ingredients     RecipeIngredient[]
-  regionResources RegionResource[]
-  allowedSockets  ItemAllowedSocket[]
-  salvageResult   ItemSalvageEntry[]
-}
-
-model ItemAllowedSocket {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  socketType      String
-}
-
-model ItemSalvageEntry {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  materialId      Int
-  quantity        Int      @default(1)
-}
-
-model ItemStat {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  statKey         String
-  statValue       Float
-}
-
-model ItemRequirement {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  reqKey          String
-  reqValue        Int
-}
-
-model ItemSet {
-  id              Int      @id
-  name            String
-  description     String
-  items           ItemTemplate[]
-  bonuses         ItemSetBonus[]
-}
-
-model ItemSetBonus {
-  id              Int      @id @default(autoincrement())
-  setId           Int
-  itemSet         ItemSet  @relation(fields: [setId], references: [id])
-  requiredCount   Int
-  statKey         String
-  statValue       Float
-}
-
-model ClassTemplate {
-  id              Int      @id
-  name            String
-  tier            Int      @default(1)
-  filePath        String   @default("classes/misc.json")
-  stats           ClassStatGrowth[]
-  skillUnlocks    ClassSkillUnlock[]
-  promotions      ClassPromotionPath[] @relation("PreviousClass")
-  promotedFrom    ClassPromotionPath[] @relation("NextClass")
-  heroes          Hero[]
-}
-
-model ClassStatGrowth {
-  id              Int      @id @default(autoincrement())
-  classId         Int
-  class           ClassTemplate @relation(fields: [classId], references: [id])
-  statKey         String
-  growthValue     Float
-  statCap         Int
-}
-
-model ClassSkillUnlock {
-  id              Int      @id @default(autoincrement())
-  classId         Int
-  class           ClassTemplate @relation(fields: [classId], references: [id])
-  levelRequired   Int
-  skillId         Int
-}
-
-model ClassPromotionPath {
-  id              Int      @id @default(autoincrement())
-  prevClassId     Int
-  prevClass       ClassTemplate @relation("PreviousClass", fields: [prevClassId], references: [id])
-  nextClassId     Int
-  nextClass       ClassTemplate @relation("NextClass", fields: [nextClassId], references: [id])
-}
-
-model TraitTemplate {
-  id              Int      @id
-  name            String
-  filePath        String   @default("traits/misc.json")
-  statModifiers   TraitStatModifier[]
-  heroes          HeroTrait[]
-}
-
-model TraitStatModifier {
-  id              Int      @id @default(autoincrement())
-  traitId         Int
-  trait           TraitTemplate @relation(fields: [traitId], references: [id])
-  statKey         String
-  modifierValue   Float
-}
-
 model MonsterTemplate {
   id          Int      @id
+  name        String   @default("")
   categoryId  Int
   category    MonsterCategory @relation(fields: [categoryId], references: [id])
   hp_base     Int
@@ -295,14 +269,6 @@ model BuildingPerk {
   value           Float
 }
 
-model GuildTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  filePath        String   @default("guilds/misc.json")
-  guilds          Guild[]
-}
-
 model RecipeTemplate {
   id              Int      @id
   name            String
@@ -322,55 +288,126 @@ model RecipeIngredient {
   quantity        Int
 }
 
-model QuestTemplate {
+model ClassTemplate {
   id              Int      @id
   name            String
-  filePath        String   @default("quests/misc.json")
-  objectives      QuestObjective[]
-  questRewards    QuestReward[]
-  userQuests      UserQuest[]
-  branches        QuestBranch[]
+  tier            Int      @default(1)
+  filePath        String   @default("classes/misc.json")
+  stats           ClassStatGrowth[]
+  skillUnlocks    ClassSkillUnlock[]
+  promotions      ClassPromotionPath[] @relation("PreviousClass")
+  promotedFrom    ClassPromotionPath[] @relation("NextClass")
+  heroes          Hero[]
 }
 
-model QuestBranch {
+model ClassStatGrowth {
   id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  choiceKey       String
-  nextNodeId      Int?
-  fameReward      Int      @default(0)
-  goldReward      Int      @default(0)
+  classId         Int
+  class           ClassTemplate @relation(fields: [classId], references: [id])
+  statKey         String
+  growthValue     Float
+  statCap         Int
 }
 
-model QuestObjective {
+model ClassSkillUnlock {
   id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String
-  targetId        Int
-  amount          Int      @default(1)
-  description     String   @default("")
-  userProgress    UserQuestObjective[]
+  classId         Int
+  class           ClassTemplate @relation(fields: [classId], references: [id])
+  levelRequired   Int
+  skillId         Int
 }
 
-model QuestReward {
+model ClassPromotionPath {
   id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String
-  targetId        Int?
-  amount          Int      @default(1)
+  prevClassId     Int
+  prevClass       ClassTemplate @relation("PreviousClass", fields: [prevClassId], references: [id])
+  nextClassId     Int
+  nextClass       ClassTemplate @relation("NextClass", fields: [nextClassId], references: [id])
+}
+
+model RaceBonusTemplate {
+  id              Int      @id
+  name            String   @default("Human")
+  filePath        String   @default("races/misc.json")
+  statBonuses     RaceStatBonus[]
+}
+
+model RaceStatBonus {
+  id              Int      @id @default(autoincrement())
+  raceTemplateId  Int
+  raceTemplate    RaceBonusTemplate @relation(fields: [raceTemplateId], references: [id])
+  statKey         String
+  bonusValue      Float
+}
+
+model JobTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("") // FIXED
+  category        String   @default("COLLECTION")
+  filePath        String   @default("jobs/misc.json")
+  workers         Hero[]
 }
 
 model AchievementTemplate {
   id              Int      @id
   name            String
+  description     String   @default("") // FIXED
+  filePath        String   @default("achievements/misc.json")
   users           UserAchievement[]
+}
+
+model SkillTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("") // FIXED
+  filePath        String   @default("skills/misc.json")
+}
+
+model StatusEffectTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("") // FIXED
+  filePath        String   @default("effects/misc.json")
+}
+
+model DialogueTemplate {
+  id              Int      @id
+  npcId           String
+  content         String   @default("")
+  filePath        String   @default("dialogues/misc.json")
+}
+
+model TraitTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  filePath        String   @default("traits/misc.json")
+  statModifiers   TraitStatModifier[]
+  heroes          HeroTrait[]
+}
+
+model TraitStatModifier {
+  id              Int      @id @default(autoincrement())
+  traitId         Int
+  trait           TraitTemplate @relation(fields: [traitId], references: [id])
+  statKey         String
+  modifierValue   Float
+}
+
+model BehaviourTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  filePath        String   @default("behaviors/misc.json")
+  heroes          HeroBehavior[]
 }
 
 model GlobalEventTemplate {
   id              Int      @id
   name            String
+  description     String   @default("")
+  filePath        String   @default("events/misc.json")
   specialSpawns   EventSpawn[]
 }
 
@@ -382,7 +419,13 @@ model EventSpawn {
   spawnChance     Float
 }
 
-// ... (Instance data preserved) ...
+model GuildTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  filePath        String   @default("guilds/misc.json")
+  guilds          Guild[]
+}
 
 model Hero {
   id          Int      @id @default(autoincrement())
@@ -390,6 +433,7 @@ model Hero {
   user        User     @relation(fields: [userId], references: [id])
   name        String
   level       Int      @default(1)
+  exp         Int      @default(0)
   classId     Int      @default(1001)
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   jobId       Int?
@@ -419,7 +463,7 @@ model HeroDeed {
   id          Int      @id @default(autoincrement())
   heroId      Int
   hero        Hero     @relation(fields: [heroId], references: [id])
-  deedKey     String
+  deedKey     String   
   value       Int      @default(0)
 }
 
@@ -445,12 +489,6 @@ model HeroBehavior {
   hero        Hero     @relation(fields: [heroId], references: [id])
   behaviorId  Int
   behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
-}
-
-model BehaviourTemplate {
-  id              Int      @id
-  name            String
-  heroes          HeroBehavior[]
 }
 
 model InventoryItem {
@@ -635,26 +673,4 @@ model HallOfFame {
 
 model MarketHistory {
   id            Int      @id @default(autoincrement())
-}
-
-model RaceBonusTemplate {
-  id            Int      @id
-  bonusData     String   @default("{}")
-}
-
-model StatusEffectTemplate {
-  id Int @id
-}
-
-model DialogueTemplate {
-  id Int @id
-}
-
-model SkillTemplate {
-  id Int @id
-}
-
-model JobTemplate {
-  id Int @id
-  workers Hero[]
 }
