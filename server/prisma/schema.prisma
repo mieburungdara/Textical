@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Restored Asset Fields)
+// AAA Deep Master Relational Schema (Time-Based Gathering Overhaul)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// 1. CORE USER & ACCOUNT
+// ==========================================
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
@@ -19,6 +22,7 @@ model User {
   mithril       Int      @default(0)
   fame          Int      @default(0)
   currentRegion Int      @default(1)
+  
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
@@ -36,6 +40,9 @@ model User {
   ledger        TransactionLedger[]
   formationPresets FormationPreset[]
   activePresetId   Int?
+  
+  // NEW: Active Gathering Session
+  gatheringTasks GatheringTask[]
 }
 
 model TransactionLedger {
@@ -49,6 +56,10 @@ model TransactionLedger {
   metadata      String   @default("{}") 
   createdAt     DateTime @default(now())
 }
+
+// ==========================================
+// 2. TEMPLATES (Static Game Data)
+// ==========================================
 
 model ItemTemplate {
   id              Int      @id
@@ -75,7 +86,7 @@ model ItemTemplate {
   recipeResult    RecipeTemplate[]
   ingredients     RecipeIngredient[]
   regionResources RegionResource[]
-  resourceNodes   ResourceNodeInstance[]
+  gatheringTasks  GatheringTask[]
 }
 
 model ItemAllowedSocket {
@@ -143,21 +154,6 @@ model RegionTemplate {
   buildings       BuildingInstance[]
   sieges          Siege[]
   resources       RegionResource[]
-  resourceNodes   ResourceNodeInstance[]
-}
-
-model ResourceNodeInstance {
-  id              Int      @id @default(autoincrement())
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  itemId          Int
-  item            ItemTemplate   @relation(fields: [itemId], references: [id])
-  requiredJobId   Int?     
-  posX            Float    @default(0)
-  posY            Float    @default(0)
-  lastGatheredAt  DateTime @default(now())
-  respawnSeconds  Int      @default(300)
-  state           String   @default("AVAILABLE")
 }
 
 model RegionResource {
@@ -169,6 +165,9 @@ model RegionResource {
   requiredJobId   Int?     
   spawnChance     Float    @default(1.0)
   gatherDifficulty Int     @default(1)
+  
+  // NEW: AAA TIME-BASED GATHERING
+  gatherTimeSeconds Int    @default(10)
 }
 
 model RegionConnection {
@@ -315,8 +314,8 @@ model RaceStatBonus {
 model JobTemplate {
   id              Int      @id
   name            String
-  description     String   @default("") // RESTORED
-  category        String   @default("COLLECTION") // RESTORED
+  description     String   @default("")
+  category        String   @default("COLLECTION")
   filePath        String   @default("jobs/misc.json")
   workers         Hero[]
 }
@@ -324,7 +323,7 @@ model JobTemplate {
 model AchievementTemplate {
   id              Int      @id
   name            String
-  description     String   @default("") // RESTORED
+  description     String   @default("")
   filePath        String   @default("achievements/misc.json")
   users           UserAchievement[]
 }
@@ -332,14 +331,14 @@ model AchievementTemplate {
 model SkillTemplate {
   id              Int      @id
   name            String
-  description     String   @default("") // RESTORED
+  description     String   @default("")
   filePath        String   @default("skills/misc.json")
 }
 
 model StatusEffectTemplate {
   id              Int      @id
   name            String
-  description     String   @default("") // RESTORED
+  description     String   @default("")
   filePath        String   @default("effects/misc.json")
 }
 
@@ -347,7 +346,7 @@ model DialogueTemplate {
   id              Int      @id
   npcId           String
   content         String   @default("")
-  description     String   @default("") // RESTORED
+  description     String   @default("")
   filePath        String   @default("dialogues/misc.json")
 }
 
@@ -440,6 +439,10 @@ model QuestReward {
   amount          Int      @default(1)
 }
 
+// ==========================================
+// 3. INSTANCE DATA (User Created)
+// ==========================================
+
 model Hero {
   id          Int      @id @default(autoincrement())
   userId      Int
@@ -456,6 +459,7 @@ model Hero {
   jobRank     String   @default("APPRENTICE")
   masteryPoints Int    @default(0)
   createdAt   DateTime @default(now())
+  
   stats       HeroStat[]
   deeds       HeroDeed[]
   traits      HeroTrait[]
@@ -463,6 +467,27 @@ model Hero {
   equipment   HeroEquipment[]
   auction     HeroAuctionListing?
   formationSlots FormationSlot[]
+  
+  // Link to active work
+  gatheringTasks GatheringTask[]
+}
+
+// NEW: GATHERING TASKS (TIMER TRACKING)
+model GatheringTask {
+  id            Int      @id @default(autoincrement())
+  
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  
+  itemId        Int
+  item          ItemTemplate @relation(fields: [itemId], references: [id])
+  
+  startedAt     DateTime @default(now())
+  finishesAt    DateTime
+  isCompleted   Boolean  @default(false)
 }
 
 model FormationPreset {

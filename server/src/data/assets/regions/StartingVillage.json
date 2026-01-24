@@ -5,8 +5,19 @@
   "type": "TOWN",
   "dangerLevel": 1,
   "resources": [
-    { "itemId": 2101, "spawnChance": 0.8, "gatherDifficulty": 1 },
-    { "itemId": 2102, "spawnChance": 0.2, "gatherDifficulty": 5, "requiredJobId": 8001 }
+    { 
+      "itemId": 2101, 
+      "spawnChance": 0.8, 
+      "gatherDifficulty": 1,
+      "gatherTimeSeconds": 10 
+    },
+    { 
+      "itemId": 2102, 
+      "spawnChance": 0.2, 
+      "gatherDifficulty": 5, 
+      "requiredJobId": 8001,
+      "gatherTimeSeconds": 30 
+    }
   ],
   "connections": []
 }
