@@ -1,4 +1,4 @@
-// AAA 5-Tier Currency Master Schema
+// AAA Guild Territory & Geopolitics Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,21 +8,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
-// 1. CORE USER & ACCOUNT
-// ==========================================
+// ... (User, Hero, Guild models preserved and updated) ...
+
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
   password      String
-  
-  // 5-TIER CURRENCY SYSTEM
   copper        Int      @default(0)
   silver        Int      @default(0)
-  gold          Int      @default(5)   // Starting with 5 Gold
+  gold          Int      @default(5)
   platinum      Int      @default(0)
   mithril       Int      @default(0)
-  
   fame          Int      @default(0)
   currentRegion Int      @default(1)
   
@@ -37,15 +33,46 @@ model User {
   activeQuests  UserQuest[]
 }
 
-// ==========================================
-// TEMPLATES & INSTANCE DATA (Preserved)
-// ==========================================
+model Guild {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  description     String?
+  templateId      Int
+  template        GuildTemplate @relation(fields: [templateId], references: [id])
+  level           Int    @default(1)
+  exp             Int    @default(0)
+  vaultGold       Int    @default(0)
+  
+  // NEW: Political Data
+  territories     RegionTemplate[]
+  taxIncomeTotal  BigInt @default(0)
+  
+  unlockedPerks   String @default("[]")
+  facilities      String @default("{}")
+  members         User[]
+  
+  // Siege relations
+  attackingSieges Siege[] @relation("AttackerRelation")
+  defendingSieges Siege[] @relation("DefenderRelation")
+  
+  createdAt       DateTime @default(now())
+}
+
+// ========================================== 
+// UPDATED: REGION WITH OWNERSHIP
+// ========================================== 
 
 model RegionTemplate {
   id              Int      @id
   name            String
   description     String
   type            String   @default("TOWN")
+  
+  // NEW: Territory Data
+  ownerGuildId    Int?
+  ownerGuild      Guild?   @relation(fields: [ownerGuildId], references: [id])
+  localTaxRate    Float    @default(0.02) // Default 2% local tax
+  
   coordinates     String   @default("{\"x\": 0, \"y\": 0}")
   connections     String   @default("[]")
   environment     String   @default("{}")
@@ -57,45 +84,77 @@ model RegionTemplate {
   backgroundPath  String   @default("res://assets/backgrounds/default.png")
   musicTrack      String   @default("default_theme")
   filePath        String   @default("regions/misc.json")
+  
   buildings       BuildingInstance[]
+  sieges          Siege[]
 }
 
-model BuildingTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  category        String   @default("ECONOMY")
-  upgradeTree     String   @default("[]")
-  perksPerLevel   String   @default("[]")
-  staffingLogic   String   @default("{}")
-  maintenance     String   @default("{}")
-  iconPath        String   @default("res://assets/icons/buildings/default.png")
-  modelPath       String   @default("")
-  filePath        String   @default("buildings/misc.json")
-  instances       BuildingInstance[]
-}
+// ========================================== 
+// NEW: SIEGE & WARFARE ENGINE
+// ========================================== 
 
-model GlobalEventTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  category        String   @default("WEATHER")
-  triggerType     String   @default("SCHEDULED")
-  worldModifiers  String   @default("{}")
-  combatModifiers String   @default("{}")
-  targetScope     String   @default("GLOBAL")
-  iconPath        String   @default("res://assets/icons/events/default.png")
-  filePath        String   @default("events/misc.json")
-  specialSpawns   EventSpawn[]
-}
-
-model EventSpawn {
+model Siege {
   id              Int      @id @default(autoincrement())
-  eventId         Int
-  event           GlobalEventTemplate @relation(fields: [eventId], references: [id])
-  monsterId       Int
-  spawnChance     Float
-  locationId      Int?
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  
+  attackerGuildId Int
+  attacker        Guild    @relation("AttackerRelation", fields: [attackerGuildId], references: [id])
+  
+  defenderGuildId Int?
+  defender        Guild?   @relation("DefenderRelation", fields: [defenderGuildId], references: [id])
+  
+  startTime       DateTime
+  endTime         DateTime
+  status          String   @default("PENDING") // PENDING, ACTIVE, FINISHED, CANCELLED
+  
+  // Results
+  winnerGuildId   Int?
+  warLog          String   @default("[]") // JSON of key battle events
+}
+
+// ... (Quest, Item, Class, Job, Achievement, Trait, etc. remain unchanged) ...
+
+model Hero {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  race        String
+  gender      String   @default("MALE")
+  level       Int      @default(1)
+  exp         Int      @default(0)
+  classId     Int      @default(1001)
+  combatClass ClassTemplate @relation(fields: [classId], references: [id])
+  jobId       Int?
+  job         JobTemplate? @relation(fields: [jobId], references: [id])
+  jobLevel    Int      @default(1)
+  jobExp      Int      @default(0)
+  jobRank     String   @default("APPRENTICE")
+  baseStats         String @default("{}")
+  activeBehavior    Int    @default(6001)
+  deeds             String @default("{}")
+  hasReproduced Boolean @default(false)
+  fatherId      Int?
+  motherId      Int?
+  generation    Int      @default(1)
+  equipment   String @default("{}")
+  createdAt   DateTime @default(now())
+  traits      HeroTrait[]
+  behaviors   HeroBehavior[]
+}
+
+model GuildTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  basePerks       String   @default("{}")
+  progressionTree String   @default("[]")
+  creationReqs    String   @default("{}")
+  primaryColor    String   @default("#ffffff")
+  iconPath        String   @default("res://assets/icons/guilds/default.png")
+  filePath        String   @default("guilds/misc.json")
+  guilds          Guild[]
 }
 
 model QuestTemplate {
@@ -126,6 +185,53 @@ model QuestObjective {
   amount          Int      @default(1)
   description     String
   userProgress    UserQuestObjective[]
+}
+
+model UserQuest {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  questId       Int
+  quest         QuestTemplate @relation(fields: [questId], references: [id])
+  status        String   @default("ACTIVE")
+  acceptedAt    DateTime @default(now())
+  completedAt   DateTime?
+  objectives    UserQuestObjective[]
+  @@unique([userId, questId])
+}
+
+model UserQuestObjective {
+  id            Int      @id @default(autoincrement())
+  userQuestId   Int
+  userQuest     UserQuest @relation(fields: [userQuestId], references: [id])
+  objectiveId   Int
+  objective     QuestObjective @relation(fields: [objectiveId], references: [id])
+  currentAmount Int      @default(0)
+  isCompleted   Boolean  @default(false)
+  @@unique([userQuestId, objectiveId])
+}
+
+model GlobalEventTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  category        String   @default("WEATHER")
+  triggerType     String   @default("SCHEDULED")
+  worldModifiers  String   @default("{}")
+  combatModifiers String   @default("{}")
+  targetScope     String   @default("GLOBAL")
+  iconPath        String   @default("res://assets/icons/events/default.png")
+  filePath        String   @default("events/misc.json")
+  specialSpawns   EventSpawn[]
+}
+
+model EventSpawn {
+  id              Int      @id @default(autoincrement())
+  eventId         Int
+  event           GlobalEventTemplate @relation(fields: [eventId], references: [id])
+  monsterId       Int
+  spawnChance     Float
+  locationId      Int?
 }
 
 model ClassTemplate {
@@ -184,17 +290,14 @@ model ItemSetBonus {
   statModifiers   String   @default("{}")
 }
 
-model GuildTemplate {
+model ItemAffix {
   id              Int      @id
   name            String
-  description     String
-  basePerks       String   @default("{}")
-  progressionTree String   @default("[]")
-  creationReqs    String   @default("{}")
-  primaryColor    String   @default("#ffffff")
-  iconPath        String   @default("res://assets/icons/guilds/default.png")
-  filePath        String   @default("guilds/misc.json")
-  guilds          Guild[]
+  type            String @default("PREFIX")
+  modifiers       String @default("{}")
+  allowedCategories String @default("[]")
+  minItemLevel      Int    @default(1)
+  rarity            String @default("COMMON")
 }
 
 model TraitTemplate {
@@ -215,6 +318,15 @@ model TraitTemplate {
   heroes          HeroTrait[]
 }
 
+model HeroTrait {
+  id          Int      @id @default(autoincrement())
+  heroId      Int
+  hero        Hero     @relation(fields: [heroId], references: [id])
+  traitId     Int
+  trait       TraitTemplate @relation(fields: [traitId], references: [id])
+  isNatural   Boolean  @default(true)
+}
+
 model BehaviourTemplate {
   id              Int      @id
   name            String
@@ -226,6 +338,14 @@ model BehaviourTemplate {
   requirements    String   @default("{}") 
   filePath        String   @default("behaviors/misc.json")
   heroes          HeroBehavior[]
+}
+
+model HeroBehavior {
+  id          Int      @id @default(autoincrement())
+  heroId      Int
+  hero        Hero     @relation(fields: [heroId], references: [id])
+  behaviorId  Int
+  behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
 }
 
 model JobTemplate {
@@ -284,6 +404,32 @@ model StatusEffectTemplate {
   filePath        String   @default("effects/misc.json")
 }
 
+model BuildingInstance {
+  id              Int      @id @default(autoincrement())
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId      Int
+  template        BuildingTemplate @relation(fields: [templateId], references: [id])
+  level           Int      @default(1)
+  instanceData    String   @default("{}")
+  createdAt       DateTime @default(now())
+}
+
+model BuildingTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  category        String   @default("ECONOMY")
+  upgradeTree     String   @default("[]")
+  perksPerLevel   String   @default("[]")
+  staffingLogic   String   @default("{}")
+  maintenance     String   @default("{}")
+  iconPath        String   @default("res://assets/icons/buildings/default.png")
+  modelPath       String   @default("")
+  filePath        String   @default("buildings/misc.json")
+  instances       BuildingInstance[]
+}
+
 model AchievementTemplate {
   id              Int      @id
   name            String
@@ -297,6 +443,18 @@ model AchievementTemplate {
   vfxPath         String   @default("")
   filePath        String   @default("achievements/misc.json")
   users           UserAchievement[]
+}
+
+model UserAchievement {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  achievementId Int
+  achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
+  progress      Int      @default(0)
+  isUnlocked    Boolean  @default(false)
+  unlockedAt    DateTime?
+  @@unique([userId, achievementId])
 }
 
 model MonsterCategory {
@@ -363,58 +521,18 @@ model RecipeIngredient {
   quantity        Int
 }
 
-model RaceBonusTemplate {
-  id          Int      @id
-  bonusData   String 
-  filePath    String   @default("races/misc.json")
-}
-
-// 3. INSTANCE DATA
-
-model Hero {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  race        String
-  gender      String   @default("MALE")
-  level       Int      @default(1)
-  exp         Int      @default(0)
-  classId     Int      @default(1001)
-  combatClass ClassTemplate @relation(fields: [classId], references: [id])
-  jobId       Int?
-  job         JobTemplate? @relation(fields: [jobId], references: [id])
-  jobLevel    Int      @default(1)
-  jobExp      Int      @default(0)
-  jobRank     String   @default("APPRENTICE")
-  baseStats         String @default("{}")
-  activeBehavior    Int    @default(6001)
-  deeds             String @default("{}")
-  hasReproduced Boolean @default(false)
-  fatherId      Int?
-  motherId      Int?
-  generation    Int      @default(1)
-  equipment   String @default("{}")
-  createdAt   DateTime @default(now())
-  traits      HeroTrait[]
-  behaviors   HeroBehavior[]
-}
-
-model HeroTrait {
-  id          Int      @id @default(autoincrement())
-  heroId      Int
-  hero        Hero     @relation(fields: [heroId], references: [id])
-  traitId     Int
-  trait       TraitTemplate @relation(fields: [traitId], references: [id])
-  isNatural   Boolean  @default(true)
-}
-
-model HeroBehavior {
-  id          Int      @id @default(autoincrement())
-  heroId      Int
-  hero        Hero     @relation(fields: [heroId], references: [id])
-  behaviorId  Int
-  behavior    BehaviourTemplate @relation(fields: [behaviorId], references: [id])
+model UserRecipe {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  recipeId      Int
+  recipe        RecipeTemplate @relation(fields: [recipeId], references: [id])
+  craftCount    Int      @default(0)
+  masteryLevel  Int      @default(1)
+  masteryExp    Int      @default(0)
+  isDiscovered  Boolean  @default(true)
+  unlockedAt    DateTime @default(now())
+  @@unique([userId, recipeId])
 }
 
 model InventoryItem {
@@ -430,32 +548,6 @@ model InventoryItem {
   isEquipped  Boolean  @default(false)
   ownerHeroId Int?
   marketListing MarketListing?
-}
-
-model BuildingInstance {
-  id              Int      @id @default(autoincrement())
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      Int
-  template        BuildingTemplate @relation(fields: [templateId], references: [id])
-  level           Int      @default(1)
-  instanceData    String   @default("{}")
-  createdAt       DateTime @default(now())
-}
-
-model Guild {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
-  description     String?
-  templateId      Int
-  template        GuildTemplate @relation(fields: [templateId], references: [id])
-  level           Int    @default(1)
-  exp             Int    @default(0)
-  vaultGold       Int    @default(0)
-  unlockedPerks   String @default("[]")
-  facilities      String @default("{}")
-  members         User[]
-  createdAt       DateTime @default(now())
 }
 
 model HallOfFame {
@@ -499,52 +591,8 @@ model MarketHistory {
   sellerId        Int
 }
 
-model UserAchievement {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  achievementId Int
-  achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
-  progress      Int      @default(0)
-  isUnlocked    Boolean  @default(false)
-  unlockedAt    DateTime?
-  @@unique([userId, achievementId])
-}
-
-model UserRecipe {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  recipeId      Int
-  recipe        RecipeTemplate @relation(fields: [recipeId], references: [id])
-  craftCount    Int      @default(0)
-  masteryLevel  Int      @default(1)
-  masteryExp    Int      @default(0)
-  isDiscovered  Boolean  @default(true)
-  unlockedAt    DateTime @default(now())
-  @@unique([userId, recipeId])
-}
-
-model UserQuest {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  questId       Int
-  quest         QuestTemplate @relation(fields: [questId], references: [id])
-  status        String   @default("ACTIVE")
-  acceptedAt    DateTime @default(now())
-  completedAt   DateTime?
-  objectives    UserQuestObjective[]
-  @@unique([userId, questId])
-}
-
-model UserQuestObjective {
-  id            Int      @id @default(autoincrement())
-  userQuestId   Int
-  userQuest     UserQuest @relation(fields: [userQuestId], references: [id])
-  objectiveId   Int
-  objective     QuestObjective @relation(fields: [objectiveId], references: [id])
-  currentAmount Int      @default(0)
-  isCompleted   Boolean  @default(false)
-  @@unique([userQuestId, objectiveId])
+model RaceBonusTemplate {
+  id          Int      @id
+  bonusData   String 
+  filePath    String   @default("races/misc.json")
 }
