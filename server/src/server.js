@@ -13,14 +13,14 @@ const guildHandler = require('./handlers/guildHandler');
 const marketHandler = require('./handlers/marketHandler');
 const buildingHandler = require('./handlers/buildingHandler');
 const questHandler = require('./handlers/questHandler');
-const dialogueHandler = require('./handlers/dialogueHandler'); // NEW
-const economyHandler = require('./handlers/economyHandler'); // NEW
+const dialogueHandler = require('./handlers/dialogueHandler');
+const economyHandler = require('./handlers/economyHandler');
+const siegeHandler = require('./handlers/siegeHandler'); // NEW
 const AdminHandler = require('./handlers/adminHandler');
 
 // Services
 const dataSyncService = require('./services/dataSyncService');
 const assetService = require('./services/assetService'); 
-const regionRepository = require('./repositories/regionRepository');
 
 const app = express();
 app.use(express.json()); 
@@ -28,7 +28,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 const server = app.listen(3000, async () => {
     console.log("Textical AAA Modular Server: http://localhost:3000");
-    console.log("Admin Panel: http://localhost:3000/admin/");
     await assetService.loadAllAssets();
 });
 
@@ -37,25 +36,10 @@ new AdminHandler(app);
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
-    console.log("[NETWORK] Player connected.");
-
     ws.on('message', async (message) => {
         try {
             const request = JSON.parse(message);
 
-            // --- ADMIN COMMANDS ---
-            if (request.type === "admin_sync_import") {
-                await dataSyncService.importFromCurrentJson();
-                ws.send(JSON.stringify({ type: "success", message: "Imported JSON to DB" }));
-                return;
-            }
-            if (request.type === "admin_sync_export") {
-                await dataSyncService.exportToJson();
-                ws.send(JSON.stringify({ type: "success", message: "Exported DB to JSON" }));
-                return;
-            }
-
-            // --- MESSAGE ROUTING ---
             switch (request.type) {
                 case "login": await authHandler.handleLogin(ws, request); break;
                 case "register": await authHandler.handleRegister(ws, request); break;
@@ -75,16 +59,12 @@ wss.on('connection', (ws) => {
                 case "accept_quest": await questHandler.handleAcceptQuest(ws, request); break;
                 case "fetch_quests": await questHandler.handleFetchActiveQuests(ws, request); break;
                 case "convert_currency": await economyHandler.handleConvert(ws, request); break;
-                // NEW: DIALOGUE COMMANDS
                 case "start_dialogue": await dialogueHandler.handleDialogue(ws, request); break;
+                // NEW: SIEGE COMMANDS
+                case "get_siege_status": await siegeHandler.handleGetSiegeStatus(ws, request); break;
+                case "trigger_siege": await siegeHandler.handleTriggerSiege(ws, request); break;
                 default: console.warn("Unknown request type:", request.type);
             }
-
-        } catch (err) {
-            console.error("Critical Server Error:", err);
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: "error", message: "Internal server error" }));
-            }
-        }
+        } catch (err) { console.error(err); }
     });
 });
