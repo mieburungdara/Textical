@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Restored Trait Category)
+// AAA Deep Master Relational Schema (Fixed TaskQueue Relations)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// 1. CORE USER & ACCOUNT
+// ==========================================
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
@@ -19,6 +22,9 @@ model User {
   mithril       Int      @default(0)
   fame          Int      @default(0)
   currentRegion Int      @default(1)
+  premiumTierId Int      @default(0)
+  premiumTier   PremiumTierTemplate @relation(fields: [premiumTierId], references: [id])
+  premiumExpiresAt DateTime?
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
@@ -36,8 +42,10 @@ model User {
   ledger        TransactionLedger[]
   formationPresets FormationPreset[]
   activePresetId   Int?
+  
+  // UNIFIED TASK QUEUE (FIXED)
+  taskQueue     TaskQueue[]
   travelTasks   TravelTask[]
-  gatheringTasks GatheringTask[]
 }
 
 model TransactionLedger {
@@ -50,6 +58,78 @@ model TransactionLedger {
   newBalance    Int      
   metadata      String   @default("{}") 
   createdAt     DateTime @default(now())
+}
+
+// ==========================================
+// 2. TEMPLATES (Static Game Data)
+// ==========================================
+
+model PremiumTierTemplate {
+  id              Int      @id
+  name            String   
+  queueSlots      Int      @default(0)
+  speedBonus      Float    @default(0.0)
+  goldBonus       Float    @default(0.0)
+  expBonus        Float    @default(0.0)
+  tavernRecruitDiscount Float @default(0.0)
+  users           User[]
+}
+
+model RegionTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  type            String   @default("TOWN")
+  ownerGuildId    Int?
+  ownerGuild      Guild?   @relation(fields: [ownerGuildId], references: [id])
+  localTaxRate    Float    @default(0.02)
+  dangerLevel     Int      @default(1)
+  backgroundPath  String   @default("res://assets/backgrounds/default.png")
+  musicTrack      String   @default("default_theme")
+  filePath        String   @default("regions/misc.json")
+  connections     RegionConnection[] @relation("OriginRegion")
+  connectedFrom   RegionConnection[] @relation("TargetRegion")
+  buildings       BuildingInstance[]
+  sieges          Siege[]
+  resources       RegionResource[]
+  travelOrigin    TaskQueue[] @relation("TaskTravelOrigin")
+  travelTarget    TaskQueue[] @relation("TaskTravelTarget")
+  travelOrigins   TravelTask[] @relation("TravelOrigin")
+  travelTargets   TravelTask[] @relation("TravelTarget")
+  tavernMercenaries TavernMercenary[]
+}
+
+model TavernMercenary {
+  id              Int      @id @default(autoincrement())
+  heroId          Int      @unique
+  hero            Hero     @relation(fields: [heroId], references: [id])
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  recruitmentCost Int      @default(100)
+  currencyTier    String   @default("GOLD")
+  expiresAt       DateTime 
+  createdAt       DateTime @default(now())
+}
+
+model RegionConnection {
+  id              Int      @id @default(autoincrement())
+  originRegionId  Int
+  origin          RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
+  targetRegionId  Int
+  target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
+  travelTimeSeconds Int    @default(10)
+}
+
+model RegionResource {
+  id              Int      @id @default(autoincrement())
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  itemId          Int
+  item            ItemTemplate   @relation(fields: [itemId], references: [id])
+  requiredJobId   Int?     
+  spawnChance     Float    @default(1.0)
+  gatherDifficulty Int     @default(1)
+  gatherTimeSeconds Int    @default(10)
 }
 
 model ItemTemplate {
@@ -80,7 +160,7 @@ model ItemTemplate {
   recipeResult    RecipeTemplate[]
   ingredients     RecipeIngredient[]
   regionResources RegionResource[]
-  gatheringTasks  GatheringTask[]
+  taskTargets     TaskQueue[]
 }
 
 model ItemTrait {
@@ -95,7 +175,7 @@ model TraitTemplate {
   id              Int      @id
   name            String
   description     String   @default("")
-  category        String   @default("GENERAL") // FIXED: Restored field
+  category        String   @default("GENERAL")
   filePath        String   @default("traits/misc.json")
   statModifiers   TraitStatModifier[]
   heroes          HeroTrait[]
@@ -155,48 +235,6 @@ model ItemSetBonus {
   requiredCount   Int
   statKey         String
   statValue       Float
-}
-
-model RegionTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  type            String   @default("TOWN")
-  ownerGuildId    Int?
-  ownerGuild      Guild?   @relation(fields: [ownerGuildId], references: [id])
-  localTaxRate    Float    @default(0.02)
-  dangerLevel     Int      @default(1)
-  backgroundPath  String   @default("res://assets/backgrounds/default.png")
-  musicTrack      String   @default("default_theme")
-  filePath        String   @default("regions/misc.json")
-  connections     RegionConnection[] @relation("OriginRegion")
-  connectedFrom   RegionConnection[] @relation("TargetRegion")
-  buildings       BuildingInstance[]
-  sieges          Siege[]
-  resources       RegionResource[]
-  travelOrigin    TravelTask[] @relation("TravelOrigin")
-  travelTarget    TravelTask[] @relation("TravelTarget")
-}
-
-model RegionConnection {
-  id              Int      @id @default(autoincrement())
-  originRegionId  Int
-  origin          RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
-  targetRegionId  Int
-  target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
-  travelTimeSeconds Int    @default(10)
-}
-
-model RegionResource {
-  id              Int      @id @default(autoincrement())
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  itemId          Int
-  item            ItemTemplate   @relation(fields: [itemId], references: [id])
-  requiredJobId   Int?     
-  spawnChance     Float    @default(1.0)
-  gatherDifficulty Int     @default(1)
-  gatherTimeSeconds Int    @default(10)
 }
 
 model MonsterTemplate {
@@ -454,10 +492,14 @@ model QuestReward {
   amount          Int      @default(1)
 }
 
+// ==========================================
+// 3. INSTANCE DATA (User Created)
+// ==========================================
+
 model Hero {
   id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
+  userId      Int?     
+  user        User?    @relation(fields: [userId], references: [id])
   name        String
   level       Int      @default(1)
   exp         Int      @default(0)
@@ -470,6 +512,7 @@ model Hero {
   jobRank     String   @default("APPRENTICE")
   masteryPoints Int    @default(0)
   createdAt   DateTime @default(now())
+  
   stats       HeroStat[]
   deeds       HeroDeed[]
   traits      HeroTrait[]
@@ -477,20 +520,29 @@ model Hero {
   equipment   HeroEquipment[]
   auction     HeroAuctionListing?
   formationSlots FormationSlot[]
-  gatheringTasks GatheringTask[]
+  
+  taskQueue     TaskQueue[] // FIXED
+  tavernEntry TavernMercenary?
 }
 
-model GatheringTask {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  heroId        Int
-  hero          Hero     @relation(fields: [heroId], references: [id])
-  itemId        Int
-  item          ItemTemplate @relation(fields: [itemId], references: [id])
-  startedAt     DateTime @default(now())
-  finishesAt    DateTime
-  isCompleted   Boolean  @default(false)
+model TaskQueue {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  heroId          Int?
+  hero            Hero?    @relation(fields: [heroId], references: [id])
+  type            String   
+  targetItemId    Int?
+  targetItem      ItemTemplate? @relation(fields: [targetItemId], references: [id])
+  originRegionId  Int?
+  originRegion    RegionTemplate? @relation("TaskTravelOrigin", fields: [originRegionId], references: [id])
+  targetRegionId  Int?
+  targetRegion    RegionTemplate? @relation("TaskTravelTarget", fields: [targetRegionId], references: [id])
+  status          String   @default("PENDING")
+  priority        Int      @default(0)
+  startedAt       DateTime?
+  finishesAt      DateTime?
+  createdAt       DateTime @default(now())
 }
 
 model TravelTask {
