@@ -43,6 +43,8 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
+selection_enabled = true
+context_menu_enabled = true
 text = "Ready to test..."
 
 [node name="RunButton" type="Button" parent="VBoxContainer"]
