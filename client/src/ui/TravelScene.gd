@@ -69,34 +69,9 @@ func _update_timer():
 
 func _on_task_completed(data):
 	_log("SOCKET SIGNAL RECEIVED!")
-	_process_arrival(data)
-
-func _force_sync():
-	_log("Syncing Profile with Server...")
-	ServerConnector.fetch_profile(GameState.current_user.id)
-
-func _on_request_completed(endpoint, data):
-	if endpoint.contains("/user/"):
-		var current_reg = int(data.get("currentRegion", -1))
-		var active_task_on_server = data.get("activeTask")
-		
-		_log("Sync Result -> Region ID: " + str(current_reg))
-		_log("Active Task on Server: " + str("YES" if active_task_on_server else "NO"))
-		
-		# Reset waiting flag since we got a fresh state
-		_is_waiting_for_socket = false
-		
-		if current_reg == _target_id or active_task_on_server == null:
-			_log("Location Confirmed or Task Finished. Routing...")
-			var region = data.get("region", {})
-			_route_by_type(region.get("type", "TOWN"))
-		else:
-			_log("Server still reports task RUNNING. Waiting for next pulse...")
-
-func _process_arrival(data):
 	if data.type == "TRAVEL":
-		_log("Arrival confirmed via WebSocket.")
-		GameState.current_user.currentRegion = data.targetRegionId
+		_log("Journey Finished. Unlocking UI...")
+		# Region ID is already updated in DB, we just need to route
 		GameState.set_active_task(null)
 		_route_by_type(data.get("targetRegionType", "TOWN"))
 

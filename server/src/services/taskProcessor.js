@@ -58,7 +58,7 @@ class TaskProcessor {
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
                     const region = await prisma.regionTemplate.findUnique({ where: { id: task.targetRegionId } });
-                    payload.targetRegionId = parseInt(task.targetRegionId);
+                    payload.targetRegionId = task.targetRegionId;
                     payload.targetRegionType = region.type;
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
