@@ -6,8 +6,11 @@ extends Control
 
 func _ready():
 	ServerConnector.login_success.connect(_on_data_updated)
-	# Also update when any request completes, as gold/vitality might change
 	ServerConnector.request_completed.connect(func(_e, _d): _on_data_updated(GameState.current_user))
+	
+	# REAL-TIME UPDATE
+	ServerConnector.task_completed.connect(func(_d): ServerConnector.fetch_profile(GameState.current_user.id))
+	
 	refresh()
 
 func refresh():
