@@ -65,12 +65,8 @@ func _on_request_completed(endpoint, data):
 	if "tavern/enter" in endpoint:
 		get_tree().change_scene_to_file("res://src/ui/TavernScreen.tscn")
 	elif "action/travel" in endpoint:
-		# Navigation is handled after the 15s timer by checking GameState currentRegion 
-		# OR we can just rely on the TaskHUD to show completion.
-		# For this demo, let's assume the user checks the map or we auto-switch after 15s.
+		# Navigation is handled after the 15s timer
 		await get_tree().create_timer(15.0).timeout
-		# Determine target region (simplification for demo)
-		# A real implementation would parse the 'data' to see the target region.
 		if data.has("targetRegionId"):
 			GameState.current_user.currentRegion = data.targetRegionId
 			if data.targetRegionId == 1:
