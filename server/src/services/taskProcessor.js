@@ -64,6 +64,7 @@ class TaskProcessor {
                 socketService.emitToUser(task.userId, "task_completed", {
                     taskId: task.id,
                     type: task.type,
+                    targetRegionId: task.targetRegionId, // NEW: Include destination
                     message: `${task.type} Finished Successfully!`
                 });
 
