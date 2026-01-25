@@ -21,8 +21,8 @@ func _run_tests():
 	log_box.clear()
 	_log("--- STARTING INTEGRATION TESTS ---", "yellow")
 	
-	_log("Step 1: Testing Login...")
-	ServerConnector.login("player1")
+	_log("Step 1: Testing Login with Security...")
+	ServerConnector.login_with_password("player1", "password123")
 	await get_tree().create_timer(1.0).timeout
 	
 	if !GameState.current_user:
