@@ -122,6 +122,19 @@ class TavernService {
             })
         ]);
     }
+
+    /**
+     * Get list of mercenaries in the user's current region.
+     */
+    async getAvailableMercenaries(userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user.isInTavern) return []; // Cannot see list if not inside
+
+        return await prisma.tavernMercenary.findMany({
+            where: { regionId: user.currentRegion },
+            include: { hero: { include: { combatClass: true } } }
+        });
+    }
 }
 
 module.exports = new TavernService();

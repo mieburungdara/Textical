@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3 uid="uid://town_screen"]
+
+[ext_resource type="Script" path="res://src/ui/TownScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://inventory_ui" path="res://src/ui/InventoryUI.tscn" id="2_inventory"]
+[ext_resource type="PackedScene" uid="uid://quest_ui" path="res://src/ui/QuestUI.tscn" id="3_quest"]
+[ext_resource type="PackedScene" uid="uid://hero_profile_ui" path="res://src/ui/HeroProfileUI.tscn" id="4_hero"]
+[ext_resource type="PackedScene" uid="uid://market_ui" path="res://src/ui/MarketUI.tscn" id="5_market"]
+[ext_resource type="PackedScene" uid="uid://crafting_ui" path="res://src/ui/CraftingUI.tscn" id="6_craft"]
+[ext_resource type="PackedScene" uid="uid://formation_ui" path="res://src/ui/FormationUI.tscn" id="7_formation"]
+[ext_resource type="PackedScene" uid="uid://task_list_hud" path="res://src/ui/TaskListHUD.tscn" id="8_task"]
+[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="9_hud"]
+
+[node name="TownScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="TopHUD" parent="." instance=ExtResource("9_hud")]
+layout_mode = 1
+
+[node name="TaskListHUD" parent="." instance=ExtResource("8_task")]
+layout_mode = 1
+
+[node name="Actions" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -60.0
+offset_right = 60.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TavernButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Tavern"
+
+[node name="MarketButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Market"
+
+[node name="InventoryButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Inventory"
+
+[node name="QuestButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Daily Quests"
+
+[node name="CraftingButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Workbench"
+
+[node name="FormationButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Formation"
+
+[node name="HeroButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "Hero Profile"
+
+[node name="WildernessButton" type="Button" parent="Actions"]
+layout_mode = 2
+text = "To Wilderness"
+
+[node name="InventoryUI" parent="." instance=ExtResource("2_inventory")]
+visible = false
+layout_mode = 1
+
+[node name="QuestUI" parent="." instance=ExtResource("3_quest")]
+visible = false
+layout_mode = 1
+
+[node name="HeroProfileUI" parent="." instance=ExtResource("4_hero")]
+visible = false
+layout_mode = 1
+
+[node name="MarketUI" parent="." instance=ExtResource("5_market")]
+visible = false
+layout_mode = 1
+
+[node name="CraftingUI" parent="." instance=ExtResource("6_craft")]
+visible = false
+layout_mode = 1
+
+[node name="FormationUI" parent="." instance=ExtResource("7_formation")]
+visible = false
+layout_mode = 1

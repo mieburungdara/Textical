@@ -1,0 +1,117 @@
+[gd_scene load_steps=2 format=3 uid="uid://combat_screen"]
+
+[ext_resource type="Script" path="res://src/ui/CombatScreen.gd" id="1_script"]
+
+[node name="CombatScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0666667, 0.0666667, 0.0666667, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="MonsterArea" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer/MonsterArea"]
+layout_mode = 2
+text = "ENEMY: SLIME"
+horizontal_alignment = 1
+
+[node name="MonsterHP" type="ProgressBar" parent="VBoxContainer/MonsterArea"]
+custom_minimum_size = Vector2(300, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+value = 100.0
+
+[node name="PartyArea" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="HeroHP" type="ProgressBar" parent="VBoxContainer/PartyArea"]
+custom_minimum_size = Vector2(300, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+value = 100.0
+
+[node name="Label" type="Label" parent="VBoxContainer/PartyArea"]
+layout_mode = 2
+text = "PARTY: ARTHUR"
+horizontal_alignment = 1
+
+[node name="LogPanel" type="Panel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="VBoxContainer/LogPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "Turn 1..."
+
+[node name="ResultPopup" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ResultPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="ResultText" type="Label" parent="ResultPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "VICTORY"
+horizontal_alignment = 1
+
+[node name="LootText" type="Label" parent="ResultPopup/VBoxContainer"]
+layout_mode = 2
+text = "Loot: Iron Ingot x1"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="ResultPopup/VBoxContainer"]
+layout_mode = 2
+text = "Return to Forest"
+
+[connection signal="pressed" from="ResultPopup/VBoxContainer/CloseButton" to="." method="_on_close_pressed"]

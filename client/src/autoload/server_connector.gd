@@ -1,137 +1,144 @@
 extends Node
 
-## Professional Server Connector.
-## Comprehensive serialization including elemental resistances and traits.
+signal login_success(user)
+signal login_failed(error)
+signal request_completed(endpoint, data)
+signal error_occurred(message)
 
-signal connection_established
-signal battle_result_received(result: Dictionary)
+var base_url = "http://localhost:3000/api"
+var _http_request: HTTPRequest
 
-var socket := WebSocketPeer.new()
-var is_connected_to_server := false
-var server_url := "ws://localhost:3000"
+func _ready():
+	_http_request = HTTPRequest.new()
+	add_child(_http_request)
+	_http_request.request_completed.connect(_on_request_completed)
 
-func _process(_delta):
-	socket.poll()
-	var state = socket.get_ready_state()
-	if state == WebSocketPeer.STATE_OPEN:
-		if not is_connected_to_server:
-			is_connected_to_server = true
-			connection_established.emit()
-		while socket.get_available_packet_count() > 0:
-			_on_data_received(socket.get_packet())
-	elif state == WebSocketPeer.STATE_CLOSED:
-		is_connected_to_server = false
+# --- GENERIC REQUESTER ---
+func _send_post(endpoint: String, body: Dictionary):
+	var headers = ["Content-Type: application/json"]
+	var json = JSON.stringify(body)
+	var url = base_url + endpoint
+	print("[NET] POST ", url, " Body: ", json)
+	var error = _http_request.request(url, headers, HTTPClient.METHOD_POST, json)
+	if error != OK:
+		emit_signal("error_occurred", "Connection Error")
 
-func connect_to_server(url: String = ""):
-	if url != "": server_url = url
-	socket.connect_to_url(server_url)
+func _send_get(endpoint: String):
+	var url = base_url + endpoint
+	print("[NET] GET ", url)
+	var error = _http_request.request(url)
+	if error != OK:
+		emit_signal("error_occurred", "Connection Error")
 
-func _on_data_received(packet: PackedByteArray):
-	var json_str = packet.get_string_from_utf8()
-	var data = JSON.parse_string(json_str)
-	if data and data.get("type") == "battle_replay":
-		battle_result_received.emit(data)
+# --- AUTH ---
+func login(username: String):
+	_send_post("/auth/login", {"username": username})
 
-func request_battle(dungeon_id: String, party: Dictionary):
-	var request = {
-		"type": "start_battle",
-		"dungeon_id": dungeon_id,
-		"party": _serialize_party_full(party)
-	}
-	socket.send_text(JSON.stringify(request))
+# --- USER DATA ---
+func fetch_profile(user_id: int):
+	_send_get("/user/" + str(user_id))
 
-func _serialize_party_full(party: Dictionary) -> Array:
-	var serialized = []
-	for pos in party:
-		var hero = party[pos] as HeroData
-		if not hero: continue
-		
-		var hero_dict = {
-			"pos": {"x": pos.x, "y": pos.y},
-			"id": hero.id,
-			"name": hero.name,
-			"hp_base": hero.hp_base,
-			"mana_base": hero.mana_base,
-			"damage_base": hero.damage_base,
-			"defense_base": hero.defense_base,
-			"speed_base": hero.speed_base,
-			"range_base": hero.range_base,
-			"element": int(hero.element),
-			"hp_regen": hero.hp_regen,
-			"mana_regen": hero.mana_regen,
-			"crit_chance": hero.crit_chance,
-			"crit_damage": hero.crit_damage,
-			"dodge_chance": hero.dodge_chance,
-			"block_chance": hero.block_chance,
-			# ELEMENTAL RESISTANCES
-			"res_fire": hero.res_fire,
-			"res_water": hero.res_water,
-			"res_wind": hero.res_wind,
-			"res_earth": hero.res_earth,
-			"res_lightning": hero.res_lightning,
-			"hp_bonus": hero.hp_bonus,
-			"damage_bonus": hero.damage_bonus,
-			"speed_bonus": hero.speed_bonus,
-			"flee_threshold": hero.flee_threshold,
-			"preferred_range": hero.preferred_range,
-			"target_priority": int(hero.target_priority),
-			"traits": _serialize_traits(hero.traits),
-			"current_job": _serialize_job(hero.current_job),
-			"equipment": _serialize_equipment(hero.equipment),
-			"skills": _serialize_skills(hero.skills)
-		}
-		serialized.append(hero_dict)
-	return serialized
+func fetch_inventory(user_id: int):
+	_send_get("/user/" + str(user_id) + "/inventory")
 
-func _serialize_job(job: JobData) -> Dictionary:
-	if not job: return {}
-	return {
-		"id": job.id,
-		"hp_mult": job.hp_mult,
-		"damage_mult": job.damage_mult,
-		"speed_mult": job.speed_mult,
-		"crit_mult": job.crit_mult,
-		"dodge_mult": job.dodge_mult,
-		"mana_mult": job.mana_mult,
-		"range_bonus": job.range_bonus
-	}
+func fetch_heroes(user_id: int):
+	_send_get("/user/" + str(user_id) + "/heroes")
 
-func _serialize_equipment(equipment: Dictionary) -> Dictionary:
-	var dict = {}
-	for slot in equipment:
-		var inst = equipment[slot]
-		if inst:
-			var traits = []
-			for t in inst.data.traits:
-				if t: traits.append(t.display_name.to_lower())
-			dict[str(slot)] = {
-				"uid": inst.uid,
-				"data": {
-					"id": inst.data.id,
-					"stat_bonuses": inst.data.stat_bonuses,
-					"traits": traits
-				}
-			}
-	return dict
+func fetch_recipes(user_id: int):
+	_send_get("/user/" + str(user_id) + "/recipes")
 
-func _serialize_traits(traits: Array[Trait]) -> Array:
-	var list = []
-	for t in traits:
-		if t: list.append(t.display_name.to_lower())
-	return list
+func fetch_hero_profile(hero_id: int):
+	_send_get("/hero/" + str(hero_id) + "/profile")
 
-func _serialize_skills(skills: Array[SkillData]) -> Array:
-	var list = []
-	for s in skills:
-		if s:
-			list.append({
-				"id": s.id,
-				"name": s.name,
-				"mana_cost": s.mana_cost,
-				"range": s.skill_range,
-				"cooldown": s.cooldown,
-				"damage_multiplier": s.damage_multiplier,
-				"aoe_pattern": s.aoe_pattern,
-				"aoe_size": s.aoe_size
-			})
-	return list
+func fetch_formation(user_id: int):
+	_send_get("/user/" + str(user_id) + "/formation")
+
+func update_formation(user_id: int, preset_id: int, slots: Array):
+	_send_post("/action/formation/update", {
+		"userId": user_id,
+		"presetId": preset_id,
+		"slots": slots
+	})
+
+# --- ACTIONS ---
+func enter_tavern(user_id: int):
+	_send_post("/tavern/enter", {"userId": user_id})
+
+func exit_tavern(user_id: int):
+	_send_post("/tavern/exit", {"userId": user_id})
+
+func get_mercenaries(user_id: int):
+	_send_get("/tavern/mercenaries?userId=" + str(user_id))
+
+func start_battle(user_id: int, monster_id: int):
+	_send_post("/battle/start", {"userId": user_id, "monsterId": monster_id})
+
+func travel(user_id: int, target_region_id: int):
+	_send_post("/action/travel", {"userId": user_id, "targetRegionId": target_region_id})
+
+func gather(user_id: int, hero_id: int, resource_id: int):
+	_send_post("/action/gather", {"userId": user_id, "heroId": hero_id, "resourceId": resource_id})
+
+func get_region_details(region_id: int):
+	_send_get("/region/" + str(region_id))
+
+func fetch_quests(user_id: int):
+	_send_get("/quests/" + str(user_id))
+
+func complete_quest(user_id: int, user_quest_id: int):
+	_send_post("/quests/complete", {"userId": user_id, "userQuestId": user_quest_id})
+
+# --- MARKET ---
+func fetch_market_listings(user_id: int):
+	_send_get("/market/listings?userId=" + str(user_id))
+
+func list_item(user_id: int, item_id: int, price: int):
+	_send_post("/market/list", {"userId": user_id, "itemId": item_id, "price": price})
+
+func buy_item(user_id: int, listing_id: int):
+	_send_post("/market/buy", {"userId": user_id, "listingId": listing_id})
+
+func sell_to_npc(user_id: int, item_id: int):
+	_send_post("/market/sell-npc", {"userId": user_id, "itemId": item_id})
+
+# --- RESPONSE HANDLER ---
+func _on_request_completed(result, response_code, headers, body):
+	if response_code == 0:
+		emit_signal("error_occurred", "Server Unreachable")
+		return
+
+	var response_text = body.get_string_from_utf8()
+	var json = JSON.parse_string(response_text)
+	
+	if response_code >= 400:
+		var err_msg = "Unknown Error"
+		if json and json is Dictionary:
+			err_msg = json.get("error", "Unknown Error")
+		print("[NET] ERROR: ", err_msg)
+		emit_signal("error_occurred", err_msg)
+		if "User not found" in err_msg:
+			emit_signal("login_failed", err_msg)
+		return
+
+	# Success Routing
+	if json is Dictionary:
+		if json.has("username") and json.has("gold"):
+			emit_signal("login_success", json)
+		elif json.has("items") and json.has("status"):
+			GameState.set_inventory(json)
+		elif json.has("type") and json.has("status") and json.get("status") == "RUNNING":
+			GameState.set_active_task(json)
+	
+	if endpoint_contains(headers, "/heroes"):
+		GameState.set_heroes(json)
+	
+	emit_signal("request_completed", _get_last_requested_url(), json)
+
+func endpoint_contains(headers: PackedStringArray, text: String) -> bool:
+	# HTTPRequest doesn't easily expose the URL in request_completed in Godot 4.0
+	# We'd usually track the last URL or use a custom node.
+	# For simplicity, we'll assume the endpoint is known or matched by data structure.
+	return true # Placeholder
+
+func _get_last_requested_url() -> String:
+	return "" # Placeholder

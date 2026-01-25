@@ -1,0 +1,34 @@
+extends Node
+
+var current_user = null
+var current_heroes = []
+var inventory = []
+var inventory_status = {"used": 0, "max": 20}
+var active_task = null
+
+func set_user(user_data):
+	current_user = user_data
+	print("[STATE] User set: ", current_user.username, " (Gold: ", current_user.gold, ")")
+
+func set_inventory(data):
+	inventory = data.items
+	inventory_status = data.status
+	print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
+
+func set_heroes(data):
+	current_heroes = data
+	print("[STATE] Heroes updated: ", current_heroes.size())
+
+func set_active_task(task):
+	active_task = task
+	if active_task:
+		print("[STATE] New task started: ", active_task.type)
+	else:
+		print("[STATE] Task cleared (Idle)")
+
+func update_vitality(new_vitality):
+	if current_user:
+		current_user.vitality = new_vitality
+
+func is_in_town():
+	return current_user and current_user.currentRegion == 1

@@ -23,7 +23,8 @@ This document tracks the physical progress of the Textical RPG engine.
 | | `CraftingService` | ✅ COMPLETE | Recipe-based item production with variable timers. |
 | **IV: Combat** | Tactical Grid | ✅ COMPLETE | 3x3 formation validation & Dual-Wield passive aggregation. |
 | | Battle Engine | ✅ COMPLETE | Turn-based idle logic with zero-gold material drops. |
-| **V: Interface** | Godot 4 UI | ⏳ **NEXT** | HUD, Progress Bars, World Map, and Tavern/Market views. |
+| **V: Interface** | API Documentation | ✅ COMPLETE | Full endpoint reference (`docs/API.md`) for Client Dev. |
+| | Godot 4 UI | ⏳ **IN PROGRESS** | Login & Town Screens created. Next: Wilderness & Battle. |
 | **V: Interface** | Godot 4 UI | ⏳ PENDING | HUD, Progress Bars, World Map, and Tavern/Market views. |
 
 ---
