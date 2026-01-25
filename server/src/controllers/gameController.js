@@ -135,13 +135,26 @@ exports.updateFormation = async (req, res) => {
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
-// --- HERO PROFILE ---
-exports.getHeroProfile = async (req, res) => {
+exports.getUserProfile = async (req, res) => {
     try {
-        const heroId = parseInt(req.params.id);
-        const profile = await formationService.getHeroCombatProfile(heroId);
-        res.json(profile);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        const { PrismaClient } = require('@prisma/client');
+        const _prisma = new PrismaClient();
+        const userId = parseInt(req.params.id);
+        const user = await _prisma.user.findUnique({
+            where: { id: userId },
+            include: { 
+                inventory: { include: { template: true } },
+                taskQueue: { where: { status: "RUNNING" } },
+                premiumTier: true,
+                region: true // NEW: Include the physical region object
+            }
+        });
+        await _prisma.$disconnect();
+        
+        // Flatten taskQueue to activeTask
+        const activeTask = user.taskQueue.length > 0 ? user.taskQueue[0] : null;
+        res.json({ ...user, activeTask });
+    } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
 // --- REGION ---

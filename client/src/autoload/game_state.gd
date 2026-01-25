@@ -12,11 +12,19 @@ var selected_hero_id: int = -1
 var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
 
 func set_user(user_data):
-    current_user = user_data
-    # Note: In a full implementation, we'd fetch region details 
-    # to determine if it's a TOWN or WILDERNESS
-    print("[STATE] User set: ", current_user.username, " (Region: ", current_user.currentRegion, ")")
-func set_inventory(data):
+	if not user_data is Dictionary: return
+	current_user = user_data
+	
+	# Sync Active Task from Server
+	if user_data.has("activeTask"):
+		active_task = user_data.activeTask
+	elif user_data.has("taskQueue"):
+		var queue = user_data.get("taskQueue", [])
+		active_task = queue[0] if queue.size() > 0 else null
+	else:
+		active_task = null
+		
+	print("[STATE] User & Task Synced. Region: ", current_user.get("currentRegion"))func set_inventory(data):
     if not data is Dictionary: return
     
     if data.has("items"):

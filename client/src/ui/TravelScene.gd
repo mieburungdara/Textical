@@ -75,12 +75,23 @@ func _force_sync():
 	ServerConnector.fetch_profile(GameState.current_user.id)
 
 func _on_request_completed(endpoint, data):
-	# If we are syncing and find that the user is already in a new region
 	if endpoint.contains("/user/"):
-		_log("Profile Synced. Current Region: " + str(data.currentRegion))
-		if GameState.active_task == null or GameState.active_task.get("status") != "RUNNING":
-			_log("No running task on server. Routing to Hub...")
-			_route_by_type(data.get("region", {}).get("type", "TOWN"))
+		_log("Profile Synced. Current Region ID: " + str(data.get("currentRegion")))
+		
+		# Check if the task is truly finished on server
+		if GameState.active_task == null:
+			_log("No active task. Routing to destination...")
+			# Use the region object if included, otherwise fetch it one last time
+			var region = data.get("region", {})
+			if region.has("type"):
+				_route_by_type(region.type)
+			else:
+				_log("Region metadata missing in sync. Requesting details...")
+				ServerConnector.get_region_details(data.currentRegion)
+	
+	elif endpoint.contains("/region/"):
+		_log("Detailed Region Data Received.")
+		_route_by_type(data.get("type", "TOWN"))
 
 func _process_arrival(data):
 	if data.type == "TRAVEL":
