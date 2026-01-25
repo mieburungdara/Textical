@@ -5,10 +5,16 @@ const inventoryService = require('../services/inventoryService');
 
 exports.login = async (req, res) => {
     try {
-        const { username } = req.body;
-        // Simplified Login: Just find or return 404. Production would use JWT.
+        const { username, password } = req.body;
         const user = await prisma.user.findUnique({ where: { username } });
+        
         if (!user) return res.status(404).json({ error: "User not found" });
+        
+        // Simple password check (In production, use bcrypt)
+        if (user.password !== password) {
+            return res.status(401).json({ error: "Invalid password" });
+        }
+        
         res.json(user);
     } catch (e) {
         res.status(500).json({ error: e.message });

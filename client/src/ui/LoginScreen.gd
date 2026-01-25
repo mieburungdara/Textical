@@ -1,6 +1,7 @@
 extends Control
 
 @onready var username_input = $VBoxContainer/UsernameInput
+@onready var password_input = $VBoxContainer/PasswordInput
 @onready var login_button = $VBoxContainer/LoginButton
 @onready var status_label = $VBoxContainer/StatusLabel
 
@@ -11,18 +12,19 @@ func _ready():
 
 func _on_login_pressed():
 	var username = username_input.text
-	if username == "":
-		status_label.text = "Enter username"
+	var password = password_input.text
+	
+	if username == "" or password == "":
+		status_label.text = "Enter username and password"
 		return
 	
-	status_label.text = "Connecting..."
-	ServerConnector.login(username)
+	status_label.text = "Authenticating..."
+	ServerConnector.login_with_password(username, password)
 
 func _on_login_success(user):
 	status_label.text = "Success! Welcome " + user.username
 	GameState.set_user(user)
-	# Transition to Main Game Scene (TODO)
 	get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 
 func _on_login_failed(error):
-	status_label.text = "Error: " + error
+	status_label.text = "Auth Error: " + error

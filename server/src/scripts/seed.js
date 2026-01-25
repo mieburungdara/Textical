@@ -55,7 +55,7 @@ async function main() {
 
   // 6. USER & TEAM
   console.log("[6/6] Finalizing Player State...");
-  const user = await prisma.user.upsert({ where: { username: "player1" }, update: { gold: 1000 }, create: { username: "player1", password: "p", premiumTierId: 5, gold: 1000 } });
+  const user = await prisma.user.upsert({ where: { username: "player1" }, update: { password: "password123", gold: 1000 }, create: { username: "player1", password: "password123", premiumTierId: 5, gold: 1000 } });
   const arthur = await prisma.hero.create({ data: { userId: user.id, name: "Arthur", classId: 1001 } });
   const gimli = await prisma.hero.create({ data: { userId: user.id, name: "Gimli", classId: 1001, jobId: 5001 } });
 
