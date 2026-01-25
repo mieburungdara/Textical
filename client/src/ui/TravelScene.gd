@@ -7,13 +7,12 @@ extends Control
 
 var _fallback_timer = 0.0
 var _is_waiting_for_socket = false
+var _target_id = -1
 
 func _ready():
 	_log("Scene Loaded. Monitoring signals...")
 	if !ServerConnector.task_completed.is_connected(_on_task_completed):
 		ServerConnector.task_completed.connect(_on_task_completed)
-	
-	# Also listen for general requests in case we force sync
 	if !ServerConnector.request_completed.is_connected(_on_request_completed):
 		ServerConnector.request_completed.connect(_on_request_completed)
 		
@@ -29,16 +28,17 @@ func _process(delta):
 	
 	if _is_waiting_for_socket:
 		_fallback_timer += delta
-		if _fallback_timer > 3.0: # If 3 seconds pass after timer 0
-			_log("Socket Timeout. Triggering Force Sync...")
+		if _fallback_timer > 3.0: 
+			_log("Socket Timeout (3s). Triggering Force Sync...")
+			_fallback_timer = 0.0 # CRITICAL FIX: Reset timer to break the infinite loop
 			_force_sync()
-			_is_waiting_for_socket = false
 
 func _update_display():
 	var task = GameState.active_task
 	if task:
-		_log("Active Task: " + str(task.type))
-		dest_label.text = "TRAVELING TO REGION " + str(task.get("targetRegionId", "?"))
+		_target_id = int(task.get("targetRegionId", -1))
+		_log("Active Task: TRAVEL to ID " + str(_target_id))
+		dest_label.text = "TRAVELING TO REGION " + str(_target_id)
 	else:
 		_log("No task in state. Attempting recovery sync...")
 		_force_sync()
@@ -63,47 +63,41 @@ func _update_timer():
 	
 	if remaining <= 0 and !_is_waiting_for_socket:
 		status_label.text = "Arriving..."
-		_log("Timer at 0. Awaiting Server Confirmation...")
+		_log("Timer reached 0. Awaiting Server Confirmation...")
 		_is_waiting_for_socket = true
+		_fallback_timer = 0.0 # Reset timer for the 3s window
 
 func _on_task_completed(data):
 	_log("SOCKET SIGNAL RECEIVED!")
 	_process_arrival(data)
 
 func _force_sync():
-	_log("Syncing with server...")
+	_log("Syncing Profile with Server...")
 	ServerConnector.fetch_profile(GameState.current_user.id)
 
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/user/"):
-		_log("Profile Synced. Current Region ID: " + str(data.get("currentRegion")))
+		var current_reg = int(data.get("currentRegion", -1))
+		_log("Sync Result -> Region ID: " + str(current_reg))
 		
-		# Check if the task is truly finished on server
-		if GameState.active_task == null:
-			_log("No active task. Routing to destination...")
-			# Use the region object if included, otherwise fetch it one last time
+		# SMART CHECK: If our current region matches the target, we have arrived
+		# regardless of whether the task object is still in the queue.
+		if current_reg == _target_id or GameState.active_task == null:
+			_log("Location Confirmed. Routing...")
 			var region = data.get("region", {})
-			if region.has("type"):
-				_route_by_type(region.type)
-			else:
-				_log("Region metadata missing in sync. Requesting details...")
-				ServerConnector.get_region_details(data.currentRegion)
-	
-	elif endpoint.contains("/region/"):
-		_log("Detailed Region Data Received.")
-		_route_by_type(data.get("type", "TOWN"))
+			_route_by_type(region.get("type", "TOWN"))
 
 func _process_arrival(data):
 	if data.type == "TRAVEL":
-		_log("Arrival confirmed by Server.")
+		_log("Arrival confirmed via WebSocket.")
 		GameState.current_user.currentRegion = data.targetRegionId
 		GameState.set_active_task(null)
 		_route_by_type(data.get("targetRegionType", "TOWN"))
 
 func _route_by_type(r_type: String):
 	if r_type == "TOWN":
-		_log("Loading Town...")
+		_log("Transitioning to Town...")
 		get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 	else:
-		_log("Loading Wilderness...")
+		_log("Transitioning to Wilderness...")
 		get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

@@ -135,6 +135,15 @@ exports.updateFormation = async (req, res) => {
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
+// --- HERO PROFILE ---
+exports.getHeroProfile = async (req, res) => {
+    try {
+        const heroId = parseInt(req.params.id);
+        const profile = await formationService.getHeroCombatProfile(heroId);
+        res.json(profile);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
 exports.getUserProfile = async (req, res) => {
     try {
         const { PrismaClient } = require('@prisma/client');

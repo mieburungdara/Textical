@@ -5,7 +5,7 @@ const gameController = require('../controllers/gameController');
 
 // --- USER ---
 router.post('/auth/login', userController.login);
-router.get('/user/:id', userController.getProfile);
+router.get('/user/:id', gameController.getUserProfile);
 router.get('/user/:id/heroes', userController.getHeroes);
 router.get('/user/:id/inventory', userController.getInventory);
 router.get('/user/:id/recipes', userController.getRecipes);
