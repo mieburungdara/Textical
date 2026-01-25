@@ -59,8 +59,10 @@ func _check_transition():
         await get_tree().create_timer(0.2).timeout
         
         if region_data.type == "TOWN":
+            GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
             get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
         else:
+            GameState.last_visited_hub = "res://src/ui/WildernessScreen.tscn"
             get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
 
 func _on_login_failed(error):

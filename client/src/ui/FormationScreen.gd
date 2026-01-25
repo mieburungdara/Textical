@@ -9,7 +9,7 @@ var selected_hero_id = -1
 var grid_slots = {} 
 
 func _ready():
-	back_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn"))
+	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(GameState.last_visited_hub))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
 	for y in range(3):
