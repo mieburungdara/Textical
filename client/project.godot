@@ -18,9 +18,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 GlobalGameManager="*res://src/autoload/global_game_manager.gd"
-AdventureManager="*res://src/autoload/adventure_manager.gd"
-SaveManager="*res://src/autoload/save_manager.gd"
-InventoryManager="*res://src/autoload/inventory_manager.gd"
 ServerConnector="*res://src/autoload/server_connector.gd"
 GameState="*res://src/autoload/game_state.gd"
 
