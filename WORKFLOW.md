@@ -17,6 +17,7 @@ This document tracks the physical progress of the Textical RPG engine.
 | | `MarketService` | ✅ COMPLETE | Dual-Tax logic, 24h Expiry, and Town-Only Viewing. |
 | | `QuestService` | ✅ COMPLETE | Daily Quest generation (The only source of gold injection). |
 | | `TravelService` | ✅ COMPLETE | Map transitions (15s) and "On the Road" state. |
+| | Networking Refactor| ✅ COMPLETE | Modular, component-based handlers with inheritance. |
 | **III: Gameplay** | Task Queue | ✅ COMPLETE | Background processor for all timed actions. |
 | | `GatheringService` | ✅ COMPLETE | Resource extraction logic (10s timers for Iron/Twigs). |
 | | Tavern Spawner | ✅ COMPLETE | Automated random hero generation (10-60m) and occupancy timers. |

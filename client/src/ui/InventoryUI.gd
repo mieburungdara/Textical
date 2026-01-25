@@ -14,7 +14,7 @@ func refresh():
 		ServerConnector.fetch_inventory(GameState.current_user.id)
 
 func _on_request_completed(endpoint, data):
-	if "inventory" in endpoint or (data is Dictionary and data.has("status")):
+	if "inventory" in endpoint and data is Dictionary and data.has("items"):
 		GameState.set_inventory(data)
 		_populate_grid()
 

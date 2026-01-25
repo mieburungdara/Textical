@@ -11,9 +11,14 @@ func set_user(user_data):
 	print("[STATE] User set: ", current_user.username, " (Gold: ", current_user.gold, ")")
 
 func set_inventory(data):
-	inventory = data.items
-	inventory_status = data.status
-	print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
+	if not data is Dictionary: return
+	
+	if data.has("items"):
+		inventory = data.items
+	
+	if data.has("status"):
+		inventory_status = data.status
+		print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
 
 func set_heroes(data):
 	current_heroes = data

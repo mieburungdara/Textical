@@ -1,81 +1,73 @@
 extends Node
 
+# Signal Forwarding (Keeps UI compatibility)
 signal login_success(user)
 signal login_failed(error)
 signal request_completed(endpoint, data)
 signal error_occurred(endpoint, message)
 
-var base_url = "http://localhost:3000/api"
+var auth: AuthHandler
+var world: WorldHandler
+var tavern: TavernHandler
+var market: MarketHandler
+var quest: QuestHandler
+var inventory: InventoryHandler
+var battle: BattleHandler
 
-# --- CORE PARALLEL REQUESTER ---
-func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}):
-	var http = HTTPRequest.new()
-	add_child(http)
-	
-	http.request_completed.connect(func(result, response_code, headers, response_body): 
-		_on_request_completed(http, endpoint, result, response_code, headers, response_body)
-	)
-	
-	var url = base_url + endpoint
-	var headers = ["Content-Type: application/json"]
-	var json_str = JSON.stringify(body) if not body.is_empty() else ""
-	
-	var error = http.request(url, headers, method, json_str)
-	if error != OK:
-		emit_signal("error_occurred", endpoint, "Initial Connection Error")
-		http.queue_free()
+func _ready():
+    # Instantiate Components
+    auth = AuthHandler.new()
+    world = WorldHandler.new()
+    tavern = TavernHandler.new()
+    market = MarketHandler.new()
+    quest = QuestHandler.new()
+    inventory = InventoryHandler.new()
+    battle = BattleHandler.new()
+    
+    var handlers = [auth, world, tavern, market, quest, inventory, battle]
+    for h in handlers:
+        add_child(h)
+        h.request_completed.connect(func(e, d): emit_signal("request_completed", e, d))
+        h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+    
+    # Specialized Signal Connections
+    auth.login_success.connect(func(u): emit_signal("login_success", u))
+    auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
-func _send_post(endpoint: String, body: Dictionary):
-	_request(endpoint, HTTPClient.METHOD_POST, body)
+# --- AUTH & USER ---
+func login_with_password(u, p): auth.login(u, p)
+func fetch_profile(id): auth.fetch_profile(id)
 
-func _send_get(endpoint: String):
-	_request(endpoint, HTTPClient.METHOD_GET)
+# --- COLLECTION (INVENTORY HANDLER) ---
+func fetch_inventory(id): inventory.fetch_inventory(id)
+func fetch_heroes(id): inventory.fetch_heroes(id)
+func fetch_recipes(id): inventory.fetch_recipes(id)
+func fetch_formation(id): inventory.fetch_formation(id)
+func fetch_hero_profile(id): inventory.fetch_hero_profile(id)
 
-# --- API METHODS ---
-func login(username: String): _send_post("/auth/login", {"username": username})
-func login_with_password(username: String, password: String): 
-	_send_post("/auth/login", {"username": username, "password": password})
-func fetch_profile(id: int): _send_get("/user/" + str(id))
-func fetch_inventory(id: int): _send_get("/user/" + str(id) + "/inventory")
-func fetch_heroes(id: int): _send_get("/user/" + str(id) + "/heroes")
-func fetch_hero_profile(id: int): _send_get("/hero/" + str(id) + "/profile")
-func fetch_all_regions(): _send_get("/regions")
-func fetch_quests(user_id: int): _send_get("/quests/" + str(user_id))
-func fetch_formation(user_id: int): _send_get("/user/" + str(user_id) + "/formation")
-func enter_tavern(id: int): _send_post("/tavern/enter", {"userId": id})
-func exit_tavern(id: int): _send_post("/tavern/exit", {"userId": id})
-func start_battle(u_id: int, m_id: int): _send_post("/battle/start", {"userId": u_id, "monsterId": m_id})
-func travel(u_id: int, r_id: int): _send_post("/action/travel", {"userId": u_id, "targetRegionId": r_id})
-func gather(u_id: int, h_id: int, r_id: int): _send_post("/action/gather", {"userId": u_id, "heroId": h_id, "resourceId": r_id})
-func craft(u_id: int, r_id: int): _send_post("/action/craft", {"userId": u_id, "recipeId": r_id})
-func update_formation(u_id: int, p_id: int, slots: Array):
-	_send_post("/action/formation/update", {"userId": u_id, "presetId": p_id, "slots": slots})
+# --- WORLD & ACTIONS (WORLD HANDLER) ---
+func fetch_all_regions(): world.fetch_all_regions()
+func get_region_details(id): world.get_region_details(id)
+func travel(u, r): world.travel(u, r)
+func gather(u, h, r): world.gather(u, h, r)
+func craft(u, r): world.craft(u, r)
+func update_formation(u, p, s): world.update_formation(u, p, s)
 
-# --- RESPONSE HANDLER ---
-func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, response_code, _headers, body):
-	var response_text = body.get_string_from_utf8()
-	var json = JSON.parse_string(response_text)
-	
-	if response_code >= 400:
-		var msg = json.get("error", "Server Error") if json is Dictionary else "Unknown Error"
-		emit_signal("error_occurred", endpoint, msg)
-		if "User not found" in msg or "password" in msg:
-			emit_signal("login_failed", msg)
-	else:
-		# Auto-Update State
-		if json is Dictionary:
-			if json.has("username"): 
-				GameState.set_user(json)
-				emit_signal("login_success", json)
-			elif json.has("items"): 
-				GameState.set_inventory(json)
-			elif json.has("type") and json.get("status") == "RUNNING":
-				GameState.set_active_task(json)
-		
-		if endpoint.contains("/heroes"):
-			GameState.set_heroes(json)
-			
-		emit_signal("request_completed", endpoint, json)
-	
-	# Bersihkan node setelah selesai
-	http_node.queue_free()
+# --- BATTLE (BATTLE HANDLER) ---
+func start_battle(u, m): battle.start_battle(u, m)
+
+# --- TAVERN (TAVERN HANDLER) ---
+func enter_tavern(id): tavern.enter(id)
+func exit_tavern(id): tavern.exit(id)
+func get_mercenaries(id): tavern.get_mercenaries(id)
+func recruit(u, m): tavern.recruit(u, m)
+
+# --- MARKET (MARKET HANDLER) ---
+func fetch_market_listings(id): market.fetch_listings(id)
+func list_item(u, i, p): market.list_item(u, i, p)
+func buy_item(u, l): market.buy_item(u, l)
+func sell_to_npc(u, i): market.sell_to_npc(u, i)
+
+# --- QUESTS (QUEST HANDLER) ---
+func fetch_quests(id): quest.fetch_quests(id)
+func complete_quest(u, q): quest.complete_quest(u, q)
