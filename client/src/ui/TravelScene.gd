@@ -5,10 +5,10 @@ extends Control
 @onready var status_label = $VBoxContainer/StatusLabel
 
 func _ready():
-	# CONNECT SIGNALS
 	ServerConnector.task_completed.connect(_on_task_completed)
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
+	# Initial UI Setup
 	_update_display()
 
 func _process(_delta):
@@ -19,6 +19,8 @@ func _update_display():
 	if task:
 		dest_label.text = "TRAVELING TO REGION " + str(task.get("targetRegionId", "?"))
 		status_label.text = "On the Road..."
+	else:
+		status_label.text = "Waiting for server signal..."
 
 func _update_timer():
 	var task = GameState.active_task
@@ -43,21 +45,27 @@ func _update_timer():
 		status_label.text = "Arriving..."
 
 func _on_task_completed(data):
+	# Match type exactly from server (e.g. "TRAVEL")
 	if data.type == "TRAVEL" or data.type == "AUDIT_TEST":
+		print("[NAV] Arrival detected via Socket. Syncing location...")
 		status_label.text = "Region Reached!"
-		# Update State
-		GameState.current_user.currentRegion = data.targetRegionId
-		# Clear active task locally
+		
+		# Clear task locally
 		GameState.set_active_task(null)
-		# Fetch region details to trigger the scene switch
-		ServerConnector.get_region_details(data.targetRegionId)
+		
+		# Update current region ID
+		if data.has("targetRegionId"):
+			GameState.current_user.currentRegion = data.targetRegionId
+		
+		# Small delay before fetching details to ensure DB transaction is fully committed
+		await get_tree().create_timer(0.5).timeout
+		ServerConnector.get_region_details(GameState.current_user.currentRegion)
 
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/region/"):
-		# DECIDE SCENE BASED ON REGION TYPE
+		print("[NAV] Region details received. Routing...")
+		# Final verification of region type
 		if data.get("type") == "TOWN":
-			print("[NAV] Routing to Town")
 			get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 		else:
-			print("[NAV] Routing to Wilderness")
 			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
