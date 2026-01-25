@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.env
+prisma/dev.db
+prisma/dev.db-journal
+tests
+*.test.js
+api_test.js
+battle_test.js
+formation_test.js
+gathering_test.js
+market_test.js
+vitality_test.js

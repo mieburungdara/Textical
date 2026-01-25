@@ -24,7 +24,9 @@ This document tracks the physical progress of the Textical RPG engine.
 | **IV: Combat** | Tactical Grid | ✅ COMPLETE | 3x3 formation validation & Dual-Wield passive aggregation. |
 | | Battle Engine | ✅ COMPLETE | Turn-based idle logic with zero-gold material drops. |
 | **V: Interface** | API Documentation | ✅ COMPLETE | Full endpoint reference (`docs/API.md`) for Client Dev. |
-| | Godot 4 UI | ⏳ **IN PROGRESS** | Login & Town Screens created. Next: Wilderness & Battle. |
+| **V: Interface** | Godot 4 UI | ✅ COMPLETE | Full navigation loop from Login to Town to Wilderness. |
+| | Deployment Prep | ✅ COMPLETE | Dockerized backend and hosting guide (`DEPLOYMENT.md`). |
+| **VI: Advanced** | Breeding System | ⏳ **NEXT** | Genetics-based hero generation and skill inheritance. |
 | **V: Interface** | Godot 4 UI | ⏳ PENDING | HUD, Progress Bars, World Map, and Tavern/Market views. |
 
 ---
