@@ -14,13 +14,13 @@ func _process(_delta):
     _update_timer_display()
 
 func _on_request_completed(endpoint, data):
-	# STRICT CHECK: Only update if it's the task endpoint OR a dictionary with a task status
-	if endpoint.contains("/task"):
-		GameState.set_active_task(data)
-	elif data is Dictionary and data.has("status") and data.get("status") is String and data.get("status") == "RUNNING":
-		# Only set as active task if it's actually a task payload
-		if data.has("type") and data.has("finishesAt"):
-			GameState.set_active_task(data)
+    # STRICT CHECK: Only update if it's the task endpoint OR a dictionary with a task status
+    if endpoint.contains("/task"):
+        GameState.set_active_task(data)
+    elif data is Dictionary and data.has("status") and data.get("status") is String and data.get("status") == "RUNNING":
+        # Only set as active task if it's actually a task payload
+        if data.has("type") and data.has("finishesAt"):
+            GameState.set_active_task(data)
 func _update_timer_display():
     var task = GameState.active_task
     
