@@ -6,6 +6,7 @@ const marketService = require('../services/marketService');
 const battleService = require('../services/battleService');
 const questService = require('../services/questService');
 const vitalityService = require('../services/vitalityService');
+const formationService = require('../services/formationService');
 
 // --- TRAVEL ---
 exports.travel = async (req, res) => {
