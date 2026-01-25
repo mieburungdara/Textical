@@ -1,7 +1,7 @@
 extends Control
 
-@onready var grid_container = $Panel/VBoxContainer/GridContainer
-@onready var hero_list = $Panel/VBoxContainer/HeroList
+@onready var grid_container = $Panel/VBoxContainer/HBox/GridContainer
+@onready var hero_list = $Panel/VBoxContainer/HBox/HeroList
 @onready var save_btn = $Panel/VBoxContainer/SaveButton
 @onready var close_btn = $Panel/VBoxContainer/CloseButton
 
