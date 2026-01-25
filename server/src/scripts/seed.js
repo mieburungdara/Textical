@@ -2,7 +2,18 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("--- FINAL MEGA CONTENT EXPANSION (DEPENDENCIES FIXED) ---");
+  console.log("--- FINAL MEGA CONTENT EXPANSION (DURATIONS FIXED) ---");
+
+  // 0. CLEANUP (Aggressive to avoid FK errors)
+  await prisma.taskQueue.deleteMany({});
+  await prisma.formationSlot.deleteMany({});
+  await prisma.formationPreset.deleteMany({});
+  await prisma.tavernMercenary.deleteMany({});
+  await prisma.heroEquipment.deleteMany({});
+  await prisma.heroTrait.deleteMany({});
+  await prisma.hero.deleteMany({});
+  await prisma.regionConnection.deleteMany({});
+  await prisma.regionResource.deleteMany({});
 
   // 1. PRE-REQUISITES (Premium & Class)
   console.log("[1/6] Pre-requisites...");
@@ -59,7 +70,7 @@ async function main() {
 
   // 6. USER & TEAM
   console.log("[6/6] Finalizing Player State...");
-  const user = await prisma.user.upsert({ where: { username: "player1" }, update: { password: "password123", gold: 1000 }, create: { username: "player1", password: "password123", premiumTierId: 5, gold: 1000 } });
+  const user = await prisma.user.upsert({ where: { username: "player1" }, update: { password: "password123", gold: 1000, currentRegion: 1 }, create: { username: "player1", password: "password123", premiumTierId: 5, gold: 1000, currentRegion: 1 } });
   const arthur = await prisma.hero.create({ data: { userId: user.id, name: "Arthur", classId: 1001 } });
   const gimli = await prisma.hero.create({ data: { userId: user.id, name: "Gimli", classId: 1001, jobId: 5001 } });
 

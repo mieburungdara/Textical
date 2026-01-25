@@ -41,7 +41,8 @@ class TravelService {
 
         // 4. Create Travel Task in Queue
         const now = new Date();
-        const finishesAt = new Date(now.getTime() + (connection.travelTimeSeconds * 1000));
+        const duration = Math.min(connection.travelTimeSeconds, 5); // CAP at 5s for dev
+        const finishesAt = new Date(now.getTime() + (duration * 1000));
 
         return await prisma.taskQueue.create({
             data: {

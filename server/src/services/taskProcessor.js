@@ -49,27 +49,24 @@ class TaskProcessor {
         for (const task of finishedTasks) {
             console.log(`[HEARTBEAT] Completing ${task.type} task ID: ${task.id}`);
             try {
-                let metadata = {};
+                let payload = {
+                    taskId: task.id,
+                    type: task.type,
+                    message: `${task.type} Finished!`
+                };
 
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
-                    // FETCH TARGET REGION TYPE FOR INSTANT CLIENT NAVIGATION
                     const region = await prisma.regionTemplate.findUnique({ where: { id: task.targetRegionId } });
-                    metadata.targetRegionType = region.type;
-                    metadata.targetRegionId = task.targetRegionId;
+                    payload.targetRegionId = parseInt(task.targetRegionId);
+                    payload.targetRegionType = region.type;
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
                 } else if (task.type === "CRAFTING") {
                     await craftingService.completeCrafting(task.userId, task.id);
                 }
 
-                socketService.emitToUser(task.userId, "task_completed", {
-                    taskId: task.id,
-                    type: task.type,
-                    targetRegionId: parseInt(task.targetRegionId),
-                    targetRegionType: region.type,
-                    message: `${task.type} Finished!`
-                });
+                socketService.emitToUser(task.userId, "task_completed", payload);
             } catch (err) {
                 console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
             }
@@ -91,9 +88,8 @@ class TaskProcessor {
                 });
 
                 if (nextTask) {
-                    let durationSeconds = 5; // Reduced from 15 for dev
+                    let durationSeconds = 5; 
 
-                    // --- AUTHORITATIVE DURATION CALCULATION ---
                     if (nextTask.type === "TRAVEL") {
                         const conn = nextTask.originRegion.connections.find(c => c.targetRegionId === nextTask.targetRegionId);
                         durationSeconds = conn ? conn.travelTimeSeconds : 5;
@@ -105,9 +101,8 @@ class TaskProcessor {
                         durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
                     }
 
-                    // Development override: Cap all tasks at 5s during this phase
+                    // Development override
                     durationSeconds = Math.min(durationSeconds, 5);
-
 
                     const now = new Date();
                     await prisma.taskQueue.update({
