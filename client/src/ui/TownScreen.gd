@@ -9,13 +9,6 @@ extends Control
 @onready var hero_btn = $Actions/HeroButton
 @onready var map_btn = $Actions/MapButton
 
-@onready var inventory_ui = $InventoryUI
-@onready var quest_ui = $QuestUI
-@onready var hero_ui = $HeroProfileUI
-@onready var crafting_ui = $CraftingUI
-@onready var formation_ui = $FormationUI
-@onready var map_ui = $WorldMapUI
-
 func _ready():
 	tavern_btn.pressed.connect(_on_tavern_pressed)
 	market_btn.pressed.connect(_on_market_pressed)
@@ -25,48 +18,20 @@ func _ready():
 	formation_btn.pressed.connect(_on_formation_pressed)
 	hero_btn.pressed.connect(_on_hero_pressed)
 	map_btn.pressed.connect(_on_map_pressed)
-	ServerConnector.request_completed.connect(_on_request_completed)
+	
+	GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
 
-func _on_tavern_pressed():
-	ServerConnector.enter_tavern(GameState.current_user.id)
-
-func _on_market_pressed():
-	get_tree().change_scene_to_file("res://src/ui/MarketScreen.tscn")
-
-func _on_inventory_pressed():
-	inventory_ui.show()
-	inventory_ui.refresh()
-
-func _on_quest_pressed():
-	quest_ui.show()
-	quest_ui.refresh()
-
-func _on_crafting_pressed():
-	crafting_ui.show()
-	crafting_ui.refresh()
-
-func _on_formation_pressed():
-	formation_ui.show()
-	formation_ui.refresh()
-
-func _on_map_pressed():
-	map_ui.show()
-	map_ui.refresh()
+func _on_tavern_pressed(): ServerConnector.enter_tavern(GameState.current_user.id)
+func _on_market_pressed(): get_tree().change_scene_to_file("res://src/ui/MarketScreen.tscn")
+func _on_inventory_pressed(): get_tree().change_scene_to_file("res://src/ui/InventoryScreen.tscn")
+func _on_quest_pressed(): get_tree().change_scene_to_file("res://src/ui/QuestScreen.tscn")
+func _on_crafting_pressed(): get_tree().change_scene_to_file("res://src/ui/CraftingScreen.tscn")
+func _on_formation_pressed(): get_tree().change_scene_to_file("res://src/ui/FormationScreen.tscn")
+func _on_map_pressed(): get_tree().change_scene_to_file("res://src/ui/WorldMapScreen.tscn")
 
 func _on_hero_pressed():
 	if GameState.current_heroes.size() > 0:
-		hero_ui.show_hero(GameState.current_heroes[0].id)
+		GameState.selected_hero_id = GameState.current_heroes[0].id
+		get_tree().change_scene_to_file("res://src/ui/HeroProfileScreen.tscn")
 	else:
 		ServerConnector.fetch_heroes(GameState.current_user.id)
-
-func _on_request_completed(endpoint, data):
-	if "tavern/enter" in endpoint:
-		get_tree().change_scene_to_file("res://src/ui/TavernScreen.tscn")
-	elif "action/travel" in endpoint:
-		await get_tree().create_timer(15.0).timeout
-		if data.has("targetRegionId"):
-			GameState.current_user.currentRegion = data.targetRegionId
-			if data.targetRegionId == 1:
-				get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
-			else:
-				get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

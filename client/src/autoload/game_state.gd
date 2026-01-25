@@ -7,6 +7,10 @@ var inventory_status = {"used": 0, "max": 20}
 var active_task = null
 var current_region_data = null # NEW: Store full object
 
+# NAVIGATION MEMORY
+var selected_hero_id: int = -1
+var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
+
 func set_user(user_data):
     current_user = user_data
     # Note: In a full implementation, we'd fetch region details 
