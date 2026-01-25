@@ -2,8 +2,8 @@
 
 This document tracks the physical progress of the Textical RPG engine.
 
-## Current Phase: II - Core Engine & Early Game Mechanics
-**Goal:** Implement the "Zero-to-Hero" loop (Scavenging -> Quests -> First Gold).
+## Current Phase: VI - Advanced Mechanics & Polishing
+**Goal:** Implement hero genetics, social systems, and visual polish.
 
 ---
 
@@ -25,11 +25,12 @@ This document tracks the physical progress of the Textical RPG engine.
 | **IV: Combat** | Tactical Grid | ✅ COMPLETE | 3x3 formation validation & Dual-Wield passive aggregation. |
 | | Battle Engine | ✅ COMPLETE | Turn-based idle logic with zero-gold material drops. |
 | **V: Interface** | API Documentation | ✅ COMPLETE | Full endpoint reference (`docs/API.md`) for Client Dev. |
-| **V: Interface** | Godot 4 UI | ✅ COMPLETE | Full navigation loop from Login to Town to Wilderness. |
+| | Godot 4 UI | ✅ COMPLETE | HUD, Progress Bars, World Map, and Tavern/Market views. |
 | | Deployment Prep | ✅ COMPLETE | Dockerized backend and hosting guide (`DEPLOYMENT.md`). |
 | | Total Brain Purge | ✅ COMPLETE | Removed all local logic, stats, and legacy code from Godot. |
+| | Stability Patch | ✅ COMPLETE | Defensive state management and UI integrity fixes. |
 | **VI: Advanced** | Breeding System | ⏳ **NEXT** | Genetics-based hero generation and skill inheritance. |
-| **V: Interface** | Godot 4 UI | ⏳ PENDING | HUD, Progress Bars, World Map, and Tavern/Market views. |
+| | Guild Territory | ⏳ PENDING | Mechanics for region capture and taxation. |
 
 ---
 
@@ -37,5 +38,5 @@ This document tracks the physical progress of the Textical RPG engine.
 - [x] Absolute Master Relational Schema (Prisma/SQLite).
 - [x] Automatic Asset-to-DB Sync Engine (`AssetService`).
 - [x] 100% Seeded Test Environment (`seed.js`).
-- [ ] Vitality Heartbeat Processor.
-- [ ] Marketplace Archiver (Cron).
+- [x] Authoritative Networking Logic (BaseNetworkHandler).
+- [x] Automated Integration Tester (DebugTester.tscn).
