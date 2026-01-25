@@ -82,6 +82,9 @@ func gather(user_id: int, hero_id: int, resource_id: int):
 func get_region_details(region_id: int):
 	_send_get("/region/" + str(region_id))
 
+func fetch_all_regions():
+	_send_get("/regions")
+
 func fetch_quests(user_id: int):
 	_send_get("/quests/" + str(user_id))
 

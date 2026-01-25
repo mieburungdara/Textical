@@ -13,7 +13,8 @@ router.get('/user/:id/formation', userController.getFormation);
 router.get('/user/:id/task', userController.getActiveTask);
 
 // --- ACTIONS ---
-router.get('/region/:id', gameController.getRegionDetails); // NEW
+router.get('/regions', gameController.getAllRegions); // NEW
+router.get('/region/:id', gameController.getRegionDetails);
 router.post('/action/travel', gameController.travel);
 router.post('/action/gather', gameController.gather);
 router.post('/action/craft', gameController.craft);

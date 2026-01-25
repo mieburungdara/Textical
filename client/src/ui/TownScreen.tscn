@@ -7,8 +7,9 @@
 [ext_resource type="PackedScene" uid="uid://market_ui" path="res://src/ui/MarketUI.tscn" id="5_market"]
 [ext_resource type="PackedScene" uid="uid://crafting_ui" path="res://src/ui/CraftingUI.tscn" id="6_craft"]
 [ext_resource type="PackedScene" uid="uid://formation_ui" path="res://src/ui/FormationUI.tscn" id="7_formation"]
-[ext_resource type="PackedScene" uid="uid://task_list_hud" path="res://src/ui/TaskListHUD.tscn" id="8_task"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="9_hud"]
+[ext_resource type="PackedScene" uid="uid://world_map_ui" path="res://src/ui/WorldMapUI.tscn" id="8_map"]
+[ext_resource type="PackedScene" uid="uid://task_list_hud" path="res://src/ui/TaskListHUD.tscn" id="9_task"]
+[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="10_hud"]
 
 [node name="TownScreen" type="Control"]
 layout_mode = 3
@@ -19,10 +20,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="TopHUD" parent="." instance=ExtResource("9_hud")]
+[node name="TopHUD" parent="." instance=ExtResource("10_hud")]
 layout_mode = 1
 
-[node name="TaskListHUD" parent="." instance=ExtResource("8_task")]
+[node name="TaskListHUD" parent="." instance=ExtResource("9_task")]
 layout_mode = 1
 
 [node name="Actions" type="VBoxContainer" parent="."]
@@ -67,9 +68,9 @@ text = "Formation"
 layout_mode = 2
 text = "Hero Profile"
 
-[node name="WildernessButton" type="Button" parent="Actions"]
+[node name="MapButton" type="Button" parent="Actions"]
 layout_mode = 2
-text = "To Wilderness"
+text = "World Map"
 
 [node name="InventoryUI" parent="." instance=ExtResource("2_inventory")]
 visible = false
@@ -92,5 +93,9 @@ visible = false
 layout_mode = 1
 
 [node name="FormationUI" parent="." instance=ExtResource("7_formation")]
+visible = false
+layout_mode = 1
+
+[node name="WorldMapUI" parent="." instance=ExtResource("8_map")]
 visible = false
 layout_mode = 1

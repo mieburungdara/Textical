@@ -2,60 +2,68 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("--- FINAL ABSOLUTE SATURATION (VERIFIED) ---");
+  console.log("--- FINAL MEGA CONTENT EXPANSION (DEPENDENCIES FIXED) ---");
 
-  // 1. SYSTEM
+  // 1. PRE-REQUISITES (Premium & Class)
+  console.log("[1/6] Pre-requisites...");
   await prisma.premiumTierTemplate.upsert({ where: { id: 5 }, update: {}, create: { id: 5, name: "DIAMOND", queueSlots: 10, speedBonus: 0.3, vitalityRegenMult: 2.0, maxVitalityBonus: 200 } });
-
-  // 2. WORLD
-  await prisma.regionTemplate.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "Oakhaven", description: "T", type: "TOWN" } });
-  await prisma.regionTemplate.upsert({ where: { id: 2 }, update: {}, create: { id: 2, name: "Woods", description: "W", type: "WILDERNESS" } });
-  await prisma.regionConnection.create({ data: { originRegionId: 1, targetRegionId: 2, travelTimeSeconds: 15 } });
-
-  // 3. TRAITS & ITEMS
-  await prisma.traitTemplate.upsert({ where: { id: 3001 }, update: {}, create: { id: 3001, name: "Fire", description: "F", category: "C" } });
-  await prisma.itemTemplate.upsert({ where: { id: 2001 }, update: {}, create: { id: 2001, name: "Sword", description: "D", category: "EQUIPMENT" } });
-  await prisma.itemTemplate.upsert({ where: { id: 2005 }, update: {}, create: { id: 2005, name: "Ingot", description: "M", category: "MATERIAL" } });
-  
-  await prisma.itemTrait.create({ data: { itemId: 2001, traitId: 3001 } });
-  await prisma.itemEquipSlot.create({ data: { itemId: 2001, slotKey: "MAIN" } });
-  await prisma.itemStat.create({ data: { itemId: 2001, statKey: "ATK", statValue: 10 } });
-
-  // 4. MONSTERS
-  const cat = await prisma.monsterCategory.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "Beasts" } });
-  await prisma.monsterTemplate.upsert({
-    where: { id: 6001 },
-    update: {},
-    create: { id: 6001, name: "Slime", categoryId: 1, hp_base: 50, damage_base: 5 }
-  });
-  await prisma.monsterLootEntry.create({ data: { monsterId: 6001, itemId: 2005, chance: 1.0 } });
-
-  // 5. CLASSES
   await prisma.classTemplate.upsert({ where: { id: 1001 }, update: {}, create: { id: 1001, name: "Novice" } });
-  await prisma.jobTemplate.upsert({ where: { id: 5001 }, update: {}, create: { id: 5001, name: "Miner" } });
 
-  // 6. GUILD
-  await prisma.guildTemplate.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "T" } });
-  const guild = await prisma.guild.create({ data: { name: "First Legion", templateId: 1 } });
+  // 2. REGIONS & WORLD WEB
+  console.log("[2/6] Building World Web (5 Regions)...");
+  await prisma.regionTemplate.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "Oakhaven Hub", description: "The Town", type: "TOWN" } });
+  await prisma.regionTemplate.upsert({ where: { id: 2 }, update: {}, create: { id: 2, name: "Iron Mine", description: "Ore Mine", type: "WILDERNESS", dangerLevel: 2 } });
+  await prisma.regionTemplate.upsert({ where: { id: 3 }, update: {}, create: { id: 3, name: "Crystal Depths", description: "Gems", type: "WILDERNESS", dangerLevel: 5 } });
+  await prisma.regionTemplate.upsert({ where: { id: 4 }, update: {}, create: { id: 4, name: "Elm Forest", description: "Lumber", type: "WILDERNESS", dangerLevel: 3 } });
+  await prisma.regionTemplate.upsert({ where: { id: 5 }, update: {}, create: { id: 5, name: "Forbidden Grove", description: "Dark", type: "WILDERNESS", dangerLevel: 8 } });
 
-  // 7. USER
-  const user = await prisma.user.upsert({ where: { username: "player1" }, update: {}, create: { username: "player1", password: "p", premiumTierId: 5, gold: 0, guildId: guild.id } });
-  await prisma.transactionLedger.create({ data: { userId: user.id, type: "I", currencyTier: "G", amountDelta: 0, newBalance: 0 } });
+  const connections = [
+    { originRegionId: 1, targetRegionId: 2 }, { originRegionId: 2, targetRegionId: 1 },
+    { originRegionId: 2, targetRegionId: 3 }, { originRegionId: 3, targetRegionId: 2 },
+    { originRegionId: 1, targetRegionId: 4 }, { originRegionId: 4, targetRegionId: 1 },
+    { originRegionId: 4, targetRegionId: 5 }, { originRegionId: 5, targetRegionId: 4 }
+  ];
+  for (const conn of connections) {
+    await prisma.regionConnection.create({ data: conn });
+  }
 
-  // 8. QUEST
-  const quest = await prisma.questTemplate.upsert({ where: { id: 4001 }, update: {}, create: { id: 4001, name: "Q", description: "D" } });
-  const qObj = await prisma.questObjective.create({ data: { questId: 4001, type: "K", targetId: 1, description: "D" } });
-  await prisma.userQuest.create({ data: { userId: user.id, questId: 4001 } });
+  // 3. JOBS & SPECIALISTS
+  console.log("[3/6] Establishing Specialist Jobs...");
+  await prisma.jobTemplate.upsert({ where: { id: 5001 }, update: {}, create: { id: 5001, name: "Miner", category: "COLLECTION" } });
+  await prisma.jobTemplate.upsert({ where: { id: 5002 }, update: {}, create: { id: 5002, name: "Woodcutter", category: "COLLECTION" } });
 
-  // 9. HERO & FORMATION
-  const hero = await prisma.hero.create({ data: { userId: user.id, name: "Arthur", classId: 1001 } });
-  const preset = await prisma.formationPreset.create({ data: { userId: user.id, name: "P" } });
-  await prisma.formationSlot.create({ data: { presetId: preset.id, heroId: hero.id, gridX: 1, gridY: 1 } });
+  // 4. ITEMS & RESOURCES
+  console.log("[4/6] Seeding Tiered Items & Resources...");
+  await prisma.itemTemplate.upsert({ where: { id: 2005 }, update: {}, create: { id: 2005, name: "Iron Ingot", description: "Metal.", category: "MATERIAL", baseValue: 20 } });
+  await prisma.itemTemplate.upsert({ where: { id: 2010 }, update: {}, create: { id: 2010, name: "Elm Log", description: "Wood.", category: "MATERIAL", baseValue: 15 } });
+  await prisma.itemTemplate.upsert({ where: { id: 2011 }, update: {}, create: { id: 2011, name: "Mana Crystal", description: "Energy.", category: "MATERIAL", baseValue: 100 } });
+  
+  const resources = [
+    { regionId: 2, itemId: 2005, gatherTimeSeconds: 10 },
+    { regionId: 3, itemId: 2011, gatherTimeSeconds: 30 },
+    { regionId: 4, itemId: 2010, gatherTimeSeconds: 12 }
+  ];
+  for (const res of resources) {
+    await prisma.regionResource.create({ data: res });
+  }
 
-  // 10. TASK
-  await prisma.taskQueue.create({ data: { userId: user.id, type: "G", status: "P" } });
+  // 5. MONSTERS
+  console.log("[5/6] Spawning Monsters...");
+  await prisma.monsterCategory.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "Beasts" } });
+  await prisma.monsterTemplate.upsert({ where: { id: 6001 }, update: {}, create: { id: 6001, name: "Slime", categoryId: 1, hp_base: 50, damage_base: 5 } });
+  await prisma.monsterTemplate.upsert({ where: { id: 6002 }, update: {}, create: { id: 6002, name: "Cave Spider", categoryId: 1, hp_base: 150, damage_base: 15 } });
 
-  console.log("--- 100% SATURATION SUCCESSFUL ---");
+  // 6. USER & TEAM
+  console.log("[6/6] Finalizing Player State...");
+  const user = await prisma.user.upsert({ where: { username: "player1" }, update: { gold: 1000 }, create: { username: "player1", password: "p", premiumTierId: 5, gold: 1000 } });
+  const arthur = await prisma.hero.create({ data: { userId: user.id, name: "Arthur", classId: 1001 } });
+  const gimli = await prisma.hero.create({ data: { userId: user.id, name: "Gimli", classId: 1001, jobId: 5001 } });
+
+  const preset = await prisma.formationPreset.create({ data: { userId: user.id, name: "Frontline" } });
+  await prisma.formationSlot.create({ data: { presetId: preset.id, heroId: arthur.id, gridX: 1, gridY: 0 } });
+  await prisma.formationSlot.create({ data: { presetId: preset.id, heroId: gimli.id, gridX: 1, gridY: 1 } });
+
+  console.log("--- EXPANSION COMPLETE! ---");
 }
 
 main().catch(e => { console.error(e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });

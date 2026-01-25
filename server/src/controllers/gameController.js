@@ -144,6 +144,18 @@ exports.getHeroProfile = async (req, res) => {
 };
 
 // --- REGION ---
+exports.getAllRegions = async (req, res) => {
+    try {
+        const { PrismaClient } = require('@prisma/client');
+        const _prisma = new PrismaClient();
+        const regions = await _prisma.regionTemplate.findMany({
+            include: { connections: true }
+        });
+        await _prisma.$disconnect();
+        res.json(regions);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
 exports.getRegionDetails = async (req, res) => {
     try {
         const regionId = parseInt(req.params.id);

@@ -29,24 +29,24 @@ func _on_slot_clicked(slot_type: EquipmentData.Slot):
     inventory_selector.open(slot_type)
 
 func _on_item_equipped(item: ItemInstance):
-	var hero = hero_details.current_hero
-	if not hero: return
-	
-	# 1. Take off current item if exists and put back to bag
-	var old_item = hero.equipment.get(last_selected_slot)
-	if old_item:
-		InventoryManager.unequip_item(old_item)
-	
-	# 2. Put on new item and remove from bag
-	if item == null:
-		hero.equipment.erase(last_selected_slot)
-	else:
-		hero.equipment[last_selected_slot] = item
-		InventoryManager.equip_item(item)
-	
-	# Refresh UI
-	hero_details.display(hero)
-	SaveManager.save_game()
+    var hero = hero_details.current_hero
+    if not hero: return
+    
+    # 1. Take off current item if exists and put back to bag
+    var old_item = hero.equipment.get(last_selected_slot)
+    if old_item:
+        InventoryManager.unequip_item(old_item)
+    
+    # 2. Put on new item and remove from bag
+    if item == null:
+        hero.equipment.erase(last_selected_slot)
+    else:
+        hero.equipment[last_selected_slot] = item
+        InventoryManager.equip_item(item)
+    
+    # Refresh UI
+    hero_details.display(hero)
+    SaveManager.save_game()
 
 func _on_save_pressed():
     GlobalGameManager.player_party = formation_grid.get_formation_data()

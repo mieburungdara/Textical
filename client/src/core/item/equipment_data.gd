@@ -14,9 +14,9 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 @export var traits: Array[ItemTrait] = []
 
 func _init():
-	type = ItemType.EQUIPMENT
-	stackable = false
+    type = ItemType.EQUIPMENT
+    stackable = false
 
 func can_be_equipped_by(hero: Object) -> bool:
-	if required_classes.is_empty(): return true
-	return hero.hero_class in required_classes
+    if required_classes.is_empty(): return true
+    return hero.hero_class in required_classes
