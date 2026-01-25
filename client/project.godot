@@ -21,9 +21,12 @@ GameState="*res://src/autoload/game_state.gd"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=360
+window/size/window_height_override=640
 window/stretch/mode="canvas_items"
+window/handheld/orientation=1
 
 [dotnet]
 
@@ -31,9 +34,13 @@ project/assembly_name="Textical"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gdgdtoolkit/plugin.cfg", "res://addons/gdscript_formatter/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/gdgdtoolkit/plugin.cfg", "res://addons/gdscript_formatter/plugin.cfg")
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
