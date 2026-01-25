@@ -1,0 +1,7 @@
+{
+  "id": 3002,
+  "name": "Venomous Strike",
+  "description": "Slowly drains the target's health and reduces speed.",
+  "category": "COMBAT",
+  "statModifiers": []
+}

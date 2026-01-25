@@ -1,0 +1,13 @@
+{
+  "id": 2006,
+  "name": "Flaming Dagger",
+  "description": "A small blade that glows with intense heat.",
+  "category": "EQUIPMENT",
+  "subCategory": "DAGGER",
+  "rarity": "RARE",
+  "isTwoHanded": false,
+  "allowedSlots": ["MAIN_HAND", "OFF_HAND"],
+  "traits": [3001],
+  "baseStats": { "attack_damage": 20 },
+  "iconPath": "res://assets/icons/items/weapons/flaming_dagger.png"
+}

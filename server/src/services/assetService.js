@@ -17,15 +17,35 @@ class AssetService {
             await this._loadItemSets();
             await this._loadJobs();
             await this._loadMonsterCategories();
+            await this._loadTraits(); // NEW: Traits must exist before items
             await this._loadItems();
             await this._loadMonsters();
             await this._loadRegionsPass1();
             await this._loadRegionsPass2();
             await this._loadQuests();
             
-            console.log(`[ASSETS] MASTER Final Relational Sync Success (Hybrid Combat).`);
+            console.log(`[ASSETS] MASTER Final Relational Sync Success (Dual-Wield Traits).`);
         } catch (err) {
             console.error("[ASSETS] CRITICAL SYNC ERROR:", err.message);
+        }
+    }
+
+    async _loadTraits() {
+        const files = this._scanDir(path.join(ASSET_ROOT, 'traits'));
+        for (let file of files) {
+            const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
+            const { statModifiers, ...traitData } = data;
+            await prisma.traitTemplate.upsert({
+                where: { id: data.id },
+                update: { ...traitData, filePath: file.relativePath },
+                create: { ...traitData, filePath: file.relativePath }
+            });
+            await prisma.traitStatModifier.deleteMany({ where: { traitId: data.id } });
+            if (statModifiers) {
+                for (let mod of statModifiers) {
+                    await prisma.traitStatModifier.create({ data: { traitId: data.id, statKey: mod.key, modifierValue: mod.val } });
+                }
+            }
         }
     }
 
@@ -71,7 +91,7 @@ class AssetService {
         const files = this._scanDir(path.join(ASSET_ROOT, 'items'));
         for (let file of files) {
             const data = JSON.parse(fs.readFileSync(file.fullPath, 'utf-8'));
-            const { baseStats, requirements, allowedSockets, allowedSlots, salvageResult, ...itemData } = data;
+            const { baseStats, requirements, allowedSockets, allowedSlots, traits, salvageResult, ...itemData } = data;
             
             await prisma.itemTemplate.upsert({
                 where: { id: data.id },
@@ -79,7 +99,6 @@ class AssetService {
                 create: { ...itemData, filePath: file.relativePath }
             });
 
-            // 1. Equip Slots (Junction)
             await prisma.itemEquipSlot.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(allowedSlots)) {
                 for (let slotKey of allowedSlots) {
@@ -87,7 +106,14 @@ class AssetService {
                 }
             }
 
-            // 2. Sockets (Junction)
+            // Sync Traits (Junction) - NEW
+            await prisma.itemTrait.deleteMany({ where: { itemId: data.id } });
+            if (Array.isArray(traits)) {
+                for (let traitId of traits) {
+                    await prisma.itemTrait.create({ data: { itemId: data.id, traitId } });
+                }
+            }
+
             await prisma.itemAllowedSocket.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(allowedSockets)) {
                 for (let socketType of allowedSockets) {
@@ -95,7 +121,6 @@ class AssetService {
                 }
             }
 
-            // 3. Salvage (Junction)
             await prisma.itemSalvageEntry.deleteMany({ where: { itemId: data.id } });
             if (Array.isArray(salvageResult)) {
                 for (let entry of salvageResult) {
@@ -103,7 +128,6 @@ class AssetService {
                 }
             }
 
-            // 4. Stats (Junction)
             await prisma.itemStat.deleteMany({ where: { itemId: data.id } });
             if (baseStats) {
                 for (let [key, val] of Object.entries(baseStats)) {

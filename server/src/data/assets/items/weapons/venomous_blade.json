@@ -1,0 +1,13 @@
+{
+  "id": 2007,
+  "name": "Venomous Blade",
+  "description": "The edges are coated in a permanent toxic residue.",
+  "category": "EQUIPMENT",
+  "subCategory": "SWORD",
+  "rarity": "RARE",
+  "isTwoHanded": false,
+  "allowedSlots": ["MAIN_HAND", "OFF_HAND"],
+  "traits": [3002],
+  "baseStats": { "attack_damage": 35 },
+  "iconPath": "res://assets/icons/items/weapons/venomous_blade.png"
+}

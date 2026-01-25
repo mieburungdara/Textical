@@ -1,0 +1,13 @@
+{
+  "id": 2008,
+  "name": "Steel Longbow",
+  "description": "A heavy bow that requires both hands to fire accurately.",
+  "category": "EQUIPMENT",
+  "subCategory": "BOW",
+  "rarity": "UNCOMMON",
+  "isTwoHanded": true,
+  "allowedSlots": ["MAIN_HAND"],
+  "traits": [],
+  "baseStats": { "attack_damage": 55, "range": 5 },
+  "iconPath": "res://assets/icons/items/weapons/steel_longbow.png"
+}

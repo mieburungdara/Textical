@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Dual-Wield & Hybrid Combat Update)
+// AAA Deep Master Relational Schema (Restored Trait Category)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,9 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
-// 1. CORE USER & ACCOUNT
-// ==========================================
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
@@ -39,8 +36,8 @@ model User {
   ledger        TransactionLedger[]
   formationPresets FormationPreset[]
   activePresetId   Int?
-  gatheringTasks GatheringTask[]
   travelTasks   TravelTask[]
+  gatheringTasks GatheringTask[]
 }
 
 model TransactionLedger {
@@ -54,10 +51,6 @@ model TransactionLedger {
   metadata      String   @default("{}") 
   createdAt     DateTime @default(now())
 }
-
-// ==========================================
-// 2. TEMPLATES (Static Game Data)
-// ==========================================
 
 model ItemTemplate {
   id              Int      @id
@@ -74,13 +67,10 @@ model ItemTemplate {
   setId           Int?
   itemSet         ItemSet? @relation(fields: [setId], references: [id])
   filePath        String   @default("items/misc.json")
-  
-  // NEW: COMBAT MECHANICS
   isTwoHanded     Boolean  @default(false)
-  
-  // Fully Normalized
+  traits          ItemTrait[]
+  equipSlots      ItemEquipSlot[]
   allowedSockets  ItemAllowedSocket[]
-  equipSlots      ItemEquipSlot[] // NEW: Allowed slots (MAIN_HAND, OFF_HAND, etc)
   salvageResults  ItemSalvageEntry[]
   stats           ItemStat[]
   requirements    ItemRequirement[]
@@ -93,12 +83,30 @@ model ItemTemplate {
   gatheringTasks  GatheringTask[]
 }
 
-// NEW: SLOT MAPPING (Normalizing the "Allowed Slots" array)
+model ItemTrait {
+  id              Int      @id @default(autoincrement())
+  itemId          Int
+  item            ItemTemplate @relation(fields: [itemId], references: [id])
+  traitId         Int
+  trait           TraitTemplate @relation(fields: [traitId], references: [id])
+}
+
+model TraitTemplate {
+  id              Int      @id
+  name            String
+  description     String   @default("")
+  category        String   @default("GENERAL") // FIXED: Restored field
+  filePath        String   @default("traits/misc.json")
+  statModifiers   TraitStatModifier[]
+  heroes          HeroTrait[]
+  items           ItemTrait[]
+}
+
 model ItemEquipSlot {
   id              Int      @id @default(autoincrement())
   itemId          Int
   item            ItemTemplate @relation(fields: [itemId], references: [id])
-  slotKey         String   // MAIN_HAND, OFF_HAND, ARMOR, NECK, RING, etc.
+  slotKey         String   
 }
 
 model ItemAllowedSocket {
@@ -366,15 +374,6 @@ model DialogueTemplate {
   filePath        String   @default("dialogues/misc.json")
 }
 
-model TraitTemplate {
-  id              Int      @id
-  name            String
-  description     String   @default("")
-  filePath        String   @default("traits/misc.json")
-  statModifiers   TraitStatModifier[]
-  heroes          HeroTrait[]
-}
-
 model TraitStatModifier {
   id              Int      @id @default(autoincrement())
   traitId         Int
@@ -454,10 +453,6 @@ model QuestReward {
   targetId        Int?     
   amount          Int      @default(1)
 }
-
-// ==========================================
-// 3. INSTANCE DATA (User Created)
-// ==========================================
 
 model Hero {
   id          Int      @id @default(autoincrement())
