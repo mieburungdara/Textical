@@ -1,45 +1,131 @@
-const questRepository = require('../repositories/questRepository');
-const userRepository = require('../repositories/userRepository');
-const inventoryRepository = require('../repositories/inventoryRepository');
-const jobService = require('./jobService');
-const prisma = new (require('@prisma/client').PrismaClient)();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
+/**
+ * QuestService
+ * The primary engine for Gold Injection.
+ * Handles daily quest assignment, objective validation, and audited rewards.
+ */
 class QuestService {
-    async acceptQuest(user, questId) {
-        const quest = await prisma.questTemplate.findUnique({
-            where: { id: questId },
-            include: { objectives: true }
-        });
-        if (!quest) throw new Error("Quest template not found.");
-        if (user.activeQuests.some(q => q.questId === questId)) throw new Error("Quest already active.");
-
-        return await questRepository.acceptQuest(user.id, questId, quest.objectives);
+    constructor() {
+        this.DAILY_QUEST_COUNT = 3;
     }
 
-    async distributeRewards(user, template, targetHeroId = null) {
-        const rewards = await prisma.questReward.findMany({
-            where: { questId: template.id }
+    /**
+     * Checks if a user is eligible for a quest refresh and populates new dailies.
+     */
+    async refreshDailyQuests(userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { activeQuests: true }
         });
 
-        for (let reward of rewards) {
-            switch (reward.type) {
-                case "GOLD": 
-                    await userRepository.update(user.id, { gold: user.gold + reward.amount });
-                    break;
-                case "ITEM":
-                    await inventoryRepository.addItem(user.id, reward.targetId, reward.amount);
-                    break;
-                case "JOB":
-                    if (targetHeroId) {
-                        await jobService.assignPermanentJob(targetHeroId, reward.targetId);
-                        console.log(`[QUEST] Hero ${targetHeroId} is now a permanent ${reward.targetId}`);
+        const now = new Date();
+        const elapsedSinceReset = now - new Date(user.lastQuestResetAt);
+
+        // If 24 hours passed, clear old ones and assign new ones
+        if (elapsedSinceReset > 86400000 || user.activeQuests.length === 0) {
+            console.log(`[QUEST] Refreshing dailies for User ${userId}`);
+            
+            // 1. Clear old user quests
+            await prisma.userQuest.deleteMany({ where: { userId } });
+
+            // 2. Pick random quest templates (Gold source)
+            const templates = await prisma.questTemplate.findMany({ take: this.DAILY_QUEST_COUNT });
+            
+            for (const template of templates) {
+                await prisma.userQuest.create({
+                    data: {
+                        userId,
+                        questId: template.id,
+                        status: "ACTIVE"
                     }
-                    break;
-                case "FAME":
-                    await userRepository.update(user.id, { fame: user.fame + reward.amount });
-                    break;
+                });
+            }
+
+            await prisma.user.update({
+                where: { id: userId },
+                data: { lastQuestResetAt: now }
+            });
+        }
+    }
+
+    /**
+     * Validates and completes a quest, injecting Gold into the economy.
+     */
+    async completeQuest(userId, userQuestId) {
+        const uQuest = await prisma.userQuest.findUnique({
+            where: { id: userQuestId },
+            include: { 
+                quest: { 
+                    include: { objectives: true, rewards: true } 
+                } 
+            }
+        });
+
+        if (!uQuest || uQuest.userId !== userId) throw new Error("Quest not found.");
+        if (uQuest.status === "COMPLETED") throw new Error("Quest already finished.");
+
+        // 1. Validate Objectives (e.g. Gather 5 Iron)
+        for (const obj of uQuest.quest.objectives) {
+            if (obj.type === "GATHER") {
+                const invItem = await prisma.inventoryItem.findFirst({
+                    where: { userId, templateId: obj.targetId }
+                });
+                if (!invItem || invItem.quantity < obj.amount) {
+                    throw new Error(`Objective incomplete: Need ${obj.amount}x [Item ${obj.targetId}]`);
+                }
+                
+                // Consume quest items
+                await prisma.inventoryItem.update({
+                    where: { id: invItem.id },
+                    data: { quantity: invItem.quantity - obj.amount }
+                });
+            }
+            // Add KILL or other types as needed here
+        }
+
+        // 2. Distribute Audited Rewards (Gold Injection)
+        let totalGoldReward = 0;
+        for (const reward of uQuest.quest.rewards) {
+            if (reward.type === "GOLD") {
+                totalGoldReward += reward.amount;
             }
         }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        return await prisma.$transaction([
+            prisma.userQuest.update({
+                where: { id: userQuestId },
+                data: { status: "COMPLETED" }
+            }),
+            prisma.user.update({
+                where: { id: userId },
+                data: { gold: user.gold + totalGoldReward }
+            }),
+            prisma.transactionLedger.create({
+                data: {
+                    userId,
+                    type: "QUEST_REWARD",
+                    currencyTier: "GOLD",
+                    amountDelta: totalGoldReward,
+                    newBalance: user.gold + totalGoldReward,
+                    metadata: JSON.stringify({ questId: uQuest.questId })
+                }
+            })
+        ]);
+    }
+
+    /**
+     * Get active quests for display.
+     */
+    async getActiveQuests(userId) {
+        await this.refreshDailyQuests(userId);
+        return await prisma.userQuest.findMany({
+            where: { userId, status: "ACTIVE" },
+            include: { quest: { include: { objectives: true, rewards: true } } }
+        });
     }
 }
 

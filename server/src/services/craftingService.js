@@ -1,35 +1,72 @@
-const inventoryRepository = require('../repositories/inventoryRepository');
-const userRepository = require('../repositories/userRepository');
-const math = require('mathjs');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const vitalityService = require('./vitalityService');
+const inventoryService = require('./inventoryService');
 
 class CraftingService {
-    async craft(user, recipe, quantity = 1) {
-        // 1. Check Gold
-        const totalGoldCost = math.multiply(recipe.goldCost, quantity);
-        if (user.gold < totalGoldCost) throw new Error("Insufficient Gold.");
+    constructor() {
+        this.BASE_CRAFTING_VITALITY_COST = 10;
+    }
 
-        // 2. Check Ingredients (Parsing JSON string from DB)
-        const ingredients = JSON.parse(recipe.ingredients);
-        for (let ing of ingredients) {
-            const userItem = user.inventory.find(i => i.templateId === ing.itemId);
-            if (!userItem || userItem.quantity < (ing.qty * quantity)) {
-                throw new Error(`Insufficient ingredient: ${ing.itemId}`);
+    async startCrafting(userId, recipeId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { 
+                taskQueue: { where: { status: "RUNNING" } },
+                recipes: { where: { recipeId: recipeId } }
             }
+        });
+
+        const region = await prisma.regionTemplate.findUnique({ where: { id: user.currentRegion } });
+        if (!region || region.type !== "TOWN") throw new Error("Town-only.");
+        
+        const recipe = await prisma.recipeTemplate.findUnique({
+            where: { id: recipeId },
+            include: { ingredients: true }
+        });
+
+        // Unified Slot Check
+        const hasSpace = await inventoryService.hasSpace(userId, recipe.resultItemId);
+        if (!hasSpace) throw new Error("Inventory full.");
+
+        for (const ingredient of recipe.ingredients) {
+            const inv = await prisma.inventoryItem.findFirst({
+                where: { userId, templateId: ingredient.itemId }
+            });
+            if (!inv || inv.quantity < ingredient.quantity) throw new Error("Missing materials.");
         }
 
-        // 3. Deduct Gold & Materials
-        await userRepository.updateGold(user.id, math.subtract(user.gold, totalGoldCost));
-        for (let ing of ingredients) {
-            const userItem = user.inventory.find(i => i.templateId === ing.itemId);
-            await inventoryRepository.updateQuantity(userItem.id, userItem.quantity - (ing.qty * quantity));
+        await vitalityService.consumeVitality(userId, this.BASE_CRAFTING_VITALITY_COST);
+        
+        for (const ing of recipe.ingredients) {
+            await prisma.inventoryItem.update({
+                where: { userId_templateId: { userId, templateId: ing.itemId } },
+                data: { quantity: { decrement: ing.quantity } }
+            });
         }
 
-        // 4. Create Result Item
-        // Note: Success rate check can be added here
-        const result = await inventoryRepository.addItem(user.id, recipe.resultItemId, recipe.resultQuantity * quantity);
+        const now = new Date();
+        const finishesAt = new Date(now.getTime() + (recipe.craftTimeSeconds * 1000));
 
-        console.log(`[CRAFTING] ${user.username} crafted ${quantity}x ${recipe.resultItemId}`);
-        return result;
+        return await prisma.taskQueue.create({
+            data: {
+                userId, type: "CRAFTING", targetItemId: recipe.resultItemId,
+                status: "RUNNING", startedAt: now, finishesAt: finishesAt
+            }
+        });
+    }
+
+    async completeCrafting(userId, taskId) {
+        const task = await prisma.taskQueue.findUnique({ where: { id: taskId } });
+        if (!task || task.status !== "RUNNING") return;
+
+        // Unified Item Addition
+        await inventoryService.addItem(userId, task.targetItemId, 1);
+
+        return await prisma.taskQueue.update({
+            where: { id: taskId },
+            data: { status: "COMPLETED" }
+        });
     }
 }
 
