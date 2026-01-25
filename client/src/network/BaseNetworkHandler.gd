@@ -32,15 +32,14 @@ func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, re
 		emit_signal("error_occurred", endpoint, msg)
 		_handle_error(endpoint, msg)
 	else:
+		# AUTHORITATIVE ORDER: Update State BEFORE emitting signal
 		_handle_success(endpoint, json)
 		emit_signal("request_completed", endpoint, json)
 	
 	http_node.queue_free()
 
-# Overridable by children
 func _handle_success(_endpoint: String, _json):
 	pass
 
-# Overridable by children
 func _handle_error(_endpoint: String, _message: String):
 	pass

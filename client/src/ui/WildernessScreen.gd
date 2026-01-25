@@ -12,53 +12,49 @@ func _ready():
 	map_btn.pressed.connect(_on_map_pressed)
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
-	if GameState.current_user:
+	# ROBUST CHECK: If region is already known in state, display immediately
+	if GameState.current_region_data:
+		current_region_data = GameState.current_region_data
+		_update_ui()
+	elif GameState.current_user:
 		_fetch_data()
 
 func _fetch_data():
-	title_label.text = "Loading Region..."
+	title_label.text = "Fetching Regional Data..."
 	ServerConnector.get_region_details(GameState.current_user.currentRegion)
 
 func _on_request_completed(endpoint, data):
-	if "region/" in endpoint:
+	if endpoint.contains("/region/"):
 		current_region_data = data
+		GameState.current_region_data = data # Sync to state
 		_update_ui()
-	elif "action/gather" in endpoint:
-		action_label.text = "Gathering started..."
-	elif "action/travel" in endpoint:
-		# Map UI handles closing itself
-		# HUD handles timer
-		await get_tree().create_timer(15.0).timeout
-		if data.has("targetRegionId"):
-			GameState.current_user.currentRegion = data.targetRegionId
-			if data.targetRegionId == 1:
-				get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
-			else:
-				# Refresh current screen
-				_fetch_data()
+	elif endpoint.contains("/action/gather"):
+		action_label.text = "Gathering sequence initiated..."
 
 func _update_ui():
-	if not current_region_data: return
+	if not current_region_data: 
+		title_label.text = "Region Unavailable"
+		return
 	
-	title_label.text = current_region_data.name + "\n(Danger: " + str(current_region_data.dangerLevel) + ")"
+	title_label.text = current_region_data.name.to_upper()
+	title_label.modulate = Color.YELLOW if current_region_data.dangerLevel > 1 else Color.WHITE
 	
-	for child in resource_container.get_children():
-		child.queue_free()
+	for child in resource_container.get_children(): child.queue_free()
 	
 	if current_region_data.resources.size() == 0:
 		var l = Label.new()
-		l.text = "No resources here."
+		l.text = "No trackable resources found."
 		resource_container.add_child(l)
 	else:
 		for res in current_region_data.resources:
 			var btn = Button.new()
-			btn.text = "Gather " + res.item.name + "\n(10s - 3 Vitality)"
-			btn.custom_minimum_size = Vector2(0, 50)
+			btn.text = "Gather %s\n(10s - 3 Vit)" % res.item.name
+			btn.custom_minimum_size = Vector2(0, 60)
 			btn.pressed.connect(func(): _on_gather_pressed(res.id))
 			resource_container.add_child(btn)
 
 	var hunt_btn = Button.new()
-	hunt_btn.text = "Hunt Slime\n(5 Vitality)"
+	hunt_btn.text = "HUNT SLIME\n(5 Vitality)"
 	hunt_btn.custom_minimum_size = Vector2(0, 60)
 	hunt_btn.pressed.connect(_on_hunt_pressed)
 	resource_container.add_child(hunt_btn)

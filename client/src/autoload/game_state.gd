@@ -5,7 +5,7 @@ var current_heroes = []
 var inventory = []
 var inventory_status = {"used": 0, "max": 20}
 var active_task = null
-var current_region_type = "TOWN" # Default
+var current_region_data = null # NEW: Store full object
 
 func set_user(user_data):
     current_user = user_data
