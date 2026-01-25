@@ -31,10 +31,8 @@ func _ready():
 	var handlers = [auth, world, tavern, market, quest, inventory, battle, socket]
 	for h in handlers:
 		add_child(h)
-		if h.has_signal("request_completed"):
-			h.request_completed.connect(_on_handler_request_completed)
-		if h.has_signal("error_occurred"):
-			h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+		if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
+		if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
 	
 	# Socket Routing
 	socket.task_completed.connect(func(d): task_completed.emit(d))
@@ -44,15 +42,20 @@ func _ready():
 	auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
 func _on_handler_request_completed(endpoint: String, data):
-	# The individual handlers (like InventoryHandler) already update GameState
-	# so we just forward the signal to the UI.
 	emit_signal("request_completed", endpoint, data)
 
 func _on_login_success(user):
+	# 1. Start Connection
 	socket.connect_to_server()
-	# Wait for connection before authenticating
-	await get_tree().create_timer(0.5).timeout
+	
+	# 2. Wait for the 'connected' signal from SocketHandler
+	if !socket.is_connected:
+		await socket.connected
+	
+	# 3. Authenticate
 	socket.authenticate(user.id)
+	
+	# 4. Now allow the UI to transition
 	emit_signal("login_success", user)
 
 # --- FACADE METHODS ---
