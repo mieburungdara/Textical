@@ -5,10 +5,18 @@ extends Control
 @onready var status_label = $VBoxContainer/StatusLabel
 @onready var debug_log = $DebugConsole
 
+var _fallback_timer = 0.0
+var _is_waiting_for_socket = false
+
 func _ready():
-	_log("Scene Loaded. Connecting signals...")
+	_log("Scene Loaded. Monitoring signals...")
 	if !ServerConnector.task_completed.is_connected(_on_task_completed):
 		ServerConnector.task_completed.connect(_on_task_completed)
+	
+	# Also listen for general requests in case we force sync
+	if !ServerConnector.request_completed.is_connected(_on_request_completed):
+		ServerConnector.request_completed.connect(_on_request_completed)
+		
 	_update_display()
 
 func _log(msg: String):
@@ -16,16 +24,24 @@ func _log(msg: String):
 	debug_log.append_text("[%s] %s\n" % [time, msg])
 	print("[TRAVEL_DEBUG] ", msg)
 
-func _process(_delta):
+func _process(delta):
 	_update_timer()
+	
+	if _is_waiting_for_socket:
+		_fallback_timer += delta
+		if _fallback_timer > 3.0: # If 3 seconds pass after timer 0
+			_log("Socket Timeout. Triggering Force Sync...")
+			_force_sync()
+			_is_waiting_for_socket = false
 
 func _update_display():
 	var task = GameState.active_task
 	if task:
-		_log("Task Found: " + task.type + " to " + str(task.get("targetRegionId", "??")))
+		_log("Active Task: " + str(task.type))
 		dest_label.text = "TRAVELING TO REGION " + str(task.get("targetRegionId", "?"))
 	else:
-		_log("WARNING: No active task in GameState.")
+		_log("No task in state. Attempting recovery sync...")
+		_force_sync()
 
 func _update_timer():
 	var task = GameState.active_task
@@ -45,31 +61,38 @@ func _update_timer():
 	if total > 0:
 		progress_bar.value = ((total - remaining) / total) * 100
 	
-	if remaining <= 0 and status_label.text != "Arriving...":
+	if remaining <= 0 and !_is_waiting_for_socket:
 		status_label.text = "Arriving..."
-		_log("Timer reached 0. Awaiting WebSocket 'task_completed'...")
+		_log("Timer at 0. Awaiting Server Confirmation...")
+		_is_waiting_for_socket = true
 
 func _on_task_completed(data):
-	_log("SIGNAL RECEIVED: task_completed")
-	_log("Data Payload: " + str(data))
-	
+	_log("SOCKET SIGNAL RECEIVED!")
+	_process_arrival(data)
+
+func _force_sync():
+	_log("Syncing with server...")
+	ServerConnector.fetch_profile(GameState.current_user.id)
+
+func _on_request_completed(endpoint, data):
+	# If we are syncing and find that the user is already in a new region
+	if endpoint.contains("/user/"):
+		_log("Profile Synced. Current Region: " + str(data.currentRegion))
+		if GameState.active_task == null or GameState.active_task.get("status") != "RUNNING":
+			_log("No running task on server. Routing to Hub...")
+			_route_by_type(data.get("region", {}).get("type", "TOWN"))
+
+func _process_arrival(data):
 	if data.type == "TRAVEL":
-		_log("Confirmed Type: TRAVEL. Target ID: " + str(data.get("targetRegionId")))
-		_log("Target Type: " + str(data.get("targetRegionType")))
-		
-		# Update State
+		_log("Arrival confirmed by Server.")
 		GameState.current_user.currentRegion = data.targetRegionId
 		GameState.set_active_task(null)
-		
-		# Check Type and Route
-		var r_type = data.get("targetRegionType", "")
-		if r_type == "TOWN":
-			_log("Routing to TownScreen...")
-			get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
-		elif r_type == "WILDERNESS":
-			_log("Routing to WildernessScreen...")
-			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
-		else:
-			_log("ERROR: targetRegionType is missing or invalid in payload!")
+		_route_by_type(data.get("targetRegionType", "TOWN"))
+
+func _route_by_type(r_type: String):
+	if r_type == "TOWN":
+		_log("Loading Town...")
+		get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 	else:
-		_log("Ignored task type: " + data.type)
+		_log("Loading Wilderness...")
+		get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

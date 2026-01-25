@@ -66,7 +66,8 @@ class TaskProcessor {
                 socketService.emitToUser(task.userId, "task_completed", {
                     taskId: task.id,
                     type: task.type,
-                    ...metadata,
+                    targetRegionId: parseInt(task.targetRegionId),
+                    targetRegionType: region.type,
                     message: `${task.type} Finished!`
                 });
             } catch (err) {
