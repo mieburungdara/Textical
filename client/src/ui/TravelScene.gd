@@ -30,7 +30,7 @@ func _process(delta):
 		_fallback_timer += delta
 		if _fallback_timer > 3.0: 
 			_log("Socket Timeout (3s). Triggering Force Sync...")
-			_fallback_timer = 0.0 # CRITICAL FIX: Reset timer to break the infinite loop
+			_fallback_timer = 0.0 
 			_force_sync()
 
 func _update_display():
@@ -65,7 +65,7 @@ func _update_timer():
 		status_label.text = "Arriving..."
 		_log("Timer reached 0. Awaiting Server Confirmation...")
 		_is_waiting_for_socket = true
-		_fallback_timer = 0.0 # Reset timer for the 3s window
+		_fallback_timer = 0.0
 
 func _on_task_completed(data):
 	_log("SOCKET SIGNAL RECEIVED!")
@@ -78,14 +78,20 @@ func _force_sync():
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/user/"):
 		var current_reg = int(data.get("currentRegion", -1))
-		_log("Sync Result -> Region ID: " + str(current_reg))
+		var active_task_on_server = data.get("activeTask")
 		
-		# SMART CHECK: If our current region matches the target, we have arrived
-		# regardless of whether the task object is still in the queue.
-		if current_reg == _target_id or GameState.active_task == null:
-			_log("Location Confirmed. Routing...")
+		_log("Sync Result -> Region ID: " + str(current_reg))
+		_log("Active Task on Server: " + str("YES" if active_task_on_server else "NO"))
+		
+		# Reset waiting flag since we got a fresh state
+		_is_waiting_for_socket = false
+		
+		if current_reg == _target_id or active_task_on_server == null:
+			_log("Location Confirmed or Task Finished. Routing...")
 			var region = data.get("region", {})
 			_route_by_type(region.get("type", "TOWN"))
+		else:
+			_log("Server still reports task RUNNING. Waiting for next pulse...")
 
 func _process_arrival(data):
 	if data.type == "TRAVEL":

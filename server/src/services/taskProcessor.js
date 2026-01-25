@@ -91,17 +91,23 @@ class TaskProcessor {
                 });
 
                 if (nextTask) {
-                    let durationSeconds = 15;
+                    let durationSeconds = 5; // Reduced from 15 for dev
+
+                    // --- AUTHORITATIVE DURATION CALCULATION ---
                     if (nextTask.type === "TRAVEL") {
                         const conn = nextTask.originRegion.connections.find(c => c.targetRegionId === nextTask.targetRegionId);
-                        durationSeconds = conn ? conn.travelTimeSeconds : 15;
+                        durationSeconds = conn ? conn.travelTimeSeconds : 5;
                     } else if (nextTask.type === "GATHERING") {
                         const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
-                        durationSeconds = res ? res.gatherTimeSeconds : 10;
+                        durationSeconds = res ? res.gatherTimeSeconds : 5;
                     } else if (nextTask.type === "CRAFTING") {
                         const recipe = await prisma.recipeTemplate.findFirst({ where: { resultItemId: nextTask.targetItemId } });
-                        durationSeconds = recipe ? recipe.craftTimeSeconds : 30;
+                        durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
                     }
+
+                    // Development override: Cap all tasks at 5s during this phase
+                    durationSeconds = Math.min(durationSeconds, 5);
+
 
                     const now = new Date();
                     await prisma.taskQueue.update({

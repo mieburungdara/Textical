@@ -18,10 +18,14 @@ async function main() {
   await prisma.regionTemplate.upsert({ where: { id: 5 }, update: {}, create: { id: 5, name: "Forbidden Grove", description: "Dark", type: "WILDERNESS", dangerLevel: 8 } });
 
   const connections = [
-    { originRegionId: 1, targetRegionId: 2 }, { originRegionId: 2, targetRegionId: 1 },
-    { originRegionId: 2, targetRegionId: 3 }, { originRegionId: 3, targetRegionId: 2 },
-    { originRegionId: 1, targetRegionId: 4 }, { originRegionId: 4, targetRegionId: 1 },
-    { originRegionId: 4, targetRegionId: 5 }, { originRegionId: 5, targetRegionId: 4 }
+    { originRegionId: 1, targetRegionId: 2, travelTimeSeconds: 5 }, 
+    { originRegionId: 2, targetRegionId: 1, travelTimeSeconds: 5 },
+    { originRegionId: 2, targetRegionId: 3, travelTimeSeconds: 5 }, 
+    { originRegionId: 3, targetRegionId: 2, travelTimeSeconds: 5 },
+    { originRegionId: 1, targetRegionId: 4, travelTimeSeconds: 5 }, 
+    { originRegionId: 4, targetRegionId: 1, travelTimeSeconds: 5 },
+    { originRegionId: 4, targetRegionId: 5, travelTimeSeconds: 5 }, 
+    { originRegionId: 5, targetRegionId: 4, travelTimeSeconds: 5 }
   ];
   for (const conn of connections) {
     await prisma.regionConnection.create({ data: conn });
@@ -39,9 +43,9 @@ async function main() {
   await prisma.itemTemplate.upsert({ where: { id: 2011 }, update: {}, create: { id: 2011, name: "Mana Crystal", description: "Energy.", category: "MATERIAL", baseValue: 100 } });
   
   const resources = [
-    { regionId: 2, itemId: 2005, gatherTimeSeconds: 10 },
-    { regionId: 3, itemId: 2011, gatherTimeSeconds: 30 },
-    { regionId: 4, itemId: 2010, gatherTimeSeconds: 12 }
+    { regionId: 2, itemId: 2005, gatherTimeSeconds: 5 },
+    { regionId: 3, itemId: 2011, gatherTimeSeconds: 5 },
+    { regionId: 4, itemId: 2010, gatherTimeSeconds: 5 }
   ];
   for (const res of resources) {
     await prisma.regionResource.create({ data: res });
