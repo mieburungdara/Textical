@@ -31,4 +31,4 @@ project/assembly_name="Textical"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/gdgdtoolkit/plugin.cfg", "res://addons/gdscript_formatter/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/gdgdtoolkit/plugin.cfg", "res://addons/gdscript_formatter/plugin.cfg")
