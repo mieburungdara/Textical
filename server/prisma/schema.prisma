@@ -18,6 +18,7 @@ model User {
   lastVitalityUpdate DateTime @default(now())
   maxInventorySlots Int    @default(20)
   currentRegion Int      @default(1)
+  region        RegionTemplate @relation(fields: [currentRegion], references: [id])
   
   tavernTimeSecondsToday Int      @default(0)
   lastTavernResetAt      DateTime @default(now())
@@ -107,6 +108,7 @@ model RegionTemplate {
   travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
+  residents       User[]
 }
 
 model TavernMercenary {
