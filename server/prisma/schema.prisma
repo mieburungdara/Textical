@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Tavern Fatigue System)
+// AAA Deep Master Relational Schema (Vitality & Tavern Loop)
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,15 +23,14 @@ model User {
   fame          Int      @default(0)
   currentRegion Int      @default(1)
   
-  // PREMIUM & TAVERN FATIGUE
   premiumTierId Int      @default(0)
   premiumTier   PremiumTierTemplate @relation(fields: [premiumTierId], references: [id])
   premiumExpiresAt DateTime?
   
-  // NEW: TAVERN FATIGUE LOGIC
-  tavernTimeSecondsToday Int      @default(0)    // Total seconds spent
-  lastTavernResetAt      DateTime @default(now()) // Daily reset anchor
-  tavernEntryAt          DateTime?               // Track current visit start
+  // TAVERN FATIGUE
+  tavernTimeSecondsToday Int      @default(0)
+  lastTavernResetAt      DateTime @default(now())
+  tavernEntryAt          DateTime?
   isInTavern             Boolean  @default(false)
 
   heroes        Hero[]
@@ -55,8 +54,6 @@ model User {
   travelTasks   TravelTask[]
 }
 
-// ... (Ledger, Templates, Regions, Items, Monsters, Buildings, Recipes preserved) ...
-
 model TransactionLedger {
   id            Int      @id @default(autoincrement())
   userId        Int
@@ -69,6 +66,10 @@ model TransactionLedger {
   createdAt     DateTime @default(now())
 }
 
+// ==========================================
+// 2. TEMPLATES (Static Game Data)
+// ==========================================
+
 model PremiumTierTemplate {
   id              Int      @id
   name            String   
@@ -77,9 +78,10 @@ model PremiumTierTemplate {
   goldBonus       Float    @default(0.0)
   expBonus        Float    @default(0.0)
   tavernRecruitDiscount Float @default(0.0)
-  
-  // NEW: Extra Tavern Time for Premium (e.g. +600 seconds)
   bonusTavernSeconds Int @default(0)
+  
+  // NEW: Vitality Regen Bonus (e.g., 1.5 = 50% faster recovery)
+  vitalityRegenMult Float @default(1.0)
   
   users           User[]
 }
@@ -501,6 +503,10 @@ model QuestReward {
   amount          Int      @default(1)
 }
 
+// ==========================================
+// 3. INSTANCE DATA (User Created)
+// ==========================================
+
 model Hero {
   id          Int      @id @default(autoincrement())
   userId      Int?     
@@ -516,6 +522,11 @@ model Hero {
   jobExp      Int      @default(0)
   jobRank     String   @default("APPRENTICE")
   masteryPoints Int    @default(0)
+  
+  // NEW: VITALITY (Combat Fatigue)
+  vitality    Int      @default(100)
+  lastVitalityUpdate DateTime @default(now())
+
   createdAt   DateTime @default(now())
   stats       HeroStat[]
   deeds       HeroDeed[]
