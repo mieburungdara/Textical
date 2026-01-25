@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Fixed TaskQueue Relations)
+// AAA Deep Master Relational Schema (Tavern Fatigue System)
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,9 +22,18 @@ model User {
   mithril       Int      @default(0)
   fame          Int      @default(0)
   currentRegion Int      @default(1)
+  
+  // PREMIUM & TAVERN FATIGUE
   premiumTierId Int      @default(0)
   premiumTier   PremiumTierTemplate @relation(fields: [premiumTierId], references: [id])
   premiumExpiresAt DateTime?
+  
+  // NEW: TAVERN FATIGUE LOGIC
+  tavernTimeSecondsToday Int      @default(0)    // Total seconds spent
+  lastTavernResetAt      DateTime @default(now()) // Daily reset anchor
+  tavernEntryAt          DateTime?               // Track current visit start
+  isInTavern             Boolean  @default(false)
+
   heroes        Hero[]
   inventory     InventoryItem[]
   listings      MarketListing[]
@@ -42,11 +51,11 @@ model User {
   ledger        TransactionLedger[]
   formationPresets FormationPreset[]
   activePresetId   Int?
-  
-  // UNIFIED TASK QUEUE (FIXED)
   taskQueue     TaskQueue[]
   travelTasks   TravelTask[]
 }
+
+// ... (Ledger, Templates, Regions, Items, Monsters, Buildings, Recipes preserved) ...
 
 model TransactionLedger {
   id            Int      @id @default(autoincrement())
@@ -60,10 +69,6 @@ model TransactionLedger {
   createdAt     DateTime @default(now())
 }
 
-// ==========================================
-// 2. TEMPLATES (Static Game Data)
-// ==========================================
-
 model PremiumTierTemplate {
   id              Int      @id
   name            String   
@@ -72,6 +77,10 @@ model PremiumTierTemplate {
   goldBonus       Float    @default(0.0)
   expBonus        Float    @default(0.0)
   tavernRecruitDiscount Float @default(0.0)
+  
+  // NEW: Extra Tavern Time for Premium (e.g. +600 seconds)
+  bonusTavernSeconds Int @default(0)
+  
   users           User[]
 }
 
@@ -492,10 +501,6 @@ model QuestReward {
   amount          Int      @default(1)
 }
 
-// ==========================================
-// 3. INSTANCE DATA (User Created)
-// ==========================================
-
 model Hero {
   id          Int      @id @default(autoincrement())
   userId      Int?     
@@ -512,7 +517,6 @@ model Hero {
   jobRank     String   @default("APPRENTICE")
   masteryPoints Int    @default(0)
   createdAt   DateTime @default(now())
-  
   stats       HeroStat[]
   deeds       HeroDeed[]
   traits      HeroTrait[]
@@ -520,8 +524,7 @@ model Hero {
   equipment   HeroEquipment[]
   auction     HeroAuctionListing?
   formationSlots FormationSlot[]
-  
-  taskQueue     TaskQueue[] // FIXED
+  taskQueue     TaskQueue[]
   tavernEntry TavernMercenary?
 }
 
