@@ -18,8 +18,15 @@ func _ready():
 	formation_btn.pressed.connect(_on_formation_pressed)
 	hero_btn.pressed.connect(_on_hero_pressed)
 	map_btn.pressed.connect(_on_map_pressed)
+	ServerConnector.request_completed.connect(_on_request_completed)
 	
 	GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
+
+func _on_request_completed(endpoint, _data):
+	if "tavern/enter" in endpoint:
+		get_tree().change_scene_to_file("res://src/ui/TavernScreen.tscn")
+	elif "action/travel" in endpoint:
+		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 
 func _on_tavern_pressed(): ServerConnector.enter_tavern(GameState.current_user.id)
 func _on_market_pressed(): get_tree().change_scene_to_file("res://src/ui/MarketScreen.tscn")

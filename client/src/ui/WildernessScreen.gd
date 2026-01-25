@@ -13,8 +13,6 @@ var _last_clicked_button: Button = null
 func _ready():
 	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldMapScreen.tscn"))
 	ServerConnector.request_completed.connect(_on_request_completed)
-	
-	# LISTEN FOR REAL-TIME COMPLETION
 	ServerConnector.task_completed.connect(_on_task_completed)
 	
 	GameState.last_visited_hub = "res://src/ui/WildernessScreen.tscn"
@@ -29,19 +27,16 @@ func _on_request_completed(endpoint, data):
 	if "region/" in endpoint:
 		current_region_data = data
 		_update_ui()
+	elif "action/travel" in endpoint:
+		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 
 func _on_task_completed(data):
 	if data.type == "GATHERING":
 		action_label.text = "Gathering Success!"
-		
-		# Play VFX at the last button position or center
 		var vfx_pos = get_viewport_rect().size / 2
 		if is_instance_valid(_last_clicked_button):
 			vfx_pos = _last_clicked_button.global_position + (_last_clicked_button.size / 2)
-		
 		_play_vfx(GATHER_VFX, vfx_pos)
-		
-		# AUTO-REFRESH: The user's items and vitality changed on server
 		ServerConnector.fetch_inventory(GameState.current_user.id)
 		ServerConnector.fetch_profile(GameState.current_user.id)
 
@@ -65,8 +60,11 @@ func _update_ui():
 	var hunt_btn = Button.new()
 	hunt_btn.text = "Hunt Slime"
 	hunt_btn.custom_minimum_size = Vector2(0, 60)
-	hunt_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/CombatScreen.tscn"))
+	hunt_btn.pressed.connect(_on_hunt_pressed)
 	resource_container.add_child(hunt_btn)
+
+func _on_hunt_pressed():
+	get_tree().change_scene_to_file("res://src/ui/CombatScreen.tscn")
 
 func _on_gather_pressed(resource_id, btn):
 	_last_clicked_button = btn

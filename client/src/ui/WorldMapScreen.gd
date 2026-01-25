@@ -16,7 +16,8 @@ func _on_request_completed(endpoint, data):
 	if endpoint.contains("/regions"):
 		_draw_map(data)
 	elif endpoint.contains("/action/travel"):
-		get_tree().change_scene_to_file(GameState.last_visited_hub)
+		# Switch to animated travel scene
+		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 
 func _draw_map(regions):
 	for child in map_container.get_children(): child.queue_free()
