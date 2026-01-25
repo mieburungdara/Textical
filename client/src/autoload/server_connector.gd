@@ -48,12 +48,13 @@ func _on_login_success(user):
 	# 1. Start Connection
 	socket.connect_to_server()
 	
-	# 2. Wait for the 'connected' signal from SocketHandler
-	if !socket.is_connected:
+	# 2. Wait for the 'connected' signal from SocketHandler if not already open
+	if socket.socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
 		await socket.connected
 	
-	# 3. Authenticate
-	socket.authenticate(user.id)
+	# 3. Authenticate only if not already authenticated for this session
+	if !socket.is_authenticated:
+		socket.authenticate(user.id)
 	
 	# 4. Now allow the UI to transition
 	emit_signal("login_success", user)

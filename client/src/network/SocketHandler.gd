@@ -15,7 +15,13 @@ func _ready():
 	set_process(true)
 
 func connect_to_server():
-	if is_connected: return
+	var state = socket.get_ready_state()
+	if state != WebSocketPeer.STATE_CLOSED:
+		print("[SOCKET] Already connected or connecting. State: ", state)
+		if state == WebSocketPeer.STATE_OPEN:
+			connected.emit() # Signal readiness if already open
+		return
+		
 	print("[SOCKET] Connecting to: ", base_url)
 	socket.connect_to_url(base_url)
 
