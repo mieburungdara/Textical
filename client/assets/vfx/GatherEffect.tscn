@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://gather_effect"]
+
+[ext_resource type="Script" path="res://assets/vfx/one_shot_vfx.gd" id="1_script"]
+
+[node name="GatherEffect" type="CPUParticles2D"]
+emitting = false
+amount = 12
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.8
+direction = Vector2(0, -1)
+spread = 60.0
+gravity = Vector2(0, 200)
+initial_velocity_min = 100.0
+initial_velocity_max = 150.0
+scale_amount_min = 4.0
+scale_amount_max = 8.0
+color = Color(0.2, 1, 0.2, 1)
+script = ExtResource("1_script")

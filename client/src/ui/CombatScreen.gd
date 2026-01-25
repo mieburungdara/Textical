@@ -7,6 +7,11 @@ extends Control
 @onready var loot_label = $ResultPopup/VBoxContainer/LootText
 @onready var popup = $ResultPopup
 
+@onready var monster_node = $VBoxContainer/MonsterArea
+@onready var hero_node = $VBoxContainer/PartyArea
+
+const HIT_VFX = preload("res://assets/vfx/HitEffect.tscn")
+
 var battle_data = null
 var current_log_index = 0
 
@@ -16,7 +21,6 @@ func _ready():
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
 	if GameState.current_user:
-		# Hardcoded Slime ID for now
 		ServerConnector.start_battle(GameState.current_user.id, 6001)
 
 func _on_request_completed(endpoint, data):
@@ -36,18 +40,36 @@ func _process_next_log_line():
 	var line = battle_data.battleLog[current_log_index]
 	log_label.append_text(line + "\n")
 	
-	# Simple regex-style parsing for HP simulation
+	if "attacks Monster" in line:
+		_play_hit_vfx(monster_node)
+	elif "attacks Arthur" in line:
+		_play_hit_vfx(hero_node)
+
 	if "Monster HP:" in line:
 		var hp_val = line.split("Monster HP: ")[1].replace(")", "").to_int()
-		monster_hp_bar.value = hp_val
+		_animate_hp(monster_hp_bar, hp_val)
 	elif "Arthur HP:" in line:
 		var hp_val = line.split("Arthur HP: ")[1].replace(")", "").to_int()
-		hero_hp_bar.value = hp_val
+		_animate_hp(hero_hp_bar, hp_val)
 
 	current_log_index += 1
-	
-	# Delay between lines for "Idle RPG" feel
 	get_tree().create_timer(0.5).timeout.connect(_process_next_log_line)
+
+func _play_hit_vfx(target_node: Control):
+	var effect = HIT_VFX.instantiate()
+	add_child(effect)
+	effect.global_position = target_node.global_position + (target_node.size / 2)
+	
+	# Simple Shake
+	var tween = create_tween()
+	var original_pos = target_node.position
+	tween.tween_property(target_node, "position", original_pos + Vector2(10, 0), 0.05)
+	tween.tween_property(target_node, "position", original_pos - Vector2(10, 0), 0.05)
+	tween.tween_property(target_node, "position", original_pos, 0.05)
+
+func _animate_hp(bar: ProgressBar, new_val: int):
+	var tween = create_tween()
+	tween.tween_property(bar, "value", float(new_val), 0.2)
 
 func _show_result():
 	result_label.text = battle_data.result
@@ -55,7 +77,6 @@ func _show_result():
 		loot_label.text = "Loot: Item " + str(battle_data.loot[0].templateId)
 	else:
 		loot_label.text = "No loot found."
-	
 	popup.show()
 
 func _on_close_pressed():
