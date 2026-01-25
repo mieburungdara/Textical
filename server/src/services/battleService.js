@@ -34,18 +34,32 @@ class BattleService {
             grid: p.grid
         }));
 
+        let turn = 1;
         while (monsterHp > 0 && heroes.some(h => !h.isDead)) {
+            battleLog.push(`--- Turn ${turn} ---`);
+            
+            // HEROES ATTACK
             for (const hero of heroes.filter(h => !h.isDead)) {
-                monsterHp -= (hero.stats.ATK || 5);
+                const damage = hero.stats.ATK || 5;
+                monsterHp -= damage;
+                battleLog.push(`[HERO] ${hero.id} attacks Monster for ${damage} damage. (Monster HP: ${Math.max(0, monsterHp)})`);
                 if (monsterHp <= 0) break;
             }
+
             if (monsterHp <= 0) break;
-            
+
+            // MONSTER ATTACKS
             const target = heroes.filter(h => !h.isDead).sort((a, b) => a.grid.y - b.grid.y)[0];
             if (target) {
-                target.hp -= monster.damage_base;
-                if (target.hp <= 0) target.isDead = true;
+                const mDamage = monster.damage_base;
+                target.hp -= mDamage;
+                battleLog.push(`[MONSTER] Monster attacks ${target.id} for ${mDamage} damage! (HERO HP: ${Math.max(0, target.hp)})`);
+                if (target.hp <= 0) {
+                    target.isDead = true;
+                    battleLog.push(`[SYSTEM] ${target.id} has fallen!`);
+                }
             }
+            turn++;
         }
 
         const result = monsterHp <= 0 ? "VICTORY" : "DEFEAT";
@@ -54,12 +68,11 @@ class BattleService {
         if (result === "VICTORY") {
             for (const entry of monster.loot) {
                 if (Math.random() < entry.chance) {
-                    // Try to add loot, but if inventory is full, it's lost! (Realistic)
                     try {
                         await inventoryService.addItem(userId, entry.itemId, 1);
                         lootEarned.push({ templateId: entry.itemId, quantity: 1 });
                     } catch (e) {
-                        battleLog.push("[INVENTORY] Inventory full! Loot lost.");
+                        battleLog.push("[SYSTEM] Inventory full! Loot lost.");
                     }
                 }
             }

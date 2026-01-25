@@ -25,11 +25,9 @@ class TaskProcessor {
     async tick() {
         if (this.isProcessing) return;
         this.isProcessing = true;
-
         try {
             await this._processFinishedTasks();
             await this._promotePendingTasks();
-            
             this.tavernTickCounter++;
             if (this.tavernTickCounter >= this.TAVERN_TICK_THRESHOLD) {
                 await tavernService.tick();
@@ -50,7 +48,6 @@ class TaskProcessor {
 
         for (const task of finishedTasks) {
             console.log(`[HEARTBEAT] Completing ${task.type} task ID: ${task.id}`);
-            
             try {
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
@@ -60,14 +57,12 @@ class TaskProcessor {
                     await craftingService.completeCrafting(task.userId, task.id);
                 }
 
-                // --- INSTANT SOCKET NOTIFICATION ---
                 socketService.emitToUser(task.userId, "task_completed", {
                     taskId: task.id,
                     type: task.type,
-                    targetRegionId: task.targetRegionId, // NEW: Include destination
+                    targetRegionId: task.targetRegionId,
                     message: `${task.type} Finished Successfully!`
                 });
-
             } catch (err) {
                 console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
             }
@@ -77,33 +72,46 @@ class TaskProcessor {
     async _promotePendingTasks() {
         const usersWithPending = await prisma.user.findMany({
             where: { taskQueue: { some: { status: "PENDING" } } },
-            include: { taskQueue: { where: { status: "RUNNING" } }, premiumTier: true }
+            include: { taskQueue: { where: { status: "RUNNING" } } }
         });
 
         for (const user of usersWithPending) {
             if (user.taskQueue.length === 0) {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
-                    orderBy: { id: 'asc' }
+                    orderBy: { id: 'asc' },
+                    include: { targetItem: true, originRegion: { include: { connections: true } } }
                 });
 
                 if (nextTask) {
+                    let durationSeconds = 15; // Fallback
+
+                    // --- AUTHORITATIVE DURATION CALCULATION ---
+                    if (nextTask.type === "TRAVEL") {
+                        const conn = nextTask.originRegion.connections.find(c => c.targetRegionId === nextTask.targetRegionId);
+                        durationSeconds = conn ? conn.travelTimeSeconds : 15;
+                    } else if (nextTask.type === "GATHERING") {
+                        const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
+                        durationSeconds = res ? res.gatherTimeSeconds : 10;
+                    } else if (nextTask.type === "CRAFTING") {
+                        const recipe = await prisma.recipeTemplate.findFirst({ where: { resultItemId: nextTask.targetItemId } });
+                        durationSeconds = recipe ? recipe.craftTimeSeconds : 30;
+                    }
+
                     const now = new Date();
-                    const durationMs = 15000; 
-                    
                     await prisma.taskQueue.update({
                         where: { id: nextTask.id },
                         data: {
                             status: "RUNNING",
                             startedAt: now,
-                            finishesAt: new Date(now.getTime() + durationMs)
+                            finishesAt: new Date(now.getTime() + (durationSeconds * 1000))
                         }
                     });
 
-                    // --- NOTIFY CLIENT OF QUEUE START ---
                     socketService.emitToUser(user.id, "task_started", {
                         taskId: nextTask.id,
-                        type: nextTask.type
+                        type: nextTask.type,
+                        duration: durationSeconds
                     });
                 }
             }

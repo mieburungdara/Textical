@@ -21,6 +21,7 @@ func _ready():
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
 	if GameState.current_user:
+		# Hardcoded Slime ID for now
 		ServerConnector.start_battle(GameState.current_user.id, 6001)
 
 func _on_request_completed(endpoint, data):
@@ -40,16 +41,17 @@ func _process_next_log_line():
 	var line = battle_data.battleLog[current_log_index]
 	log_label.append_text(line + "\n")
 	
-	if "attacks Monster" in line:
+	# UNIVERSAL PARSER
+	if "[HERO]" in line and "attacks Monster" in line:
 		_play_hit_vfx(monster_node)
-	elif "attacks Arthur" in line:
+	elif "[MONSTER]" in line and "attacks" in line:
 		_play_hit_vfx(hero_node)
 
 	if "Monster HP:" in line:
 		var hp_val = line.split("Monster HP: ")[1].replace(")", "").to_int()
 		_animate_hp(monster_hp_bar, hp_val)
-	elif "Arthur HP:" in line:
-		var hp_val = line.split("Arthur HP: ")[1].replace(")", "").to_int()
+	elif "HERO HP:" in line:
+		var hp_val = line.split("HERO HP: ")[1].replace(")", "").to_int()
 		_animate_hp(hero_hp_bar, hp_val)
 
 	current_log_index += 1
@@ -74,7 +76,7 @@ func _animate_hp(bar: ProgressBar, new_val: int):
 func _show_result():
 	result_label.text = battle_data.result
 	if battle_data.loot.size() > 0:
-		loot_label.text = "Loot: Item " + str(battle_data.loot[0].templateId)
+		loot_label.text = "Loot Earned!"
 	else:
 		loot_label.text = "No loot found."
 	popup.show()

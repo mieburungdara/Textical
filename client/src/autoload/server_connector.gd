@@ -31,8 +31,10 @@ func _ready():
 	var handlers = [auth, world, tavern, market, quest, inventory, battle, socket]
 	for h in handlers:
 		add_child(h)
-		if h.has_signal("request_completed"): h.request_completed.connect(func(e, d): emit_signal("request_completed", e, d))
-		if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+		if h.has_signal("request_completed"):
+			h.request_completed.connect(_on_handler_request_completed)
+		if h.has_signal("error_occurred"):
+			h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
 	
 	# Socket Routing
 	socket.task_completed.connect(func(d): task_completed.emit(d))
@@ -41,10 +43,15 @@ func _ready():
 	auth.login_success.connect(_on_login_success)
 	auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
+func _on_handler_request_completed(endpoint: String, data):
+	# The individual handlers (like InventoryHandler) already update GameState
+	# so we just forward the signal to the UI.
+	emit_signal("request_completed", endpoint, data)
+
 func _on_login_success(user):
-	# Upon login, connect the WebSocket and authenticate
 	socket.connect_to_server()
-	await socket.connected
+	# Wait for connection before authenticating
+	await get_tree().create_timer(0.5).timeout
 	socket.authenticate(user.id)
 	emit_signal("login_success", user)
 
