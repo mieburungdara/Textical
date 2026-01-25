@@ -26,6 +26,7 @@ This document tracks the physical progress of the Textical RPG engine.
 | **V: Interface** | API Documentation | ✅ COMPLETE | Full endpoint reference (`docs/API.md`) for Client Dev. |
 | **V: Interface** | Godot 4 UI | ✅ COMPLETE | Full navigation loop from Login to Town to Wilderness. |
 | | Deployment Prep | ✅ COMPLETE | Dockerized backend and hosting guide (`DEPLOYMENT.md`). |
+| | Total Brain Purge | ✅ COMPLETE | Removed all local logic, stats, and legacy code from Godot. |
 | **VI: Advanced** | Breeding System | ⏳ **NEXT** | Genetics-based hero generation and skill inheritance. |
 | **V: Interface** | Godot 4 UI | ⏳ PENDING | HUD, Progress Bars, World Map, and Tavern/Market views. |
 
