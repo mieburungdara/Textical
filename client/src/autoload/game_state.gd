@@ -8,10 +8,10 @@ var active_task = null
 var current_region_type = "TOWN" # Default
 
 func set_user(user_data):
-	current_user = user_data
-	# Note: In a full implementation, we'd fetch region details 
-	# to determine if it's a TOWN or WILDERNESS
-	print("[STATE] User set: ", current_user.username, " (Region: ", current_user.currentRegion, ")")
+    current_user = user_data
+    # Note: In a full implementation, we'd fetch region details 
+    # to determine if it's a TOWN or WILDERNESS
+    print("[STATE] User set: ", current_user.username, " (Region: ", current_user.currentRegion, ")")
 func set_inventory(data):
     if not data is Dictionary: return
     

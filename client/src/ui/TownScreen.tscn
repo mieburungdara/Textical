@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://town_screen"]
+[gd_scene load_steps=12 format=3 uid="uid://town_screen"]
 
 [ext_resource type="Script" path="res://src/ui/TownScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://inventory_ui" path="res://src/ui/InventoryUI.tscn" id="2_inventory"]
