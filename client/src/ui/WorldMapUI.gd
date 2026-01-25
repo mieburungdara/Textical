@@ -19,14 +19,20 @@ func refresh():
         ServerConnector.fetch_all_regions()
 
 func _on_request_completed(endpoint, data):
-    if endpoint.contains("/regions") and data is Array:
-        regions = data
-        _draw_map()
-    elif endpoint.contains("/action/travel"):
-        status_label.text = "Travel started! 15s remaining."
-        # TaskHUD will handle the countdown visuals
-        hide()
-
+	if endpoint.contains("/regions") and data is Array:
+		regions = data
+		_draw_map()
+	elif endpoint.contains("/action/travel"):
+		status_label.text = "Travel started! 15s remaining."
+		# Use global timer logic or let TaskHUD show progress
+		await get_tree().create_timer(15.0).timeout
+		ServerConnector.get_region_details(data.targetRegionId)
+	elif endpoint.contains("/region/"):
+		GameState.current_user.currentRegion = data.id
+		if data.type == "TOWN":
+			get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
+		else:
+			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
 func _draw_map():
     for child in map_container.get_children(): child.queue_free()
     

@@ -9,6 +9,7 @@ func _ready():
 	login_button.pressed.connect(_on_login_pressed)
 	ServerConnector.login_success.connect(_on_login_success)
 	ServerConnector.login_failed.connect(_on_login_failed)
+	ServerConnector.request_completed.connect(_on_request_completed)
 
 func _on_login_pressed():
 	var username = username_input.text
@@ -22,9 +23,18 @@ func _on_login_pressed():
 	ServerConnector.login_with_password(username, password)
 
 func _on_login_success(user):
-	status_label.text = "Success! Welcome " + user.username
+	status_label.text = "Checking location..."
 	GameState.set_user(user)
-	get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
+	# Fetch region details before deciding which screen to load
+	ServerConnector.get_region_details(user.currentRegion)
+
+func _on_request_completed(endpoint, data):
+	if endpoint.contains("/region/"):
+		# Decide scene based on region type
+		if data.type == "TOWN":
+			get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
+		else:
+			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
 
 func _on_login_failed(error):
 	status_label.text = "Auth Error: " + error
