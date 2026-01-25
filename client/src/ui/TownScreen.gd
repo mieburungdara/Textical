@@ -12,7 +12,6 @@ extends Control
 @onready var inventory_ui = $InventoryUI
 @onready var quest_ui = $QuestUI
 @onready var hero_ui = $HeroProfileUI
-@onready var market_ui = $MarketUI
 @onready var crafting_ui = $CraftingUI
 @onready var formation_ui = $FormationUI
 @onready var map_ui = $WorldMapUI
@@ -32,8 +31,7 @@ func _on_tavern_pressed():
 	ServerConnector.enter_tavern(GameState.current_user.id)
 
 func _on_market_pressed():
-	market_ui.show()
-	market_ui.refresh()
+	get_tree().change_scene_to_file("res://src/ui/MarketScreen.tscn")
 
 func _on_inventory_pressed():
 	inventory_ui.show()
@@ -65,7 +63,6 @@ func _on_request_completed(endpoint, data):
 	if "tavern/enter" in endpoint:
 		get_tree().change_scene_to_file("res://src/ui/TavernScreen.tscn")
 	elif "action/travel" in endpoint:
-		# Navigation is handled after the 15s timer
 		await get_tree().create_timer(15.0).timeout
 		if data.has("targetRegionId"):
 			GameState.current_user.currentRegion = data.targetRegionId

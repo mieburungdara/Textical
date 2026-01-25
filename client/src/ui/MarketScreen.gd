@@ -1,13 +1,14 @@
 extends Control
 
-@onready var buy_list = $Panel/VBoxContainer/TabContainer/Browse/ScrollContainer/BuyList
-@onready var sell_list = $Panel/VBoxContainer/TabContainer/Inventory/ScrollContainer/SellList
-@onready var status_label = $Panel/VBoxContainer/StatusLabel
-@onready var close_btn = $Panel/VBoxContainer/CloseButton
+@onready var buy_list = $VBoxContainer/TabContainer/Browse/ScrollContainer/BuyList
+@onready var sell_list = $VBoxContainer/TabContainer/Inventory/ScrollContainer/SellList
+@onready var status_label = $VBoxContainer/StatusLabel
+@onready var back_btn = $VBoxContainer/BackButton
 
 func _ready():
-	close_btn.pressed.connect(func(): hide())
+	back_btn.pressed.connect(_on_back_pressed)
 	ServerConnector.request_completed.connect(_on_request_completed)
+	refresh()
 
 func refresh():
 	if GameState.current_user:
@@ -73,5 +74,7 @@ func _populate_sell_list():
 		sell_list.add_child(hbox)
 
 func _on_list_pressed(item_id):
-	# Simplified: Just list for 10 gold for demo
 	ServerConnector.list_item(GameState.current_user.id, item_id, 10)
+
+func _on_back_pressed():
+	get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")

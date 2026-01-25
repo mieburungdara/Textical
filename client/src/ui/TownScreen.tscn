@@ -1,10 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://town_screen"]
+[gd_scene load_steps=11 format=3 uid="uid://town_screen"]
 
 [ext_resource type="Script" path="res://src/ui/TownScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://inventory_ui" path="res://src/ui/InventoryUI.tscn" id="2_inventory"]
 [ext_resource type="PackedScene" uid="uid://quest_ui" path="res://src/ui/QuestUI.tscn" id="3_quest"]
 [ext_resource type="PackedScene" uid="uid://hero_profile_ui" path="res://src/ui/HeroProfileUI.tscn" id="4_hero"]
-[ext_resource type="PackedScene" uid="uid://market_ui" path="res://src/ui/MarketUI.tscn" id="5_market"]
 [ext_resource type="PackedScene" uid="uid://crafting_ui" path="res://src/ui/CraftingUI.tscn" id="6_craft"]
 [ext_resource type="PackedScene" uid="uid://formation_ui" path="res://src/ui/FormationUI.tscn" id="7_formation"]
 [ext_resource type="PackedScene" uid="uid://world_map_ui" path="res://src/ui/WorldMapUI.tscn" id="8_map"]
@@ -81,10 +80,6 @@ visible = false
 layout_mode = 1
 
 [node name="HeroProfileUI" parent="." instance=ExtResource("4_hero")]
-visible = false
-layout_mode = 1
-
-[node name="MarketUI" parent="." instance=ExtResource("5_market")]
 visible = false
 layout_mode = 1
 
