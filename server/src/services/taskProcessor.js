@@ -1,37 +1,25 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Import services to handle completion logic
 const travelService = require('./travelService');
 const gatheringService = require('./gatheringService');
 const tavernService = require('./tavernService');
 const craftingService = require('./craftingService');
+const socketService = require('./socketService');
 
-/**
- * TaskProcessor
- * The authoritative heartbeat of the Textical engine.
- * Periodically checks for finished tasks and promotes pending ones.
- */
 class TaskProcessor {
     constructor() {
         this.interval = null;
-        this.HEARTBEAT_MS = 2000; // Check every 2 seconds
+        this.HEARTBEAT_MS = 2000; 
         this.isProcessing = false;
-        
-        // Counter to slow down tavern spawning (don't roll 30% every 2s)
         this.tavernTickCounter = 0;
-        this.TAVERN_TICK_THRESHOLD = 30; // Check tavern roughly every 60 seconds
+        this.TAVERN_TICK_THRESHOLD = 30;
     }
 
     start() {
         if (this.interval) return;
         console.log("[HEARTBEAT] Task Processor started.");
         this.interval = setInterval(() => this.tick(), this.HEARTBEAT_MS);
-    }
-
-    stop() {
-        clearInterval(this.interval);
-        this.interval = null;
     }
 
     async tick() {
@@ -42,7 +30,6 @@ class TaskProcessor {
             await this._processFinishedTasks();
             await this._promotePendingTasks();
             
-            // TAVERN ENGINE
             this.tavernTickCounter++;
             if (this.tavernTickCounter >= this.TAVERN_TICK_THRESHOLD) {
                 await tavernService.tick();
@@ -55,17 +42,10 @@ class TaskProcessor {
         }
     }
 
-    /**
-     * 1. COMPLETION LOGIC
-     * Finds RUNNING tasks where now > finishesAt
-     */
     async _processFinishedTasks() {
         const now = new Date();
         const finishedTasks = await prisma.taskQueue.findMany({
-            where: {
-                status: "RUNNING",
-                finishesAt: { lte: now }
-            }
+            where: { status: "RUNNING", finishesAt: { lte: now } }
         });
 
         for (const task of finishedTasks) {
@@ -79,33 +59,27 @@ class TaskProcessor {
                 } else if (task.type === "CRAFTING") {
                     await craftingService.completeCrafting(task.userId, task.id);
                 }
+
+                // --- INSTANT SOCKET NOTIFICATION ---
+                socketService.emitToUser(task.userId, "task_completed", {
+                    taskId: task.id,
+                    type: task.type,
+                    message: `${task.type} Finished Successfully!`
+                });
+
             } catch (err) {
                 console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
             }
         }
     }
 
-    /**
-     * 2. ACTIVATION LOGIC (Queue System)
-     * Finds PENDING tasks and starts them if the user has an open slot.
-     */
     async _promotePendingTasks() {
-        // Find users who have PENDING tasks but NO currently RUNNING tasks
         const usersWithPending = await prisma.user.findMany({
-            where: {
-                taskQueue: { some: { status: "PENDING" } }
-            },
-            include: {
-                taskQueue: { 
-                    where: { status: "RUNNING" } 
-                },
-                premiumTier: true
-            }
+            where: { taskQueue: { some: { status: "PENDING" } } },
+            include: { taskQueue: { where: { status: "RUNNING" } }, premiumTier: true }
         });
 
         for (const user of usersWithPending) {
-            // Free players get 1 active slot. Premium Diamond gets 1 active + 10 queue.
-            // But only 1 can be "RUNNING" at a physical moment in Textical's logic.
             if (user.taskQueue.length === 0) {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
@@ -113,12 +87,8 @@ class TaskProcessor {
                 });
 
                 if (nextTask) {
-                    console.log(`[HEARTBEAT] Activating PENDING task ${nextTask.id} for User ${user.id}`);
-                    
-                    // Note: In a real scenario, travel/gather duration should be recalculated here 
-                    // based on current stats/buffs if not already set at creation.
                     const now = new Date();
-                    const durationMs = 15000; // Default 15s for travel/gather if unset
+                    const durationMs = 15000; 
                     
                     await prisma.taskQueue.update({
                         where: { id: nextTask.id },
@@ -127,6 +97,12 @@ class TaskProcessor {
                             startedAt: now,
                             finishesAt: new Date(now.getTime() + durationMs)
                         }
+                    });
+
+                    // --- NOTIFY CLIENT OF QUEUE START ---
+                    socketService.emitToUser(user.id, "task_started", {
+                        taskId: nextTask.id,
+                        type: nextTask.type
                     });
                 }
             }
