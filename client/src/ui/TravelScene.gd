@@ -6,9 +6,6 @@ extends Control
 
 func _ready():
 	ServerConnector.task_completed.connect(_on_task_completed)
-	ServerConnector.request_completed.connect(_on_request_completed)
-	
-	# Initial UI Setup
 	_update_display()
 
 func _process(_delta):
@@ -19,8 +16,6 @@ func _update_display():
 	if task:
 		dest_label.text = "TRAVELING TO REGION " + str(task.get("targetRegionId", "?"))
 		status_label.text = "On the Road..."
-	else:
-		status_label.text = "Waiting for server signal..."
 
 func _update_timer():
 	var task = GameState.active_task
@@ -28,7 +23,6 @@ func _update_timer():
 	
 	var finishes_at = task.get("finishesAt", "")
 	var started_at = task.get("startedAt", "")
-	
 	if finishes_at == "" or started_at == "": return
 	
 	var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
@@ -45,27 +39,15 @@ func _update_timer():
 		status_label.text = "Arriving..."
 
 func _on_task_completed(data):
-	# Match type exactly from server (e.g. "TRAVEL")
-	if data.type == "TRAVEL" or data.type == "AUDIT_TEST":
-		print("[NAV] Arrival detected via Socket. Syncing location...")
-		status_label.text = "Region Reached!"
-		
-		# Clear task locally
+	if data.type == "TRAVEL":
+		# 1. Update State Instantly
+		GameState.current_user.currentRegion = data.targetRegionId
 		GameState.set_active_task(null)
 		
-		# Update current region ID
-		if data.has("targetRegionId"):
-			GameState.current_user.currentRegion = data.targetRegionId
-		
-		# Small delay before fetching details to ensure DB transaction is fully committed
-		await get_tree().create_timer(0.5).timeout
-		ServerConnector.get_region_details(GameState.current_user.currentRegion)
-
-func _on_request_completed(endpoint, data):
-	if endpoint.contains("/region/"):
-		print("[NAV] Region details received. Routing...")
-		# Final verification of region type
-		if data.get("type") == "TOWN":
+		# 2. Switch Scene Instantly based on Server Metadata
+		if data.targetRegionType == "TOWN":
+			print("[NAV] Instant Route to Town")
 			get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 		else:
+			print("[NAV] Instant Route to Wilderness")
 			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

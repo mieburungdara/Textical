@@ -49,8 +49,14 @@ class TaskProcessor {
         for (const task of finishedTasks) {
             console.log(`[HEARTBEAT] Completing ${task.type} task ID: ${task.id}`);
             try {
+                let metadata = {};
+
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
+                    // FETCH TARGET REGION TYPE FOR INSTANT CLIENT NAVIGATION
+                    const region = await prisma.regionTemplate.findUnique({ where: { id: task.targetRegionId } });
+                    metadata.targetRegionType = region.type;
+                    metadata.targetRegionId = task.targetRegionId;
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
                 } else if (task.type === "CRAFTING") {
@@ -60,8 +66,8 @@ class TaskProcessor {
                 socketService.emitToUser(task.userId, "task_completed", {
                     taskId: task.id,
                     type: task.type,
-                    targetRegionId: task.targetRegionId,
-                    message: `${task.type} Finished Successfully!`
+                    ...metadata,
+                    message: `${task.type} Finished!`
                 });
             } catch (err) {
                 console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
@@ -84,9 +90,7 @@ class TaskProcessor {
                 });
 
                 if (nextTask) {
-                    let durationSeconds = 15; // Fallback
-
-                    // --- AUTHORITATIVE DURATION CALCULATION ---
+                    let durationSeconds = 15;
                     if (nextTask.type === "TRAVEL") {
                         const conn = nextTask.originRegion.connections.find(c => c.targetRegionId === nextTask.targetRegionId);
                         durationSeconds = conn ? conn.travelTimeSeconds : 15;
@@ -101,11 +105,7 @@ class TaskProcessor {
                     const now = new Date();
                     await prisma.taskQueue.update({
                         where: { id: nextTask.id },
-                        data: {
-                            status: "RUNNING",
-                            startedAt: now,
-                            finishesAt: new Date(now.getTime() + (durationSeconds * 1000))
-                        }
+                        data: { status: "RUNNING", startedAt: now, finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) }
                     });
 
                     socketService.emitToUser(user.id, "task_started", {
