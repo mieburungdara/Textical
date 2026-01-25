@@ -22,8 +22,13 @@ func _on_request_completed(endpoint, data):
 func _populate_quests(quests):
 	for child in quest_list.get_children(): child.queue_free()
 	for u_quest in quests:
-		var quest = u_quest.quest
+		var quest = u_quest.get("quest", {})
+		var rewards = quest.get("rewards", [])
+		var reward_amount = 0
+		if rewards.size() > 0:
+			reward_amount = rewards[0].get("amount", 0)
+			
 		var btn = Button.new()
-		btn.text = "%s - Reward: %d Gold" % [quest.name, quest.rewards[0].amount]
+		btn.text = "%s - Reward: %d Gold" % [quest.get("name", "Unknown"), reward_amount]
 		btn.pressed.connect(func(): ServerConnector.complete_quest(GameState.current_user.id, u_quest.id))
 		quest_list.add_child(btn)

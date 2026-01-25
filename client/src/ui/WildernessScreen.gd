@@ -72,4 +72,5 @@ func _on_gather_pressed(resource_id, btn):
 		ServerConnector.gather(GameState.current_user.id, GameState.current_heroes[0].id, resource_id)
 		action_label.text = "Extracting..."
 	else:
+		action_label.text = "Fetching heroes..."
 		ServerConnector.fetch_heroes(GameState.current_user.id)

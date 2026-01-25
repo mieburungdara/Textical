@@ -38,7 +38,8 @@ func _on_map_pressed(): get_tree().change_scene_to_file("res://src/ui/WorldMapSc
 
 func _on_hero_pressed():
 	if GameState.current_heroes.size() > 0:
-		GameState.selected_hero_id = GameState.current_heroes[0].id
-		get_tree().change_scene_to_file("res://src/ui/HeroProfileScreen.tscn")
+		GameState.selected_hero_id = GameState.current_heroes[0].get("id", -1)
+		if GameState.selected_hero_id != -1:
+			get_tree().change_scene_to_file("res://src/ui/HeroProfileScreen.tscn")
 	else:
 		ServerConnector.fetch_heroes(GameState.current_user.id)

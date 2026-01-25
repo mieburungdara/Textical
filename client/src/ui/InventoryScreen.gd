@@ -24,5 +24,8 @@ func _populate_grid():
 	for item in GameState.inventory:
 		var item_node = Button.new()
 		item_node.custom_minimum_size = Vector2(100, 100)
-		item_node.text = "%s\nx%d" % [item.template.name, item.quantity]
+		var template = item.get("template", {})
+		var item_name = template.get("name", "Unknown")
+		var qty = item.get("quantity", 1)
+		item_node.text = "%s\nx%d" % [item_name, qty]
 		grid.add_child(item_node)
