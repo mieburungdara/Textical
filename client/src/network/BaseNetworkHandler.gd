@@ -7,15 +7,16 @@ signal error_occurred(endpoint, message)
 var base_url = "http://localhost:3000/api"
 
 func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}):
-	var http = HTTPRequest.new()
-	add_child(http)
-	
-	http.request_completed.connect(func(result, response_code, headers, response_body): 
-		_on_request_completed(http, endpoint, result, response_code, headers, response_body)
-	)
 	var url = base_url + endpoint
 	var headers = ["Content-Type: application/json"]
 	var json_str = JSON.stringify(body) if not body.is_empty() else ""
+	
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	http.request_completed.connect(func(result, response_code, response_headers, response_body): 
+		_on_request_completed(http, endpoint, result, response_code, response_headers, response_body)
+	)
 	
 	var error = http.request(url, headers, method, json_str)
 	if error != OK:

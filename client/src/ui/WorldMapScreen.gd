@@ -24,7 +24,7 @@ func _on_request_completed(endpoint, data):
 		_draw_map(data)
 	elif endpoint.contains("/action/travel"):
 		print("[MAP_DEBUG] Server confirmed travel. Transitioning...")
-		# THE SYNC: Server sends back the task object. Set it locally.
+		# Server response now includes 'targetRegion' relation!
 		GameState.set_active_task(data)
 		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 
