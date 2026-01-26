@@ -9,5 +9,7 @@ func craft(u_id: int, r_id: int): _request("/action/craft", HTTPClient.METHOD_PO
 func update_formation(u_id: int, p_id: int, slots: Array): _request("/action/formation/update", HTTPClient.METHOD_POST, {"userId": u_id, "presetId": p_id, "slots": slots})
 
 func _handle_success(_endpoint: String, json):
-	if json is Dictionary and json.has("type") and json.has("status") and json.get("status") is String and json.get("status") == "RUNNING":
-		GameState.set_active_task(json)
+	if json is Dictionary and json.has("type") and json.has("status"):
+		var status = json.get("status", "")
+		if status == "RUNNING" or status == "PENDING":
+			GameState.set_active_task(json)
