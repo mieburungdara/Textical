@@ -26,6 +26,11 @@ color = Color(0.85, 0.75, 0.55, 1)
 
 [node name="Pins" type="Node2D" parent="MapLayer"]
 
+[node name="PlayerMarker" type="Polygon2D" parent="MapLayer"]
+z_index = 100
+color = Color(0, 0.6, 1, 1)
+polygon = PackedVector2Array(0, -30, 20, 30, 0, 15, -20, 30)
+
 [node name="PathGroup" type="Node2D" parent="MapLayer"]
 z_index = 50
 
@@ -41,8 +46,8 @@ end_cap_mode = 2
 rotates = false
 loop = false
 
-[node name="RedDot" type="Polygon2D" parent="MapLayer/PathGroup/Path2D/PathFollow2D"]
-z_index = 100
+[node name="TravelDot" type="Polygon2D" parent="MapLayer/PathGroup/Path2D/PathFollow2D"]
+z_index = 110
 color = Color(1, 0, 0, 1)
 polygon = PackedVector2Array(-25, -25, 25, -25, 25, 25, -25, 25)
 

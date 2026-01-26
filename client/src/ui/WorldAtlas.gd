@@ -4,6 +4,7 @@ extends Control
 @onready var cam = $Camera2D
 @onready var pins_layer = $MapLayer/Pins
 @onready var landmarks_layer = $MapLayer/Landmarks
+@onready var player_marker = $MapLayer/PlayerMarker
 @onready var info_panel = $UI/InfoPanel
 @onready var start_btn = $UI/InfoPanel/Margin/VBox/HBox/StartBtn
 @onready var close_btn = $UI/InfoPanel/Margin/VBox/HBox/CloseBtn
@@ -33,6 +34,7 @@ var is_traveling = false
 func _ready():
 	_setup_signals()
 	_spawn_map_elements()
+	_update_player_position()
 	_center_on_player()
 	
 	info_panel.hide()
@@ -45,9 +47,7 @@ func _setup_signals():
 	ServerConnector.task_completed.connect(_on_task_completed)
 
 func _spawn_map_elements():
-	# Clear existing
 	for child in landmarks_layer.get_children(): child.queue_free()
-	
 	for lm in GameState.FLAVOR_LANDMARKS:
 		var l = Label.new()
 		l.text = lm.name
@@ -56,8 +56,16 @@ func _spawn_map_elements():
 		l.add_theme_font_size_override("font_size", 32)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		landmarks_layer.add_child(l)
-	
 	ServerConnector.fetch_all_regions()
+
+func _update_player_position():
+	if GameState.current_user:
+		var rid_raw = GameState.current_user.get("currentRegion", 1)
+		var rid = int(str(rid_raw).to_float())
+		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+		player_marker.position = pos
+		# Hide travel dot when not moving
+		if !is_traveling: path_group.hide()
 
 func _center_on_player():
 	if GameState.current_user:
@@ -65,7 +73,6 @@ func _center_on_player():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		cam.global_position = pos
-		print("[MAP] Initial Camera Snap to: ", pos)
 
 func _process(_delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
@@ -76,17 +83,11 @@ func _process(_delta):
 		cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 
 func _input(event):
-	# Using _input for global capture, but only if not on UI
 	if is_traveling: return 
-	
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			is_dragging = event.pressed
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			target_zoom = clamp(target_zoom + zoom_speed, min_zoom, max_zoom)
-		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			target_zoom = clamp(target_zoom - zoom_speed, min_zoom, max_zoom)
-
+		if event.button_index == MOUSE_BUTTON_LEFT: is_dragging = event.pressed
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP: target_zoom = clamp(target_zoom + zoom_speed, min_zoom, max_zoom)
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: target_zoom = clamp(target_zoom - zoom_speed, min_zoom, max_zoom)
 	if event is InputEventMouseMotion and is_dragging:
 		cam.global_position -= event.relative / cam.zoom
 
@@ -101,8 +102,7 @@ func _populate_pins(regions):
 	for r in regions:
 		var btn = Button.new()
 		btn.text = r.name
-		# FIX: Ensure position is handled as Vector2 correctly
-		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0)) - Vector2(100, 30) # Offset to center button
+		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0)) - Vector2(100, 30)
 		btn.custom_minimum_size = Vector2(200, 60)
 		btn.pressed.connect(_on_pin_clicked.bind(r))
 		pins_layer.add_child(btn)
@@ -119,11 +119,7 @@ func _on_pin_clicked(region):
 	info_panel.show()
 
 func _on_start_journey():
-	# BUG FIX: Ensure user and selection exist before proceeding
-	if !GameState.current_user or !selected_region: 
-		print("[MAP_ERROR] Cannot start: Missing user or selection.")
-		return
-		
+	if !GameState.current_user or !selected_region: return
 	start_btn.disabled = true
 	ServerConnector.travel(GameState.current_user.id, selected_region.id)
 
@@ -132,22 +128,16 @@ func _start_cinematic_travel(task):
 	info_panel.hide()
 	path_group.show() 
 	
-	# BUG FIX: Robust casting for all Godot versions
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
-	
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
 	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
 	
-	print("[MAP] Building cinematic path from ", start_pos, " to ", end_pos)
-	
-	# Build the curve
 	var curve = Curve2D.new()
 	curve.add_point(start_pos)
 	curve.add_point(end_pos)
 	path_2d.curve = curve
 	
-	# Draw the line
 	line_2d.clear_points()
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
@@ -173,10 +163,10 @@ func _calculate_server_progress() -> float:
 
 func _on_task_completed(data):
 	if data.type == "TRAVEL":
-		# Ensure we don't switch scenes before the dot finishes if possible
-		# but for logic, we clear now
+		is_traveling = false
 		GameState.set_active_task(null)
 		GameState.current_user.currentRegion = data.targetRegionId
+		_update_player_position() 
 		_route_by_type(data.targetRegionType)
 
 func _route_by_type(r_type):

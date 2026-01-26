@@ -19,45 +19,45 @@ var battle: BattleHandler
 var socket: SocketHandler
 
 func _ready():
-	auth = AuthHandler.new()
-	world = WorldHandler.new()
-	tavern = TavernHandler.new()
-	market = MarketHandler.new()
-	quest = QuestHandler.new()
-	inventory = InventoryHandler.new()
-	battle = BattleHandler.new()
-	socket = SocketHandler.new()
-	
-	var handlers = [auth, world, tavern, market, quest, inventory, battle, socket]
-	for h in handlers:
-		add_child(h)
-		if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
-		if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
-	
-	# Socket Routing
-	socket.task_completed.connect(func(d): task_completed.emit(d))
-	socket.task_started.connect(func(d): task_started.emit(d))
-	
-	auth.login_success.connect(_on_login_success)
-	auth.login_failed.connect(func(e): emit_signal("login_failed", e))
+    auth = AuthHandler.new()
+    world = WorldHandler.new()
+    tavern = TavernHandler.new()
+    market = MarketHandler.new()
+    quest = QuestHandler.new()
+    inventory = InventoryHandler.new()
+    battle = BattleHandler.new()
+    socket = SocketHandler.new()
+    
+    var handlers = [auth, world, tavern, market, quest, inventory, battle, socket]
+    for h in handlers:
+        add_child(h)
+        if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
+        if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+    
+    # Socket Routing
+    socket.task_completed.connect(func(d): task_completed.emit(d))
+    socket.task_started.connect(func(d): task_started.emit(d))
+    
+    auth.login_success.connect(_on_login_success)
+    auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
 func _on_handler_request_completed(endpoint: String, data):
-	emit_signal("request_completed", endpoint, data)
+    emit_signal("request_completed", endpoint, data)
 
 func _on_login_success(user):
-	# 1. Start Connection
-	socket.connect_to_server()
-	
-	# 2. Wait for the 'connected' signal from SocketHandler if not already open
-	if socket.socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
-		await socket.connected
-	
-	# 3. Authenticate only if not already authenticated for this session
-	if !socket.is_authenticated:
-		socket.authenticate(user.id)
-	
-	# 4. Now allow the UI to transition
-	emit_signal("login_success", user)
+    # 1. Start Connection
+    socket.connect_to_server()
+    
+    # 2. Wait for the 'connected' signal from SocketHandler if not already open
+    if socket.socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
+        await socket.connected
+    
+    # 3. Authenticate only if not already authenticated for this session
+    if !socket.is_authenticated:
+        socket.authenticate(user.id)
+    
+    # 4. Now allow the UI to transition
+    emit_signal("login_success", user)
 
 # --- FACADE METHODS ---
 func login_with_password(u, p): auth.login(u, p)
