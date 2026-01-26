@@ -16,28 +16,38 @@ func _setup_scene():
 	
 	var task = GameState.active_task
 	if task and task.get("type") == "TRAVEL":
-		_log("Incoming Task Data: " + str(task))
-		_target_id = int(task.get("targetRegionId", -1))
+		_log("Incoming Task Metadata: " + str(task.get("targetRegion", "NONE")))
+		_parse_region_data(task.get("targetRegion", {}))
 		
-		# Metadata Capture (Now correctly nested inside the task check)
+		dest_name.text = str(_target_id) # Initial fallback
 		if task.has("targetRegion"):
-			var region_template = task.get("targetRegion", {})
-			dest_name.text = region_template.get("name", "Unknown Region")
-			_target_type = region_template.get("type", "TOWN")
+			dest_name.text = task.targetRegion.get("name", "Unknown")
 			
-			# Parse Lore/Tips/History from metadata JSON string
-			var meta_str = region_template.get("metadata", "{}")
-			var meta = JSON.parse_string(meta_str)
-			if meta is Dictionary:
-				lore_label.text = meta.get("lore", "No lore recorded for this place.")
-				history_label.text = meta.get("history", "History has forgotten this land.")
-				_tips = meta.get("tips", ["Stay alert."])
-				_show_tip(0)
-		
-		_log("Traveling to: " + dest_name.text)
+		_log("Traveling to: " + dest_name.text + " (Type: " + _target_type + ")")
 	else:
 		_log("No travel task detected. Triggering recovery...")
 		_force_sync()
+
+func _parse_region_data(tr):
+	if !tr or tr.is_empty(): 
+		_log("ERROR: Region template is null or empty.")
+		return
+		
+	_target_id = int(tr.get("id", -1))
+	_target_type = tr.get("type", "TOWN")
+	
+	# Parse Lore/Tips/History from metadata JSON string
+	var meta_str = tr.get("metadata", "{}")
+	_log("Raw Metadata String: " + meta_str)
+	
+	var meta = JSON.parse_string(meta_str)
+	if meta is Dictionary:
+		lore_label.text = meta.get("lore", "No lore recorded.")
+		history_label.text = meta.get("history", "History is lost.")
+		_tips = meta.get("tips", ["Stay alert."])
+		_show_tip(0)
+	else:
+		_log("ERROR: Metadata string failed to parse into Dictionary.")
 
 func _show_tip(idx):
 	if _tips.size() > 0:
@@ -53,6 +63,10 @@ func _on_timer_finished():
 
 func _handle_task_completion(data):
 	if data.type == "TRAVEL":
+		_log("Socket arrival. Metadata: " + str(data.get("targetRegion", "NONE")))
+		# Update target type if provided in late packet
+		if data.has("targetRegion"):
+			_target_type = data.targetRegion.get("type", _target_type)
 		_is_waiting_for_socket = false
 
 func _handle_request_result(endpoint, data):
@@ -61,6 +75,10 @@ func _handle_request_result(endpoint, data):
 		if active_task_on_server == null:
 			var metadata = data.get("currentRegionData", {})
 			_route_by_type(metadata.get("type", "TOWN"))
+		else:
+			# Recovery during travel: re-parse region
+			_log("Recovery sync found task. Re-parsing region...")
+			_parse_region_data(active_task_on_server.get("targetRegion", {}))
 
 func _route_by_type(r_type: String):
 	if _is_changing_scene: return

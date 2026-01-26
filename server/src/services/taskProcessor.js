@@ -43,7 +43,7 @@ class TaskProcessor {
         const now = new Date();
         const finishedTasks = await prisma.taskQueue.findMany({
             where: { status: "RUNNING", finishesAt: { lte: now } },
-            include: { targetRegion: true }
+            include: { targetRegion: true } // LOAD METADATA HERE
         });
 
         for (const task of finishedTasks) {
@@ -53,9 +53,10 @@ class TaskProcessor {
 
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
-                    const region = await prisma.regionTemplate.findUnique({ where: { id: task.targetRegionId } });
+                    // ENSURE FULL METADATA IS IN SOCKET PAYLOAD
                     payload.targetRegionId = task.targetRegionId;
-                    payload.targetRegionType = region ? region.type : "TOWN";
+                    payload.targetRegionType = task.targetRegion ? task.targetRegion.type : "TOWN";
+                    payload.targetRegion = task.targetRegion; // INCLUDE FULL TEMPLATE FOR LORE
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
                 } else if (task.type === "CRAFTING") {
@@ -79,13 +80,13 @@ class TaskProcessor {
             if (user.taskQueue.length === 0) {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
-                    orderBy: { id: 'asc' }
+                    orderBy: { id: 'asc' },
+                    include: { targetRegion: true } // LOAD METADATA DURING PROMOTION
                 });
 
                 if (nextTask) {
                     let durationSeconds = 5; 
 
-                    // AUTHORITATIVE DURATION CALCULATION (DB-Based)
                     if (nextTask.type === "GATHERING") {
                         const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
                         durationSeconds = res ? res.gatherTimeSeconds : 5;
@@ -98,7 +99,6 @@ class TaskProcessor {
 
                     const now = new Date();
                     
-                    // BUG FIX: Atomic Promotion Transaction
                     await prisma.$transaction([
                         prisma.taskQueue.update({
                             where: { id: nextTask.id },
@@ -113,7 +113,8 @@ class TaskProcessor {
                     socketService.emitToUser(user.id, "task_started", {
                         taskId: nextTask.id,
                         type: nextTask.type,
-                        duration: durationSeconds
+                        duration: durationSeconds,
+                        targetRegion: nextTask.targetRegion // FORWARD METADATA TO UI
                     });
                 }
             }
