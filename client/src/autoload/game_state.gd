@@ -12,21 +12,21 @@ var current_region_data = null # NEW: Full metadata storage
 
 # GEOGRAPHIC ATLAS (5000x5000 World Grid)
 const REGION_POSITIONS = {
-	1: Vector2(2500, 4500), # Oakhaven Hub (Far South Center)
-	2: Vector2(1200, 3200), # Iron Mine (South West)
-	3: Vector2(800, 1500),  # Crystal Depths (Far North West)
-	4: Vector2(3800, 3200), # Elm Forest (South East)
-	5: Vector2(4200, 1500)  # Forbidden Grove (Far North East)
+    1: Vector2(2500, 4500), # Oakhaven Hub (Far South Center)
+    2: Vector2(1200, 3200), # Iron Mine (South West)
+    3: Vector2(800, 1500),  # Crystal Depths (Far North West)
+    4: Vector2(3800, 3200), # Elm Forest (South East)
+    5: Vector2(4200, 1500)  # Forbidden Grove (Far North East)
 }
 
 const FLAVOR_LANDMARKS = [
-	{"name": "Lake of Whispers", "pos": Vector2(2500, 3500)},
-	{"name": "The Shattered Peaks", "pos": Vector2(500, 500)},
-	{"name": "Ancient Sentinel Pillar", "pos": Vector2(4500, 4500)},
-	{"name": "Siren's Whisp Falls", "pos": Vector2(1500, 1500)},
-	{"name": "The Weeping Sands", "pos": Vector2(3500, 500)},
-	{"name": "Dead Man's pass", "pos": Vector2(2500, 2000)},
-	{"name": "Sun-King Observatory", "pos": Vector2(1000, 4000)}
+    {"name": "Lake of Whispers", "pos": Vector2(2500, 3500)},
+    {"name": "The Shattered Peaks", "pos": Vector2(500, 500)},
+    {"name": "Ancient Sentinel Pillar", "pos": Vector2(4500, 4500)},
+    {"name": "Siren's Whisp Falls", "pos": Vector2(1500, 1500)},
+    {"name": "The Weeping Sands", "pos": Vector2(3500, 500)},
+    {"name": "Dead Man's pass", "pos": Vector2(2500, 2000)},
+    {"name": "Sun-King Observatory", "pos": Vector2(1000, 4000)}
 ]
 
 # NAVIGATION MEMORYvar selected_hero_id: int = -1

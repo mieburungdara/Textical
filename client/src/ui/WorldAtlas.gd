@@ -17,6 +17,7 @@ extends Control
 @onready var path_2d = $MapLayer/Path2D
 @onready var line_2d = $MapLayer/Path2D/Line2D
 @onready var follow_2d = $MapLayer/Path2D/PathFollow2D
+@onready var red_dot = $MapLayer/Path2D/PathFollow2D/RedDot
 
 # CAMERA VARS
 var min_zoom = 0.2
@@ -37,6 +38,10 @@ func _ready():
 	# Initial UI State
 	info_panel.hide()
 	path_2d.hide()
+	
+	# BUG FIX: Ensure RedDot is visible above paper
+	if red_dot:
+		red_dot.z_index = 10 
 
 func _setup_signals():
 	close_btn.pressed.connect(func(): info_panel.hide())
@@ -59,7 +64,8 @@ func _spawn_map_elements():
 
 func _center_on_player():
 	if GameState.current_user:
-		var rid = GameState.current_user.get("currentRegion", 1)
+		var rid_raw = GameState.current_user.get("currentRegion", 1)
+		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		cam.position = pos
 
@@ -69,11 +75,13 @@ func _process(_delta):
 	
 	# Handle Follow during travel
 	if is_traveling:
-		follow_2d.progress_ratio = _calculate_server_progress()
-		cam.position = follow_2d.global_position
+		var progress = _calculate_server_progress()
+		follow_2d.progress_ratio = progress
+		# Smooth camera follow
+		cam.position = cam.position.lerp(follow_2d.global_position, 0.1)
 
 func _input(event):
-	if is_traveling: return # Lock camera during cinematic travel
+	if is_traveling: return 
 	
 	# PANNING (Dragging)
 	if event is InputEventMouseButton:
@@ -100,7 +108,7 @@ func _populate_pins(regions):
 	for r in regions:
 		var btn = Button.new()
 		btn.text = r.name
-		btn.position = GameState.REGION_POSITIONS.get(r.id, Vector2(0,0))
+		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0))
 		btn.custom_minimum_size = Vector2(120, 40)
 		btn.pressed.connect(_on_pin_clicked.bind(r))
 		pins_layer.add_child(btn)
@@ -128,9 +136,12 @@ func _start_cinematic_travel(task):
 	info_panel.hide()
 	path_2d.show()
 	
-	# Build Path
-	var start_pos = GameState.REGION_POSITIONS.get(int(task.originRegionId), Vector2(2500, 2500))
-	var end_pos = GameState.REGION_POSITIONS.get(int(task.targetRegionId), Vector2(2500, 2500))
+	# BUG FIX: Safe ID Casting
+	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
+	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
+	
+	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
+	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
 	
 	var curve = Curve2D.new()
 	curve.add_point(start_pos)
@@ -146,10 +157,14 @@ func _start_cinematic_travel(task):
 
 func _calculate_server_progress() -> float:
 	var task = GameState.active_task
-	if !task or task.status != "RUNNING": return 1.0
+	if !task or task.get("status", "") != "RUNNING": return 1.0
 	
-	var finish_unix = Time.get_unix_time_from_datetime_string(task.finishesAt)
-	var start_unix = Time.get_unix_time_from_datetime_string(task.startedAt)
+	var finishes_at = task.get("finishesAt", "")
+	var started_at = task.get("startedAt", "")
+	if finishes_at == "" or started_at == "": return 0.0
+	
+	var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
+	var start_unix = Time.get_unix_time_from_datetime_string(started_at)
 	var now_unix = Time.get_unix_time_from_system()
 	
 	var remaining = max(0, finish_unix - now_unix)
@@ -162,7 +177,7 @@ func _on_task_completed(data):
 		GameState.set_active_task(null)
 		GameState.current_user.currentRegion = data.targetRegionId
 		# Transition out of Atlas
-		_route_by_type(data.targetRegionType)
+		_route_by_type(data.get("targetRegionType", "TOWN"))
 
 func _route_by_type(r_type):
 	if r_type == "TOWN": get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
