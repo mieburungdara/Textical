@@ -12,11 +12,11 @@ var current_region_data = null # NEW: Full metadata storage
 
 # GEOGRAPHIC ATLAS (Indiana Jones Style Positions)
 const REGION_POSITIONS = {
-	1: Vector2(360, 1000), # Oakhaven Hub (Bottom Center)
-	2: Vector2(180, 750),  # Iron Mine (Mid Left)
-	3: Vector2(120, 350),  # Crystal Depths (Top Left)
-	4: Vector2(540, 750),  # Elm Forest (Mid Right)
-	5: Vector2(600, 350)   # Forbidden Grove (Top Right)
+    1: Vector2(360, 1000), # Oakhaven Hub (Bottom Center)
+    2: Vector2(180, 750),  # Iron Mine (Mid Left)
+    3: Vector2(120, 350),  # Crystal Depths (Top Left)
+    4: Vector2(540, 750),  # Elm Forest (Mid Right)
+    5: Vector2(600, 350)   # Forbidden Grove (Top Right)
 }
 
 # NAVIGATION MEMORY
