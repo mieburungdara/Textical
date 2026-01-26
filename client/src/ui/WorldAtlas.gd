@@ -32,7 +32,7 @@ var selected_region = null
 var is_traveling = false
 var _target_type = "TOWN"
 var _local_progress = 0.0
-var _travel_duration = 5.0 # Local mirror of server lock
+var _travel_duration = 5.0 
 
 func _ready():
 	_setup_signals()
@@ -66,6 +66,8 @@ func _update_player_position():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		player_marker.position = pos
+		player_marker.show()
+		path_group.hide()
 
 func _center_on_player():
 	if GameState.current_user:
@@ -78,18 +80,18 @@ func _process(delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
 	
 	if is_traveling:
-		# LOCAL AUTONOMOUS ANIMATION
 		_local_progress += delta / _travel_duration
 		var p = clamp(_local_progress, 0.0, 1.0)
 		
 		if path_2d.curve and path_2d.curve.get_baked_length() > 0:
 			follow_2d.progress_ratio = p
+			# Camera follows the moving arrow
 			cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 		
 		if p >= 1.0:
 			_complete_travel_locally()
 
-func _input(event):
+func _unhandled_input(event):
 	if is_traveling: return 
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT: is_dragging = event.pressed
@@ -102,7 +104,6 @@ func _on_request_completed(endpoint, data):
 	if endpoint.contains("/regions"):
 		_populate_pins(data)
 	elif endpoint.contains("/action/travel"):
-		# START JOURNEY IMMEDIATELY ON 'OK'
 		_start_cinematic_travel(data)
 
 func _populate_pins(regions):
@@ -132,11 +133,9 @@ func _on_start_journey():
 	ServerConnector.travel(GameState.current_user.id, selected_region.id)
 
 func _start_cinematic_travel(task):
-	# 1. Capture metadata for transition
 	var tr = task.get("targetRegion", {})
 	_target_type = tr.get("type", "TOWN")
 	
-	# 2. Build the curve
 	var origin_val = task.get("originRegionId", 1)
 	var origin_rid = int(str(origin_val).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
@@ -153,18 +152,18 @@ func _start_cinematic_travel(task):
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
 	
-	# 3. Trigger local timer
+	# SWITCH MARKERS: Hide static, show moving
+	player_marker.hide()
+	path_group.show() 
+	
 	_local_progress = 0.0
 	is_traveling = true
 	info_panel.hide()
-	path_group.show() 
 	GameState.set_active_task(task)
 
 func _complete_travel_locally():
 	is_traveling = false
 	GameState.set_active_task(null)
-	# GameState.current_user.currentRegion is already updated on server
-	# We just need to route the UI
 	_route_by_type(_target_type)
 
 func _route_by_type(r_type):
