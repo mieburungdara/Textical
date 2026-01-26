@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="Textical"
-run/main_scene="res://src/ui/LoginScreen.tscn"
-config/features=PackedStringArray("4.5", "Mobile")
+run/main_scene="res://src/ui/LoadingScreen.tscn"
+config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
 
