@@ -41,8 +41,10 @@ class TaskProcessor {
 
     async _processFinishedTasks() {
         const now = new Date();
+        // BUG FIX: Include targetRegion to avoid N+1 query loop
         const finishedTasks = await prisma.taskQueue.findMany({
-            where: { status: "RUNNING", finishesAt: { lte: now } }
+            where: { status: "RUNNING", finishesAt: { lte: now } },
+            include: { targetRegion: true }
         });
 
         for (const task of finishedTasks) {
@@ -52,9 +54,8 @@ class TaskProcessor {
 
                 if (task.type === "TRAVEL") {
                     await travelService.completeTravel(task.userId, task.id);
-                    const region = await prisma.regionTemplate.findUnique({ where: { id: task.targetRegionId } });
                     payload.targetRegionId = parseInt(task.targetRegionId);
-                    payload.targetRegionType = region ? region.type : "TOWN";
+                    payload.targetRegionType = task.targetRegion ? task.targetRegion.type : "TOWN";
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
                 } else if (task.type === "CRAFTING") {
@@ -79,7 +80,7 @@ class TaskProcessor {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
                     orderBy: { id: 'asc' },
-                    include: { originRegion: true } // CRITICAL: Ensure origin is loaded
+                    include: { originRegion: true }
                 });
 
                 if (nextTask) {
@@ -102,7 +103,7 @@ class TaskProcessor {
 
                     const now = new Date();
                     
-                    // BUG FIX: Atomic Promotion Transaction
+                    // BUG FIX: Atomic Promotion & Tavern Eviction for queued travels
                     await prisma.$transaction([
                         prisma.taskQueue.update({
                             where: { id: nextTask.id },
@@ -112,11 +113,14 @@ class TaskProcessor {
                                 finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) 
                             }
                         }),
-                        // Ensure location is updated only IF it's a travel task
                         ...(nextTask.type === "TRAVEL" ? [
                             prisma.user.update({
                                 where: { id: user.id },
-                                data: { currentRegion: nextTask.targetRegionId }
+                                data: { 
+                                    currentRegion: nextTask.targetRegionId,
+                                    isInTavern: false,
+                                    tavernEntryAt: null
+                                }
                             })
                         ] : [])
                     ]);
