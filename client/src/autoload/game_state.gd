@@ -22,44 +22,37 @@ func set_active_task(task_data):
 		print("[STATE] Task Cleared (IDLE)")
 
 func set_user(user_data):
-    if not user_data is Dictionary: return
-    current_user = user_data
-    
-    # Sync Active Task from Server
-    if user_data.has("activeTask"):
-        active_task = user_data.activeTask
-    elif user_data.has("taskQueue"):
-        var queue = user_data.get("taskQueue", [])
-        active_task = queue[0] if queue.size() > 0 else null
-    else:
-        active_task = null
-        
-    print("[STATE] User & Task Synced. Region: ", current_user.get("currentRegion"))
+	if not user_data is Dictionary: return
+	current_user = user_data
+	
+	# Sync Active Task from Server via the setter to trigger signals
+	var new_task = null
+	if user_data.has("activeTask"):
+		new_task = user_data.activeTask
+	elif user_data.has("taskQueue"):
+		var queue = user_data.get("taskQueue", [])
+		new_task = queue[0] if queue.size() > 0 else null
+	
+	set_active_task(new_task)
+	print("[STATE] User Synced. Region: ", current_user.get("currentRegion"))
 
 func set_inventory(data):
-    if not data is Dictionary: return
-    
-    if data.has("items"):
-        inventory = data.items
-    
-    if data.has("status"):
-        inventory_status = data.status
-        print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
+	if not data is Dictionary: return
+	
+	if data.has("items"):
+		inventory = data.items
+	
+	if data.has("status"):
+		inventory_status = data.status
+		print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
 
 func set_heroes(data):
-    current_heroes = data
-    print("[STATE] Heroes updated: ", current_heroes.size())
-
-func set_active_task(task):
-    active_task = task
-    if active_task:
-        print("[STATE] New task started: ", active_task.type)
-    else:
-        print("[STATE] Task cleared (Idle)")
+	current_heroes = data
+	print("[STATE] Heroes updated: ", current_heroes.size())
 
 func update_vitality(new_vitality):
-    if current_user:
-        current_user.vitality = new_vitality
+	if current_user:
+		current_user.vitality = new_vitality
 
 func is_in_town():
-    return current_user and current_user.currentRegion == 1
+	return current_user and current_user.currentRegion == 1
