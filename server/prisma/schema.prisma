@@ -102,6 +102,7 @@ model RegionTemplate {
   description     String
   type            String   @default("TOWN")
   dangerLevel     Int      @default(1)
+  metadata        String   @default("{}") // NEW: Store lore and tips
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]

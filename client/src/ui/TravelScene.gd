@@ -14,24 +14,24 @@ var _current_tip_idx = 0
 func _setup_scene():
     next_tip_btn.pressed.connect(_on_next_tip)
     
-    	var task = GameState.active_task
-    	if task and task.get("type") == "TRAVEL":
-    		_log("Incoming Task Data: " + str(task))
-    		_target_id = int(task.get("targetRegionId", -1))        
-        # Metadata Capture
-        if task.has("targetRegion"):
-            var tr = task.get("targetRegion", {})
-            dest_name.text = tr.get("name", "Unknown Region")
-            _target_type = tr.get("type", "TOWN")
-            
-            # Parse Lore/Tips/History from metadata JSON string
-            var meta_str = tr.get("metadata", "{}")
-            var meta = JSON.parse_string(meta_str)
-            if meta is Dictionary:
-                lore_label.text = meta.get("lore", "No lore recorded for this place.")
-                history_label.text = meta.get("history", "History has forgotten this land.")
-                _tips = meta.get("tips", ["Stay alert."])
-                _show_tip(0)
+    var task = GameState.active_task
+    if task and task.get("type") == "TRAVEL":
+        _log("Incoming Task Data: " + str(task))
+        _target_id = int(task.get("targetRegionId", -1))        
+    # Metadata Capture
+    if task.has("targetRegion"):
+        var tr = task.get("targetRegion", {})
+        dest_name.text = tr.get("name", "Unknown Region")
+        _target_type = tr.get("type", "TOWN")
+        
+        # Parse Lore/Tips/History from metadata JSON string
+        var meta_str = tr.get("metadata", "{}")
+        var meta = JSON.parse_string(meta_str)
+        if meta is Dictionary:
+            lore_label.text = meta.get("lore", "No lore recorded for this place.")
+            history_label.text = meta.get("history", "History has forgotten this land.")
+            _tips = meta.get("tips", ["Stay alert."])
+            _show_tip(0)
         
         _log("Traveling to: " + dest_name.text)
     else:
