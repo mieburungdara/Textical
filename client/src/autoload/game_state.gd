@@ -1,15 +1,25 @@
 extends Node
 
+signal task_updated(task)
+
 var current_user = null
 var current_heroes = []
 var inventory = []
 var inventory_status = {"used": 0, "max": 20}
 var active_task = null
-var current_region_data = null # NEW: Store full object
+var current_region_type = "TOWN" # Default
 
 # NAVIGATION MEMORY
 var selected_hero_id: int = -1
 var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
+
+func set_active_task(task_data):
+	active_task = task_data
+	task_updated.emit(active_task)
+	if active_task:
+		print("[STATE] Task Active: ", active_task.type)
+	else:
+		print("[STATE] Task Cleared (IDLE)")
 
 func set_user(user_data):
     if not user_data is Dictionary: return
