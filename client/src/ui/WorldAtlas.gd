@@ -45,6 +45,9 @@ func _setup_signals():
 	ServerConnector.task_completed.connect(_on_task_completed)
 
 func _spawn_map_elements():
+	# Clear existing
+	for child in landmarks_layer.get_children(): child.queue_free()
+	
 	for lm in GameState.FLAVOR_LANDMARKS:
 		var l = Label.new()
 		l.text = lm.name
@@ -62,6 +65,7 @@ func _center_on_player():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		cam.global_position = pos
+		print("[MAP] Initial Camera Snap to: ", pos)
 
 func _process(_delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
@@ -71,8 +75,8 @@ func _process(_delta):
 		follow_2d.progress_ratio = progress
 		cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 
-func _unhandled_input(event):
-	# Using _unhandled_input to ensure we don't drag while clicking UI buttons
+func _input(event):
+	# Using _input for global capture, but only if not on UI
 	if is_traveling: return 
 	
 	if event is InputEventMouseButton:
@@ -97,7 +101,8 @@ func _populate_pins(regions):
 	for r in regions:
 		var btn = Button.new()
 		btn.text = r.name
-		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0))
+		# FIX: Ensure position is handled as Vector2 correctly
+		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0)) - Vector2(100, 30) # Offset to center button
 		btn.custom_minimum_size = Vector2(200, 60)
 		btn.pressed.connect(_on_pin_clicked.bind(r))
 		pins_layer.add_child(btn)
@@ -114,7 +119,11 @@ func _on_pin_clicked(region):
 	info_panel.show()
 
 func _on_start_journey():
-	if !selected_region: return
+	# BUG FIX: Ensure user and selection exist before proceeding
+	if !GameState.current_user or !selected_region: 
+		print("[MAP_ERROR] Cannot start: Missing user or selection.")
+		return
+		
 	start_btn.disabled = true
 	ServerConnector.travel(GameState.current_user.id, selected_region.id)
 
@@ -123,17 +132,22 @@ func _start_cinematic_travel(task):
 	info_panel.hide()
 	path_group.show() 
 	
+	# BUG FIX: Robust casting for all Godot versions
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
 	
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
 	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
 	
+	print("[MAP] Building cinematic path from ", start_pos, " to ", end_pos)
+	
+	# Build the curve
 	var curve = Curve2D.new()
 	curve.add_point(start_pos)
 	curve.add_point(end_pos)
 	path_2d.curve = curve
 	
+	# Draw the line
 	line_2d.clear_points()
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
@@ -159,6 +173,8 @@ func _calculate_server_progress() -> float:
 
 func _on_task_completed(data):
 	if data.type == "TRAVEL":
+		# Ensure we don't switch scenes before the dot finishes if possible
+		# but for logic, we clear now
 		GameState.set_active_task(null)
 		GameState.current_user.currentRegion = data.targetRegionId
 		_route_by_type(data.targetRegionType)

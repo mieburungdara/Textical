@@ -42,6 +42,7 @@ rotates = false
 loop = false
 
 [node name="RedDot" type="Polygon2D" parent="MapLayer/PathGroup/Path2D/PathFollow2D"]
+z_index = 100
 color = Color(1, 0, 0, 1)
 polygon = PackedVector2Array(-25, -25, 25, -25, 25, 25, -25, 25)
 
