@@ -1,0 +1,37 @@
+{
+	"1": {
+		"name": "Oakhaven Hub",
+		"type": "TOWN",
+		"lore": "Oakhaven was founded 200 years ago by the legendary logger, Silas Elm.",
+		"history": "A peaceful sanctuary untouched by the Dark Grove's corruption.",
+		"tips": ["Tavern recovery is 10x faster than outside.", "Check the Quest Board daily for gold."]
+	},
+	"2": {
+		"name": "Iron Mine",
+		"type": "WILDERNESS",
+		"lore": "Deep beneath the earth lies the vein of Titan's Blood, also known as Iron.",
+		"history": "Abandoned during the Great Gem War, now reclaimed by scavengers.",
+		"tips": ["Gimli gets a gathering bonus in mines.", "Watch out for Cave Spiders in the deep."]
+	},
+	"3": {
+		"name": "Crystal Depths",
+		"type": "WILDERNESS",
+		"lore": "Where light itself crystallizes into Mana.",
+		"history": "The birthplace of the first Wizards.",
+		"tips": ["Mana Crystals are heavy but valuable.", "Light-trait heroes excel here."]
+	},
+	"4": {
+		"name": "Elm Forest",
+		"type": "WILDERNESS",
+		"lore": "A dense canopy where the trees whisper ancient secrets.",
+		"history": "Formerly the hunting grounds of the Solar Vanguard.",
+		"tips": ["Fire-trait skills are dangerous but effective here.", "Elm wood is perfect for bows."]
+	},
+	"5": {
+		"name": "Forbidden Grove",
+		"type": "WILDERNESS",
+		"lore": "A place where reality itself starts to fray at the edges.",
+		"history": "The epicentre of the corruption that ended the Age of Kings.",
+		"tips": ["Never travel here without a full team.", "The darkness drains vitality faster."]
+	}
+}

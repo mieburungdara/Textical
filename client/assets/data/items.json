@@ -1,0 +1,23 @@
+{
+	"2005": {
+		"name": "Iron Ingot",
+		"description": "A refined bar of iron. Heavy and cold.",
+		"category": "MATERIAL",
+		"rarity": "COMMON",
+		"icon": "res://assets/icons/items/iron_ingot.png"
+	},
+	"2010": {
+		"name": "Elm Log",
+		"description": "Sturdy wood from the Elm Forest.",
+		"category": "MATERIAL",
+		"rarity": "COMMON",
+		"icon": "res://assets/icons/items/elm_log.png"
+	},
+	"2011": {
+		"name": "Mana Crystal",
+		"description": "A glowing crystal pulsing with magical energy.",
+		"category": "MATERIAL",
+		"rarity": "UNCOMMON",
+		"icon": "res://assets/icons/items/mana_crystal.png"
+	}
+}

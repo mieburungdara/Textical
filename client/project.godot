@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.5", "Mobile")
 
 ServerConnector="*res://src/autoload/server_connector.gd"
 GameState="*res://src/autoload/game_state.gd"
+DataManager="*res://src/autoload/data_manager.gd"
 
 [display]
 

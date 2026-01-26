@@ -1,0 +1,14 @@
+{
+	"6001": {
+		"name": "Green Slime",
+		"description": "A jiggly nuisance found in damp places.",
+		"image": "res://assets/images/monsters/slime.png",
+		"roar_sfx": "res://assets/audio/sfx/slime_jump.wav"
+	},
+	"6002": {
+		"name": "Cave Spider",
+		"description": "Eight eyes watching from the dark.",
+		"image": "res://assets/images/monsters/spider.png",
+		"roar_sfx": "res://assets/audio/sfx/spider_hiss.wav"
+	}
+}

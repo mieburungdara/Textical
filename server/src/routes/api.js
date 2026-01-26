@@ -12,6 +12,10 @@ router.get('/user/:id/recipes', userController.getRecipes);
 router.get('/user/:id/formation', userController.getFormation);
 router.get('/user/:id/task', userController.getActiveTask);
 
+// --- ASSETS (SYNC SYSTEM) ---
+router.get('/assets/manifest', gameController.getManifest);
+router.get('/assets/raw/:category/:id', gameController.getRawAsset);
+
 // --- ACTIONS ---
 router.get('/regions', gameController.getAllRegions); // NEW
 router.get('/region/:id', gameController.getRegionDetails);

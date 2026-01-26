@@ -9,6 +9,24 @@ const vitalityService = require('../services/vitalityService');
 const formationService = require('../services/formationService');
 const prisma = require('../db'); // SHARED INSTANCE
 
+const assetService = require('../services/assetService');
+
+// --- ASSETS ---
+exports.getManifest = async (req, res) => {
+    try {
+        const manifest = await assetService.getManifest();
+        res.json(manifest);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+exports.getRawAsset = async (req, res) => {
+    try {
+        const { category, id } = req.params;
+        const data = await assetService.getRawAsset(category, id);
+        res.json(data);
+    } catch (e) { res.status(404).json({ error: e.message }); }
+};
+
 // --- TRAVEL ---
 exports.travel = async (req, res) => {
     try {

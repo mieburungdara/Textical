@@ -31,10 +31,17 @@ func _on_login_pressed():
     ServerConnector.login_with_password(username, password)
 
 func _on_login_success(user):
-    status_label.text = "Syncing world state..."
+    status_label.text = "Checking assets..."
     GameState.set_user(user)
     _save_credentials(username_input.text, password_input.text)
     
+    # Start Asset Sync
+    DataManager.sync_finished.connect(_on_sync_finished, CONNECT_ONE_SHOT)
+    DataManager.start_sync()
+
+func _on_sync_finished():
+    status_label.text = "Syncing world state..."
+    var user = GameState.current_user
     # Start Parallel Pre-loading
     ServerConnector.fetch_heroes(user.id)
     ServerConnector.fetch_inventory(user.id)
