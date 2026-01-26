@@ -11,6 +11,12 @@ var current_region_data = null
 var _last_clicked_button: Button = null
 
 func _ready():
+	# BUG FIX: Auto-redirect if a task is already running
+	if GameState.active_task:
+		if GameState.active_task.type == "TRAVEL":
+			get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
+			return
+
 	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldMapScreen.tscn"))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	ServerConnector.task_completed.connect(_on_task_completed)

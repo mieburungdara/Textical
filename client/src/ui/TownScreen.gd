@@ -10,6 +10,12 @@ extends Control
 @onready var map_btn = $Actions/MapButton
 
 func _ready():
+	# BUG FIX: Auto-redirect if a task is already running (Sequential Queue support)
+	if GameState.active_task:
+		if GameState.active_task.type == "TRAVEL":
+			get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
+			return
+
 	tavern_btn.pressed.connect(_on_tavern_pressed)
 	market_btn.pressed.connect(_on_market_pressed)
 	inventory_btn.pressed.connect(_on_inventory_pressed)

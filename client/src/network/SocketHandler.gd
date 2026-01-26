@@ -62,9 +62,9 @@ func _on_data(raw_data: String):
 				"task_completed": task_completed.emit(data)
 				"task_started": task_started.emit(data)
 	
-	elif raw_data.begins_with("2"): 
-		socket.send_text("3") 
-
+	elif raw_data.begins_with("2"): # PING
+		socket.send_text("3") # PONG
+		print("[SOCKET] Pong sent.")
 func authenticate(user_id: int):
 	_pending_user_id = user_id
 	# If we are already fully ready, send now
