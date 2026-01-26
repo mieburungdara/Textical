@@ -148,6 +148,10 @@ exports.getHeroProfile = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
     try {
         const userId = parseInt(req.params.id);
+        
+        // Sync vitality first
+        await vitalityService.syncUserVitality(userId);
+
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { 
@@ -157,20 +161,27 @@ exports.getUserProfile = async (req, res) => {
                     include: { targetRegion: true }
                 },
                 premiumTier: true,
-                region: true 
+                region: true // This is the RegionTemplate relation
             }
         });
         
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        // Accurate Recovery Metadata
+        // Build a robust activeTask object with clear type metadata
         const activeTask = user.taskQueue.length > 0 ? {
             ...user.taskQueue[0],
             targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN",
             targetRegionName: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.name : "Destination"
         } : null;
         
-        res.json({ ...user, activeTask });
+        // Ensure the current region's type is always accessible
+        const regionMetadata = user.region ? { type: user.region.type, name: user.region.name } : { type: "TOWN", name: "Unknown" };
+
+        res.json({ 
+            ...user, 
+            activeTask,
+            currentRegionData: regionMetadata // Explicit metadata for the client
+        });
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
