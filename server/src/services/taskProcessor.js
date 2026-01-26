@@ -41,7 +41,6 @@ class TaskProcessor {
 
     async _processFinishedTasks() {
         const now = new Date();
-        // BUG FIX: Include targetRegion to avoid N+1 query loop
         const finishedTasks = await prisma.taskQueue.findMany({
             where: { status: "RUNNING", finishesAt: { lte: now } },
             include: { targetRegion: true }
@@ -79,19 +78,14 @@ class TaskProcessor {
             if (user.taskQueue.length === 0) {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
-                    orderBy: { id: 'asc' },
-                    include: { originRegion: true }
+                    orderBy: { id: 'asc' }
                 });
 
                 if (nextTask) {
                     let durationSeconds = 5; 
 
-                    if (nextTask.type === "TRAVEL") {
-                        const conn = await prisma.regionConnection.findFirst({
-                            where: { originRegionId: user.currentRegion, targetRegionId: nextTask.targetRegionId }
-                        });
-                        durationSeconds = conn ? conn.travelTimeSeconds : 5;
-                    } else if (nextTask.type === "GATHERING") {
+                    // AUTHORITATIVE DURATION CALCULATION (DB-Based)
+                    if (nextTask.type === "GATHERING") {
                         const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
                         durationSeconds = res ? res.gatherTimeSeconds : 5;
                     } else if (nextTask.type === "CRAFTING") {
@@ -103,7 +97,7 @@ class TaskProcessor {
 
                     const now = new Date();
                     
-                    // BUG FIX: Atomic Promotion & Tavern Eviction for queued travels
+                    // BUG FIX: Atomic Promotion Transaction
                     await prisma.$transaction([
                         prisma.taskQueue.update({
                             where: { id: nextTask.id },
@@ -112,27 +106,13 @@ class TaskProcessor {
                                 startedAt: now, 
                                 finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) 
                             }
-                        }),
-                        ...(nextTask.type === "TRAVEL" ? [
-                            prisma.user.update({
-                                where: { id: user.id },
-                                data: { 
-                                    currentRegion: nextTask.targetRegionId,
-                                    isInTavern: false,
-                                    tavernEntryAt: null
-                                }
-                            })
-                        ] : [])
+                        })
                     ]);
-
-                    const region = nextTask.type === "TRAVEL" ? await prisma.regionTemplate.findUnique({ where: { id: nextTask.targetRegionId } }) : null;
 
                     socketService.emitToUser(user.id, "task_started", {
                         taskId: nextTask.id,
                         type: nextTask.type,
-                        duration: durationSeconds,
-                        targetRegionId: nextTask.targetRegionId,
-                        targetRegionType: region ? region.type : "TOWN"
+                        duration: durationSeconds
                     });
                 }
             }

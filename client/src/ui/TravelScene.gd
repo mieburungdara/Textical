@@ -12,12 +12,9 @@ var _is_changing_scene = false
 
 func _ready():
     _log("Scene Loaded. Monitoring signals...")
-    
-    # CONNECT SIGNALS
     if !ServerConnector.task_completed.is_connected(_on_task_completed):
         ServerConnector.task_completed.connect(_on_task_completed)
     
-    # NEW: Listen for next task starting (Queue support)
     if !ServerConnector.task_started.is_connected(_on_task_started):
         ServerConnector.task_started.connect(_on_task_started)
         
@@ -46,8 +43,7 @@ func _update_display():
     var task = GameState.active_task
     if task and task.get("type") == "TRAVEL":
         var tid = task.get("targetRegionId", -1)
-        if tid == -1 and task.has("targetRegion"):
-            tid = task.get("targetRegion", {}).get("id", -1)
+        if tid == -1 and task.has("targetRegion"): tid = task.get("targetRegion", {}).get("id", -1)
             
         _target_id = int(tid)
         _log("Active Task: TRAVEL to ID " + str(_target_id))

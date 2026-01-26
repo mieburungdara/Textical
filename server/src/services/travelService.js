@@ -24,69 +24,54 @@ class TravelService {
 
         if (!user) throw new Error("User not found");
         
-        const activeTask = user.taskQueue.length > 0 ? user.taskQueue[0] : null;
-        const activeCount = await prisma.taskQueue.count({
+        // BUG FIX: Disable Queuing for Travel
+        // Travel can only be started if there are ZERO running or pending tasks
+        const totalActiveTasks = await prisma.taskQueue.count({
             where: { userId, status: { in: ["RUNNING", "PENDING"] } }
         });
 
-        if (activeCount >= user.premiumTier.queueSlots) {
-            throw new Error(`Queue full (${activeCount}/${user.premiumTier.queueSlots} slots).`);
+        if (totalActiveTasks > 0) {
+            throw new Error("You cannot start a journey while busy with other actions.");
         }
 
-        let originId = user.currentRegion;
-        if (activeTask) {
-            originId = activeTask.targetRegionId || user.currentRegion;
-        }
-
-        if (originId === targetRegionId) throw new Error("You are already traveling to this destination.");
-
+        // Adjacency check (Always from current location)
         const connection = await prisma.regionConnection.findFirst({
-            where: { originRegionId: originId, targetRegionId: targetRegionId }
+            where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
         });
 
-        if (!connection) throw new Error(`No direct path exists from ${activeTask ? "previous destination" : "here"}.`);
+        if (!connection) throw new Error("No direct path exists from here.");
 
+        // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
-        const isFirstTask = activeCount === 0;
-        const status = isFirstTask ? "RUNNING" : "PENDING";
         const now = new Date();
         const duration = 5; 
-        const finishesAt = isFirstTask ? new Date(now.getTime() + (duration * 1000)) : null;
+        const finishesAt = new Date(now.getTime() + (duration * 1000));
 
-        // PREPARE UPDATES
-        const userUpdateData = {
-            vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
-            isInTavern: false,
-            tavernEntryAt: null
-        };
-
-        // If it's the FIRST task, migrate the user's region immediately
-        if (isFirstTask) {
-            userUpdateData.currentRegion = targetRegionId;
-        }
-
-        // EXECUTE ATOMIC TRANSACTION
-        const [updatedUser, newTask] = await prisma.$transaction([
+        // TRAVEL is always the FIRST and ONLY task
+        const operations = [
             prisma.user.update({
                 where: { id: userId },
-                data: userUpdateData
+                data: { 
+                    currentRegion: targetRegionId,
+                    vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
+                    isInTavern: false,
+                    tavernEntryAt: null
+                }
             }),
             prisma.taskQueue.create({
                 data: {
                     userId: userId,
                     type: "TRAVEL",
                     targetRegionId: targetRegionId,
-                    status: status,
-                    startedAt: isFirstTask ? now : null,
+                    status: "RUNNING", // Always RUNNING
+                    startedAt: now,
                     finishesAt: finishesAt
                 }
             })
-        ]);
-
-        return newTask;
+        ];
     }
 
     async completeTravel(_userId, taskId) {
