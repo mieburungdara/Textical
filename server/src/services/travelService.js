@@ -14,25 +14,33 @@ class TravelService {
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { 
-                taskQueue: true,
+                taskQueue: {
+                    where: { status: { in: ["RUNNING", "PENDING"] } },
+                    orderBy: { id: 'desc' },
+                    take: 1
+                },
                 premiumTier: true 
             }
         });
 
         if (!user) throw new Error("User not found");
         
-        // BUG FIX: Respect Premium Queue Slots
-        const activeCount = user.taskQueue.filter(t => t.status !== "COMPLETED").length;
+        // BUG FIX: Efficient Active Count & Last Task detection
+        const activeTask = user.taskQueue.length > 0 ? user.taskQueue[0] : null;
+        
+        // Use a separate count for queue limit validation
+        const activeCount = await prisma.taskQueue.count({
+            where: { userId, status: { in: ["RUNNING", "PENDING"] } }
+        });
+
         if (activeCount >= user.premiumTier.queueSlots) {
             throw new Error(`Queue full (${activeCount}/${user.premiumTier.queueSlots} slots).`);
         }
 
-        // BUG FIX: Validasi Jalur untuk Antrian (Tactical Queue Path Validation)
+        // BUG FIX: Tactical Queue Path Validation
         let originId = user.currentRegion;
-        if (activeCount > 0) {
-            // If there's a queue, the origin is the destination of the LAST task in the queue
-            const lastTask = user.taskQueue.sort((a, b) => b.id - a.id)[0];
-            originId = lastTask.targetRegionId || user.currentRegion;
+        if (activeTask) {
+            originId = activeTask.targetRegionId || user.currentRegion;
         }
 
         if (originId === targetRegionId) throw new Error("You are already traveling to this destination.");
