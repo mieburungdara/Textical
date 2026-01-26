@@ -23,7 +23,7 @@ extends Control
 var min_zoom = 0.1
 var max_zoom = 3.0
 var zoom_speed = 0.1
-var target_zoom = 0.5 # Zoom out a bit initially
+var target_zoom = 0.5 
 var is_dragging = false
 
 # STATE
@@ -62,7 +62,6 @@ func _center_on_player():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		cam.global_position = pos
-		print("[MAP] Snapping camera to: ", pos)
 
 func _process(_delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
@@ -72,8 +71,8 @@ func _process(_delta):
 		follow_2d.progress_ratio = progress
 		cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 
-func _gui_input(event):
-	# Using _gui_input on the root Control to capture all events
+func _unhandled_input(event):
+	# Using _unhandled_input to ensure we don't drag while clicking UI buttons
 	if is_traveling: return 
 	
 	if event is InputEventMouseButton:
@@ -85,7 +84,6 @@ func _gui_input(event):
 			target_zoom = clamp(target_zoom - zoom_speed, min_zoom, max_zoom)
 
 	if event is InputEventMouseMotion and is_dragging:
-		# Directly update camera position based on relative movement
 		cam.global_position -= event.relative / cam.zoom
 
 func _on_request_completed(endpoint, data):
@@ -123,15 +121,13 @@ func _on_start_journey():
 func _start_cinematic_travel(task):
 	is_traveling = true
 	info_panel.hide()
-	path_group.show() # Make sure the container is visible!
+	path_group.show() 
 	
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
 	
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
 	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
-	
-	print("[MAP] Building path from ", start_pos, " to ", end_pos)
 	
 	var curve = Curve2D.new()
 	curve.add_point(start_pos)
