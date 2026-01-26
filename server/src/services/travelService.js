@@ -63,12 +63,13 @@ class TravelService {
                 data: {
                     userId: userId,
                     type: "TRAVEL",
+                    originRegionId: user.currentRegion, // NEW: Store starting point
                     targetRegionId: targetRegionId,
                     status: "RUNNING",
                     startedAt: now,
                     finishesAt: finishesAt
                 },
-                include: { targetRegion: true } // Ensure full metadata is included
+                include: { targetRegion: true } 
             })
         ];
 
