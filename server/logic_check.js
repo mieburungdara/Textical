@@ -33,7 +33,8 @@ async function runLogicAudit() {
         console.log("\n[3/6] Testing Travel State Machine...");
         // Reset user to Town
         await prisma.user.update({ where: { id: user.id }, data: { currentRegion: 1 } });
-        const travelTask = await travelService.startTravel(user.id, 2); // To Woods
+        const result = await travelService.startTravel(user.id, 2); // To Woods
+        const travelTask = result[1]; // Get the Task object from transaction array
         if (travelTask.status !== "RUNNING") throw new Error("Travel failed to start.");
         console.log(`✅ Travel started. Finishes at: ${travelTask.finishesAt}`);
 

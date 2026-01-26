@@ -72,6 +72,8 @@ class TravelService {
                 }
             })
         ];
+
+        return await prisma.$transaction(operations);
     }
 
     async completeTravel(_userId, taskId) {
