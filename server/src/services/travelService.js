@@ -42,7 +42,9 @@ class TravelService {
                 where: { id: userId },
                 data: { 
                     currentRegion: targetRegionId,
-                    vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST }
+                    vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
+                    isInTavern: false, // NEW: Force exit tavern on travel
+                    tavernEntryAt: null // NEW: Clear entry time
                 }
             }),
             prisma.taskQueue.create({

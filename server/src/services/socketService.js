@@ -14,7 +14,8 @@ class SocketService {
         this.io.on("connection", (socket) => {
             console.log(`[SOCKET] New connection: ${socket.id}`);
 
-            socket.on("authenticate", (userId) => {
+            socket.on("authenticate", (rawUserId) => {
+                const userId = parseInt(rawUserId); // BUG FIX: Force integer key
                 this.userSockets.set(userId, socket.id);
                 console.log(`[SOCKET] User ${userId} authenticated on socket ${socket.id}`);
             });
