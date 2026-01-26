@@ -125,11 +125,14 @@ class TaskProcessor {
                         ] : [])
                     ]);
 
+                    const region = nextTask.type === "TRAVEL" ? await prisma.regionTemplate.findUnique({ where: { id: nextTask.targetRegionId } }) : null;
+
                     socketService.emitToUser(user.id, "task_started", {
                         taskId: nextTask.id,
                         type: nextTask.type,
                         duration: durationSeconds,
-                        targetRegionId: nextTask.targetRegionId
+                        targetRegionId: nextTask.targetRegionId,
+                        targetRegionType: region ? region.type : "TOWN"
                     });
                 }
             }

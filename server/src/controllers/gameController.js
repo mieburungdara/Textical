@@ -163,6 +163,7 @@ exports.getUserProfile = async (req, res) => {
         
         if (!user) return res.status(404).json({ error: "User not found" });
 
+        // Accurate Recovery Metadata
         const activeTask = user.taskQueue.length > 0 ? {
             ...user.taskQueue[0],
             targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN",

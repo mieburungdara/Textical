@@ -31,7 +31,7 @@ This document tracks the physical progress of the Textical RPG engine.
 | | Stability Patch | ✅ COMPLETE | Defensive state management and UI integrity fixes. |
 | **VI: Advanced** | Real-time Integration | ✅ COMPLETE | Server-side Socket.io bridge for instant task updates. |
 | | Visual Effects | ✅ COMPLETE | Particle bursts and tween animations for combat/gathering. |
-| | Technical Audit | ✅ COMPLETE | Fixed DB connection leaks, queue adjacency, and recovery persistence. |
+| | Technical Audit | ✅ COMPLETE | Fixed race conditions, hardened adjacency validation, and optimized payloads. |
 | | Breeding System | ⏳ **NEXT** | Genetics-based hero generation and skill inheritance. |
 | | Guild Territory | ⏳ PENDING | Mechanics for region capture and taxation. |
 

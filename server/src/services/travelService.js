@@ -45,32 +45,30 @@ class TravelService {
 
         if (originId === targetRegionId) throw new Error("You are already traveling to this destination.");
 
+        // 2. CONNECTION VERIFICATION (Fresh check)
         const connection = await prisma.regionConnection.findFirst({
             where: { originRegionId: originId, targetRegionId: targetRegionId }
         });
 
-        if (!connection) throw new Error(`No direct path exists from ${activeCount > 0 ? "previous destination" : "here"}.`);
+        if (!connection) throw new Error(`No direct path exists from ${activeTask ? "previous destination" : "here"}.`);
 
         // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
-        const freshUser = await prisma.user.findUnique({ where: { id: userId }, include: { taskQueue: true, premiumTier: true } });
+        const freshUser = await prisma.user.findUnique({ where: { id: userId }, include: { taskQueue: { where: { status: { in: ["RUNNING", "PENDING"] } } } } });
         
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
-        // BUG FIX: Re-verify adjacency using FRESH data to prevent race conditions
-        let freshOriginId = freshUser.currentRegion;
-        const freshActiveTask = freshUser.taskQueue.find(t => t.status !== "COMPLETED");
-        if (freshActiveTask) {
-            freshOriginId = freshActiveTask.targetRegionId || freshUser.currentRegion;
+        // RE-VERIFY ADJACENCY (Final Guard)
+        const activeCountFinal = freshUser.taskQueue.length;
+        let finalOriginId = freshUser.currentRegion;
+        if (activeCountFinal > 0) {
+            const lastTask = freshUser.taskQueue.sort((a, b) => b.id - a.id)[0];
+            finalOriginId = lastTask.targetRegionId || freshUser.currentRegion;
         }
 
-        const connection = await prisma.regionConnection.findFirst({
-            where: { originRegionId: freshOriginId, targetRegionId: targetRegionId }
-        });
+        if (finalOriginId !== originId) throw new Error("World state changed. Please try again.");
 
-        if (!connection) throw new Error(`No direct path exists from ${freshActiveTask ? "previous destination" : "here"}.`);
-
-        const isFirstTask = activeCount === 0;
+        const isFirstTask = activeCountFinal === 0;
         const status = isFirstTask ? "RUNNING" : "PENDING";
         const now = new Date();
         const duration = 5; 

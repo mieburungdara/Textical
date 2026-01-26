@@ -11,28 +11,29 @@ var _target_id = -1
 var _is_changing_scene = false
 
 func _ready():
-    _log("Scene Loaded. Monitoring signals...")
-    if !ServerConnector.task_completed.is_connected(_on_task_completed):
-        ServerConnector.task_completed.connect(_on_task_completed)
-    if !ServerConnector.request_completed.is_connected(_on_request_completed):
-        ServerConnector.request_completed.connect(_on_request_completed)
-        
-    _update_display()
+	_log("Scene Loaded. Monitoring signals...")
+	if !ServerConnector.task_completed.is_connected(_on_task_completed):
+		ServerConnector.task_completed.connect(_on_task_completed)
+	if !ServerConnector.request_completed.is_connected(_on_request_completed):
+		ServerConnector.request_completed.connect(_on_request_completed)
+		
+	_update_display()
 
 func _log(msg: String):
-    var time = Time.get_time_string_from_system()
-    debug_log.append_text("[%s] %s\n" % [time, msg])
-    print("[TRAVEL_DEBUG] ", msg)
+	var time = Time.get_time_string_from_system()
+	debug_log.append_text("[%s] %s\n" % [time, msg])
+	print("[TRAVEL_DEBUG] ", msg)
 
 func _process(delta):
-    _update_timer()
-    
-    if _is_waiting_for_socket:
-        _fallback_timer += delta
-        if _fallback_timer > 3.0: 
-            _log("Socket Timeout (3s). Triggering Force Sync...")
-            _fallback_timer = 0.0 
-            _force_sync()
+	if _is_changing_scene: return
+	_update_timer()
+	
+	if _is_waiting_for_socket:
+		_fallback_timer += delta
+		if _fallback_timer > 3.0: 
+			_log("Socket Timeout (3s). Triggering Force Sync...")
+			_fallback_timer = 0.0 
+			_force_sync()
 
 func _update_display():
 	var task = GameState.active_task
@@ -52,37 +53,38 @@ func _update_display():
 func _update_timer():
 	var task = GameState.active_task
 	if !task or task.get("status", "") != "RUNNING" or task.get("type") != "TRAVEL": return    
-    var finishes_at = task.get("finishesAt", "")
-    var started_at = task.get("startedAt", "")
-    if finishes_at == "" or started_at == "": return
-    
-    var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
-    var start_unix = Time.get_unix_time_from_datetime_string(started_at)
-    var now_unix = Time.get_unix_time_from_system()
-    
-    var remaining = max(0, finish_unix - now_unix)
-    var total = finish_unix - start_unix
-    
-    if total > 0:
-        progress_bar.value = ((total - remaining) / total) * 100
-    
-    if remaining <= 0 and !_is_waiting_for_socket:
-        status_label.text = "Arriving..."
-        _log("Timer reached 0. Awaiting Server Confirmation...")
-        _is_waiting_for_socket = true
-        _fallback_timer = 0.0
+	
+	var finishes_at = task.get("finishesAt", "")
+	var started_at = task.get("startedAt", "")
+	if finishes_at == "" or started_at == "": return
+	
+	var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
+	var start_unix = Time.get_unix_time_from_datetime_string(started_at)
+	var now_unix = Time.get_unix_time_from_system()
+	
+	var remaining = max(0, finish_unix - now_unix)
+	var total = finish_unix - start_unix
+	
+	if total > 0:
+		progress_bar.value = ((total - remaining) / total) * 100
+	
+	if remaining <= 0 and !_is_waiting_for_socket:
+		status_label.text = "Arriving..."
+		_log("Timer reached 0. Awaiting Server Confirmation...")
+		_is_waiting_for_socket = true
+		_fallback_timer = 0.0
 
 func _force_sync():
-    _log("Syncing Profile with Server...")
-    if GameState.current_user:
-        ServerConnector.fetch_profile(GameState.current_user.id)
+	_log("Syncing Profile with Server...")
+	if GameState.current_user:
+		ServerConnector.fetch_profile(GameState.current_user.id)
 
 func _on_task_completed(data):
-    _log("SOCKET SIGNAL RECEIVED!")
-    if data.type == "TRAVEL":
-        _log("Journey Finished. Unlocking UI...")
-        GameState.set_active_task(null)
-        _route_by_type(data.get("targetRegionType", "TOWN"))
+	_log("SOCKET SIGNAL RECEIVED!")
+	if data.type == "TRAVEL":
+		_log("Journey Finished. Unlocking UI...")
+		GameState.set_active_task(null)
+		_route_by_type(data.get("targetRegionType", "TOWN"))
 
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/user/"):
@@ -95,7 +97,6 @@ func _on_request_completed(endpoint, data):
 		
 		if current_reg == _target_id or active_task_on_server == null:
 			_log("Location Confirmed. Discovering region type...")
-			# NEW: Dynamic Discovery from nested profile or direct fetch
 			var r_type = "TOWN"
 			if data.has("region") and data.region.has("type"):
 				r_type = data.region.type
@@ -105,6 +106,7 @@ func _on_request_completed(endpoint, data):
 			_route_by_type(r_type)
 		else:
 			_log("Server still reports task RUNNING. Waiting...")
+
 func _route_by_type(r_type: String):
 	if _is_changing_scene: return
 	_is_changing_scene = true
