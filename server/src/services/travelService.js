@@ -53,8 +53,22 @@ class TravelService {
 
         // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
-        const freshUser = await prisma.user.findUnique({ where: { id: userId } });
+        const freshUser = await prisma.user.findUnique({ where: { id: userId }, include: { taskQueue: true, premiumTier: true } });
+        
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
+
+        // BUG FIX: Re-verify adjacency using FRESH data to prevent race conditions
+        let freshOriginId = freshUser.currentRegion;
+        const freshActiveTask = freshUser.taskQueue.find(t => t.status !== "COMPLETED");
+        if (freshActiveTask) {
+            freshOriginId = freshActiveTask.targetRegionId || freshUser.currentRegion;
+        }
+
+        const connection = await prisma.regionConnection.findFirst({
+            where: { originRegionId: freshOriginId, targetRegionId: targetRegionId }
+        });
+
+        if (!connection) throw new Error(`No direct path exists from ${freshActiveTask ? "previous destination" : "here"}.`);
 
         const isFirstTask = activeCount === 0;
         const status = isFirstTask ? "RUNNING" : "PENDING";
