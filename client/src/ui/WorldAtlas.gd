@@ -1,0 +1,169 @@
+extends Control
+
+# NODES
+@onready var cam = $Camera2D
+@onready var pins_layer = $MapLayer/Pins
+@onready var landmarks_layer = $MapLayer/Landmarks
+@onready var info_panel = $UI/InfoPanel
+@onready var start_btn = $UI/InfoPanel/Margin/VBox/HBox/StartBtn
+@onready var close_btn = $UI/InfoPanel/Margin/VBox/HBox/CloseBtn
+
+# UI ELEMENTS
+@onready var name_label = $UI/InfoPanel/Margin/VBox/RegionName
+@onready var lore_label = $UI/InfoPanel/Margin/VBox/LoreLabel
+@onready var tips_label = $UI/InfoPanel/Margin/VBox/TipsLabel
+
+# PATH NODES
+@onready var path_2d = $MapLayer/Path2D
+@onready var line_2d = $MapLayer/Path2D/Line2D
+@onready var follow_2d = $MapLayer/Path2D/PathFollow2D
+
+# CAMERA VARS
+var min_zoom = 0.2
+var max_zoom = 2.0
+var zoom_speed = 0.1
+var target_zoom = 1.0
+var is_dragging = false
+
+# STATE
+var selected_region = null
+var is_traveling = false
+
+func _ready():
+	_setup_signals()
+	_spawn_map_elements()
+	_center_on_player()
+	
+	# Initial UI State
+	info_panel.hide()
+	path_2d.hide()
+
+func _setup_signals():
+	close_btn.pressed.connect(func(): info_panel.hide())
+	start_btn.pressed.connect(_on_start_journey)
+	ServerConnector.request_completed.connect(_on_request_completed)
+	ServerConnector.task_completed.connect(_on_task_completed)
+
+func _spawn_map_elements():
+	# 1. Spawn Flavor Landmarks
+	for lm in GameState.FLAVOR_LANDMARKS:
+		var l = Label.new()
+		l.text = lm.name
+		l.position = lm.pos
+		l.add_theme_color_override("font_color", Color(0.4, 0.3, 0.2))
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		landmarks_layer.add_child(l)
+	
+	# 2. Fetch regions to spawn Pins
+	ServerConnector.fetch_all_regions()
+
+func _center_on_player():
+	if GameState.current_user:
+		var rid = GameState.current_user.get("currentRegion", 1)
+		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+		cam.position = pos
+
+func _process(_delta):
+	# Handle Smooth Zoom
+	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
+	
+	# Handle Follow during travel
+	if is_traveling:
+		follow_2d.progress_ratio = _calculate_server_progress()
+		cam.position = follow_2d.global_position
+
+func _input(event):
+	if is_traveling: return # Lock camera during cinematic travel
+	
+	# PANNING (Dragging)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			is_dragging = event.pressed
+		
+		# ZOOMING
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			target_zoom = clamp(target_zoom + zoom_speed, min_zoom, max_zoom)
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			target_zoom = clamp(target_zoom - zoom_speed, min_zoom, max_zoom)
+
+	if event is InputEventMouseMotion and is_dragging:
+		cam.position -= event.relative / cam.zoom
+
+func _on_request_completed(endpoint, data):
+	if endpoint.contains("/regions"):
+		_populate_pins(data)
+	elif endpoint.contains("/action/travel"):
+		_start_cinematic_travel(data)
+
+func _populate_pins(regions):
+	for child in pins_layer.get_children(): child.queue_free()
+	for r in regions:
+		var btn = Button.new()
+		btn.text = r.name
+		btn.position = GameState.REGION_POSITIONS.get(r.id, Vector2(0,0))
+		btn.custom_minimum_size = Vector2(120, 40)
+		btn.pressed.connect(_on_pin_clicked.bind(r))
+		pins_layer.add_child(btn)
+
+func _on_pin_clicked(region):
+	if is_traveling: return
+	selected_region = region
+	name_label.text = region.name
+	
+	var meta = JSON.parse_string(region.get("metadata", "{}"))
+	if meta is Dictionary:
+		lore_label.text = meta.get("lore", "Exploring this region...")
+		var tips = meta.get("tips", ["Stay safe."])
+		tips_label.text = "TIP: " + tips[0]
+	
+	info_panel.show()
+
+func _on_start_journey():
+	if !selected_region: return
+	start_btn.disabled = true
+	ServerConnector.travel(GameState.current_user.id, selected_region.id)
+
+func _start_cinematic_travel(task):
+	is_traveling = true
+	info_panel.hide()
+	path_2d.show()
+	
+	# Build Path
+	var start_pos = GameState.REGION_POSITIONS.get(int(task.originRegionId), Vector2(2500, 2500))
+	var end_pos = GameState.REGION_POSITIONS.get(int(task.targetRegionId), Vector2(2500, 2500))
+	
+	var curve = Curve2D.new()
+	curve.add_point(start_pos)
+	curve.add_point(end_pos)
+	path_2d.curve = curve
+	
+	line_2d.clear_points()
+	line_2d.add_point(start_pos)
+	line_2d.add_point(end_pos)
+	
+	# GameState update
+	GameState.set_active_task(task)
+
+func _calculate_server_progress() -> float:
+	var task = GameState.active_task
+	if !task or task.status != "RUNNING": return 1.0
+	
+	var finish_unix = Time.get_unix_time_from_datetime_string(task.finishesAt)
+	var start_unix = Time.get_unix_time_from_datetime_string(task.startedAt)
+	var now_unix = Time.get_unix_time_from_system()
+	
+	var remaining = max(0, finish_unix - now_unix)
+	var total = finish_unix - start_unix
+	return (total - remaining) / total if total > 0 else 1.0
+
+func _on_task_completed(data):
+	if data.type == "TRAVEL":
+		is_traveling = false
+		GameState.set_active_task(null)
+		GameState.current_user.currentRegion = data.targetRegionId
+		# Transition out of Atlas
+		_route_by_type(data.targetRegionType)
+
+func _route_by_type(r_type):
+	if r_type == "TOWN": get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
+	else: get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

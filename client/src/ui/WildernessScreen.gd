@@ -17,7 +17,7 @@ func _ready():
 			get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 			return
 
-	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldMapScreen.tscn"))
+	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn"))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	ServerConnector.task_completed.connect(_on_task_completed)
 	

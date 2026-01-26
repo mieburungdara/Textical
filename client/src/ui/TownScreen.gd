@@ -40,7 +40,7 @@ func _on_inventory_pressed(): get_tree().change_scene_to_file("res://src/ui/Inve
 func _on_quest_pressed(): get_tree().change_scene_to_file("res://src/ui/QuestScreen.tscn")
 func _on_crafting_pressed(): get_tree().change_scene_to_file("res://src/ui/CraftingScreen.tscn")
 func _on_formation_pressed(): get_tree().change_scene_to_file("res://src/ui/FormationScreen.tscn")
-func _on_map_pressed(): get_tree().change_scene_to_file("res://src/ui/WorldMapScreen.tscn")
+func _on_map_pressed(): get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 
 func _on_hero_pressed():
 	if GameState.current_heroes.size() > 0:
