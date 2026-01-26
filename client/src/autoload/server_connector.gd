@@ -9,6 +9,8 @@ signal error_occurred(endpoint, message)
 signal task_completed(data)
 signal task_started(data)
 
+var base_url = "http://localhost:3000/api"
+
 var auth: AuthHandler
 var world: WorldHandler
 var tavern: TavernHandler

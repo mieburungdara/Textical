@@ -3,6 +3,10 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const gameController = require('../controllers/gameController');
 
+// --- ASSETS (SYNC SYSTEM) - HIGH PRIORITY ---
+router.get('/assets/manifest', gameController.getManifest);
+router.get('/assets/raw/:category/:id', gameController.getRawAsset);
+
 // --- USER ---
 router.post('/auth/login', userController.login);
 router.get('/user/:id', gameController.getUserProfile);
@@ -12,12 +16,8 @@ router.get('/user/:id/recipes', userController.getRecipes);
 router.get('/user/:id/formation', userController.getFormation);
 router.get('/user/:id/task', userController.getActiveTask);
 
-// --- ASSETS (SYNC SYSTEM) ---
-router.get('/assets/manifest', gameController.getManifest);
-router.get('/assets/raw/:category/:id', gameController.getRawAsset);
-
 // --- ACTIONS ---
-router.get('/regions', gameController.getAllRegions); // NEW
+router.get('/regions', gameController.getAllRegions);
 router.get('/region/:id', gameController.getRegionDetails);
 router.post('/action/travel', gameController.travel);
 router.post('/action/gather', gameController.gather);

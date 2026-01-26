@@ -121,10 +121,10 @@ func _on_pin_clicked(region):
     if is_traveling: return
     selected_region = region
     
-    # USE LOCAL DATA
-    var local_data = DataManager.get_region(region.id)
-    name_label.text = local_data.name
-    lore_label.text = local_data.lore
+        # USE LOCAL DATA
+        var rid = int(str(region.id).to_float())
+        var local_data = DataManager.get_region(rid)
+        name_label.text = local_data.name    lore_label.text = local_data.lore
     var tips = local_data.get("tips", ["Stay safe."])
     tips_label.text = "TIP: " + tips[0]
     
