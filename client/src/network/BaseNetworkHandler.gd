@@ -13,7 +13,6 @@ func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}
 	http.request_completed.connect(func(result, response_code, headers, response_body): 
 		_on_request_completed(http, endpoint, result, response_code, headers, response_body)
 	)
-	
 	var url = base_url + endpoint
 	var headers = ["Content-Type: application/json"]
 	var json_str = JSON.stringify(body) if not body.is_empty() else ""

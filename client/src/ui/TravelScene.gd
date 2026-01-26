@@ -18,15 +18,14 @@ func _setup_scene():
     if task and task.get("type") == "TRAVEL":
         _log("Incoming Task Data: " + str(task))
         _target_id = int(task.get("targetRegionId", -1))        
-    # Metadata Capture
-    if task.has("targetRegion"):
-        var tr = task.get("targetRegion", {})
-        dest_name.text = tr.get("name", "Unknown Region")
-        _target_type = tr.get("type", "TOWN")
-        
-        # Parse Lore/Tips/History from metadata JSON string
-        var meta_str = tr.get("metadata", "{}")
-        var meta = JSON.parse_string(meta_str)
+    		# Metadata Capture
+    		if task.has("targetRegion"):
+    			var region_template = task.get("targetRegion", {})
+    			dest_name.text = region_template.get("name", "Unknown Region")
+    			_target_type = region_template.get("type", "TOWN")
+    			
+    			# Parse Lore/Tips/History from metadata JSON string
+    			var meta_str = region_template.get("metadata", "{}")        var meta = JSON.parse_string(meta_str)
         if meta is Dictionary:
             lore_label.text = meta.get("lore", "No lore recorded for this place.")
             history_label.text = meta.get("history", "History has forgotten this land.")
