@@ -17,7 +17,6 @@ extends Control
 @onready var path_2d = $MapLayer/Path2D
 @onready var line_2d = $MapLayer/Path2D/Line2D
 @onready var follow_2d = $MapLayer/Path2D/PathFollow2D
-@onready var red_dot = $MapLayer/Path2D/PathFollow2D/RedDot
 
 # CAMERA VARS
 var min_zoom = 0.2
@@ -35,13 +34,8 @@ func _ready():
 	_spawn_map_elements()
 	_center_on_player()
 	
-	# Initial UI State
 	info_panel.hide()
 	path_2d.hide()
-	
-	# BUG FIX: Ensure RedDot is visible above paper
-	if red_dot:
-		red_dot.z_index = 10 
 
 func _setup_signals():
 	close_btn.pressed.connect(func(): info_panel.hide())
@@ -50,16 +44,15 @@ func _setup_signals():
 	ServerConnector.task_completed.connect(_on_task_completed)
 
 func _spawn_map_elements():
-	# 1. Spawn Flavor Landmarks
 	for lm in GameState.FLAVOR_LANDMARKS:
 		var l = Label.new()
 		l.text = lm.name
 		l.position = lm.pos
 		l.add_theme_color_override("font_color", Color(0.4, 0.3, 0.2))
+		l.add_theme_font_size_override("font_size", 24)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		landmarks_layer.add_child(l)
 	
-	# 2. Fetch regions to spawn Pins
 	ServerConnector.fetch_all_regions()
 
 func _center_on_player():
@@ -68,27 +61,24 @@ func _center_on_player():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		cam.position = pos
+		print("[MAP] Centered on Region: ", rid, " at ", pos)
 
 func _process(_delta):
-	# Handle Smooth Zoom
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
 	
-	# Handle Follow during travel
 	if is_traveling:
 		var progress = _calculate_server_progress()
 		follow_2d.progress_ratio = progress
-		# Smooth camera follow
 		cam.position = cam.position.lerp(follow_2d.global_position, 0.1)
+		if progress >= 1.0:
+			is_traveling = false # Ready for arrival switch
 
 func _input(event):
 	if is_traveling: return 
 	
-	# PANNING (Dragging)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			is_dragging = event.pressed
-		
-		# ZOOMING
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			target_zoom = clamp(target_zoom + zoom_speed, min_zoom, max_zoom)
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
@@ -109,7 +99,7 @@ func _populate_pins(regions):
 		var btn = Button.new()
 		btn.text = r.name
 		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0))
-		btn.custom_minimum_size = Vector2(120, 40)
+		btn.custom_minimum_size = Vector2(150, 50)
 		btn.pressed.connect(_on_pin_clicked.bind(r))
 		pins_layer.add_child(btn)
 
@@ -117,13 +107,11 @@ func _on_pin_clicked(region):
 	if is_traveling: return
 	selected_region = region
 	name_label.text = region.name
-	
 	var meta = JSON.parse_string(region.get("metadata", "{}"))
 	if meta is Dictionary:
 		lore_label.text = meta.get("lore", "Exploring this region...")
 		var tips = meta.get("tips", ["Stay safe."])
 		tips_label.text = "TIP: " + tips[0]
-	
 	info_panel.show()
 
 func _on_start_journey():
@@ -136,10 +124,8 @@ func _start_cinematic_travel(task):
 	info_panel.hide()
 	path_2d.show()
 	
-	# BUG FIX: Safe ID Casting
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
-	
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
 	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
 	
@@ -152,32 +138,23 @@ func _start_cinematic_travel(task):
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
 	
-	# GameState update
 	GameState.set_active_task(task)
 
 func _calculate_server_progress() -> float:
 	var task = GameState.active_task
 	if !task or task.get("status", "") != "RUNNING": return 1.0
-	
-	var finishes_at = task.get("finishesAt", "")
-	var started_at = task.get("startedAt", "")
-	if finishes_at == "" or started_at == "": return 0.0
-	
-	var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
-	var start_unix = Time.get_unix_time_from_datetime_string(started_at)
+	var finish_unix = Time.get_unix_time_from_datetime_string(task.finishesAt)
+	var start_unix = Time.get_unix_time_from_datetime_string(task.startedAt)
 	var now_unix = Time.get_unix_time_from_system()
-	
 	var remaining = max(0, finish_unix - now_unix)
 	var total = finish_unix - start_unix
 	return (total - remaining) / total if total > 0 else 1.0
 
 func _on_task_completed(data):
 	if data.type == "TRAVEL":
-		is_traveling = false
 		GameState.set_active_task(null)
 		GameState.current_user.currentRegion = data.targetRegionId
-		# Transition out of Atlas
-		_route_by_type(data.get("targetRegionType", "TOWN"))
+		_route_by_type(data.targetRegionType)
 
 func _route_by_type(r_type):
 	if r_type == "TOWN": get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")

@@ -28,27 +28,24 @@ color = Color(0.85, 0.75, 0.55, 1)
 [node name="Path2D" type="Path2D" parent="MapLayer"]
 
 [node name="Line2D" type="Line2D" parent="MapLayer/Path2D"]
-width = 10.0
+z_index = 15
+width = 12.0
 default_color = Color(0.8, 0.2, 0.2, 0.6)
 texture_mode = 1
 begin_cap_mode = 2
 end_cap_mode = 2
 
 [node name="PathFollow2D" type="PathFollow2D" parent="MapLayer/Path2D"]
+z_index = 20
 rotates = false
 loop = false
 
-[node name="RedDot" type="ColorRect" parent="MapLayer/Path2D/PathFollow2D"]
-z_index = 20
-custom_minimum_size = Vector2(40, 40)
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
-color = Color(0.8, 0, 0, 1)
+[node name="RedDot" type="Polygon2D" parent="MapLayer/Path2D/PathFollow2D"]
+color = Color(1, 0, 0, 1)
+polygon = PackedVector2Array(-20, -20, 20, -20, 20, 20, -20, 20)
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(2500, 4500)
+position = Vector2(2500, 2500)
 limit_left = 0
 limit_top = 0
 limit_right = 5000
