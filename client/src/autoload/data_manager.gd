@@ -19,11 +19,19 @@ func _ensure_dirs():
 
 func start_sync():
 	print("[SYNC] Checking for updates...")
-	ServerConnector.request_completed.connect(_on_manifest_received, CONNECT_ONE_SHOT)
+	# Use a one-shot connection to prevent multiple triggers
+	if !ServerConnector.request_completed.is_connected(_on_manifest_received):
+		ServerConnector.request_completed.connect(_on_manifest_received)
+	
 	ServerConnector._send_get("/assets/manifest")
 
 func _on_manifest_received(endpoint, manifest):
 	if !endpoint.contains("/assets/manifest"): return
+	
+	# Disconnect after receiving manifest
+	if ServerConnector.request_completed.is_connected(_on_manifest_received):
+		ServerConnector.request_completed.disconnect(_on_manifest_received)
+	
 	if !manifest is Dictionary:
 		print("[SYNC] Error: Manifest is not a dictionary.")
 		sync_finished.emit()
@@ -66,8 +74,9 @@ func _process_next_in_queue():
 func _on_asset_downloaded(result, code, body, save_path):
 	if result == OK and code == 200:
 		var file = FileAccess.open(save_path, FileAccess.WRITE)
-		file.store_string(body.get_string_from_utf8())
-		file.close()
+		if file:
+			file.store_string(body.get_string_from_utf8())
+			file.close()
 
 # --- DATA ACCESS ---
 

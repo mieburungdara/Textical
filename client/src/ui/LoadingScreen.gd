@@ -10,9 +10,15 @@ func _ready():
 	DataManager.sync_progress.connect(_on_sync_progress)
 	DataManager.sync_finished.connect(_on_sync_finished)
 	
+	# Global error listener
+	ServerConnector.error_occurred.connect(_on_error)
+	
 	# Small delay to ensure everything is ready
 	await get_tree().create_timer(1.0).timeout
 	
+	_start_patching()
+
+func _start_patching():
 	status_label.text = "Checking for updates..."
 	DataManager.start_sync()
 
@@ -28,3 +34,10 @@ func _on_sync_finished():
 	
 	# Transition to Login
 	get_tree().change_scene_to_file("res://src/ui/LoginScreen.tscn")
+
+func _on_error(endpoint, message):
+	if "assets" in endpoint:
+		status_label.text = "Error updating assets: " + message
+		# Allow retry after delay
+		await get_tree().create_timer(3.0).timeout
+		_start_patching()
