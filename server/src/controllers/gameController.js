@@ -153,18 +153,21 @@ exports.getUserProfile = async (req, res) => {
             where: { id: userId },
             include: { 
                 inventory: { include: { template: true } },
-                taskQueue: { where: { status: "RUNNING" } },
+                taskQueue: { 
+                    where: { status: "RUNNING" },
+                    include: { targetRegion: true } // Include destination metadata
+                },
                 premiumTier: true,
-                region: true // NEW: Include the physical region object
+                region: true 
             }
         });
         await _prisma.$disconnect();
         
-        // Flatten taskQueue to activeTask consistently
+        // Consistent Flattening with Enriched Metadata
         const activeTask = user.taskQueue.length > 0 ? {
             ...user.taskQueue[0],
-            targetRegionId: user.taskQueue[0].targetRegionId,
-            targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN"
+            targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN",
+            targetRegionName: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.name : "Destination"
         } : null;
         
         res.json({ ...user, activeTask });

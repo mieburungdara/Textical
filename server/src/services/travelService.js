@@ -27,13 +27,19 @@ class TravelService {
             throw new Error(`Queue full (${activeCount}/${user.premiumTier.queueSlots} slots).`);
         }
 
-        // Adjacency check for the FIRST task
-        if (activeCount === 0) {
-            const connection = await prisma.regionConnection.findFirst({
-                where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
-            });
-            if (!connection) throw new Error("No direct path exists from here.");
+        // BUG FIX: Validasi Jalur untuk Antrian (Tactical Queue Path Validation)
+        let originId = user.currentRegion;
+        if (activeCount > 0) {
+            // If there's a queue, the origin is the destination of the LAST task in the queue
+            const lastTask = user.taskQueue.sort((a, b) => b.id - a.id)[0];
+            originId = lastTask.targetRegionId || user.currentRegion;
         }
+
+        const connection = await prisma.regionConnection.findFirst({
+            where: { originRegionId: originId, targetRegionId: targetRegionId }
+        });
+
+        if (!connection) throw new Error(`No direct path exists from ${activeCount > 0 ? "previous destination" : "here"}.`);
 
         // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);

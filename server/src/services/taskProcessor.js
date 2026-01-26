@@ -85,6 +85,24 @@ class TaskProcessor {
                 if (nextTask) {
                     let durationSeconds = 5; 
 
+                    // AUTHORITATIVE DURATION CALCULATION (DB-Based)
+                    if (nextTask.type === "TRAVEL") {
+                        // Find connection from currentRegion to target
+                        const conn = await prisma.regionConnection.findFirst({
+                            where: { originRegionId: user.currentRegion, targetRegionId: nextTask.targetRegionId }
+                        });
+                        durationSeconds = conn ? conn.travelTimeSeconds : 5;
+                    } else if (nextTask.type === "GATHERING") {
+                        const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
+                        durationSeconds = res ? res.gatherTimeSeconds : 5;
+                    } else if (nextTask.type === "CRAFTING") {
+                        const recipe = await prisma.recipeTemplate.findFirst({ where: { resultItemId: nextTask.targetItemId } });
+                        durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
+                    }
+
+                    // Dev Override (Optional: keep at 5s for now if you wish, but logic is restored)
+                    durationSeconds = Math.min(durationSeconds, 5); 
+
                     // BUG FIX: For queued travels, update user location INSTANTLY when task starts
                     if (nextTask.type === "TRAVEL") {
                         await prisma.user.update({
