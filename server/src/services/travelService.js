@@ -11,38 +11,47 @@ class TravelService {
         const userId = parseInt(userIdRaw);
         const targetRegionId = parseInt(targetRegionIdRaw);
 
-        // 1. Fetch User with Lock-Aware check
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { taskQueue: { where: { status: "RUNNING" } } }
+            include: { 
+                taskQueue: true,
+                premiumTier: true 
+            }
         });
 
         if (!user) throw new Error("User not found");
-        if (user.taskQueue.length > 0) throw new Error("User is busy.");
-        if (user.currentRegion === targetRegionId) throw new Error("Already there.");
+        
+        // BUG FIX: Respect Premium Queue Slots
+        const activeCount = user.taskQueue.filter(t => t.status !== "COMPLETED").length;
+        if (activeCount >= user.premiumTier.queueSlots) {
+            throw new Error(`Queue full (${activeCount}/${user.premiumTier.queueSlots} slots).`);
+        }
 
-        // 2. CONNECTION VERIFICATION (Strict check)
-        const connection = await prisma.regionConnection.findFirst({
-            where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
-        });
+        // Adjacency check for the FIRST task
+        if (activeCount === 0) {
+            const connection = await prisma.regionConnection.findFirst({
+                where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
+            });
+            if (!connection) throw new Error("No direct path exists from here.");
+        }
 
-        if (!connection) throw new Error("No direct path exists.");
-
-        // 3. Vitality Guard
+        // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Insufficient Vitality.");
+        if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
+        const isFirstTask = activeCount === 0;
+        const status = isFirstTask ? "RUNNING" : "PENDING";
         const now = new Date();
-        const finishesAt = new Date(now.getTime() + (5 * 1000)); // 5s for dev
+        const duration = 5; 
+        const finishesAt = isFirstTask ? new Date(now.getTime() + (duration * 1000)) : null;
 
-        // BUG FIX: Wrap everything in a single transaction
-        // Ensure isInTavern is reset and location is updated ATOMICALLY with the lock
-        return await prisma.$transaction([
+        // BUG FIX: Atomic Transaction for Location & Task
+        // If it's the FIRST task, we migrate instantly. If it's queued, we wait.
+        const operations = [
             prisma.user.update({
                 where: { id: userId },
                 data: { 
-                    currentRegion: targetRegionId,
                     vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
                     isInTavern: false,
                     tavernEntryAt: null
@@ -52,14 +61,19 @@ class TravelService {
                 data: {
                     userId: userId,
                     type: "TRAVEL",
-                    originRegionId: user.currentRegion,
                     targetRegionId: targetRegionId,
-                    status: "RUNNING",
-                    startedAt: now,
+                    status: status,
+                    startedAt: isFirstTask ? now : null,
                     finishesAt: finishesAt
                 }
             })
-        ]);
+        ];
+
+        if (isFirstTask) {
+            operations[0].data.currentRegion = targetRegionId;
+        }
+
+        return await prisma.$transaction(operations);
     }
 
     async completeTravel(_userId, taskId) {
