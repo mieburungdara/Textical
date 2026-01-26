@@ -7,6 +7,7 @@ const battleService = require('../services/battleService');
 const questService = require('../services/questService');
 const vitalityService = require('../services/vitalityService');
 const formationService = require('../services/formationService');
+const prisma = require('../db'); // SHARED INSTANCE
 
 // --- TRAVEL ---
 exports.travel = async (req, res) => {
@@ -146,24 +147,22 @@ exports.getHeroProfile = async (req, res) => {
 
 exports.getUserProfile = async (req, res) => {
     try {
-        const { PrismaClient } = require('@prisma/client');
-        const _prisma = new PrismaClient();
         const userId = parseInt(req.params.id);
-        const user = await _prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { 
                 inventory: { include: { template: true } },
                 taskQueue: { 
                     where: { status: "RUNNING" },
-                    include: { targetRegion: true } // Include destination metadata
+                    include: { targetRegion: true }
                 },
                 premiumTier: true,
                 region: true 
             }
         });
-        await _prisma.$disconnect();
         
-        // Consistent Flattening with Enriched Metadata
+        if (!user) return res.status(404).json({ error: "User not found" });
+
         const activeTask = user.taskQueue.length > 0 ? {
             ...user.taskQueue[0],
             targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN",
@@ -177,12 +176,9 @@ exports.getUserProfile = async (req, res) => {
 // --- REGION ---
 exports.getAllRegions = async (req, res) => {
     try {
-        const { PrismaClient } = require('@prisma/client');
-        const _prisma = new PrismaClient();
-        const regions = await _prisma.regionTemplate.findMany({
+        const regions = await prisma.regionTemplate.findMany({
             include: { connections: true }
         });
-        await _prisma.$disconnect();
         res.json(regions);
     } catch (e) { res.status(500).json({ error: e.message }); }
 };
@@ -190,33 +186,13 @@ exports.getAllRegions = async (req, res) => {
 exports.getRegionDetails = async (req, res) => {
     try {
         const regionId = parseInt(req.params.id);
-        const prisma = require('@prisma/client').PrismaClient; // Lazy load if not global
-        const db = new (require('@prisma/client').PrismaClient)(); // Or use existing if accessible, but for safety in this file edit:
-        
-        // Re-using the existing prisma instance would be better if it was exported, 
-        // but checking the file content, 'prisma' is not exported. 
-        // I will use the imports from the top of the file if available.
-        // Checking file content... 'const prisma' is NOT defined in this file, it imports services.
-        // Actually, services use prisma. I should probably put this in a service or just import prisma here.
-        // Let's import prisma at the top of the file for this function.
-        
-        // Wait, I can't easily add import at top with 'replace'. 
-        // I'll assume 'prisma' isn't available and use a Service or standard import inside the function.
-        
-        // Better approach: Add a helper in 'TravelService' or just raw prisma here. 
-        // I'll use a new instance for this specific read operation to be safe and quick.
-        const { PrismaClient } = require('@prisma/client');
-        const _prisma = new PrismaClient();
-        
-        const region = await _prisma.regionTemplate.findUnique({
+        const region = await prisma.regionTemplate.findUnique({
             where: { id: regionId },
             include: { 
                 resources: { include: { item: true } },
                 connections: { include: { target: true } }
             }
         });
-        await _prisma.$disconnect();
-        
         res.json(region);
     } catch (e) { res.status(500).json({ error: e.message }); }
 };

@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db');
+
 const vitalityService = require('./vitalityService');
 
 class TravelService {
@@ -34,6 +34,8 @@ class TravelService {
             const lastTask = user.taskQueue.sort((a, b) => b.id - a.id)[0];
             originId = lastTask.targetRegionId || user.currentRegion;
         }
+
+        if (originId === targetRegionId) throw new Error("You are already traveling to this destination.");
 
         const connection = await prisma.regionConnection.findFirst({
             where: { originRegionId: originId, targetRegionId: targetRegionId }

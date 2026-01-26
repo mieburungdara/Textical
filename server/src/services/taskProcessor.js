@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db');
+
 
 const travelService = require('./travelService');
 const gatheringService = require('./gatheringService');

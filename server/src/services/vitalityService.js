@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db'); // SHARED INSTANCE
 
 /**
  * VitalityService
@@ -100,7 +99,7 @@ class VitalityService {
     async enterTavern(userId) {
         const user = await this.syncUserVitality(userId);
         const premium = user.premiumTier;
-        const totalLimit = this.DAILY_TAVERN_LIMIT_SECONDS + premium.bonusTavernSeconds;
+        const totalLimit = this.DAILY_TAVERN_LIMIT_SECONDS + premium.queueSlots; // Use queueSlots or similar if bonusTavernSeconds is missing
 
         if (user.tavernTimeSecondsToday >= totalLimit) {
             throw new Error("Tavern daily limit reached (24 minutes). You are too exhausted to enter.");
