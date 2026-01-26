@@ -47,6 +47,7 @@ func _setup_signals():
 	close_btn.pressed.connect(func(): info_panel.hide())
 	start_btn.pressed.connect(_on_start_journey)
 	ServerConnector.request_completed.connect(_on_request_completed)
+	# REMOVED: task_completed listener (We use local timer now)
 
 func _spawn_map_elements():
 	for child in landmarks_layer.get_children(): child.queue_free()
@@ -67,7 +68,7 @@ func _update_player_position():
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		player_marker.position = pos
 		player_marker.show()
-		path_group.hide()
+		if !is_traveling: path_group.hide()
 
 func _center_on_player():
 	if GameState.current_user:
@@ -80,12 +81,12 @@ func _process(delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
 	
 	if is_traveling:
+		# PURE LOCAL ANIMATION (Smoother than server sync)
 		_local_progress += delta / _travel_duration
 		var p = clamp(_local_progress, 0.0, 1.0)
 		
 		if path_2d.curve and path_2d.curve.get_baked_length() > 0:
 			follow_2d.progress_ratio = p
-			# Camera follows the moving arrow
 			cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 		
 		if p >= 1.0:
@@ -152,7 +153,6 @@ func _start_cinematic_travel(task):
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
 	
-	# SWITCH MARKERS: Hide static, show moving
 	player_marker.hide()
 	path_group.show() 
 	
