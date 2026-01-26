@@ -64,7 +64,6 @@ func _update_player_position():
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
 		player_marker.position = pos
-		# Hide travel dot when not moving
 		if !is_traveling: path_group.hide()
 
 func _center_on_player():
@@ -79,8 +78,14 @@ func _process(_delta):
 	
 	if is_traveling:
 		var progress = _calculate_server_progress()
-		follow_2d.progress_ratio = progress
-		cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
+		
+		# BUG FIX: Guard against zero-length or uninitialized curves
+		if path_2d.curve and path_2d.curve.get_baked_length() > 0:
+			follow_2d.progress_ratio = progress
+			cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
+		
+		if progress >= 1.0:
+			is_traveling = false
 
 func _input(event):
 	if is_traveling: return 
@@ -124,10 +129,7 @@ func _on_start_journey():
 	ServerConnector.travel(GameState.current_user.id, selected_region.id)
 
 func _start_cinematic_travel(task):
-	is_traveling = true
-	info_panel.hide()
-	path_group.show() 
-	
+	# Build the curve BEFORE setting is_traveling to true
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
@@ -142,6 +144,10 @@ func _start_cinematic_travel(task):
 	line_2d.add_point(start_pos)
 	line_2d.add_point(end_pos)
 	
+	# Only now enable the process logic
+	is_traveling = true
+	info_panel.hide()
+	path_group.show() 
 	GameState.set_active_task(task)
 
 func _calculate_server_progress() -> float:
