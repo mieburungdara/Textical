@@ -1,5 +1,4 @@
 const prisma = require('../db');
-
 const vitalityService = require('./vitalityService');
 
 class TravelService {
@@ -25,10 +24,7 @@ class TravelService {
 
         if (!user) throw new Error("User not found");
         
-        // BUG FIX: Efficient Active Count & Last Task detection
         const activeTask = user.taskQueue.length > 0 ? user.taskQueue[0] : null;
-        
-        // Use a separate count for queue limit validation
         const activeCount = await prisma.taskQueue.count({
             where: { userId, status: { in: ["RUNNING", "PENDING"] } }
         });
@@ -37,7 +33,6 @@ class TravelService {
             throw new Error(`Queue full (${activeCount}/${user.premiumTier.queueSlots} slots).`);
         }
 
-        // BUG FIX: Tactical Queue Path Validation
         let originId = user.currentRegion;
         if (activeTask) {
             originId = activeTask.targetRegionId || user.currentRegion;
@@ -45,45 +40,39 @@ class TravelService {
 
         if (originId === targetRegionId) throw new Error("You are already traveling to this destination.");
 
-        // 2. CONNECTION VERIFICATION (Fresh check)
         const connection = await prisma.regionConnection.findFirst({
             where: { originRegionId: originId, targetRegionId: targetRegionId }
         });
 
         if (!connection) throw new Error(`No direct path exists from ${activeTask ? "previous destination" : "here"}.`);
 
-        // Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
-        const freshUser = await prisma.user.findUnique({ where: { id: userId }, include: { taskQueue: { where: { status: { in: ["RUNNING", "PENDING"] } } } } });
-        
+        const freshUser = await prisma.user.findUnique({ where: { id: userId } });
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
-        // RE-VERIFY ADJACENCY (Final Guard)
-        const activeCountFinal = freshUser.taskQueue.length;
-        let finalOriginId = freshUser.currentRegion;
-        if (activeCountFinal > 0) {
-            const lastTask = freshUser.taskQueue.sort((a, b) => b.id - a.id)[0];
-            finalOriginId = lastTask.targetRegionId || freshUser.currentRegion;
-        }
-
-        if (finalOriginId !== originId) throw new Error("World state changed. Please try again.");
-
-        const isFirstTask = activeCountFinal === 0;
+        const isFirstTask = activeCount === 0;
         const status = isFirstTask ? "RUNNING" : "PENDING";
         const now = new Date();
         const duration = 5; 
         const finishesAt = isFirstTask ? new Date(now.getTime() + (duration * 1000)) : null;
 
-        // BUG FIX: Atomic Transaction for Location & Task
-        // If it's the FIRST task, we migrate instantly. If it's queued, we wait.
-        const operations = [
+        // PREPARE UPDATES
+        const userUpdateData = {
+            vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
+            isInTavern: false,
+            tavernEntryAt: null
+        };
+
+        // If it's the FIRST task, migrate the user's region immediately
+        if (isFirstTask) {
+            userUpdateData.currentRegion = targetRegionId;
+        }
+
+        // EXECUTE ATOMIC TRANSACTION
+        const [updatedUser, newTask] = await prisma.$transaction([
             prisma.user.update({
                 where: { id: userId },
-                data: { 
-                    vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
-                    isInTavern: false,
-                    tavernEntryAt: null
-                }
+                data: userUpdateData
             }),
             prisma.taskQueue.create({
                 data: {
@@ -95,13 +84,9 @@ class TravelService {
                     finishesAt: finishesAt
                 }
             })
-        ];
+        ]);
 
-        if (isFirstTask) {
-            operations[0].data.currentRegion = targetRegionId;
-        }
-
-        return await prisma.$transaction(operations);
+        return newTask;
     }
 
     async completeTravel(_userId, taskId) {

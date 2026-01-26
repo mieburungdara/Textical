@@ -13,9 +13,7 @@ const prisma = require('../db'); // SHARED INSTANCE
 exports.travel = async (req, res) => {
     try {
         const { userId, targetRegionId } = req.body;
-        const result = await travelService.startTravel(userId, targetRegionId);
-        // Transaction returns [user, task] - we want the task
-        const task = Array.isArray(result) ? result[1] : result;
+        const task = await travelService.startTravel(userId, targetRegionId);
         res.json(task);
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
