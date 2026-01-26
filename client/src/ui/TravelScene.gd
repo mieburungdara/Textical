@@ -8,6 +8,7 @@ extends Control
 var _fallback_timer = 0.0
 var _is_waiting_for_socket = false
 var _target_id = -1
+var _is_changing_scene = false
 
 func _ready():
     _log("Scene Loaded. Monitoring signals...")
@@ -99,9 +100,12 @@ func _on_request_completed(endpoint, data):
             _log("Server still reports task RUNNING. Waiting for next pulse...")
 
 func _route_by_type(r_type: String):
-    if r_type == "TOWN":
-        _log("Transitioning to Town...")
-        get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
-    else:
-        _log("Transitioning to Wilderness...")
-        get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
+	if _is_changing_scene: return
+	_is_changing_scene = true
+	
+	if r_type == "TOWN":
+		_log("Transitioning to Town...")
+		get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
+	else:
+		_log("Transitioning to Wilderness...")
+		get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")

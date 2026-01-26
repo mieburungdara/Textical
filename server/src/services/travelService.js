@@ -11,35 +11,33 @@ class TravelService {
         const userId = parseInt(userIdRaw);
         const targetRegionId = parseInt(targetRegionIdRaw);
 
-        // 1. Authoritative State Fetch (Atomic-like check)
+        // 1. Fetch User with Lock-Aware check
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { taskQueue: { where: { status: "RUNNING" } } }
         });
 
         if (!user) throw new Error("User not found");
-        if (user.taskQueue.length > 0) throw new Error("User is busy with another task.");
-        if (user.currentRegion === targetRegionId) throw new Error("You are already there.");
+        if (user.taskQueue.length > 0) throw new Error("User is busy.");
+        if (user.currentRegion === targetRegionId) throw new Error("Already there.");
 
+        // 2. CONNECTION VERIFICATION (Strict check)
         const connection = await prisma.regionConnection.findFirst({
             where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
         });
 
         if (!connection) throw new Error("No direct path exists.");
 
-        // 2. Authoritative Vitality Sync
+        // 3. Vitality Guard
         await vitalityService.syncUserVitality(userId);
-        
-        // 3. ATOMIC TRANSACTION (Includes Vitality Check)
-        // We use a decrement and check if it results in >= 0 (Logic level)
-        // If the user has < 5 vitality, the transaction will still subtract it unless we guard
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
+        if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Insufficient Vitality.");
 
         const now = new Date();
-        const duration = 5; 
-        const finishesAt = new Date(now.getTime() + (duration * 1000));
+        const finishesAt = new Date(now.getTime() + (5 * 1000)); // 5s for dev
 
+        // BUG FIX: Wrap everything in a single transaction
+        // Ensure isInTavern is reset and location is updated ATOMICALLY with the lock
         return await prisma.$transaction([
             prisma.user.update({
                 where: { id: userId },
