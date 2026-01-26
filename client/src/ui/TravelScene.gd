@@ -34,19 +34,21 @@ func _process(delta):
             _force_sync()
 
 func _update_display():
-    var task = GameState.active_task
-    if task:
-        _target_id = int(task.get("targetRegionId", -1))
-        _log("Active Task: TRAVEL to ID " + str(_target_id))
-        dest_label.text = "TRAVELING TO REGION " + str(_target_id)
-    else:
-        _log("No task in state. Attempting recovery sync...")
-        _force_sync()
+	var task = GameState.active_task
+	if task and task.get("type") == "TRAVEL":
+		_target_id = int(task.get("targetRegionId", -1))
+		_log("Active Task: TRAVEL to ID " + str(_target_id))
+		dest_label.text = "TRAVELING TO REGION " + str(_target_id)
+	elif task:
+		_log("ERROR: Wrong task type in TravelScene: " + task.type)
+		_force_sync() # Recover to correct scene
+	else:
+		_log("No task in state. Attempting recovery sync...")
+		_force_sync()
 
 func _update_timer():
-    var task = GameState.active_task
-    if !task or task.get("status", "") != "RUNNING": return
-    
+	var task = GameState.active_task
+	if !task or task.get("status", "") != "RUNNING" or task.get("type") != "TRAVEL": return    
     var finishes_at = task.get("finishesAt", "")
     var started_at = task.get("startedAt", "")
     if finishes_at == "" or started_at == "": return

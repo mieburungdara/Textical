@@ -8,10 +8,10 @@ class TravelService {
     }
 
     async startTravel(userIdRaw, targetRegionIdRaw) {
-        // BUG FIX: Cast to Integer to prevent Floating Point ID Corruption from JSON
         const userId = parseInt(userIdRaw);
         const targetRegionId = parseInt(targetRegionIdRaw);
 
+        // 1. Authoritative State Fetch (Atomic-like check)
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: { taskQueue: { where: { status: "RUNNING" } } }
@@ -27,8 +27,12 @@ class TravelService {
 
         if (!connection) throw new Error("No direct path exists.");
 
-        // Authoritative Check: Sync Vitality before consuming
+        // 2. Authoritative Vitality Sync
         await vitalityService.syncUserVitality(userId);
+        
+        // 3. ATOMIC TRANSACTION (Includes Vitality Check)
+        // We use a decrement and check if it results in >= 0 (Logic level)
+        // If the user has < 5 vitality, the transaction will still subtract it unless we guard
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
@@ -36,15 +40,14 @@ class TravelService {
         const duration = 5; 
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 
-        // BUG FIX: Use Transaction to ensure Region Update and Task Lock are atomic (Zero Overlap)
         return await prisma.$transaction([
             prisma.user.update({
                 where: { id: userId },
                 data: { 
                     currentRegion: targetRegionId,
                     vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
-                    isInTavern: false, // NEW: Force exit tavern on travel
-                    tavernEntryAt: null // NEW: Clear entry time
+                    isInTavern: false,
+                    tavernEntryAt: null
                 }
             }),
             prisma.taskQueue.create({

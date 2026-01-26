@@ -55,8 +55,14 @@ func _on_request_completed(endpoint, data):
 func _check_transition():
     if heroes_loaded and inventory_loaded and region_loaded:
         status_label.text = "READY."
-        # Small delay to prevent transition glitch
         await get_tree().create_timer(0.2).timeout
+        
+        # BUG FIX: If there is an active task, route to the action scene instead of the hub
+        if GameState.active_task:
+            if GameState.active_task.type == "TRAVEL":
+                get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
+                return
+            # Add other task types here (GATHERING, etc) if they have scenes
         
         if region_data.type == "TOWN":
             GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
