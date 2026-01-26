@@ -24,6 +24,10 @@ func start_sync():
 
 func _on_manifest_received(endpoint, manifest):
 	if !endpoint.contains("/assets/manifest"): return
+	if !manifest is Dictionary:
+		print("[SYNC] Error: Manifest is not a dictionary.")
+		sync_finished.emit()
+		return
 	
 	_sync_queue = []
 	for category in manifest.keys():

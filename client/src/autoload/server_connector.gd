@@ -82,5 +82,9 @@ func fetch_market_listings(id): market.fetch_listings(id)
 func list_item(u, i, p): market.list_item(u, i, p)
 func buy_item(u, l): market.buy_item(u, l)
 func sell_to_npc(u, i): market.sell_to_npc(u, i)
+# --- QUESTS (QUEST HANDLER) ---
 func fetch_quests(id): quest.fetch_quests(id)
 func complete_quest(u, q): quest.complete_quest(u, q)
+
+# --- UTILITY (For Sync System) ---
+func _send_get(path): world._request(path, HTTPClient.METHOD_GET)

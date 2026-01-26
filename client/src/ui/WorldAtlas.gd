@@ -118,34 +118,34 @@ func _populate_pins(regions):
         pins_layer.add_child(btn)
 
 func _on_pin_clicked(region):
-	if is_traveling: return
-	selected_region = region
-	
-	# USE LOCAL DATA
-	var local_data = DataManager.get_region(region.id)
-	name_label.text = local_data.name
-	lore_label.text = local_data.lore
-	var tips = local_data.get("tips", ["Stay safe."])
-	tips_label.text = "TIP: " + tips[0]
-	
-	info_panel.show()
+    if is_traveling: return
+    selected_region = region
+    
+    # USE LOCAL DATA
+    var local_data = DataManager.get_region(region.id)
+    name_label.text = local_data.name
+    lore_label.text = local_data.lore
+    var tips = local_data.get("tips", ["Stay safe."])
+    tips_label.text = "TIP: " + tips[0]
+    
+    info_panel.show()
 
 func _on_start_journey():
-	if !GameState.current_user or !selected_region: return
-	start_btn.disabled = true
-	ServerConnector.travel(GameState.current_user.id, selected_region.id)
+    if !GameState.current_user or !selected_region: return
+    start_btn.disabled = true
+    ServerConnector.travel(GameState.current_user.id, selected_region.id)
 
 func _start_cinematic_travel(task):
-	# USE LOCAL DATA FOR TYPE
-	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
-	var local_data = DataManager.get_region(target_rid)
-	_target_type = local_data.type    
+    # USE LOCAL DATA FOR TYPE
+    var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
+    var local_data = DataManager.get_region(target_rid)
+    _target_type = local_data.type    
     var origin_val = task.get("originRegionId", 1)
-    	var origin_rid = int(str(origin_val).to_float())
-    	_target_id = int(str(task.get("targetRegionId", 1)).to_float())
-    	
-    	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
-    	var end_pos = GameState.REGION_POSITIONS.get(_target_id, Vector2(2500, 2500))    
+        var origin_rid = int(str(origin_val).to_float())
+        _target_id = int(str(task.get("targetRegionId", 1)).to_float())
+        
+        var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
+        var end_pos = GameState.REGION_POSITIONS.get(_target_id, Vector2(2500, 2500))    
     var curve = Curve2D.new()
     curve.add_point(start_pos)
     curve.add_point(end_pos)
@@ -164,17 +164,17 @@ func _start_cinematic_travel(task):
     GameState.set_active_task(task)
 
 func _complete_travel_locally():
-	is_traveling = false
-	GameState.set_active_task(null)
-	
-	# BUG FIX: Visually snap player to new region immediately
-	if GameState.current_user:
-		var rid = int(str(_target_id).to_float()) # Use the target ID we saved
-		# Update local GameState region too (Optimistic update)
-		GameState.current_user.currentRegion = rid 
-		_update_player_position()
-	
-	_route_by_type(_target_type)
+    is_traveling = false
+    GameState.set_active_task(null)
+    
+    # BUG FIX: Visually snap player to new region immediately
+    if GameState.current_user:
+        var rid = int(str(_target_id).to_float()) # Use the target ID we saved
+        # Update local GameState region too (Optimistic update)
+        GameState.current_user.currentRegion = rid 
+        _update_player_position()
+    
+    _route_by_type(_target_type)
 func _route_by_type(r_type):
     if r_type == "TOWN": get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
     else: get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
