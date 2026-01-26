@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://travel_scene"]
+[gd_scene load_steps=3 format=3 uid="uid://travel_scene"]
 
 [ext_resource type="Script" path="res://src/ui/TravelScene.gd" id="1_script"]
 
@@ -18,34 +18,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0784314, 0.0784314, 0.0784314, 1)
+color = Color(0.12, 0.1, 0.08, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = 50.0
-offset_right = -50.0
-offset_bottom = -50.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 30
-alignment = 1
-
-[node name="DestName" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
-theme_override_font_sizes/font_size = 32
-text = "Traveling to..."
-horizontal_alignment = 1
-
-[node name="LoreBox" type="Panel" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxContainer/LoreBox"]
+[node name="MapPaper" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,56 +31,103 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 18
-text = "Lore text goes here..."
+color = Color(0.85, 0.75, 0.55, 1)
+
+[node name="Path2D" type="Path2D" parent="MapPaper"]
+
+[node name="Line2D" type="Line2D" parent="MapPaper/Path2D"]
+width = 4.0
+default_color = Color(0.6, 0.2, 0.2, 0.5)
+texture_mode = 1
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="PathFollow2D" type="PathFollow2D" parent="MapPaper/Path2D"]
+rotates = false
+loop = false
+
+[node name="RedDot" type="ColorRect" parent="MapPaper/Path2D/PathFollow2D"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(0.8, 0, 0, 1)
+
+[node name="Overlay" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 30
+
+[node name="DestName" type="Label" parent="Overlay"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 32
+text = "Traveling to..."
+horizontal_alignment = 1
+
+[node name="LoreBox" type="Panel" parent="Overlay"]
+self_modulate = Color(1, 1, 1, 0.7)
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Overlay/LoreBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 16
+text = "Lore text..."
 autowrap_mode = 3
 
-[node name="InfoGrid" type="HBoxContainer" parent="VBoxContainer"]
+[node name="TipsBox" type="VBoxContainer" parent="Overlay"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 20
+size_flags_vertical = 10
 
-[node name="HistoryBox" type="VBoxContainer" parent="VBoxContainer/InfoGrid"]
+[node name="Title" type="Label" parent="Overlay/TipsBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Title" type="Label" parent="VBoxContainer/InfoGrid/HistoryBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.5, 1, 1)
-text = "HISTORY"
-
-[node name="Text" type="Label" parent="VBoxContainer/InfoGrid/HistoryBox"]
-layout_mode = 2
-text = "History fragment..."
-autowrap_mode = 3
-
-[node name="TipsBox" type="VBoxContainer" parent="VBoxContainer/InfoGrid"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Title" type="Label" parent="VBoxContainer/InfoGrid/TipsBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
 text = "SURVIVAL TIP"
+horizontal_alignment = 1
 
-[node name="Text" type="Label" parent="VBoxContainer/InfoGrid/TipsBox"]
+[node name="Text" type="Label" parent="Overlay/TipsBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Pro tip..."
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="NextTipBtn" type="Button" parent="VBoxContainer/InfoGrid/TipsBox"]
+[node name="NextTipBtn" type="Button" parent="Overlay/TipsBox"]
 layout_mode = 2
 text = "Next Tip"
 
-[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="Overlay"]
+visible = false
 layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Overlay"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "On the Road..."
 horizontal_alignment = 1
-
-[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
-show_percentage = false
 
 [node name="DebugConsole" type="RichTextLabel" parent="."]
 visible = false
