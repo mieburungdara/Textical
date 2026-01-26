@@ -2,6 +2,7 @@ extends Control
 
 @onready var map_container = $VBoxContainer/MapArea
 @onready var back_btn = $VBoxContainer/BackButton
+@onready var status_label = $VBoxContainer/StatusLabel
 
 func _ready():
 	back_btn.pressed.connect(_on_back_pressed)
@@ -14,13 +15,17 @@ func refresh():
 		ServerConnector.fetch_all_regions()
 
 func _on_error(endpoint, msg):
-	print("[MAP_DEBUG] Error on ", endpoint, ": ", msg)
+	if "travel" in endpoint:
+		print("[MAP_ERROR] Travel rejected: ", msg)
+		status_label.text = "Travel Failed: " + msg
 
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/regions"):
 		_draw_map(data)
 	elif endpoint.contains("/action/travel"):
-		print("[MAP_DEBUG] Travel confirmed. Switching to TravelScene...")
+		print("[MAP_DEBUG] Server confirmed travel. Transitioning...")
+		# THE SYNC: Server sends back the task object. Set it locally.
+		GameState.set_active_task(data)
 		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
 
 func _draw_map(regions):
@@ -42,12 +47,11 @@ func _draw_map(regions):
 			btn.modulate = Color.GREEN
 			btn.text += " (HERE)"
 		
-		# FIX: Use bind() to pass the correct region data to the function
 		btn.pressed.connect(_on_region_pressed.bind(region))
 		grid.add_child(btn)
 
 func _on_region_pressed(region):
-	print("[MAP_DEBUG] Traveling to: ", region.name, " (ID: ", region.id, ")")
+	status_label.text = "Authorizing travel to " + region.name + "..."
 	ServerConnector.travel(GameState.current_user.id, region.id)
 
 func _on_back_pressed():
