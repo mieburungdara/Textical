@@ -67,10 +67,9 @@ func _on_data(raw_data: String):
 
 func authenticate(user_id: int):
 	_pending_user_id = user_id
+	# If we are already fully ready, send now
 	if is_connected:
-		# Note: We still wait for '40' before actually sending the packet
-		# but if we are already connected, we can try immediately.
-		pass
+		_send_auth(user_id)
 
 func _send_auth(user_id: int):
 	var msg = '42["authenticate", %d]' % user_id

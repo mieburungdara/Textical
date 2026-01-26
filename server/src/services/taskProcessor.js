@@ -1,6 +1,5 @@
 const prisma = require('../db');
 
-
 const travelService = require('./travelService');
 const gatheringService = require('./gatheringService');
 const tavernService = require('./tavernService');
@@ -79,15 +78,14 @@ class TaskProcessor {
             if (user.taskQueue.length === 0) {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
-                    orderBy: { id: 'asc' }
+                    orderBy: { id: 'asc' },
+                    include: { originRegion: true } // CRITICAL: Ensure origin is loaded
                 });
 
                 if (nextTask) {
                     let durationSeconds = 5; 
 
-                    // AUTHORITATIVE DURATION CALCULATION (DB-Based)
                     if (nextTask.type === "TRAVEL") {
-                        // Find connection from currentRegion to target
                         const conn = await prisma.regionConnection.findFirst({
                             where: { originRegionId: user.currentRegion, targetRegionId: nextTask.targetRegionId }
                         });
@@ -100,28 +98,29 @@ class TaskProcessor {
                         durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
                     }
 
-                    // Dev Override (Optional: keep at 5s for now if you wish, but logic is restored)
                     durationSeconds = Math.min(durationSeconds, 5); 
 
-                    // BUG FIX: For queued travels, update user location INSTANTLY when task starts
-                    if (nextTask.type === "TRAVEL") {
-                        await prisma.user.update({
-                            where: { id: user.id },
-                            data: { currentRegion: nextTask.targetRegionId }
-                        });
-                    }
-
                     const now = new Date();
-                    await prisma.taskQueue.update({
-                        where: { id: nextTask.id },
-                        data: { 
-                            status: "RUNNING", 
-                            startedAt: now, 
-                            finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) 
-                        }
-                    });
+                    
+                    // BUG FIX: Atomic Promotion Transaction
+                    await prisma.$transaction([
+                        prisma.taskQueue.update({
+                            where: { id: nextTask.id },
+                            data: { 
+                                status: "RUNNING", 
+                                startedAt: now, 
+                                finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) 
+                            }
+                        }),
+                        // Ensure location is updated only IF it's a travel task
+                        ...(nextTask.type === "TRAVEL" ? [
+                            prisma.user.update({
+                                where: { id: user.id },
+                                data: { currentRegion: nextTask.targetRegionId }
+                            })
+                        ] : [])
+                    ]);
 
-                    // Emit task_started so the client UI can switch scenes/start timers
                     socketService.emitToUser(user.id, "task_started", {
                         taskId: nextTask.id,
                         type: nextTask.type,
