@@ -8,51 +8,52 @@ var inventory = []
 var inventory_status = {"used": 0, "max": 20}
 var active_task = null
 var current_region_type = "TOWN" # Default
+var current_region_data = null # NEW: Full metadata storage
 
 # NAVIGATION MEMORY
 var selected_hero_id: int = -1
 var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
 
 func set_active_task(task_data):
-	active_task = task_data
-	task_updated.emit(active_task)
-	if active_task:
-		print("[STATE] Task Active: ", active_task.type)
-	else:
-		print("[STATE] Task Cleared (IDLE)")
+    active_task = task_data
+    task_updated.emit(active_task)
+    if active_task:
+        print("[STATE] Task Active: ", active_task.type)
+    else:
+        print("[STATE] Task Cleared (IDLE)")
 
 func set_user(user_data):
-	if not user_data is Dictionary: return
-	current_user = user_data
-	
-	# Sync Active Task from Server via the setter to trigger signals
-	var new_task = null
-	if user_data.has("activeTask"):
-		new_task = user_data.activeTask
-	elif user_data.has("taskQueue"):
-		var queue = user_data.get("taskQueue", [])
-		new_task = queue[0] if queue.size() > 0 else null
-	
-	set_active_task(new_task)
-	print("[STATE] User Synced. Region: ", current_user.get("currentRegion"))
+    if not user_data is Dictionary: return
+    current_user = user_data
+    
+    # Sync Active Task from Server via the setter to trigger signals
+    var new_task = null
+    if user_data.has("activeTask"):
+        new_task = user_data.activeTask
+    elif user_data.has("taskQueue"):
+        var queue = user_data.get("taskQueue", [])
+        new_task = queue[0] if queue.size() > 0 else null
+    
+    set_active_task(new_task)
+    print("[STATE] User Synced. Region: ", current_user.get("currentRegion"))
 
 func set_inventory(data):
-	if not data is Dictionary: return
-	
-	if data.has("items"):
-		inventory = data.items
-	
-	if data.has("status"):
-		inventory_status = data.status
-		print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
+    if not data is Dictionary: return
+    
+    if data.has("items"):
+        inventory = data.items
+    
+    if data.has("status"):
+        inventory_status = data.status
+        print("[STATE] Inventory updated: ", inventory_status.used, "/", inventory_status.max)
 
 func set_heroes(data):
-	current_heroes = data
-	print("[STATE] Heroes updated: ", current_heroes.size())
+    current_heroes = data
+    print("[STATE] Heroes updated: ", current_heroes.size())
 
 func update_vitality(new_vitality):
-	if current_user:
-		current_user.vitality = new_vitality
+    if current_user:
+        current_user.vitality = new_vitality
 
 func is_in_town():
-	return current_user and current_user.currentRegion == 1
+    return current_user and current_user.currentRegion == 1
