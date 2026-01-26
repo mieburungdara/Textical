@@ -68,7 +68,7 @@ class TravelService {
                     startedAt: now,
                     finishesAt: finishesAt
                 },
-                include: { targetRegion: true } // CRITICAL FIX: Return destination metadata
+                include: { targetRegion: true } // Ensure full metadata is included
             })
         ];
 

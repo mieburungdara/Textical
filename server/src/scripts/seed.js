@@ -22,11 +22,56 @@ async function main() {
 
   // 2. REGIONS & WORLD WEB
   console.log("[2/6] Building World Web (5 Regions)...");
-  await prisma.regionTemplate.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: "Oakhaven Hub", description: "The Town", type: "TOWN" } });
-  await prisma.regionTemplate.upsert({ where: { id: 2 }, update: {}, create: { id: 2, name: "Iron Mine", description: "Ore Mine", type: "WILDERNESS", dangerLevel: 2 } });
-  await prisma.regionTemplate.upsert({ where: { id: 3 }, update: {}, create: { id: 3, name: "Crystal Depths", description: "Gems", type: "WILDERNESS", dangerLevel: 5 } });
-  await prisma.regionTemplate.upsert({ where: { id: 4 }, update: {}, create: { id: 4, name: "Elm Forest", description: "Lumber", type: "WILDERNESS", dangerLevel: 3 } });
-  await prisma.regionTemplate.upsert({ where: { id: 5 }, update: {}, create: { id: 5, name: "Forbidden Grove", description: "Dark", type: "WILDERNESS", dangerLevel: 8 } });
+  await prisma.regionTemplate.upsert({ 
+    where: { id: 1 }, update: {}, create: { 
+      id: 1, name: "Oakhaven Hub", description: "The Town", type: "TOWN",
+      metadata: JSON.stringify({
+        lore: "Oakhaven was founded 200 years ago by the legendary logger, Silas Elm.",
+        tips: ["Tavern recovery is 10x faster than outside.", "Check the Quest Board daily for gold."],
+        history: "A peaceful sanctuary untouched by the Dark Grove's corruption."
+      })
+    } 
+  });
+  await prisma.regionTemplate.upsert({ 
+    where: { id: 2 }, update: {}, create: { 
+      id: 2, name: "Iron Mine", description: "Ore Mine", type: "WILDERNESS", dangerLevel: 2,
+      metadata: JSON.stringify({
+        lore: "Deep beneath the earth lies the vein of Titan's Blood, also known as Iron.",
+        tips: ["Gimli gets a gathering bonus in mines.", "Watch out for Cave Spiders in the deep."],
+        history: "Abandoned during the Great Gem War, now reclaimed by scavengers."
+      })
+    } 
+  });
+  await prisma.regionTemplate.upsert({ 
+    where: { id: 3 }, update: {}, create: { 
+      id: 3, name: "Crystal Depths", description: "Gems", type: "WILDERNESS", dangerLevel: 5,
+      metadata: JSON.stringify({
+        lore: "Where light itself crystallizes into Mana.",
+        tips: ["Mana Crystals are heavy but valuable.", "Light-trait heroes excel here."],
+        history: "The birthplace of the first Wizards."
+      })
+    } 
+  });
+  await prisma.regionTemplate.upsert({ 
+    where: { id: 4 }, update: {}, create: { 
+      id: 4, name: "Elm Forest", description: "Lumber", type: "WILDERNESS", dangerLevel: 3,
+      metadata: JSON.stringify({
+        lore: "A dense canopy where the trees whisper ancient secrets.",
+        tips: ["Fire-trait skills are dangerous but effective here.", "Elm wood is perfect for bows."],
+        history: "Formerly the hunting grounds of the Solar Vanguard."
+      })
+    } 
+  });
+  await prisma.regionTemplate.upsert({ 
+    where: { id: 5 }, update: {}, create: { 
+      id: 5, name: "Forbidden Grove", description: "Dark", type: "WILDERNESS", dangerLevel: 8,
+      metadata: JSON.stringify({
+        lore: "A place where reality itself starts to fray at the edges.",
+        tips: ["Never travel here without a full team.", "The darkness drains vitality faster."],
+        history: "The epicentre of the corruption that ended the Age of Kings."
+      })
+    } 
+  });
 
   const connections = [
     { originRegionId: 1, targetRegionId: 2, travelTimeSeconds: 5 }, 
