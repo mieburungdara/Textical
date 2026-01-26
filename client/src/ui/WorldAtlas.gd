@@ -14,15 +14,16 @@ extends Control
 @onready var tips_label = $UI/InfoPanel/Margin/VBox/TipsLabel
 
 # PATH NODES
-@onready var path_2d = $MapLayer/Path2D
-@onready var line_2d = $MapLayer/Path2D/Line2D
-@onready var follow_2d = $MapLayer/Path2D/PathFollow2D
+@onready var path_group = $MapLayer/PathGroup
+@onready var path_2d = $MapLayer/PathGroup/Path2D
+@onready var line_2d = $MapLayer/PathGroup/Path2D/Line2D
+@onready var follow_2d = $MapLayer/PathGroup/Path2D/PathFollow2D
 
 # CAMERA VARS
-var min_zoom = 0.2
-var max_zoom = 2.0
+var min_zoom = 0.1
+var max_zoom = 3.0
 var zoom_speed = 0.1
-var target_zoom = 1.0
+var target_zoom = 0.5 # Zoom out a bit initially
 var is_dragging = false
 
 # STATE
@@ -35,7 +36,7 @@ func _ready():
 	_center_on_player()
 	
 	info_panel.hide()
-	path_2d.hide()
+	path_group.hide()
 
 func _setup_signals():
 	close_btn.pressed.connect(func(): info_panel.hide())
@@ -49,7 +50,7 @@ func _spawn_map_elements():
 		l.text = lm.name
 		l.position = lm.pos
 		l.add_theme_color_override("font_color", Color(0.4, 0.3, 0.2))
-		l.add_theme_font_size_override("font_size", 24)
+		l.add_theme_font_size_override("font_size", 32)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		landmarks_layer.add_child(l)
 	
@@ -60,8 +61,8 @@ func _center_on_player():
 		var rid_raw = GameState.current_user.get("currentRegion", 1)
 		var rid = int(str(rid_raw).to_float())
 		var pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
-		cam.position = pos
-		print("[MAP] Centered on Region: ", rid, " at ", pos)
+		cam.global_position = pos
+		print("[MAP] Snapping camera to: ", pos)
 
 func _process(_delta):
 	cam.zoom = cam.zoom.lerp(Vector2(target_zoom, target_zoom), 0.1)
@@ -69,11 +70,10 @@ func _process(_delta):
 	if is_traveling:
 		var progress = _calculate_server_progress()
 		follow_2d.progress_ratio = progress
-		cam.position = cam.position.lerp(follow_2d.global_position, 0.1)
-		if progress >= 1.0:
-			is_traveling = false # Ready for arrival switch
+		cam.global_position = cam.global_position.lerp(follow_2d.global_position, 0.1)
 
-func _input(event):
+func _gui_input(event):
+	# Using _gui_input on the root Control to capture all events
 	if is_traveling: return 
 	
 	if event is InputEventMouseButton:
@@ -85,7 +85,8 @@ func _input(event):
 			target_zoom = clamp(target_zoom - zoom_speed, min_zoom, max_zoom)
 
 	if event is InputEventMouseMotion and is_dragging:
-		cam.position -= event.relative / cam.zoom
+		# Directly update camera position based on relative movement
+		cam.global_position -= event.relative / cam.zoom
 
 func _on_request_completed(endpoint, data):
 	if endpoint.contains("/regions"):
@@ -99,7 +100,7 @@ func _populate_pins(regions):
 		var btn = Button.new()
 		btn.text = r.name
 		btn.position = GameState.REGION_POSITIONS.get(int(r.id), Vector2(0,0))
-		btn.custom_minimum_size = Vector2(150, 50)
+		btn.custom_minimum_size = Vector2(200, 60)
 		btn.pressed.connect(_on_pin_clicked.bind(r))
 		pins_layer.add_child(btn)
 
@@ -122,12 +123,15 @@ func _on_start_journey():
 func _start_cinematic_travel(task):
 	is_traveling = true
 	info_panel.hide()
-	path_2d.show()
+	path_group.show() # Make sure the container is visible!
 	
 	var origin_rid = int(str(task.get("originRegionId", 1)).to_float())
 	var target_rid = int(str(task.get("targetRegionId", 1)).to_float())
+	
 	var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
 	var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
+	
+	print("[MAP] Building path from ", start_pos, " to ", end_pos)
 	
 	var curve = Curve2D.new()
 	curve.add_point(start_pos)
@@ -143,12 +147,19 @@ func _start_cinematic_travel(task):
 func _calculate_server_progress() -> float:
 	var task = GameState.active_task
 	if !task or task.get("status", "") != "RUNNING": return 1.0
-	var finish_unix = Time.get_unix_time_from_datetime_string(task.finishesAt)
-	var start_unix = Time.get_unix_time_from_datetime_string(task.startedAt)
+	
+	var finishes_at = task.get("finishesAt", "")
+	var started_at = task.get("startedAt", "")
+	if finishes_at == "" or started_at == "": return 0.0
+	
+	var finish_unix = Time.get_unix_time_from_datetime_string(finishes_at)
+	var start_unix = Time.get_unix_time_from_datetime_string(started_at)
 	var now_unix = Time.get_unix_time_from_system()
+	
 	var remaining = max(0, finish_unix - now_unix)
 	var total = finish_unix - start_unix
-	return (total - remaining) / total if total > 0 else 1.0
+	var p = (total - remaining) / total if total > 0 else 1.0
+	return clamp(p, 0.0, 1.0)
 
 func _on_task_completed(data):
 	if data.type == "TRAVEL":
