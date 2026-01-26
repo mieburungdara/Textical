@@ -36,13 +36,15 @@ func _process(delta):
 
 func _update_display():
 	var task = GameState.active_task
-	if task and task.get("type") == "TRAVEL":
-		_target_id = int(task.get("targetRegionId", -1))
+	if task:
+		# Predictive ID Capture (Handles both flat and nested responses)
+		var tid = task.get("targetRegionId", -1)
+		if tid == -1 and task.has("targetRegion"):
+			tid = task.get("targetRegion", {}).get("id", -1)
+			
+		_target_id = int(tid)
 		_log("Active Task: TRAVEL to ID " + str(_target_id))
 		dest_label.text = "TRAVELING TO REGION " + str(_target_id)
-	elif task:
-		_log("ERROR: Wrong task type in TravelScene: " + task.type)
-		_force_sync() # Recover to correct scene
 	else:
 		_log("No task in state. Attempting recovery sync...")
 		_force_sync()

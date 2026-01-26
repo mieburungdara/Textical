@@ -160,8 +160,13 @@ exports.getUserProfile = async (req, res) => {
         });
         await _prisma.$disconnect();
         
-        // Flatten taskQueue to activeTask
-        const activeTask = user.taskQueue.length > 0 ? user.taskQueue[0] : null;
+        // Flatten taskQueue to activeTask consistently
+        const activeTask = user.taskQueue.length > 0 ? {
+            ...user.taskQueue[0],
+            targetRegionId: user.taskQueue[0].targetRegionId,
+            targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN"
+        } : null;
+        
         res.json({ ...user, activeTask });
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
