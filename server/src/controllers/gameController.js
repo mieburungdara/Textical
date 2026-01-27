@@ -7,6 +7,7 @@ const battleService = require('../services/battleService');
 const questService = require('../services/questService');
 const vitalityService = require('../services/vitalityService');
 const formationService = require('../services/formationService');
+const equipmentService = require('../services/equipmentService');
 const prisma = require('../db'); // SHARED INSTANCE
 
 const assetService = require('../services/assetService');
@@ -151,6 +152,23 @@ exports.updateFormation = async (req, res) => {
         const { userId, presetId, slots } = req.body;
         const result = await formationService.updateFormation(userId, presetId, slots);
         res.json({ success: true, result });
+    } catch (e) { res.status(400).json({ error: e.message }); }
+};
+
+// --- EQUIPMENT ---
+exports.equipItem = async (req, res) => {
+    try {
+        const { userId, heroId, itemInstanceId, slotKey } = req.body;
+        const result = await equipmentService.equipItem(userId, heroId, itemInstanceId, slotKey);
+        res.json({ success: true, result });
+    } catch (e) { res.status(400).json({ error: e.message }); }
+};
+
+exports.unequipItem = async (req, res) => {
+    try {
+        const { userId, heroId, slotKey } = req.body;
+        await equipmentService.unequipItem(userId, heroId, slotKey);
+        res.json({ success: true });
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 

@@ -30,5 +30,8 @@ func _populate_quests(quests):
 			
 		var btn = Button.new()
 		btn.text = "%s - Reward: %d Gold" % [quest.get("name", "Unknown"), reward_amount]
-		btn.pressed.connect(func(): ServerConnector.complete_quest(GameState.current_user.id, u_quest.id))
+		btn.pressed.connect(func(): 
+			if GameState.current_user:
+				ServerConnector.complete_quest(GameState.current_user.id, u_quest.id)
+		)
 		quest_list.add_child(btn)

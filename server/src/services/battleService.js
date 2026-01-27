@@ -12,13 +12,23 @@ class BattleService {
     async startBattle(userId, monsterTemplateId) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { formationPresets: { include: { slots: true } } }
+            include: { 
+                formationPresets: { include: { slots: true } },
+                taskQueue: { where: { status: "RUNNING" } }
+            }
         });
+        if (!user) throw new Error("User not found");
+        if (user.taskQueue.length > 0) throw new Error("You are too busy to start a battle right now.");
+        
+        if (!user.formationPresets || user.formationPresets.length === 0) {
+            throw new Error("No formation presets found for user.");
+        }
 
         const monster = await prisma.monsterTemplate.findUnique({
             where: { id: monsterTemplateId },
             include: { loot: true }
         });
+        if (!monster) throw new Error("Monster not found");
 
         const party = await formationService.getPartyProfile(user.formationPresets[0].id);
         await vitalityService.syncUserVitality(userId);
@@ -35,7 +45,8 @@ class BattleService {
         }));
 
         let turn = 1;
-        while (monsterHp > 0 && heroes.some(h => !h.isDead)) {
+        const MAX_TURNS = 100;
+        while (monsterHp > 0 && heroes.some(h => !h.isDead) && turn <= MAX_TURNS) {
             battleLog.push(`--- Turn ${turn} ---`);
             
             // HEROES ATTACK
@@ -62,7 +73,8 @@ class BattleService {
             turn++;
         }
 
-        const result = monsterHp <= 0 ? "VICTORY" : "DEFEAT";
+        const result = (monsterHp <= 0 && turn <= MAX_TURNS) ? "VICTORY" : "DEFEAT";
+        if (turn > MAX_TURNS) battleLog.push("[SYSTEM] Battle exceeded max turns! (STALEMATE - DEFEAT)");
         let lootEarned = [];
 
         if (result === "VICTORY") {

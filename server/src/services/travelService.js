@@ -38,22 +38,19 @@ class TravelService {
 
         if (!connection) throw new Error("No direct path exists from here.");
 
-        // Fetch Target Region Template to return metadata to client
-        const targetRegion = await prisma.regionTemplate.findUnique({ where: { id: targetRegionId } });
-
         await vitalityService.syncUserVitality(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
         const now = new Date();
-        const duration = 5; 
+        const duration = connection.travelTimeSeconds || 15; 
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 
+        // Start Journey: Deduct Vitality & Create Task (DO NOT update currentRegion yet)
         const operations = [
             prisma.user.update({
                 where: { id: userId },
                 data: { 
-                    currentRegion: targetRegionId,
                     vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
                     isInTavern: false,
                     tavernEntryAt: null
@@ -63,7 +60,7 @@ class TravelService {
                 data: {
                     userId: userId,
                     type: "TRAVEL",
-                    originRegionId: user.currentRegion, // NEW: Store starting point
+                    originRegionId: user.currentRegion,
                     targetRegionId: targetRegionId,
                     status: "RUNNING",
                     startedAt: now,
@@ -74,14 +71,27 @@ class TravelService {
         ];
 
         const result = await prisma.$transaction(operations);
-        return result[1]; // Return the created Task with targetRegion included
+        return result[1]; 
     }
 
-    async completeTravel(_userId, taskId) {
-        return await prisma.taskQueue.update({
-            where: { id: taskId },
-            data: { status: "COMPLETED" }
+    async completeTravel(userId, taskId) {
+        const task = await prisma.taskQueue.findUnique({
+            where: { id: taskId }
         });
+
+        if (!task || task.status !== "RUNNING") return;
+
+        // Atomic Arrive: Update User Region and Complete Task
+        return await prisma.$transaction([
+            prisma.user.update({
+                where: { id: userId },
+                data: { currentRegion: task.targetRegionId }
+            }),
+            prisma.taskQueue.update({
+                where: { id: taskId },
+                data: { status: "COMPLETED" }
+            })
+        ]);
     }
 }
 

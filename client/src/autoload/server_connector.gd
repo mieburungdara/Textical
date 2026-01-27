@@ -8,6 +8,7 @@ signal error_occurred(endpoint, message)
 # REAL-TIME SIGNALS
 signal task_completed(data)
 signal task_started(data)
+signal task_failed(data)
 
 var base_url = "http://localhost:3000/api"
 
@@ -39,6 +40,7 @@ func _ready():
     # Socket Routing
     socket.task_completed.connect(func(d): task_completed.emit(d))
     socket.task_started.connect(func(d): task_started.emit(d))
+    socket.task_failed.connect(func(d): task_failed.emit(d))
     
     auth.login_success.connect(_on_login_success)
     auth.login_failed.connect(func(e): emit_signal("login_failed", e))
@@ -57,6 +59,7 @@ func _on_login_success(user):
     # 3. Authenticate only if not already authenticated for this session
     if !socket.is_authenticated:
         socket.authenticate(user.id)
+        await socket.authenticated # Wait for confirmation
     
     # 4. Now allow the UI to transition
     emit_signal("login_success", user)

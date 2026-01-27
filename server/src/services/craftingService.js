@@ -17,6 +17,8 @@ class CraftingService {
             }
         });
 
+        if (user.taskQueue.length > 0) throw new Error("You are too busy to start crafting right now.");
+
         const region = await prisma.regionTemplate.findUnique({ where: { id: user.currentRegion } });
         if (!region || region.type !== "TOWN") throw new Error("Town-only.");
         
@@ -31,18 +33,33 @@ class CraftingService {
 
         for (const ingredient of recipe.ingredients) {
             const inv = await prisma.inventoryItem.findFirst({
-                where: { userId, templateId: ingredient.itemId }
+                where: { 
+                    userId, 
+                    templateId: ingredient.itemId,
+                    marketListing: null, // NOT LISTED
+                    equippedIn: null     // NOT EQUIPPED
+                }
             });
-            if (!inv || inv.quantity < ingredient.quantity) throw new Error("Missing materials.");
+            if (!inv || inv.quantity < ingredient.quantity) throw new Error(`Missing materials: ${ingredient.item.name}. (Check if items are equipped or listed on market)`);
         }
 
         await vitalityService.consumeVitality(userId, this.BASE_CRAFTING_VITALITY_COST);
         
         for (const ing of recipe.ingredients) {
-            await prisma.inventoryItem.update({
-                where: { userId_templateId: { userId, templateId: ing.itemId } },
-                data: { quantity: { decrement: ing.quantity } }
+            const inv = await prisma.inventoryItem.findUnique({
+                where: { userId_templateId: { userId, templateId: ing.itemId } }
             });
+            
+            if (inv.quantity === ing.quantity) {
+                await prisma.inventoryItem.delete({
+                    where: { id: inv.id }
+                });
+            } else {
+                await prisma.inventoryItem.update({
+                    where: { userId_templateId: { userId, templateId: ing.itemId } },
+                    data: { quantity: { decrement: ing.quantity } }
+                });
+            }
         }
 
         const now = new Date();

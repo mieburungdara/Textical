@@ -1,0 +1,8 @@
+{
+  "id": 6002,
+  "name": "Cave Spider",
+  "hp_base": 150,
+  "damage_base": 15,
+  "categoryId": 1,
+  "loot": []
+}

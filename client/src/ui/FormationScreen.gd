@@ -51,6 +51,15 @@ func _populate_hero_list(heroes):
 
 func _on_grid_pressed(x, y, btn):
 	if selected_hero_id != -1:
+		# BUG FIX: Ensure hero isn't in two places
+		for key in grid_slots.keys():
+			if grid_slots[key] == selected_hero_id:
+				grid_slots.erase(key)
+				# Update UI for the erased slot
+				var pos = key.split(",")
+				var erased_idx = int(pos[1]) * 3 + int(pos[0])
+				grid_container.get_child(erased_idx).text = "Empty"
+		
 		grid_slots["%d,%d" % [x, y]] = selected_hero_id
 		btn.text = "Hero\n%d" % selected_hero_id
 		selected_hero_id = -1

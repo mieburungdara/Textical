@@ -19,10 +19,19 @@ func _ready():
 	popup.hide()
 	log_label.text = "Initializing combat..."
 	ServerConnector.request_completed.connect(_on_request_completed)
+	ServerConnector.error_occurred.connect(_on_error)
 	
 	if GameState.current_user:
 		# Hardcoded Slime ID for now
 		ServerConnector.start_battle(GameState.current_user.id, 6001)
+
+func _on_error(endpoint, message):
+	if "battle/start" in endpoint:
+		log_label.append_text("[ERROR] " + message + "\n")
+		log_label.append_text("Returning to wilderness in 3s...\n")
+		await get_tree().create_timer(3.0).timeout
+		if is_inside_tree():
+			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
 
 func _on_request_completed(endpoint, data):
 	if "battle/start" in endpoint:
@@ -34,6 +43,7 @@ func _start_log_replay():
 	_process_next_log_line()
 
 func _process_next_log_line():
+	if not is_inside_tree(): return
 	if current_log_index >= battle_data.battleLog.size():
 		_show_result()
 		return

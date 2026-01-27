@@ -16,6 +16,7 @@ func _ready():
     
     _log("Base Scene Initialized. Connecting signals...")
     ServerConnector.task_completed.connect(_on_task_completed_base)
+    ServerConnector.task_failed.connect(_on_task_failed_base)
     ServerConnector.request_completed.connect(_on_request_completed_base)
     _log("Handing over to Child: _setup_scene()")
     _setup_scene()
@@ -73,6 +74,15 @@ func _force_sync():
 
 func _setup_scene():
     pass
+
+func _on_task_failed_base(data):
+    _log("Task Failed: " + data.get("error", "Unknown Error"))
+    if status_label: status_label.text = "Error: " + data.get("error", "Failed")
+    _is_waiting_for_socket = false
+    # Recovery: Go back to last hub after delay
+    await get_tree().create_timer(3.0).timeout
+    if is_inside_tree():
+        get_tree().change_scene_to_file(GameState.last_visited_hub)
 
 func _on_task_completed_base(data):
     _log("Base received task_completed. Handing over to Child.")

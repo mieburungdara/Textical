@@ -1,0 +1,17 @@
+{
+  "id": 5,
+  "name": "Forbidden Grove",
+  "description": "Dark",
+  "type": "WILDERNESS",
+  "dangerLevel": 8,
+  "metadata": "{\"lore\":\"A place where reality itself starts to fray at the edges.\",\"tips\":[\"Never travel here without a full team.\",\"The darkness drains vitality faster.\"],\"history\":\"The epicentre of the corruption that ended the Age of Kings.\"}",
+  "resources": [],
+  "connections": [
+    {
+      "id": 32,
+      "originRegionId": 5,
+      "targetRegionId": 4,
+      "travelTimeSeconds": 5
+    }
+  ]
+}

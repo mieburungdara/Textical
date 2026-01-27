@@ -4,6 +4,7 @@ const travelService = require('./travelService');
 const gatheringService = require('./gatheringService');
 const tavernService = require('./tavernService');
 const craftingService = require('./craftingService');
+const marketService = require('./marketService');
 const socketService = require('./socketService');
 
 class TaskProcessor {
@@ -30,6 +31,7 @@ class TaskProcessor {
             this.tavernTickCounter++;
             if (this.tavernTickCounter >= this.TAVERN_TICK_THRESHOLD) {
                 await tavernService.tick();
+                await marketService.archiveExpiredListings(); // CLEANUP EXPIRED LISTINGS
                 this.tavernTickCounter = 0;
             }
         } catch (err) {
@@ -66,6 +68,19 @@ class TaskProcessor {
                 socketService.emitToUser(task.userId, "task_completed", payload);
             } catch (err) {
                 console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
+                
+                // BUG FIX: Prevent Zombie Tasks (Looping failure)
+                // Mark as FAILED so heartbeat stops processing it
+                await prisma.taskQueue.update({
+                    where: { id: task.id },
+                    data: { status: "FAILED" }
+                });
+
+                socketService.emitToUser(task.userId, "task_failed", {
+                    taskId: task.id,
+                    type: task.type,
+                    error: err.message
+                });
             }
         }
     }
@@ -94,8 +109,6 @@ class TaskProcessor {
                         const recipe = await prisma.recipeTemplate.findFirst({ where: { resultItemId: nextTask.targetItemId } });
                         durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
                     }
-
-                    durationSeconds = Math.min(durationSeconds, 5); 
 
                     const now = new Date();
                     

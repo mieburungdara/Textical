@@ -18,6 +18,7 @@ class SocketService {
                 const userId = parseInt(rawUserId); // BUG FIX: Force integer key
                 this.userSockets.set(userId, socket.id);
                 console.log(`[SOCKET] User ${userId} authenticated on socket ${socket.id}`);
+                socket.emit("authenticated", { userId }); // Confirm auth
             });
 
             socket.on("disconnect", () => {

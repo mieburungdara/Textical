@@ -1,0 +1,8 @@
+{
+  "id": 6001,
+  "name": "Slime",
+  "hp_base": 50,
+  "damage_base": 5,
+  "categoryId": 1,
+  "loot": []
+}

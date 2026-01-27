@@ -23,18 +23,15 @@ class VitalityService {
         if (elapsedSeconds <= 0) return user.vitality;
 
         const premium = user.premiumTier || { vitalityRegenMult: 1.0, maxVitalityBonus: 0 };
-        const maxCap = user.maxVitality + premium.maxVitalityBonus;
+        const maxCap = user.maxVitality + (premium.maxVitalityBonus || 0);
 
-        // Determine multiplier (Tavern vs World)
-        let multiplier = premium.vitalityRegenMult;
-        if (user.isInTavern) {
-            multiplier *= this.TAVERN_REGEN_MULTIPLIER;
-        }
+        if (user.vitality >= maxCap) return user.vitality;
+
+        let multiplier = premium.vitalityRegenMult || 1.0;
+        if (user.isInTavern) multiplier *= this.TAVERN_REGEN_MULTIPLIER;
 
         const pointsGained = (elapsedSeconds / this.BASE_REGEN_SECONDS) * multiplier;
-        const finalVitality = Math.min(maxCap, user.vitality + pointsGained);
-
-        return Math.floor(finalVitality);
+        return Math.floor(Math.min(maxCap, user.vitality + pointsGained));
     }
 
     /**
@@ -48,27 +45,61 @@ class VitalityService {
 
         if (!user) throw new Error("User not found");
 
-        // 1. Handle Daily Tavern Reset
         const now = new Date();
-        const resetElapsed = now - new Date(user.lastTavernResetAt);
+        const premium = user.premiumTier || { vitalityRegenMult: 1.0, maxVitalityBonus: 0 };
+        const totalTavernLimit = this.DAILY_TAVERN_LIMIT_SECONDS + (premium.queueSlots || 0);
+        const maxCap = user.maxVitality + (premium.maxVitalityBonus || 0);
+
+        // 1. Handle Daily Tavern Reset
         let dailySeconds = user.tavernTimeSecondsToday;
         let lastReset = user.lastTavernResetAt;
-
-        if (resetElapsed > 86400000) { // 24 hours
+        if ((now - new Date(lastReset)) > 86400000) {
             dailySeconds = 0;
             lastReset = now;
         }
 
-        // 2. Calculate and Save Vitality
-        const currentVit = this.calculateCurrentVitality(user);
+        // 2. Real-time Tavern Tracking
+        let inTavern = user.isInTavern;
+        let entryAt = user.tavernEntryAt;
+        if (inTavern && entryAt) {
+            const duration = Math.floor((now - new Date(entryAt)) / 1000);
+            dailySeconds += duration;
+            entryAt = now;
+            if (dailySeconds >= totalTavernLimit) {
+                inTavern = false;
+                entryAt = null;
+            }
+        }
+
+        // 3. Robust Regeneration (Preserving Fractional Progress)
+        const elapsedSeconds = Math.floor((now - new Date(user.lastVitalityUpdate)) / 1000);
+        let currentVit = user.vitality;
+        let lastUpdate = new Date(user.lastVitalityUpdate);
+
+        if (elapsedSeconds > 0 && currentVit < maxCap) {
+            let multiplier = premium.vitalityRegenMult || 1.0;
+            if (user.isInTavern) multiplier *= this.TAVERN_REGEN_MULTIPLIER;
+
+            const secondsPerPoint = this.BASE_REGEN_SECONDS / multiplier;
+            const pointsGained = Math.floor(elapsedSeconds / secondsPerPoint);
+            
+            if (pointsGained > 0) {
+                currentVit = Math.min(maxCap, currentVit + pointsGained);
+                // Advance the clock ONLY by the time consumed for full points
+                const consumedSeconds = Math.floor(pointsGained * secondsPerPoint);
+                lastUpdate = new Date(lastUpdate.getTime() + (consumedSeconds * 1000));
+            }
+        }
 
         return await prisma.user.update({
             where: { id: userId },
             data: {
                 vitality: currentVit,
-                lastVitalityUpdate: now,
+                lastVitalityUpdate: lastUpdate,
                 tavernTimeSecondsToday: dailySeconds,
-                lastTavernResetAt: lastReset
+                lastTavernResetAt: lastReset,
+                isInTavern: inTavern,
+                tavernEntryAt: entryAt
             },
             include: { premiumTier: true }
         });
@@ -87,8 +118,7 @@ class VitalityService {
         return await prisma.user.update({
             where: { id: userId },
             data: {
-                vitality: user.vitality - amount,
-                lastVitalityUpdate: new Date()
+                vitality: user.vitality - amount
             }
         });
     }
@@ -117,26 +147,17 @@ class VitalityService {
     }
 
     /**
-     * Handles exiting the Tavern with 1-minute minimum rounding logic.
+     * Handles exiting the Tavern.
      */
     async exitTavern(userId) {
         const user = await this.syncUserVitality(userId);
-        if (!user.isInTavern || !user.tavernEntryAt) return user;
-
-        const now = new Date();
-        let durationSeconds = Math.floor((now - new Date(user.tavernEntryAt)) / 1000);
-        
-        // APPLY RULE: Minimum 1 minute stay (60 seconds)
-        if (durationSeconds < 60) {
-            durationSeconds = 60;
-        }
+        if (!user.isInTavern) return user;
 
         return await prisma.user.update({
             where: { id: userId },
             data: {
                 isInTavern: false,
-                tavernEntryAt: null,
-                tavernTimeSecondsToday: user.tavernTimeSecondsToday + durationSeconds
+                tavernEntryAt: null
             }
         });
     }

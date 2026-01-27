@@ -1,0 +1,39 @@
+{
+  "id": 2,
+  "name": "Iron Mine",
+  "description": "Ore Mine",
+  "type": "WILDERNESS",
+  "dangerLevel": 2,
+  "metadata": "{\"lore\":\"Deep beneath the earth lies the vein of Titan's Blood, also known as Iron.\",\"tips\":[\"Gimli gets a gathering bonus in mines.\",\"Watch out for Cave Spiders in the deep.\"],\"history\":\"Abandoned during the Great Gem War, now reclaimed by scavengers.\"}",
+  "resources": [
+    {
+      "id": 10,
+      "regionId": 2,
+      "itemId": 2005,
+      "gatherTimeSeconds": 5,
+      "item": {
+        "id": 2005,
+        "name": "Iron Ingot",
+        "description": "Metal.",
+        "category": "MATERIAL",
+        "baseValue": 20,
+        "rarity": "COMMON",
+        "isTwoHanded": false
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": 26,
+      "originRegionId": 2,
+      "targetRegionId": 1,
+      "travelTimeSeconds": 5
+    },
+    {
+      "id": 27,
+      "originRegionId": 2,
+      "targetRegionId": 3,
+      "travelTimeSeconds": 5
+    }
+  ]
+}

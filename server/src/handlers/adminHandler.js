@@ -28,6 +28,7 @@ class AdminHandler {
                 let data;
                 if (resource === 'monsters') data = await prisma.monsterTemplate.findMany();
                 else if (resource === 'regions') data = await prisma.regionTemplate.findMany();
+                else if (resource === 'items') data = await prisma.itemTemplate.findMany();
                 res.json(data || []);
             } catch (e) { res.status(500).json({ error: e.message }); }
         });
@@ -45,6 +46,8 @@ class AdminHandler {
                     await assetService.saveMonster(id, body);
                 } else if (resource === 'regions') {
                     await assetService.saveRegion(id, body);
+                } else if (resource === 'items') {
+                    await assetService.saveItem(id, body);
                 }
                 res.json({ success: true, message: `Updated ${id} and mirrored to disk.` });
             } catch (e) { 

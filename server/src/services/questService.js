@@ -31,7 +31,10 @@ class QuestService {
             await prisma.userQuest.deleteMany({ where: { userId } });
 
             // 2. Pick random quest templates (Gold source)
-            const templates = await prisma.questTemplate.findMany({ take: this.DAILY_QUEST_COUNT });
+            const allTemplates = await prisma.questTemplate.findMany();
+            const templates = allTemplates
+                .sort(() => 0.5 - Math.random())
+                .slice(0, this.DAILY_QUEST_COUNT);
             
             for (const template of templates) {
                 await prisma.userQuest.create({
@@ -70,17 +73,26 @@ class QuestService {
         for (const obj of uQuest.quest.objectives) {
             if (obj.type === "GATHER") {
                 const invItem = await prisma.inventoryItem.findFirst({
-                    where: { userId, templateId: obj.targetId }
+                    where: { 
+                        userId, 
+                        templateId: obj.targetId,
+                        marketListing: null,
+                        equippedIn: null
+                    }
                 });
                 if (!invItem || invItem.quantity < obj.amount) {
-                    throw new Error(`Objective incomplete: Need ${obj.amount}x [Item ${obj.targetId}]`);
+                    throw new Error(`Objective incomplete: Need ${obj.amount}x [Item ${obj.targetId}]. (Ensure items are not equipped or listed)`);
                 }
                 
-                // Consume quest items
-                await prisma.inventoryItem.update({
-                    where: { id: invItem.id },
-                    data: { quantity: invItem.quantity - obj.amount }
-                });
+                // Consume quest items (Delete if zero)
+                if (invItem.quantity === obj.amount) {
+                    await prisma.inventoryItem.delete({ where: { id: invItem.id } });
+                } else {
+                    await prisma.inventoryItem.update({
+                        where: { id: invItem.id },
+                        data: { quantity: invItem.quantity - obj.amount }
+                    });
+                }
             }
             // Add KILL or other types as needed here
         }

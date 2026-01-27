@@ -1,0 +1,23 @@
+{
+  "id": 1,
+  "name": "Oakhaven Hub",
+  "description": "The Town",
+  "type": "TOWN",
+  "dangerLevel": 1,
+  "metadata": "{\"lore\":\"Oakhaven was founded 200 years ago by the legendary logger, Silas Elm.\",\"tips\":[\"Tavern recovery is 10x faster than outside.\",\"Check the Quest Board daily for gold.\"],\"history\":\"A peaceful sanctuary untouched by the Dark Grove's corruption.\"}",
+  "resources": [],
+  "connections": [
+    {
+      "id": 25,
+      "originRegionId": 1,
+      "targetRegionId": 2,
+      "travelTimeSeconds": 5
+    },
+    {
+      "id": 29,
+      "originRegionId": 1,
+      "targetRegionId": 4,
+      "travelTimeSeconds": 5
+    }
+  ]
+}

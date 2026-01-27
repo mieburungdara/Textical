@@ -15,6 +15,7 @@ func _ready():
 	
 	# Small delay to ensure everything is ready
 	await get_tree().create_timer(1.0).timeout
+	if not is_inside_tree(): return
 	
 	_start_patching()
 
@@ -40,4 +41,5 @@ func _on_error(endpoint, message):
 		status_label.text = "Error updating assets: " + message
 		# Allow retry after delay
 		await get_tree().create_timer(3.0).timeout
-		_start_patching()
+		if is_inside_tree():
+			_start_patching()

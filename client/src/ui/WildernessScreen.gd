@@ -14,7 +14,7 @@ func _ready():
 	# BUG FIX: Auto-redirect if a task is already running
 	if GameState.active_task:
 		if GameState.active_task.type == "TRAVEL":
-			get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
+			get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 			return
 
 	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn"))
@@ -34,7 +34,7 @@ func _on_request_completed(endpoint, data):
 		current_region_data = data
 		_update_ui()
 	elif "action/travel" in endpoint:
-		get_tree().change_scene_to_file("res://src/ui/TravelScene.tscn")
+		get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 
 func _on_task_completed(data):
 	if data.type == "GATHERING":
@@ -43,8 +43,10 @@ func _on_task_completed(data):
 		if is_instance_valid(_last_clicked_button):
 			vfx_pos = _last_clicked_button.global_position + (_last_clicked_button.size / 2)
 		_play_vfx(GATHER_VFX, vfx_pos)
-		ServerConnector.fetch_inventory(GameState.current_user.id)
-		ServerConnector.fetch_profile(GameState.current_user.id)
+		
+		if GameState.current_user:
+			ServerConnector.fetch_inventory(GameState.current_user.id)
+			ServerConnector.fetch_profile(GameState.current_user.id)
 
 func _play_vfx(vfx_scene: PackedScene, pos: Vector2):
 	var effect = vfx_scene.instantiate()

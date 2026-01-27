@@ -3,14 +3,15 @@ class_name SocketHandler
 
 signal task_completed(data)
 signal task_started(data)
+signal task_failed(data)
 signal connected
+signal authenticated
 signal disconnected
 
 var socket: WebSocketPeer = WebSocketPeer.new()
 var is_socket_connected = false
 var is_authenticated = false
 var _pending_user_id = -1
-var base_url = "ws://localhost:3000/socket.io/?EIO=4&transport=websocket"
 
 func _ready():
     set_process(true)
@@ -19,8 +20,12 @@ func connect_to_server():
     var state = socket.get_ready_state()
     if state != WebSocketPeer.STATE_CLOSED: return
     
-    print("[SOCKET] Connecting to: ", base_url)
-    socket.connect_to_url(base_url)
+    # Construct WS URL from API URL
+    var ws_url = get_parent().base_url.replace("http://", "ws://").replace("https://", "wss://").replace("/api", "")
+    ws_url += "/socket.io/?EIO=4&transport=websocket"
+    
+    print("[SOCKET] Connecting to: ", ws_url)
+    socket.connect_to_url(ws_url)
 
 func _process(_delta):
     socket.poll()
@@ -61,6 +66,11 @@ func _on_data(raw_data: String):
             match event:
                 "task_completed": task_completed.emit(data)
                 "task_started": task_started.emit(data)
+                "task_failed": task_failed.emit(data)
+                "authenticated": 
+                    is_authenticated = true
+                    authenticated.emit()
+                    print("[SOCKET] Auth Confirmed.")
     
     elif raw_data.begins_with("2"): # PING
         socket.send_text("3") # PONG
@@ -74,6 +84,5 @@ func authenticate(user_id: int):
 func _send_auth(user_id: int):
     var msg = '42["authenticate", %d]' % user_id
     socket.send_text(msg)
-    is_authenticated = true
     _pending_user_id = -1
-    print("[SOCKET] Auth Sent for User: ", user_id)
+    print("[SOCKET] Auth Request Sent for User: ", user_id)

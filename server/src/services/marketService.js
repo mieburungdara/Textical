@@ -20,9 +20,11 @@ class MarketService {
     async _verifyInTown(userId) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { taskQueue: true }
+            include: { taskQueue: { where: { status: "RUNNING" } } }
         });
         
+        if (user.taskQueue.length > 0) throw new Error("You are too busy to use the market right now.");
+
         // Find current region template
         const region = await prisma.regionTemplate.findUnique({
             where: { id: user.currentRegion }
@@ -39,14 +41,17 @@ class MarketService {
      * Deducts 5% tax upfront.
      */
     async listItem(userId, itemInstanceId, pricePerUnit) {
+        if (!pricePerUnit || pricePerUnit < 1) throw new Error("Price must be at least 1 Gold.");
         const user = await this._verifyInTown(userId);
         
         const item = await prisma.inventoryItem.findUnique({
             where: { id: itemInstanceId },
-            include: { template: true }
+            include: { template: true, marketListing: true, equippedIn: true }
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found in your inventory.");
+        if (item.marketListing) throw new Error("Item is already listed on the market.");
+        if (item.equippedIn) throw new Error("Cannot list an item that is currently equipped.");
         
         const totalListingValue = pricePerUnit * item.quantity;
         const upfrontTax = Math.ceil(totalListingValue * this.UPFRONT_TAX_RATE);
@@ -106,14 +111,37 @@ class MarketService {
         const salesTax = Math.floor(totalPrice * this.SALES_TAX_RATE);
         const sellerNetProfit = totalPrice - salesTax;
 
+        // 3. Ownership Transfer (Smart Merge)
+        const existingItem = await prisma.inventoryItem.findUnique({
+            where: { userId_templateId: { userId: buyerId, templateId: listing.templateId } }
+        });
+
+        const itemOps = [];
+        if (existingItem) {
+            // Merge into existing slot
+            itemOps.push(prisma.inventoryItem.update({
+                where: { id: existingItem.id },
+                data: { quantity: { increment: listing.itemInstance.quantity } }
+            }));
+            itemOps.push(prisma.inventoryItem.delete({
+                where: { id: listing.itemInstanceId }
+            }));
+        } else {
+            // Transfer ownership of the slot
+            itemOps.push(prisma.inventoryItem.update({
+                where: { id: listing.itemInstanceId },
+                data: { userId: buyerId }
+            }));
+        }
+
         // Atomic Swap
         return await prisma.$transaction([
             // 1. Buyer Pays
             prisma.user.update({ where: { id: buyerId }, data: { gold: buyer.gold - totalPrice } }),
             // 2. Seller Receives (Net)
             prisma.user.update({ where: { id: listing.sellerId }, data: { gold: listing.seller.gold + sellerNetProfit } }),
-            // 3. Ownership Transfer
-            prisma.inventoryItem.update({ where: { id: listing.itemInstanceId }, data: { userId: buyerId } }),
+            // 3. Items
+            ...itemOps,
             // 4. Delete Listing
             prisma.marketListing.delete({ where: { id: listingId } }),
             // 5. Log Transaction
@@ -139,10 +167,12 @@ class MarketService {
 
         const item = await prisma.inventoryItem.findUnique({
             where: { id: itemInstanceId },
-            include: { template: true }
+            include: { template: true, marketListing: true, equippedIn: true }
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found.");
+        if (item.marketListing) throw new Error("Cannot sell an item that is currently listed on the market.");
+        if (item.equippedIn) throw new Error("Cannot sell an item that is currently equipped.");
 
         const npcPricePerUnit = Math.floor(item.template.baseValue * this.NPC_BUY_RATE);
         const totalPayout = npcPricePerUnit * item.quantity;

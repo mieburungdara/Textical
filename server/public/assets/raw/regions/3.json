@@ -1,0 +1,33 @@
+{
+  "id": 3,
+  "name": "Crystal Depths",
+  "description": "Gems",
+  "type": "WILDERNESS",
+  "dangerLevel": 5,
+  "metadata": "{\"lore\":\"Where light itself crystallizes into Mana.\",\"tips\":[\"Mana Crystals are heavy but valuable.\",\"Light-trait heroes excel here.\"],\"history\":\"The birthplace of the first Wizards.\"}",
+  "resources": [
+    {
+      "id": 11,
+      "regionId": 3,
+      "itemId": 2011,
+      "gatherTimeSeconds": 5,
+      "item": {
+        "id": 2011,
+        "name": "Mana Crystal",
+        "description": "Energy.",
+        "category": "MATERIAL",
+        "baseValue": 100,
+        "rarity": "COMMON",
+        "isTwoHanded": false
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": 28,
+      "originRegionId": 3,
+      "targetRegionId": 2,
+      "travelTimeSeconds": 5
+    }
+  ]
+}

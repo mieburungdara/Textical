@@ -24,7 +24,8 @@ func _on_request_completed(endpoint, data):
 	elif "market/buy" in endpoint or "market/list" in endpoint or "market/sell-npc" in endpoint:
 		status_label.text = "Transaction successful!"
 		refresh()
-		ServerConnector.fetch_profile(GameState.current_user.id)
+		if GameState.current_user:
+			ServerConnector.fetch_profile(GameState.current_user.id)
 
 func _populate_buy_list(listings):
 	for child in buy_list.get_children(): child.queue_free()
@@ -43,7 +44,10 @@ func _populate_buy_list(listings):
 		
 		var btn = Button.new()
 		btn.text = "Buy"
-		btn.pressed.connect(func(): ServerConnector.buy_item(GameState.current_user.id, list.id))
+		btn.pressed.connect(func(): 
+			if GameState.current_user:
+				ServerConnector.buy_item(GameState.current_user.id, list.id)
+		)
 		
 		hbox.add_child(info)
 		hbox.add_child(btn)
@@ -61,7 +65,10 @@ func _populate_sell_list():
 		# NPC Sell Button
 		var npc_btn = Button.new()
 		npc_btn.text = "NPC Sell (10%)"
-		npc_btn.pressed.connect(func(): ServerConnector.sell_to_npc(GameState.current_user.id, item.id))
+		npc_btn.pressed.connect(func(): 
+			if GameState.current_user:
+				ServerConnector.sell_to_npc(GameState.current_user.id, item.id)
+		)
 		
 		# Market List Button
 		var list_btn = Button.new()
@@ -74,7 +81,8 @@ func _populate_sell_list():
 		sell_list.add_child(hbox)
 
 func _on_list_pressed(item_id):
-	ServerConnector.list_item(GameState.current_user.id, item_id, 10)
+	if GameState.current_user:
+		ServerConnector.list_item(GameState.current_user.id, item_id, 10)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")

@@ -79,9 +79,13 @@ class TavernService {
         // 1. Enforce Tavern Fatigue (VitalityService handles the Visa check)
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { premiumTier: true }
+            include: { 
+                premiumTier: true,
+                taskQueue: { where: { status: "RUNNING" } }
+            }
         });
 
+        if (user.taskQueue.length > 0) throw new Error("You are too busy to recruit right now.");
         if (!user.isInTavern) throw new Error("You must be inside the Tavern to recruit.");
 
         // 2. Fetch Mercenary

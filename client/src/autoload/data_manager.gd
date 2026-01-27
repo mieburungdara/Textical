@@ -6,9 +6,20 @@ signal sync_progress(current, total)
 const DATA_DIR = "user://data/"
 var _sync_queue = []
 var _total_to_sync = 0
+var _fallback_data = {}
 
 func _ready():
+    _load_fallback_data()
     _ensure_dirs()
+
+func _load_fallback_data():
+    var files = ["regions", "items", "monsters"]
+    for f in files:
+        var path = "res://assets/data/" + f + ".json"
+        if FileAccess.file_exists(path):
+            var file = FileAccess.open(path, FileAccess.READ)
+            var json = JSON.parse_string(file.get_as_text())
+            if json: _fallback_data[f] = json
 
 func _ensure_dirs():
     var categories = ["regions", "items", "monsters"]
@@ -62,7 +73,7 @@ func _process_next_in_queue():
     
     var http = HTTPRequest.new()
     add_child(http)
-    http.request_completed.connect(func(result, code, headers, body): 
+    http.request_completed.connect(func(result, code, _headers, body): 
         _on_asset_downloaded(result, code, body, item.path)
         http.queue_free()
         _process_next_in_queue()
@@ -81,11 +92,19 @@ func _on_asset_downloaded(result, code, body, save_path):
 # --- DATA ACCESS ---
 
 func get_asset(category: String, id: int) -> Dictionary:
+    # 1. Try User Data (Updates)
     var path = DATA_DIR + category + "/" + str(id) + ".json"
     if FileAccess.file_exists(path):
         var file = FileAccess.open(path, FileAccess.READ)
         var json = JSON.parse_string(file.get_as_text())
-        return json if json else {}
+        if json: return json
+    
+    # 2. Try Fallback Data (Bundled)
+    if _fallback_data.has(category):
+        var str_id = str(id)
+        if _fallback_data[category].has(str_id):
+            return _fallback_data[category][str_id]
+            
     return {}
 
 func get_region(id): return get_asset("regions", id)

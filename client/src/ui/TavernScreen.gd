@@ -20,7 +20,8 @@ func _on_request_completed(endpoint, data):
         status_label.text = "Recruitment Successful!"
         # Refresh list and user gold
         refresh()
-        ServerConnector.fetch_profile(GameState.current_user.id)
+        if GameState.current_user:
+            ServerConnector.fetch_profile(GameState.current_user.id)
     elif "tavern/exit" in endpoint:
         get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
 
@@ -56,7 +57,9 @@ func _populate_mercs(mercs):
 
 func _on_recruit_pressed(merc_id):
     status_label.text = "Processing recruitment..."
-    ServerConnector.recruit(GameState.current_user.id, merc_id)
+    if GameState.current_user:
+        ServerConnector.recruit(GameState.current_user.id, merc_id)
 
 func _on_exit_pressed():
-    ServerConnector.exit_tavern(GameState.current_user.id)
+    if GameState.current_user:
+        ServerConnector.exit_tavern(GameState.current_user.id)

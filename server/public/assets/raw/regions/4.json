@@ -1,0 +1,39 @@
+{
+  "id": 4,
+  "name": "Elm Forest",
+  "description": "Lumber",
+  "type": "WILDERNESS",
+  "dangerLevel": 3,
+  "metadata": "{\"lore\":\"A dense canopy where the trees whisper ancient secrets.\",\"tips\":[\"Fire-trait skills are dangerous but effective here.\",\"Elm wood is perfect for bows.\"],\"history\":\"Formerly the hunting grounds of the Solar Vanguard.\"}",
+  "resources": [
+    {
+      "id": 12,
+      "regionId": 4,
+      "itemId": 2010,
+      "gatherTimeSeconds": 5,
+      "item": {
+        "id": 2010,
+        "name": "Elm Log",
+        "description": "Wood.",
+        "category": "MATERIAL",
+        "baseValue": 15,
+        "rarity": "COMMON",
+        "isTwoHanded": false
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": 30,
+      "originRegionId": 4,
+      "targetRegionId": 1,
+      "travelTimeSeconds": 5
+    },
+    {
+      "id": 31,
+      "originRegionId": 4,
+      "targetRegionId": 5,
+      "travelTimeSeconds": 5
+    }
+  ]
+}

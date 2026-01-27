@@ -23,5 +23,8 @@ func _populate_recipes(recipes):
 	for recipe in recipes:
 		var btn = Button.new()
 		btn.text = "%s -> %s (%ds)" % [recipe.name, recipe.resultItem.name, recipe.craftTimeSeconds]
-		btn.pressed.connect(func(): ServerConnector.craft(GameState.current_user.id, recipe.id))
+		btn.pressed.connect(func(): 
+			if GameState.current_user:
+				ServerConnector.craft(GameState.current_user.id, recipe.id)
+		)
 		recipe_list.add_child(btn)

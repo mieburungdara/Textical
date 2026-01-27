@@ -15,14 +15,15 @@ class InventoryService {
         const user = await prisma.user.findUnique({
             where: { id: userId }
         });
+        if (!user) return false;
 
         const currentSlots = await prisma.inventoryItem.count({
             where: { userId }
         });
 
         // Check if item already exists (stackable)
-        const existing = await prisma.inventoryItem.findFirst({
-            where: { userId, templateId }
+        const existing = await prisma.inventoryItem.findUnique({
+            where: { userId_templateId: { userId, templateId } }
         });
 
         if (existing) return true; // Stacking doesn't cost a slot
@@ -39,12 +40,10 @@ class InventoryService {
             throw new Error("Inventory full! Return to town to sell or archive items.");
         }
 
-        // Atomic Upsert
+        // Atomic Upsert using the unique compound key
         return await prisma.inventoryItem.upsert({
             where: { 
-                // We need a unique constraint on (userId, templateId) for upsert to work perfectly
-                // For now, we'll use findFirst + update/create logic
-                id: (await prisma.inventoryItem.findFirst({ where: { userId, templateId } }))?.id || -1
+                userId_templateId: { userId, templateId }
             },
             update: { quantity: { increment: quantity } },
             create: { userId, templateId, quantity }
