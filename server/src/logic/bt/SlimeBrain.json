@@ -1,11 +1,26 @@
 {
   "title": "SlimeBrain",
-  "root": "root",
+  "root": "gate-jarak",
   "nodes": {
-    "root": {
-      "id": "root",
-      "name": "Selector",
-      "title": "Brain",
+    "gate-jarak": {
+      "id": "gate-jarak",
+      "name": "IsTargetInRange",
+      "title": "Apakah Musuh Dekat?",
+      "children": [
+        "aksi-serang",
+        "aksi-mendekat"
+      ]
+    },
+    "aksi-serang": {
+      "id": "aksi-serang",
+      "name": "AttackTarget",
+      "title": "Ya: Serang Musuh!",
+      "children": []
+    },
+    "aksi-mendekat": {
+      "id": "aksi-mendekat",
+      "name": "MoveToTarget",
+      "title": "Tidak: Cari Musuh",
       "children": []
     }
   }
