@@ -1,5 +1,5 @@
 const CombatRules = require('./combatRules');
-const traitService = require('../services/traitService'); // UPDATED
+const traitService = require('../services/traitService'); 
 
 class BattleRules {
     constructor(sim) {
@@ -24,7 +24,7 @@ class BattleRules {
         defender.takeDamage(finalDamage);
         traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
 
-        this.sim.logger.addEntry(this.sim.currentTick, "ATTACK", `${attacker.data.name} hit ${defender.data.name}`, this.sim.units, {
+        this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
             actor_id: attacker.instanceId, target_id: defender.instanceId, damage: finalDamage
         });
 
@@ -52,7 +52,7 @@ class BattleRules {
             }
         });
 
-        this.sim.logger.addEntry(this.sim.currentTick, "CAST_SKILL", `${actor.data.name} cast ${skill.name}`, this.sim.units, {
+        this.sim.logger.addEvent("CAST_SKILL", `${actor.data.name} cast ${skill.name}`, {
             actor_id: actor.instanceId, target_pos: targetPos, skill_name: skill.name, result: { hit_ids: hitIds }
         });
     }
@@ -67,7 +67,7 @@ class BattleRules {
             if (u.teamId === 1) this.sim.killedMonsterIds.push(u.data.id);
             this.sim.rewards.gold += 15;
             this.sim.rewards.exp += (u.data.exp_reward || 10);
-            this.sim.logger.addEntry(this.sim.currentTick, "DEATH", `${u.data.name} died`, this.sim.units, { target_id: u.instanceId });
+            this.sim.logger.addEvent("DEATH", `${u.data.name} died`, { target_id: u.instanceId });
         });
     }
 
@@ -77,7 +77,7 @@ class BattleRules {
             this.sim.isFinished = true;
             this.sim.winnerTeam = Array.from(aliveTeams)[0] ?? -1;
             this.sim.units.forEach(u => traitService.executeHook("onBattleEnd", u, this.sim));
-            this.sim.logger.addEntry(this.sim.currentTick, "GAME_OVER", `Battle Finished`, this.sim.units, { winner: this.sim.winnerTeam });
+            this.sim.logger.addEvent("GAME_OVER", `Battle Finished`, { winner: this.sim.winnerTeam });
             return true;
         }
         return false;

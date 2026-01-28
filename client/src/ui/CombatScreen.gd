@@ -11,7 +11,7 @@ extends Control
 
 const HIT_VFX = preload("res://assets/vfx/HitEffect.tscn")
 const GRID_SIZE = 50
-const TICK_DELAY = 0.05 # Faster ticks for AP system
+const TICK_DELAY = 0.15 # Kecepatan per visual tick
 
 var battle_data = null
 var unit_nodes = {} # { instance_id: Node2D }
@@ -53,24 +53,19 @@ func _on_error(_endpoint, message):
     log_label.append_text("[color=red][ERROR][/color] " + message + "\n")
 
 func _setup_battlefield():
-    # 1. Clear previous units
     for child in units_layer.get_children(): child.queue_free()
     unit_nodes.clear()
     
-    # 2. Spawn units using initial positions
     for u in battle_data.initialUnits:
         var node = _create_unit_visual(u)
         units_layer.add_child(node)
         unit_nodes[u.id] = node
         node.position = Vector2(u.x * cell_size.x, u.y * cell_size.y) + (cell_size / 2)
     
-    # 3. Start Replay
     _run_replay()
 
 func _create_unit_visual(u_data) -> Node2D:
     var node = Node2D.new()
-    
-    # Unit Circle
     var poly = Polygon2D.new()
     var radius = min(cell_size.x, cell_size.y) * 0.4
     var points = []
@@ -81,7 +76,6 @@ func _create_unit_visual(u_data) -> Node2D:
     poly.color = Color.CYAN if u_data.team == "PLAYER" else Color.RED
     node.add_child(poly)
     
-    # Health Bar (Mini)
     var bar = ProgressBar.new()
     bar.show_percentage = false
     bar.custom_minimum_size = Vector2(cell_size.x * 0.8, 4)
@@ -98,41 +92,43 @@ async function _run_replay():
     for log_entry in battle_data.replay:
         if not is_inside_tree(): return
         
-        # 1. Update EVERY unit position and health based on state snapshot
+        # 1. Update State SEMUA unit secara simultan
         for uid in log_entry.unit_states:
             var state = log_entry.unit_states[uid]
             var node = unit_nodes.get(uid)
             if is_instance_valid(node):
-                # Animate Move
+                # Gerakan Simultan
                 var target_pos = Vector2(state.pos.x * cell_size.x, state.pos.y * cell_size.y) + (cell_size / 2)
                 if node.position != target_pos:
                     var tw = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
                     tw.tween_property(node, "position", target_pos, TICK_DELAY)
                 
-                # Update HP Bar
+                # Update HP Simultan
                 var bar = node.get_meta("hp_bar")
                 if bar:
                     var tw_hp = create_tween()
                     tw_hp.tween_property(bar, "value", float(state.hp), TICK_DELAY)
 
-        # 2. Trigger Event Specific VFX
-        match log_entry.type:
-            "ATTACK":
-                _play_attack_vfx(log_entry)
-            "DEATH":
-                _play_death_vfx(log_entry)
-            "GAME_START":
-                log_label.append_text("[b]BATTLE ENGAGED[/b]\n")
+        # 2. Proses Semua Event dalam Tick ini secara simultan
+        for event in log_entry.events:
+            match event.type:
+                "ATTACK":
+                    _play_attack_vfx(event)
+                "DEATH":
+                    _play_death_vfx(event)
+                "GAME_OVER":
+                    log_label.append_text("[b]BATTLE FINISHED[/b]\n")
 
-        if log_entry.message != "":
-            log_label.append_text(log_entry.message + "\n")
+            if event.message != "":
+                log_label.append_text(event.message + "\n")
         
+        # Tunggu satu durasi tick sebelum memproses tick berikutnya
         await get_tree().create_timer(TICK_DELAY).timeout
     
     _show_result()
 
-func _play_attack_vfx(entry):
-    var target_id = entry.data.get("target_id")
+func _play_attack_vfx(ev):
+    var target_id = ev.data.get("target_id")
     var target_node = unit_nodes.get(target_id)
     if is_instance_valid(target_node):
         var vfx = HIT_VFX.instantiate()
@@ -143,8 +139,8 @@ func _play_attack_vfx(entry):
         tw.tween_property(target_node, "modulate", Color.WHITE * 2, 0.05)
         tw.tween_property(target_node, "modulate", Color.WHITE, 0.05)
 
-func _play_death_vfx(entry):
-    var target_id = entry.data.get("target_id")
+func _play_death_vfx(ev):
+    var target_id = ev.data.get("target_id")
     var node = unit_nodes.get(target_id)
     if is_instance_valid(node):
         var tw = create_tween()

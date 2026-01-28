@@ -48,6 +48,9 @@ class BattleSimulation {
         this.units.forEach(u => traitService.executeHook("onTickStart", u, this));
         this.grid.updateObstacles(this.units);
         
+        // Start grouping events for this visual tick
+        this.logger.startTick(this.currentTick);
+
         _.forEach(this.units, (u) => { if (!u.isDead) { u.tick(1.0); u.applyStatusDamage(); } });
 
         const readyUnits = _.chain(this.units).filter(u => !u.isDead && u.isReady()).orderBy(['currentActionPoints'], ['desc']).value();
@@ -61,9 +64,13 @@ class BattleSimulation {
             actor.currentActionPoints -= 100.0;
             actor.applyRegen();
             actor.tempDamageMult = 1.0;
-            if (this.rules.checkWinCondition()) return;
+            if (this.rules.checkWinCondition()) break;
         }
+        
         this.rules.resolveDeaths();
+
+        // Commit all events and state snapshots for this tick
+        this.logger.commitTick(this.units);
     }
 }
 

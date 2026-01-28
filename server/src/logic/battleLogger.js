@@ -1,39 +1,51 @@
 class BattleLogger {
     constructor() {
         this.logs = [];
+        this.currentTickData = null;
     }
 
     /**
-     * @param {number} tick 
-     * @param {string} type 
-     * @param {string} message 
-     * @param {Array} units 
-     * @param {Object} data 
+     * Memulai pengumpulan data untuk satu tick visual.
      */
-    addEntry(tick, type, message, units, data = {}) {
-        const states = {};
+    startTick(tick) {
+        this.currentTickData = {
+            tick: tick,
+            events: [],
+            unit_states: {}
+        };
+    }
+
+    /**
+     * Menambahkan event ke dalam tick yang sedang berjalan.
+     */
+    addEvent(type, message, data = {}) {
+        if (!this.currentTickData) return;
+        this.currentTickData.events.push({
+            type: type,
+            message: message,
+            data: data
+        });
+    }
+
+    /**
+     * Mengunci state posisi dan HP unit di akhir tick, lalu menyimpan tick tersebut.
+     */
+    commitTick(units) {
+        if (!this.currentTickData) return;
+        
         units.forEach(u => {
-            states[u.instanceId] = { 
+            this.currentTickData.unit_states[u.instanceId] = { 
                 hp: u.currentHealth, 
                 mana: u.currentMana, 
                 ap: u.currentActionPoints, 
-                // FIX: Clone the position object to prevent reference mutation
                 pos: { x: u.gridPos.x, y: u.gridPos.y } 
             };
         });
 
-        this.logs.push({
-            tick: tick,
-            type: type,
-            message: message,
-            data: data,
-            unit_states: states
-        });
+        this.logs.push(this.currentTickData);
+        this.currentTickData = null;
     }
 
-    /**
-     * @returns {Array}
-     */
     getLogs() {
         return this.logs;
     }
