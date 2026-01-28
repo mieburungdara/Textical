@@ -1,18 +1,41 @@
 extends Control
 
-@onready var merc_list = $MarginContainer/MainBoard/VBoxContainer/ScrollContainer/MercList
-@onready var status_label = $MarginContainer/MainBoard/VBoxContainer/StatusArea/StatusLabel
+@onready var merc_list = $MarginContainer/MainBoard/VBox/ScrollContainer/MercList
+@onready var status_label = $MarginContainer/MainBoard/VBox/StatusArea/StatusLabel
+@onready var firelight = $Firelight
+
+var _time_acc = 0.0
 
 func _ready():
     ServerConnector.request_completed.connect(_on_request_completed)
     refresh()
+    
+    # Connect signals from BottomHUD to exit tavern correctly
+    var bottom_hud = find_child("BottomHUD")
+    if bottom_hud:
+        var town_btn = bottom_hud.find_child("Town")
+        if town_btn:
+            # We override the behavior: instead of just changing scene, 
+            # we must call ServerConnector.exit_tavern first
+            for connection in town_btn.pressed.get_connections():
+                town_btn.pressed.disconnect(connection.callable)
+            town_btn.pressed.connect(_on_exit_pressed)
+
+func _process(delta):
+    # Flickering firelight effect
+    _time_acc += delta
+    if firelight:
+        var flicker = 0.7 + (sin(_time_acc * 12.0) * 0.15) + (sin(_time_acc * 30.0) * 0.08)
+        firelight.modulate.a = flicker
+
 func refresh():
     if GameState.current_user:
         ServerConnector.get_mercenaries(GameState.current_user.id)
 
 func _on_request_completed(endpoint, data):
     if !is_inside_tree(): return
-    if "tavern/mercenaries" in endpoint:        _populate_mercs(data)
+    if "tavern/mercenaries" in endpoint:
+        _populate_mercs(data)
     elif "tavern/recruit" in endpoint:
         status_label.text = "Recruitment Successful!"
         status_label.add_theme_color_override("font_color", Color.GREEN)
@@ -130,7 +153,7 @@ func _populate_mercs(mercs):
         btn_style.corner_radius_top_left = 10
         btn_style.corner_radius_top_right = 10
         btn_style.corner_radius_bottom_left = 10
-        btn_style.corner_radius_bottom_right = 10
+        btn_style.corner_radius_bottom_left = 10
         btn_style.border_width_bottom = 4
         btn_style.border_color = Color(0.05, 0.15, 0.05)
         

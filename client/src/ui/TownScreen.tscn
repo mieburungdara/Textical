@@ -1,9 +1,109 @@
-[gd_scene load_steps=5 format=3 uid="uid://town_screen"]
+[gd_scene load_steps=18 format=3 uid="uid://o2sucrfahuvn"]
 
-[ext_resource type="Script" path="res://src/ui/TownScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
+[ext_resource type="Script" uid="uid://cnx3av43g08fn" path="res://src/ui/TownScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+colors = PackedColorArray(0.15, 0.1, 0.05, 1, 0.05, 0.04, 0.06, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="Gradient" id="Gradient_sun"]
+colors = PackedColorArray(1, 0.6, 0.2, 0.4, 1, 0.4, 0.1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_sun"]
+gradient = SubResource("Gradient_sun")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_terrain"]
+offsets = PackedFloat32Array(0, 0.3)
+colors = PackedColorArray(0, 0, 0, 0, 0.05, 0.04, 0.03, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_terrain"]
+gradient = SubResource("Gradient_terrain")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="Gradient" id="Gradient_particles"]
+offsets = PackedFloat32Array(0, 0, 1)
+colors = PackedColorArray(1, 0.9, 0.6, 0, 1, 1, 1, 0, 1, 0.8, 0.4, 0.6)
+
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.6)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 1)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_separator"]
+color = Color(1, 0.8, 0.4, 0.3)
+grow_begin = -50.0
+grow_end = -50.0
+thickness = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+content_margin_left = 15.0
+content_margin_top = 15.0
+content_margin_right = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.12, 0.1, 0.08, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.35, 0.2, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_pressed"]
+content_margin_left = 15.0
+content_margin_top = 15.0
+content_margin_right = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.08, 0.07, 0.05, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.8, 0.2, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_hover"]
+content_margin_left = 15.0
+content_margin_top = 15.0
+content_margin_right = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.18, 0.15, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.7, 0.4, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.8, 0.7, 0.4, 0.1)
+shadow_size = 12
 
 [node name="TownScreen" type="Control"]
 layout_mode = 3
@@ -14,14 +114,267 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.05, 0.03, 1)
+texture = SubResource("GradientTexture2D_bg")
+
+[node name="SunGlow" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 182.0
+offset_right = 493.0
+offset_bottom = 1170.0
+grow_horizontal = 2
+texture = SubResource("GradientTexture2D_sun")
+
+[node name="Terrain" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -500.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = SubResource("GradientTexture2D_terrain")
+
+[node name="TownAmbience" type="CPUParticles2D" parent="."]
+position = Vector2(360, 1280)
+amount = 30
+lifetime = 10.0
+preprocess = 5.0
+emission_shape = 3
+emission_rect_extents = Vector2(360, 1)
+gravity = Vector2(0, -10)
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color_ramp = SubResource("Gradient_particles")
+
+[node name="Vignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_vignette")
+
+[node name="HeaderContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 120.0
+offset_bottom = 200.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+
+[node name="TownTitle" type="RichTextLabel" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 36
+bbcode_enabled = true
+text = "[center][wave amp=30 freq=3]RIVERDALE VILLAGE[/wave][/center]"
+fit_content = true
+
+[node name="HSeparator" type="HSeparator" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+theme_override_styles/separator = SubResource("StyleBoxLine_separator")
+
+[node name="TownSubtitle" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "A peaceful haven for weary travelers"
+horizontal_alignment = 1
+
+[node name="ActionGrid" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = -140.0
+offset_right = 170.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="TavernButton" type="Button" parent="ActionGrid"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_card_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_card_hover")
+
+[node name="VBox" type="VBoxContainer" parent="ActionGrid/TavernButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="Label" parent="ActionGrid/TavernButton/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "🍻"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="ActionGrid/TavernButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Tavern"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="ActionGrid/TavernButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Rest & Heal"
+horizontal_alignment = 1
+
+[node name="MarketButton" type="Button" parent="ActionGrid"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_card_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_card_hover")
+
+[node name="VBox" type="VBoxContainer" parent="ActionGrid/MarketButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="Label" parent="ActionGrid/MarketButton/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "⚖️"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="ActionGrid/MarketButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Market"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="ActionGrid/MarketButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Trade Items"
+horizontal_alignment = 1
+
+[node name="QuestButton" type="Button" parent="ActionGrid"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_card_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_card_hover")
+
+[node name="VBox" type="VBoxContainer" parent="ActionGrid/QuestButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="Label" parent="ActionGrid/QuestButton/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "📜"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="ActionGrid/QuestButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Quests"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="ActionGrid/QuestButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Earn Rewards"
+horizontal_alignment = 1
+
+[node name="CraftingButton" type="Button" parent="ActionGrid"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_card_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_card_hover")
+
+[node name="VBox" type="VBoxContainer" parent="ActionGrid/CraftingButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Icon" type="Label" parent="ActionGrid/CraftingButton/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "🔨"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="ActionGrid/CraftingButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "Craft"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="ActionGrid/CraftingButton/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Forge Gear"
+horizontal_alignment = 1
 
 [node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
@@ -31,43 +384,3 @@ layout_mode = 1
 
 [node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1
-
-[node name="Actions" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -150.0
-offset_right = 150.0
-offset_bottom = 150.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 15
-alignment = 1
-
-[node name="TavernButton" type="Button" parent="Actions"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "🍻 VISIT TAVERN"
-
-[node name="MarketButton" type="Button" parent="Actions"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "⚖️ VILLAGE MARKET"
-
-[node name="QuestButton" type="Button" parent="Actions"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "📜 DAILY QUESTS"
-
-[node name="CraftingButton" type="Button" parent="Actions"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "🔨 WORKBENCH"
