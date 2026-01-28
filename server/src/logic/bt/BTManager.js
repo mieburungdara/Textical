@@ -7,6 +7,12 @@ const CheckMana = require('./nodes/conditions/CheckMana');
 const HasStatusEffect = require('./nodes/conditions/HasStatusEffect');
 const NearbyUnitsCount = require('./nodes/conditions/NearbyUnitsCount');
 const RandomProbability = require('./nodes/conditions/RandomProbability');
+const CheckSkillReady = require('./nodes/conditions/CheckSkillReady');
+const CheckDistance = require('./nodes/conditions/CheckDistance');
+const CheckTerrain = require('./nodes/conditions/CheckTerrain');
+const CheckTargetStatus = require('./nodes/conditions/CheckTargetStatus');
+const CheckAllyCount = require('./nodes/conditions/CheckAllyCount');
+const CheckLineOfSight = require('./nodes/conditions/CheckLineOfSight');
 
 // Import Actions
 const FindTarget = require('./nodes/actions/FindTarget');
@@ -27,6 +33,12 @@ class BTManager {
             'HasStatusEffect': HasStatusEffect,
             'NearbyUnitsCount': NearbyUnitsCount,
             'RandomProbability': RandomProbability,
+            'CheckSkillReady': CheckSkillReady,
+            'CheckDistance': CheckDistance,
+            'CheckTerrain': CheckTerrain,
+            'CheckTargetStatus': CheckTargetStatus,
+            'CheckAllyCount': CheckAllyCount,
+            'CheckLineOfSight': CheckLineOfSight,
             'FindTarget': FindTarget,
             'AttackTarget': AttackTarget,
             'MoveToTarget': MoveToTarget,
