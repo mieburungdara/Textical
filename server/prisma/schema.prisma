@@ -100,9 +100,10 @@ model RegionTemplate {
   id              Int      @id
   name            String
   description     String
-  type            String   @default("TOWN")
+  visualType      String   @default("TOWN")
+  type            RegionType @relation(fields: [visualType], references: [id])
   dangerLevel     Int      @default(1)
-  metadata        String   @default("{}") // NEW: Store lore and tips
+  metadata        String   @default("{}") 
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]
@@ -110,6 +111,13 @@ model RegionTemplate {
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
   residents       User[]
+}
+
+model RegionType {
+  id          String   @id // e.g. "VOLCANO"
+  name        String   // Display Name
+  description String?
+  regions     RegionTemplate[]
 }
 
 model TavernMercenary {

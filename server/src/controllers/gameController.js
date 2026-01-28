@@ -227,7 +227,7 @@ exports.getUserProfile = async (req, res) => {
         } : null;
         
         // Ensure the current region's type is always accessible
-        const regionMetadata = user.region ? { type: user.region.type, name: user.region.name } : { type: "TOWN", name: "Unknown" };
+        const regionMetadata = user.region ? { type: user.region.visualType, name: user.region.name } : { type: "TOWN", name: "Unknown" };
 
         res.json({ 
             ...user, 
@@ -243,7 +243,9 @@ exports.getAllRegions = async (req, res) => {
         const regions = await prisma.regionTemplate.findMany({
             include: { connections: true }
         });
-        res.json(regions);
+        // Map visualType to type for client compatibility
+        const mapped = regions.map(r => ({ ...r, type: r.visualType }));
+        res.json(mapped);
     } catch (e) { res.status(500).json({ error: e.message }); }
 };
 
@@ -257,6 +259,7 @@ exports.getRegionDetails = async (req, res) => {
                 connections: { include: { target: true } }
             }
         });
-        res.json(region);
+        if (!region) return res.status(404).json({ error: "Region not found" });
+        res.json({ ...region, type: region.visualType });
     } catch (e) { res.status(500).json({ error: e.message }); }
 };

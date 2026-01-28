@@ -71,7 +71,8 @@ class TravelService {
         ];
 
         const result = await prisma.$transaction(operations);
-        return result[1]; 
+        const task = result[1];
+        return { ...task, targetRegionType: task.targetRegion ? task.targetRegion.visualType : "TOWN" };
     }
 
     async completeTravel(userId, taskId) {

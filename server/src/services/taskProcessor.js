@@ -57,8 +57,8 @@ class TaskProcessor {
                     await travelService.completeTravel(task.userId, task.id);
                     // ENSURE FULL METADATA IS IN SOCKET PAYLOAD
                     payload.targetRegionId = task.targetRegionId;
-                    payload.targetRegionType = task.targetRegion ? task.targetRegion.type : "TOWN";
-                    payload.targetRegion = task.targetRegion; // INCLUDE FULL TEMPLATE FOR LORE
+                    payload.targetRegionType = task.targetRegion ? task.targetRegion.visualType : "TOWN";
+                    payload.targetRegion = task.targetRegion ? { ...task.targetRegion, type: task.targetRegion.visualType } : null;
                 } else if (task.type === "GATHERING") {
                     await gatheringService.completeGathering(task.userId, task.id);
                 } else if (task.type === "CRAFTING") {
