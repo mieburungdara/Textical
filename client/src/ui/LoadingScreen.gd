@@ -91,21 +91,25 @@ func _process(delta):
     if magic_sigil:
         magic_sigil.update_animation(delta, current_val)
 
+var _is_transitioning = false
+var _ripple_tex: ImageTexture = null
+
 func _input(event):
     if event is InputEventMouseButton and event.pressed:
         _spawn_ripple(event.position)
 
 func _spawn_ripple(pos: Vector2):
-    var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-    for y in range(32):
-        for x in range(32):
-            var dist = Vector2(x-16, y-16).length()
-            if dist < 14: img.set_pixel(x, y, Color(1, 1, 1, 1.0))
-    var circle_tex = ImageTexture.create_from_image(img)
+    if _ripple_tex == null:
+        var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+        for y in range(32):
+            for x in range(32):
+                var dist = Vector2(x-16, y-16).length()
+                if dist < 14: img.set_pixel(x, y, Color(1, 1, 1, 1.0))
+        _ripple_tex = ImageTexture.create_from_image(img)
     
     var ripple = TextureRect.new()
     ripple.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    ripple.texture = circle_tex
+    ripple.texture = _ripple_tex
     ripple.custom_minimum_size = Vector2(40, 40)
     ripple.position = pos - Vector2(20, 20)
     ripple.pivot_offset = Vector2(20, 20)
@@ -116,7 +120,7 @@ func _spawn_ripple(pos: Vector2):
     
     var tween = create_tween()
     tween.set_parallel(true)
-    tween.tween_property(ripple, "scale", Vector2(4, 4), 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+    tween.tween_property(ripple, "scale", Vector2(4, 4), 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT) 
     tween.tween_property(ripple, "modulate:a", 0.0, 0.6)
     await tween.finished
     if is_instance_valid(ripple): ripple.queue_free()

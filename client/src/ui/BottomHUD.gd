@@ -10,7 +10,25 @@ const ROUTES = {
     "Atlas": "res://src/ui/WorldAtlas.tscn"
 }
 
+var _style_active: StyleBoxFlat
+var _style_normal: StyleBoxFlat
+
 func _ready():
+    # Pre-configure styles
+    _style_active = StyleBoxFlat.new()
+    _style_active.bg_color = Color(1, 0.8, 0.4, 0.08)
+    _style_active.border_width_bottom = 3
+    _style_active.border_color = Color(1, 0.8, 0.2, 1)
+    _style_active.corner_radius_top_left = 8
+    _style_active.corner_radius_top_right = 8
+
+    _style_normal = StyleBoxFlat.new()
+    _style_normal.bg_color = Color(0, 0, 0, 0)
+    _style_normal.border_width_bottom = 2
+    _style_normal.border_color = Color(0, 0, 0, 0)
+    _style_normal.corner_radius_top_left = 8
+    _style_normal.corner_radius_top_right = 8
+
     # Connect fixed routes
     for btn_name in ROUTES.keys():
         var btn = nav_hbox.get_node(btn_name)
@@ -69,26 +87,8 @@ func _update_ui():
         if is_active:
             # Active: Gold Color + Active Style
             btn.add_theme_color_override("font_color", Color(1, 0.8, 0.2, 1))
-            
-            # Create a dynamic stylebox for active state based on the scene's resource if possible, 
-            # or just manually set properties to match StyleBoxFlat_btn_active
-            var style = StyleBoxFlat.new()
-            style.bg_color = Color(1, 0.8, 0.4, 0.08)
-            style.border_width_bottom = 3
-            style.border_color = Color(1, 0.8, 0.2, 1)
-            style.corner_radius_top_left = 8
-            style.corner_radius_top_right = 8
-            
-            btn.add_theme_stylebox_override("normal", style)
+            btn.add_theme_stylebox_override("normal", _style_active)
         else:
             # Inactive: Muted Blue-Grey + Transparent Style
             btn.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7, 1))
-            
-            var style = StyleBoxFlat.new()
-            style.bg_color = Color(0, 0, 0, 0)
-            style.border_width_bottom = 2
-            style.border_color = Color(0, 0, 0, 0)
-            style.corner_radius_top_left = 8
-            style.corner_radius_top_right = 8
-            
-            btn.add_theme_stylebox_override("normal", style)
+            btn.add_theme_stylebox_override("normal", _style_normal)

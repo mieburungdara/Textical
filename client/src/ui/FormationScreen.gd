@@ -27,8 +27,9 @@ func _ready():
     refresh()
 
 func _process(_delta):
+    if tactical_grid.size.x <= 0 or tactical_grid.size.y <= 0: return
     var new_size = tactical_grid.size / GRID_SIZE
-    if new_size != cell_size:
+    if new_size.snapped(Vector2(0.01, 0.01)) != cell_size.snapped(Vector2(0.01, 0.01)):
         cell_size = new_size
         tactical_grid.queue_redraw()
 
@@ -137,7 +138,7 @@ func _on_grid_draw():
             draw_x = (GRID_SIZE - 1) - gx
             draw_y = (GRID_SIZE - 1) - gy
         
-        var rect = Rect2(Vector2(draw_x * cell_size.x + 1, draw_y * cell_size.y + 1), cell_size - Vector2(2, 2))
+        var rect = Rect2(Vector2(draw_x * cell_size.x + 1, draw_y * cell_size.y + 1), cell_size - Vector2(2, 2))   
         var color = Color.CYAN
         if hid == selected_hero_id: color = Color.GOLD
         
@@ -145,6 +146,7 @@ func _on_grid_draw():
 
 func _on_grid_input(event):
     if is_mirror_view: return 
+    if cell_size.x <= 0: return # Final safety check
     if event is InputEventMouseButton and event.pressed:
         var gx = int(event.position.x / cell_size.x)
         var gy = int(event.position.y / cell_size.y)
@@ -159,9 +161,11 @@ func _handle_touch(gx, gy):
         # PICK UP
         if hero_at_slot != -1:
             selected_hero_id = int(hero_at_slot)
-            _show_hero_details(hero_data_map[selected_hero_id])
-    else:
-        # MOVE OR SWAP
+            if hero_data_map.has(selected_hero_id):
+                _show_hero_details(hero_data_map[selected_hero_id])
+            else:
+                inspector_name.text = "LOADING UNIT..."
+    else:        # MOVE OR SWAP
         if gy < ENEMY_ROWS:
             inspector_name.text = "FORBIDDEN"
             inspector_details.text = "[color=red]Commander, we cannot deploy units in enemy territory.[/color]"
