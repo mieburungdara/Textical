@@ -18,12 +18,12 @@ func _ready():
             return
 
     ServerConnector.request_completed.connect(_on_request_completed)
-    ServerConnector.task_completed.connect(_on_task_completed)
-    
-    GameState.last_visited_hub = scene_file_path
-    
-    if GameState.current_user:
-        _fetch_data()
+    	ServerConnector.task_completed.connect(_on_task_completed)
+    	
+    	if get_tree().current_scene:
+    		GameState.last_visited_hub = get_tree().current_scene.scene_file_path
+    	
+    	if GameState.current_user:        _fetch_data()
 
 func _fetch_data():
     ServerConnector.get_region_details(GameState.current_user.currentRegion)

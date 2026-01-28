@@ -29,16 +29,24 @@ class FormationService {
                 if (!hero || hero.userId !== userId) throw new Error("Unauthorized hero ownership.");
         
                 // 2. Atomic Upsert (Prevents race conditions)
-                return await prisma.$transaction(async (tx) => {
-                    // Remove whatever was at the target coordinate first (prevent collision with existing occupant)
-                    await tx.formationSlot.deleteMany({ where: { presetId, gridX, gridY } });
-                    
-                    return await tx.formationSlot.upsert({
-                        where: { presetId_heroId: { presetId, heroId } },
-                        update: { gridX, gridY },
-                        create: { presetId, heroId, gridX, gridY }
-                    });
-                });
+        return await prisma.$transaction(async (tx) => {
+            // First, remove anyone else currently at the target coordinates
+            // to ensure the new hero can move there without violating the unique constraint
+            await tx.formationSlot.deleteMany({
+                where: { 
+                    presetId, 
+                    gridX, 
+                    gridY,
+                    heroId: { not: heroId } // Don't delete ourselves if we are already there
+                }
+            });
+            
+            return await tx.formationSlot.upsert({
+                where: { presetId_heroId: { presetId, heroId } },
+                update: { gridX, gridY },
+                create: { presetId, heroId, gridX, gridY }
+            });
+        });
             }
         
             async swapUnits(userId, presetId, heroA, heroB) {

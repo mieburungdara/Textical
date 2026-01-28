@@ -227,7 +227,11 @@ exports.getUserProfile = async (req, res) => {
         } : null;
         
         // Ensure the current region's type is always accessible
-        const regionMetadata = user.region ? { type: user.region.visualType, name: user.region.name } : { type: "TOWN", name: "Unknown" };
+        const regionMetadata = user.region ? { 
+            type: user.region.visualType, 
+            visualType: user.region.visualType,
+            name: user.region.name 
+        } : { type: "TOWN", name: "Unknown" };
 
         res.json({ 
             ...user, 

@@ -12,9 +12,10 @@ var SHOW_DEBUG_GRID = true
 var _active_connections = [] # Store paths to draw
 
 func _spawn_map_elements():
-    # 1. Landmarks
-    for child in landmarks_layer.get_children(): child.queue_free()
-    for lm in GameState.FLAVOR_LANDMARKS:
+	if not is_node_ready(): await ready
+	
+	# 1. Landmarks
+	for child in landmarks_layer.get_children(): child.queue_free()    for lm in GameState.FLAVOR_LANDMARKS:
         var l = Label.new()
         l.text = lm.name
         l.position = lm.pos
@@ -81,17 +82,21 @@ func _populate_pins(regions, click_callback: Callable):
     connections_layer.queue_redraw()
 
 func _draw_dashed_line(canvas: Node2D, from: Vector2, to: Vector2, color: Color, width: float):
-    var dash_length = 15.0
-    var gap_length = 10.0
-    var diff = to - from
-    var length = diff.length()
-    var direction = diff.normalized()
-    var current_dist = 0.0
-    
-    while current_dist < length:
-        var end_dist = min(current_dist + dash_length, length)
-        canvas.draw_line(from + direction * current_dist, from + direction * end_dist, color, width)
-        current_dist += dash_length + gap_length
+	const DASH_LEN = 15.0
+	const GAP_LEN = 10.0
+	const STEP = DASH_LEN + GAP_LEN
+	
+	if STEP <= 0: return
+	
+	var diff = to - from
+	var length = diff.length()
+	var direction = diff.normalized()
+	var current_dist = 0.0
+	
+	while current_dist < length:
+		var end_dist = min(current_dist + DASH_LEN, length)
+		canvas.draw_line(from + direction * current_dist, from + direction * end_dist, color, width)
+		current_dist += STEP
 
 func _update_player_position(is_traveling: bool = false):
     if !GameState.current_user: return
