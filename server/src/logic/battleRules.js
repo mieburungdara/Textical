@@ -67,6 +67,12 @@ class BattleRules {
                 const finalDmg = defMods.finalDamage !== undefined ? defMods.finalDamage : result.damage;
                 victim.takeDamage(finalDmg);
                 traitService.executeHook("onLifesteal", actor, finalDmg, this.sim);
+                
+                // Apply Status Effect if skill has one
+                if (skill.status_effect) {
+                    victim.applyEffect({ ...skill.status_effect });
+                }
+
                 hitIds.push(victim.instanceId);
                 if (victim.currentHealth <= 0) traitService.executeHook("onKill", actor, victim, this.sim);
             }

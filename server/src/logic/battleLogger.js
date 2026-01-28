@@ -38,7 +38,8 @@ class BattleLogger {
                 hp: u.currentHealth, 
                 mana: u.currentMana, 
                 ap: u.currentActionPoints, 
-                pos: { x: u.gridPos.x, y: u.gridPos.y } 
+                pos: { x: u.gridPos.x, y: u.gridPos.y },
+                effects: u.activeEffects.map(e => e.type)
             };
         });
 

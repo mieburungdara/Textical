@@ -16,6 +16,7 @@ class BattleUnit {
         this.skillCooldowns = {};
         this.activeEffects = []; 
         this.weaponTraits = [];
+        this.temporaryStats = {}; // To store aura/buff modifiers
         
         if (data.equipment) {
             Object.values(data.equipment).forEach(item => {
@@ -28,29 +29,53 @@ class BattleUnit {
 
     tick(delta) {
         if (this.isDead) return;
-        this.currentActionPoints += this.stats.speed * delta;
+        
+        // AP calculation modified by speed debuffs/buffs
+        const effectiveSpeed = this.getStat("speed");
+        this.currentActionPoints += effectiveSpeed * delta;
     }
 
-    isReady() { return this.currentActionPoints >= 100.0; }
-    canAfford(manaCost) { return this.currentMana >= manaCost; }
-    consumeMana(amount) { this.currentMana = Math.max(0, this.currentMana - amount); }
-    takeDamage(amount) { this.currentHealth = Math.max(0, this.currentHealth - amount); }
+    getStat(key) {
+        const base = this.stats[key] || 0;
+        const mod = this.temporaryStats[key] || 0;
+        return Math.max(0, base + mod);
+    }
 
-    applyRegen() {
-        const hpRegen = this.stats.hp_regen || 0;
-        const manaRegen = this.stats.mana_regen || 2;
-        this.currentHealth = Math.min(this.stats.health_max, this.currentHealth + hpRegen);
-        this.currentMana = Math.min(this.stats.mana_max, this.currentMana + manaRegen);
+    applyEffect(effect) {
+        // Simple stacking logic: replace if same type exists
+        const existingIdx = this.activeEffects.findIndex(e => e.type === effect.type);
+        if (existingIdx !== -1) {
+            this.activeEffects[existingIdx] = effect;
+        } else {
+            this.activeEffects.push(effect);
+        }
+    }
+
+    isReady() { 
+        // Cannot act if STUNNED
+        if (this.activeEffects.some(e => e.type === "STUN")) return false;
+        return this.currentActionPoints >= 100.0; 
     }
 
     applyStatusDamage() {
         let totalDot = 0;
+        this.temporaryStats = {}; // Reset every tick to recalculate auras/buffs
+
         this.activeEffects = this.activeEffects.filter(eff => {
-            if (eff.type === "burn" || eff.type === "poison") {
-                const dmg = Math.floor(this.stats.health_max * 0.05); 
+            // 1. Process DoT
+            if (eff.type === "BURN" || eff.type === "POISON") {
+                const dmg = eff.power || 5;
                 this.takeDamage(dmg);
                 totalDot += dmg;
             }
+
+            // 2. Process Stat Modifiers (Calculated in getStat)
+            if (eff.stat_mod) {
+                for (const [sKey, sVal] of Object.entries(eff.stat_mod)) {
+                    this.temporaryStats[sKey] = (this.temporaryStats[sKey] || 0) + sVal;
+                }
+            }
+
             eff.duration--;
             return eff.duration > 0;
         });

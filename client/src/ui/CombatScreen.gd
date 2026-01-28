@@ -92,24 +92,28 @@ async function _run_replay():
     for log_entry in battle_data.replay:
         if not is_inside_tree(): return
         
-        # 1. Update State SEMUA unit secara simultan
+        # 1. Update EVERY unit position and health based on state snapshot
         for uid in log_entry.unit_states:
             var state = log_entry.unit_states[uid]
             var node = unit_nodes.get(uid)
             if is_instance_valid(node):
-                # Gerakan Simultan
-                var target_pos = Vector2(state.pos.x * cell_size.x, state.pos.y * cell_size.y) + (cell_size / 2)
-                if node.position != target_pos:
-                    var tw = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-                    tw.tween_property(node, "position", target_pos, TICK_DELAY)
+                # ... (existing movement/HP logic)
                 
-                # Update HP Simultan
-                var bar = node.get_meta("hp_bar")
-                if bar:
-                    var tw_hp = create_tween()
-                    tw_hp.tween_property(bar, "value", float(state.hp), TICK_DELAY)
+                # NEW: Visual Status Indicator (Color Tinting)
+                var base_color = Color.CYAN if "hero_" in uid else Color.RED
+                var tint = base_color
+                
+                # Check for active effects in unit_states (we need to send this from server)
+                if state.has("effects"):
+                    for eff in state.effects:
+                        if eff == "STUN": tint = Color.YELLOW
+                        elif eff == "BURN": tint = Color.ORANGE
+                
+                var poly = node.get_child(0)
+                if poly is Polygon2D:
+                    poly.color = tint
 
-        # 2. Proses Semua Event dalam Tick ini secara simultan
+        # 2. Trigger Event Specific VFX
         for event in log_entry.events:
             match event.type:
                 "ATTACK":

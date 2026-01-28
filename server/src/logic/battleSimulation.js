@@ -36,7 +36,10 @@ class BattleSimulation {
 
     run() {
         this.units.forEach(u => traitService.executeHook("onBattleStart", u, this));
-        this.logger.addEntry(0, "GAME_START", `Battle [${this.battleId.substring(0,8)}] Engaged!`, this.units);
+        this.logger.startTick(0);
+        this.logger.addEvent("GAME_START", `Battle Engaged!`, { units: this.units.map(u => u.instanceId) });
+        this.logger.commitTick(this.units);
+
         while (!this.isFinished && this.currentTick < this.MAX_TICKS) {
             this.processTick();
         }
@@ -50,6 +53,9 @@ class BattleSimulation {
         
         // Start grouping events for this visual tick
         this.logger.startTick(this.currentTick);
+
+        // --- NEW: Calculate Synergies & Auras ---
+        this._applyAuras();
 
         _.forEach(this.units, (u) => { if (!u.isDead) { u.tick(1.0); u.applyStatusDamage(); } });
 
@@ -71,6 +77,26 @@ class BattleSimulation {
 
         // Commit all events and state snapshots for this tick
         this.logger.commitTick(this.units);
+    }
+
+    _applyAuras() {
+        for (const unit of this.units.filter(u => !u.isDead)) {
+            const allies = this.units.filter(u => !u.isDead && u.teamId === unit.teamId && u.instanceId !== unit.instanceId);
+            
+            for (const ally of allies) {
+                const dist = this.grid.getDistance(unit.gridPos, ally.gridPos);
+                
+                // 1. Shield Wall (Adjacent allies gain +DEF)
+                if (dist <= 1) {
+                    unit.temporaryStats.defense = (unit.temporaryStats.defense || 0) + 5;
+                }
+
+                // 2. Protector (Allies behind high-HP units gain CRIT)
+                if (dist <= 2 && ally.stats.health_max > 150) {
+                    unit.temporaryStats.crit_chance = (unit.temporaryStats.crit_chance || 0) + 0.1;
+                }
+            }
+        }
     }
 }
 
