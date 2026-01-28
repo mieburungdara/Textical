@@ -23,6 +23,7 @@ router.post('/action/travel', gameController.travel);
 router.post('/action/gather', gameController.gather);
 router.post('/action/craft', gameController.craft);
 router.post('/action/formation/update', gameController.updateFormation);
+router.post('/action/formation/move', gameController.moveFormationUnit);
 router.post('/action/equip', gameController.equipItem);
 router.post('/action/unequip', gameController.unequipItem);
 

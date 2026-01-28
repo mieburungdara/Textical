@@ -1,8 +1,45 @@
-[gd_scene load_steps=4 format=3 uid="uid://formation_screen"]
+[gd_scene load_steps=10 format=3 uid="uid://formation_screen"]
 
 [ext_resource type="Script" path="res://src/ui/FormationScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
-[ext_resource type="PackedScene" uid="uid://task_list_hud" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+
+[sub_resource type="Gradient" id="Gradient_war"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(0.05, 0.1, 0.15, 1, 0.02, 0.05, 0.1, 1, 0.01, 0.02, 0.05, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_war")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="LabelSettings" id="LabelSettings_title"]
+font_size = 24
+font_color = Color(0.4, 0.8, 1, 1)
+outline_size = 6
+outline_color = Color(0, 0.1, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_main"]
+bg_color = Color(0.02, 0.05, 0.1, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.4, 0.6, 0.3)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_left = 10
+corner_radius_bottom_right = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_inspector"]
+bg_color = Color(0, 0, 0, 0.8)
+border_width_top = 2
+border_color = Color(0.4, 0.8, 1, 0.4)
+content_margin_left = 15
+content_margin_top = 5
+content_margin_right = 15
+content_margin_bottom = 5
 
 [node name="FormationScreen" type="Control"]
 layout_mode = 3
@@ -13,46 +50,110 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_bg")
+
 [node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
 
 [node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
+layout_mode = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 100.0
-offset_top = 80.0
-offset_right = -100.0
-offset_bottom = -20.0
+offset_top = 90.0
+offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="MainFrame" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "TACTICAL FORMATION"
-horizontal_alignment = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_main")
 
-[node name="HBox" type="HBoxContainer" parent="VBoxContainer"]
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainFrame"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 50
+theme_override_constants/separation = 5
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/MainFrame/VBox"]
+layout_mode = 2
 alignment = 1
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/HBox"]
+[node name="Title" type="Label" parent="MarginContainer/MainFrame/VBox/Header"]
 layout_mode = 2
-columns = 3
+size_flags_horizontal = 3
+text = "MASSIVE 50x50 BATTLEFIELD"
+label_settings = SubResource("LabelSettings_title")
+horizontal_alignment = 1
 
-[node name="HeroList" type="VBoxContainer" parent="VBoxContainer/HBox"]
-custom_minimum_size = Vector2(250, 0)
+[node name="StrategyButtons" type="HBoxContainer" parent="MarginContainer/MainFrame/VBox/Header"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="MirrorBtn" type="Button" parent="MarginContainer/MainFrame/VBox/Header/StrategyButtons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "MIRROR OFF"
+
+[node name="TacticalGrid" type="Control" parent="MarginContainer/MainFrame/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 0
+
+[node name="Inspector" type="PanelContainer" parent="MarginContainer/MainFrame/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_inspector")
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/MainFrame/VBox/Inspector"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="AvatarFrame" type="Panel" parent="MarginContainer/MainFrame/VBox/Inspector/HBox"]
+custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
 
-[node name="BackButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
+[node name="Initial" type="Label" parent="MarginContainer/MainFrame/VBox/Inspector/HBox/AvatarFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Info" type="VBoxContainer" parent="MarginContainer/MainFrame/VBox/Inspector/HBox"]
 layout_mode = 2
-text = "Back to Town"
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="HeroName" type="Label" parent="MarginContainer/MainFrame/VBox/Inspector/HBox/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "Select a Position"
+
+[node name="HeroDetails" type="RichTextLabel" parent="MarginContainer/MainFrame/VBox/Inspector/HBox/Info"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[color=gray]Top 25: Enemy | Bottom 25: Player[/color]"
+fit_content = true

@@ -35,6 +35,7 @@ func _on_error(endpoint, message):
 
 func _on_request_completed(endpoint, data):
 	if "battle/start" in endpoint:
+		GameState.inventory_is_dirty = true
 		battle_data = data
 		_start_log_replay()
 

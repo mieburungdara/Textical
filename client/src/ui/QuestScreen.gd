@@ -1,10 +1,8 @@
 extends Control
 
-@onready var quest_list = $VBoxContainer/ScrollContainer/QuestList
-@onready var back_btn = $VBoxContainer/BackButton
+@onready var quest_list = $MarginContainer/VBoxContainer/ScrollContainer/QuestList
 
 func _ready():
-	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(GameState.last_visited_hub))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	refresh()
 
@@ -13,9 +11,11 @@ func refresh():
 		ServerConnector.fetch_quests(GameState.current_user.id)
 
 func _on_request_completed(endpoint, data):
+	if !is_inside_tree(): return
 	if "quests/" in endpoint and not endpoint.contains("complete"):
 		_populate_quests(data)
 	elif "quests/complete" in endpoint:
+		GameState.inventory_is_dirty = true
 		refresh()
 		ServerConnector.fetch_profile(GameState.current_user.id)
 

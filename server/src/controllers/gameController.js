@@ -155,6 +155,14 @@ exports.updateFormation = async (req, res) => {
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
+exports.moveFormationUnit = async (req, res) => {
+    try {
+        const { userId, presetId, heroId, gridX, gridY } = req.body;
+        const result = await formationService.moveUnit(userId, presetId, heroId, gridX, gridY);
+        res.json({ success: true, result });
+    } catch (e) { res.status(400).json({ error: e.message }); }
+};
+
 // --- EQUIPMENT ---
 exports.equipItem = async (req, res) => {
     try {

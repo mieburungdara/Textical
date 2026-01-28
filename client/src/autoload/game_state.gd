@@ -1,14 +1,24 @@
 extends Node
 
 signal task_updated(task)
+signal region_changed(new_data)
 
 var current_user = null
 var current_heroes = []
 var inventory = []
 var inventory_status = {"used": 0, "max": 20}
+var inventory_is_dirty = true
 var active_task = null
 var current_region_type = "TOWN" 
-var current_region_data = null
+var current_region_data = null:
+    set(val):
+        current_region_data = val
+        region_changed.emit(val)
+
+# PERSISTENCE
+var selected_hero_id: int = -1
+var last_selected_item_id: int = -1
+var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
 
 # GEOGRAPHIC ATLAS (5000x5000 World Grid)
 const REGION_POSITIONS = {
@@ -29,9 +39,18 @@ const FLAVOR_LANDMARKS = [
     {"name": "Sun-King Observatory", "pos": Vector2(1000, 4000)}
 ]
 
-# NAVIGATION MEMORY
-var selected_hero_id: int = -1
-var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
+func _ready():
+    ServerConnector.task_completed.connect(_on_global_task_completed)
+
+func _on_global_task_completed(data):
+    if data.type == "TRAVEL":
+        if data.has("targetRegion"):
+            current_region_data = data.targetRegion
+        elif data.has("targetRegionId"):
+            current_region_data = DataManager.get_region(int(data.targetRegionId))
+        
+        if current_user:
+            current_user.currentRegion = int(data.get("targetRegionId", current_user.currentRegion))
 
 func set_active_task(task_data):
     active_task = task_data
@@ -59,6 +78,7 @@ func set_inventory(data):
     if not data is Dictionary: return
     if data.has("items"): inventory = data.items
     if data.has("status"): inventory_status = data.status
+    inventory_is_dirty = false
 
 func set_heroes(data):
     current_heroes = data

@@ -1,9 +1,8 @@
 extends Control
 
-@onready var title_label = $VBoxContainer/Title
-@onready var resource_container = $VBoxContainer/ResourceList
-@onready var action_label = $VBoxContainer/ActionStatus
-@onready var map_btn = $VBoxContainer/MapButton
+@onready var title_label = $MarginContainer/VBoxContainer/Title
+@onready var resource_container = $MarginContainer/VBoxContainer/ResourceList
+@onready var action_label = $MarginContainer/VBoxContainer/ActionStatus
 
 const GATHER_VFX = preload("res://assets/vfx/GatherEffect.tscn")
 
@@ -17,7 +16,6 @@ func _ready():
 			get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 			return
 
-	map_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn"))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	ServerConnector.task_completed.connect(_on_task_completed)
 	
@@ -44,6 +42,7 @@ func _on_task_completed(data):
 			vfx_pos = _last_clicked_button.global_position + (_last_clicked_button.size / 2)
 		_play_vfx(GATHER_VFX, vfx_pos)
 		
+		GameState.inventory_is_dirty = true
 		if GameState.current_user:
 			ServerConnector.fetch_inventory(GameState.current_user.id)
 			ServerConnector.fetch_profile(GameState.current_user.id)

@@ -1,12 +1,10 @@
 extends Control
 
-@onready var name_label = $VBoxContainer/HeroName
-@onready var stats_label = $VBoxContainer/StatsLabel
-@onready var traits_list = $VBoxContainer/TraitsList
-@onready var back_btn = $VBoxContainer/BackButton
+@onready var name_label = $MarginContainer/VBoxContainer/HeroName
+@onready var stats_label = $MarginContainer/VBoxContainer/StatsLabel
+@onready var traits_list = $MarginContainer/VBoxContainer/TraitsList
 
 func _ready():
-	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(GameState.last_visited_hub))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	
 	if GameState.selected_hero_id != -1:

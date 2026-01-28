@@ -13,9 +13,52 @@ class FormationService {
      * @param {number} presetId 
      * @param {Array} slots Array of { heroId, gridX, gridY }
      */
+    /**
+     * Moves or Places a single unit on the grid.
+     */
+    async moveUnit(userId, presetId, heroId, gridX, gridY) {
+        // 1. Validation
+        if (gridX < 0 || gridX > 49 || gridY < 25 || gridY > 49) {
+            throw new Error("Invalid territory.");
+        }
+
+        const preset = await prisma.formationPreset.findUnique({ where: { id: presetId } });
+        if (!preset || preset.userId !== userId) throw new Error("Unauthorized.");
+
+        // 2. Atomic Move
+        return await prisma.$transaction(async (tx) => {
+            // A. Remove this hero from any existing slot in this preset
+            await tx.formationSlot.deleteMany({
+                where: { presetId, heroId }
+            });
+
+            // B. Remove whatever was at the target coordinate (it will be replaced)
+            await tx.formationSlot.deleteMany({
+                where: { presetId, gridX, gridY }
+            });
+
+            // C. Create the new slot
+            return await tx.formationSlot.create({
+                data: { presetId, heroId, gridX, gridY }
+            });
+        });
+    }
+
+    /**
+     * Removes a unit from the grid entirely.
+     */
+    async removeUnit(userId, presetId, gridX, gridY) {
+        const preset = await prisma.formationPreset.findUnique({ where: { id: presetId } });
+        if (!preset || preset.userId !== userId) throw new Error("Unauthorized.");
+
+        return await prisma.formationSlot.deleteMany({
+            where: { presetId, gridX, gridY }
+        });
+    }
+
     async updateFormation(userId, presetId, slots) {
-        // 1. Basic Validation
-        if (slots.length > 9) throw new Error("A formation cannot exceed 9 heroes.");
+        // 1. Massive Grid Validation (50x50)
+        if (slots.length > 2500) throw new Error("Formation cannot exceed 2500 units.");
         
         const preset = await prisma.formationPreset.findUnique({
             where: { id: presetId }
@@ -27,12 +70,13 @@ class FormationService {
         const usedHeroes = new Set();
 
         for (const slot of slots) {
-            if (slot.gridX < 0 || slot.gridX > 2 || slot.gridY < 0 || slot.gridY > 2) {
-                throw new Error(`Invalid grid position: [${slot.gridX}, ${slot.gridY}]. Must be 0-2.`);
+            // BOUNDARY: X (0-49), Y (25-49 for Player Territory)
+            if (slot.gridX < 0 || slot.gridX > 49 || slot.gridY < 25 || slot.gridY > 49) {
+                throw new Error(`Invalid grid position: [${slot.gridX}, ${slot.gridY}]. Player must stay in Rows 25-49.`);
             }
             
             const posKey = `${slot.gridX},${slot.gridY}`;
-            if (usedPositions.has(posKey)) throw new Error("Multiple heroes cannot occupy the same slot.");
+            if (usedPositions.has(posKey)) throw new Error("Multiple units cannot occupy the same slot.");
             if (usedHeroes.has(slot.heroId)) throw new Error("A hero cannot be in two places at once.");
             
             usedPositions.add(posKey);

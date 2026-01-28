@@ -1,10 +1,8 @@
 extends Control
 
-@onready var recipe_list = $VBoxContainer/ScrollContainer/RecipeList
-@onready var back_btn = $VBoxContainer/BackButton
+@onready var recipe_list = $MarginContainer/VBoxContainer/ScrollContainer/RecipeList
 
 func _ready():
-	back_btn.pressed.connect(func(): get_tree().change_scene_to_file(GameState.last_visited_hub))
 	ServerConnector.request_completed.connect(_on_request_completed)
 	refresh()
 

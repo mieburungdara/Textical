@@ -2,15 +2,16 @@ extends AtlasBase
 
 @onready var travel_system = $MapLayer/PathGroup
 @onready var ui_panel = $UI/InfoPanel
-@onready var back_btn = get_node_or_null("UI/BackBtn")
 
 func _ready():
     # 1. Component Signal Connections
     travel_system.camera = cam
     ui_panel.action_requested.connect(_on_action_requested)
     travel_system.travel_finished.connect(_on_travel_finished)
-    if back_btn: back_btn.pressed.connect(func(): get_tree().change_scene_to_file(GameState.last_visited_hub))
     ServerConnector.request_completed.connect(_on_request_completed)
+    ServerConnector.task_completed.connect(func(d): 
+        if d.type == "TRAVEL": _on_travel_finished(int(d.targetRegionId), d.targetRegionType)
+    )
     
     # 2. State Sync
     _spawn_map_elements()
@@ -43,6 +44,8 @@ func _on_travel_finished(tid, t_type):
     GameState.set_active_task(null)
     if GameState.current_user:
         GameState.current_user.currentRegion = tid
+        # Update shared state for HUD navigation
+        GameState.current_region_data = DataManager.get_region(tid)
         _update_player_position(false)
     _route_to(t_type)
 

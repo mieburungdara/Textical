@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://task_list_hud"]
+[gd_scene load_steps=2 format=3 uid="uid://bqe6er2xuyggx"]
 
-[ext_resource type="Script" path="res://src/ui/TaskListHUD.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://caki0akpu8lal" path="res://src/ui/TaskListHUD.gd" id="1_script"]
 
 [node name="TaskListHUD" type="Control"]
 layout_mode = 3
@@ -9,10 +9,10 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -220.0
-offset_top = -120.0
-offset_right = -20.0
-offset_bottom = -20.0
+offset_left = -213.0
+offset_top = -1205.0
+offset_right = -13.0
+offset_bottom = -1105.0
 grow_horizontal = 0
 grow_vertical = 0
 script = ExtResource("1_script")

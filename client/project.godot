@@ -26,7 +26,7 @@ DebugOverlay="*res://src/ui/DebugOverlay.tscn"
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/size/window_width_override=360
-window/size/window_height_override=740
+window/size/window_height_override=920
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
 

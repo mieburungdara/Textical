@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://town_screen"]
+[gd_scene load_steps=5 format=3 uid="uid://town_screen"]
 
 [ext_resource type="Script" path="res://src/ui/TownScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
-[ext_resource type="PackedScene" uid="uid://task_list_hud" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
 
 [node name="TownScreen" type="Control"]
 layout_mode = 3
@@ -13,10 +14,22 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.05, 0.03, 1)
+
 [node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
 
 [node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
+layout_mode = 1
+
+[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1
 
 [node name="Actions" type="VBoxContainer" parent="."]
@@ -26,43 +39,35 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -100.0
+offset_left = -150.0
 offset_top = -150.0
-offset_right = 100.0
+offset_right = 150.0
 offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 15
 alignment = 1
 
 [node name="TavernButton" type="Button" parent="Actions"]
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
-text = "Tavern"
+theme_override_font_sizes/font_size = 20
+text = "🍻 VISIT TAVERN"
 
 [node name="MarketButton" type="Button" parent="Actions"]
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
-text = "Market"
-
-[node name="InventoryButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "Inventory"
+theme_override_font_sizes/font_size = 20
+text = "⚖️ VILLAGE MARKET"
 
 [node name="QuestButton" type="Button" parent="Actions"]
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
-text = "Daily Quests"
+theme_override_font_sizes/font_size = 20
+text = "📜 DAILY QUESTS"
 
 [node name="CraftingButton" type="Button" parent="Actions"]
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
-text = "Workbench"
-
-[node name="FormationButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "Formation"
-
-[node name="HeroButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "Hero Profile"
-
-[node name="MapButton" type="Button" parent="Actions"]
-layout_mode = 2
-text = "World Map"
+theme_override_font_sizes/font_size = 20
+text = "🔨 WORKBENCH"
