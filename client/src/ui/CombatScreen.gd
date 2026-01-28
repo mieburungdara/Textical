@@ -114,6 +114,8 @@ async function _run_replay():
             match event.type:
                 "ATTACK":
                     _play_attack_vfx(event)
+                "CAST_SKILL":
+                    _play_skill_vfx(event)
                 "DEATH":
                     _play_death_vfx(event)
                 "GAME_OVER":
@@ -138,6 +140,36 @@ func _play_attack_vfx(ev):
         var tw = create_tween()
         tw.tween_property(target_node, "modulate", Color.WHITE * 2, 0.05)
         tw.tween_property(target_node, "modulate", Color.WHITE, 0.05)
+
+        # NEW: Animate Knockback
+        if ev.data.has("knockback") and ev.data.knockback != null:
+            var kb = ev.data.knockback
+            var kb_pos = Vector2(kb.to.x * cell_size.x, kb.to.y * cell_size.y) + (cell_size / 2)
+            var kb_tw = create_tween().set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+            kb_tw.tween_property(target_node, "position", kb_pos, 0.1)
+
+func _play_skill_vfx(ev):
+    # Flash all impacted tiles
+    if ev.data.has("impact_tiles"):
+        for tile in ev.data.impact_tiles:
+            var rect = ColorRect.new()
+            rect.size = cell_size
+            rect.position = Vector2(tile.x * cell_size.x, tile.y * cell_size.y)
+            rect.color = Color(1, 1, 0, 0.3) # Yellow flash
+            grid_container.add_child(rect)
+            
+            var tw = create_tween()
+            tw.tween_property(rect, "modulate:a", 0.0, 0.3)
+            tw.tween_callback(rect.queue_free)
+    
+    # Also play standard hit VFX on all hit victims
+    if ev.data.has("result") and ev.data.result.has("hit_ids"):
+        for victim_id in ev.data.result.hit_ids:
+            var victim_node = unit_nodes.get(victim_id)
+            if is_instance_valid(victim_node):
+                var vfx = HIT_VFX.instantiate()
+                add_child(vfx)
+                vfx.global_position = victim_node.global_position
 
 func _play_death_vfx(ev):
     var target_id = ev.data.get("target_id")

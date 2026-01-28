@@ -58,7 +58,10 @@ class BattleService {
             sim.addUnit({
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 name: p.profile.name,
-                skills: [] // Add skills logic here later
+                skills: [
+                    { id: 1, name: "Heavy Cleave", range: 1, aoe_pattern: "CROSS", aoe_size: 1, damage_multiplier: 1.5, mana_cost: 20 },
+                    { id: 2, name: "Archer Volley", range: 5, aoe_pattern: "CIRCLE", aoe_size: 2, damage_multiplier: 0.8, mana_cost: 15 }
+                ]
             }, 0, { x: p.grid.x, y: p.grid.y }, stats);
         });
 
@@ -79,7 +82,10 @@ class BattleService {
             instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).substr(2, 5)}`,
             id: monsterTemplate.id,
             name: monsterTemplate.name,
-            exp_reward: 20
+            exp_reward: 20,
+            skills: [
+                { id: 101, name: "Area Smash", range: 1, aoe_pattern: "SQUARE", aoe_size: 1, damage_multiplier: 1.2, mana_cost: 0 }
+            ]
         }, 1, { x: 25, y: 5 }, monsterStats);
 
         // 4. Run Simulation

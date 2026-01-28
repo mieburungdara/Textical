@@ -88,6 +88,14 @@ class BattleGrid {
                     }
                 }
             }
+        } else if (pattern === "LINE") {
+            // Directional line from a source (not yet fully directional, just a vertical/horizontal spread for now)
+            for (let i = 1; i <= size; i++) {
+                [{x:i,y:0},{x:-i,y:0},{x:0,y:i},{x:0,y:-i}].forEach(d => {
+                    const p = { x: center.x + d.x, y: center.y + d.y };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                });
+            }
         }
         return tiles;
     }

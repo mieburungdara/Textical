@@ -24,8 +24,28 @@ class BattleRules {
         defender.takeDamage(finalDamage);
         traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
 
+        // --- NEW: Knockback Logic (15% chance on basic attack) ---
+        let knockbackData = null;
+        if (Math.random() < 0.15 && !defender.isDead) {
+            const dx = Math.sign(defender.gridPos.x - attacker.gridPos.x);
+            const dy = Math.sign(defender.gridPos.y - attacker.gridPos.y);
+            const nextX = defender.gridPos.x + dx;
+            const nextY = defender.gridPos.y + dy;
+
+            if (!this.sim.grid.isTileOccupied(nextX, nextY)) {
+                const oldPos = { ...defender.gridPos };
+                this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
+                defender.gridPos = { x: nextX, y: nextY };
+                this.sim.grid.unitGrid[nextY][nextX] = defender;
+                knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
+            }
+        }
+
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
-            actor_id: attacker.instanceId, target_id: defender.instanceId, damage: finalDamage
+            actor_id: attacker.instanceId, 
+            target_id: defender.instanceId, 
+            damage: finalDamage,
+            knockback: knockbackData
         });
 
         if (defender.currentHealth <= 0) traitService.executeHook("onKill", attacker, defender, this.sim);
@@ -53,7 +73,11 @@ class BattleRules {
         });
 
         this.sim.logger.addEvent("CAST_SKILL", `${actor.data.name} cast ${skill.name}`, {
-            actor_id: actor.instanceId, target_pos: targetPos, skill_name: skill.name, result: { hit_ids: hitIds }
+            actor_id: actor.instanceId, 
+            target_pos: targetPos, 
+            skill_name: skill.name, 
+            impact_tiles: tiles,
+            result: { hit_ids: hitIds }
         });
     }
 
