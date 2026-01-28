@@ -101,6 +101,16 @@ func get_region_scene(r_type: String) -> String:
 		"GRAVEYARD": return "res://src/ui/regions/GraveyardScreen.tscn"
 		"OCEAN": return "res://src/ui/regions/OceanScreen.tscn"
 		"SKY": return "res://src/ui/regions/SkyScreen.tscn"
+		"CRYSTAL": return "res://src/ui/regions/CrystalScreen.tscn"
+		"TECH": return "res://src/ui/regions/TechScreen.tscn"
+		"HELL": return "res://src/ui/regions/HellScreen.tscn"
+		"GARDEN": return "res://src/ui/regions/GardenScreen.tscn"
+		"VOID": return "res://src/ui/regions/VoidScreen.tscn"
+		"WASTELAND": return "res://src/ui/regions/WastelandScreen.tscn"
+		"STEAMPUNK": return "res://src/ui/regions/SteampunkScreen.tscn"
+		"DREAM": return "res://src/ui/regions/DreamScreen.tscn"
+		"UNDERDARK": return "res://src/ui/regions/UnderdarkScreen.tscn"
+		"LIBRARY": return "res://src/ui/regions/LibraryScreen.tscn"
 		_: return "res://src/ui/regions/ForestScreen.tscn" # Fallback
 
 func is_in_town():
