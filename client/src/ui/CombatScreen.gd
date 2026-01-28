@@ -11,10 +11,10 @@ extends Control
 
 const HIT_VFX = preload("res://assets/vfx/HitEffect.tscn")
 const GRID_SIZE = 50
-const TICK_DELAY = 0.15 # Seconds between replay ticks
+const TICK_DELAY = 0.05 # Faster ticks for AP system
 
 var battle_data = null
-var unit_nodes = {} # { unit_id: Node2D }
+var unit_nodes = {} # { instance_id: Node2D }
 var cell_size: Vector2 = Vector2.ZERO
 var is_replaying = false
 
@@ -57,7 +57,7 @@ func _setup_battlefield():
     for child in units_layer.get_children(): child.queue_free()
     unit_nodes.clear()
     
-    # 2. Spawn units
+    # 2. Spawn units using initial positions
     for u in battle_data.initialUnits:
         var node = _create_unit_visual(u)
         units_layer.add_child(node)
@@ -70,7 +70,7 @@ func _setup_battlefield():
 func _create_unit_visual(u_data) -> Node2D:
     var node = Node2D.new()
     
-    # Visual (Circle)
+    # Unit Circle
     var poly = Polygon2D.new()
     var radius = min(cell_size.x, cell_size.y) * 0.4
     var points = []
@@ -81,76 +81,82 @@ func _create_unit_visual(u_data) -> Node2D:
     poly.color = Color.CYAN if u_data.team == "PLAYER" else Color.RED
     node.add_child(poly)
     
-    # Name Label
-    var lbl = Label.new()
-    lbl.text = u_data.name
-    lbl.add_theme_font_size_override("font_size", 10)
-    lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    lbl.position = Vector2(-50, -radius - 20)
-    lbl.custom_minimum_size = Vector2(100, 0)
-    node.add_child(lbl)
+    # Health Bar (Mini)
+    var bar = ProgressBar.new()
+    bar.show_percentage = false
+    bar.custom_minimum_size = Vector2(cell_size.x * 0.8, 4)
+    bar.position = Vector2(-cell_size.x * 0.4, -radius - 10)
+    bar.max_value = u_data.maxHp
+    bar.value = u_data.maxHp
+    node.add_child(bar)
+    node.set_meta("hp_bar", bar)
     
     return node
 
 async function _run_replay():
     is_replaying = true
-    for tick_group in battle_data.replay:
+    for log_entry in battle_data.replay:
         if not is_inside_tree(): return
         
-        # log_label.append_text("[TICK %d]\n" % tick_group.tick)
-        
-        for event in tick_group.events:
-            match event.type:
-                "MOVE":
-                    _animate_move(event)
-                "ATTACK":
-                    _animate_attack(event)
-                "DEATH":
-                    _animate_death(event)
+        # 1. Update EVERY unit position and health based on state snapshot
+        for uid in log_entry.unit_states:
+            var state = log_entry.unit_states[uid]
+            var node = unit_nodes.get(uid)
+            if is_instance_valid(node):
+                # Animate Move
+                var target_pos = Vector2(state.pos.x * cell_size.x, state.pos.y * cell_size.y) + (cell_size / 2)
+                if node.position != target_pos:
+                    var tw = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+                    tw.tween_property(node, "position", target_pos, TICK_DELAY)
+                
+                # Update HP Bar
+                var bar = node.get_meta("hp_bar")
+                if bar:
+                    var tw_hp = create_tween()
+                    tw_hp.tween_property(bar, "value", float(state.hp), TICK_DELAY)
+
+        # 2. Trigger Event Specific VFX
+        match log_entry.type:
+            "ATTACK":
+                _play_attack_vfx(log_entry)
+            "DEATH":
+                _play_death_vfx(log_entry)
+            "GAME_START":
+                log_label.append_text("[b]BATTLE ENGAGED[/b]\n")
+
+        if log_entry.message != "":
+            log_label.append_text(log_entry.message + "\n")
         
         await get_tree().create_timer(TICK_DELAY).timeout
     
     _show_result()
 
-func _animate_move(ev):
-    var node = unit_nodes.get(ev.unitId)
-    if is_instance_valid(node):
-        var target_pos = Vector2(ev.to[0] * cell_size.x, ev.to[1] * cell_size.y) + (cell_size / 2)
-        var tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-        tween.tween_property(node, "position", target_pos, TICK_DELAY)
-
-func _animate_attack(ev):
-    var attacker = unit_nodes.get(ev.attacker)
-    var target = unit_nodes.get(ev.target)
-    
-    if is_instance_valid(attacker) and is_instance_valid(target):
-        # 1. Flash Log
-        log_label.append_text("%s hits %s for %d\n" % [ev.attacker, ev.target, ev.damage])
-        
-        # 2. Impact VFX
+func _play_attack_vfx(entry):
+    var target_id = entry.data.get("target_id")
+    var target_node = unit_nodes.get(target_id)
+    if is_instance_valid(target_node):
         var vfx = HIT_VFX.instantiate()
         add_child(vfx)
-        vfx.global_position = target.global_position
+        vfx.global_position = target_node.global_position
         
-        # 3. Shake target
-        var tween = create_tween()
-        tween.tween_property(target, "modulate", Color.WHITE * 2, 0.05)
-        tween.tween_property(target, "modulate", Color.WHITE, 0.05)
+        var tw = create_tween()
+        tw.tween_property(target_node, "modulate", Color.WHITE * 2, 0.05)
+        tw.tween_property(target_node, "modulate", Color.WHITE, 0.05)
 
-func _animate_death(ev):
-    var node = unit_nodes.get(ev.unitId)
+func _play_death_vfx(entry):
+    var target_id = entry.data.get("target_id")
+    var node = unit_nodes.get(target_id)
     if is_instance_valid(node):
-        log_label.append_text("[color=red]%s has fallen![/color]\n" % ev.unitId)
-        var tween = create_tween()
-        tween.tween_property(node, "modulate:a", 0.0, 0.2)
-        tween.tween_callback(node.queue_free)
+        var tw = create_tween()
+        tw.tween_property(node, "modulate:a", 0.0, 0.2)
+        tw.tween_callback(node.queue_free)
 
 func _show_result():
     result_text.text = battle_data.result
     if battle_data.loot.size() > 0:
         loot_text.text = "Loot Acquired: " + str(battle_data.loot.size()) + " items"
     else:
-        loot_text.text = "No loot found in the remains."
+        loot_text.text = "No loot found."
     result_popup.show()
 
 func _on_close_pressed():

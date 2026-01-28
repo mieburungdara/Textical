@@ -2,12 +2,13 @@ const prisma = require('../db');
 const formationService = require('./formationService');
 const vitalityService = require('./vitalityService');
 const inventoryService = require('./inventoryService');
+const BattleSimulation = require('../logic/battleSimulation');
 
 class BattleService {
     constructor() {
         this.BATTLE_VITALITY_COST = 5;
-        this.GRID_SIZE = 50;
-        this.MAX_TICKS = 200;
+        this.GRID_WIDTH = 50;
+        this.GRID_HEIGHT = 50;
     }
 
     async startBattle(userId, monsterTemplateId) {
@@ -37,113 +38,56 @@ class BattleService {
         await vitalityService.syncUserVitality(userId);
         await vitalityService.consumeVitality(userId, this.BATTLE_VITALITY_COST);
 
-        // 3. Initialize Simulation State
-        let units = [];
-        
+        // 3. Setup Simulation
+        const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT);
+
         // Add Heroes
         party.forEach(p => {
-            units.push({
-                id: `hero_${p.profile.name}`,
-                team: "PLAYER",
-                hp: 100,
-                maxHp: 100,
-                atk: p.profile.totalStats.ATK || 10,
-                x: p.grid.x,
-                y: p.grid.y,
-                isDead: false,
-                name: p.profile.name
-            });
+            const stats = {
+                health_max: p.profile.totalStats.HP || 100,
+                mana_max: p.profile.totalStats.MP || 50,
+                attack_damage: p.profile.totalStats.ATK || 10,
+                defense: p.profile.totalStats.DEF || 5,
+                speed: p.profile.totalStats.SPD || 10,
+                attack_range: p.profile.totalStats.RANGE || 1,
+                crit_chance: 0.05,
+                crit_damage: 1.5,
+                dodge_rate: 5
+            };
+            
+            sim.addUnit({
+                instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
+                name: p.profile.name,
+                skills: [] // Add skills logic here later
+            }, 0, { x: p.grid.x, y: p.grid.y }, stats);
         });
 
-        // Add Monster(s) - Positioned at top center for now
-        units.push({
-            id: `monster_${monsterTemplate.id}`,
-            team: "MONSTER",
-            hp: monsterTemplate.hp_base,
-            maxHp: monsterTemplate.hp_base,
-            atk: monsterTemplate.damage_base,
-            x: 25,
-            y: 5,
-            isDead: false,
-            name: monsterTemplate.name
-        });
+        // Add Monsters (Positioned at top center)
+        const monsterStats = {
+            health_max: monsterTemplate.hp_base,
+            mana_max: 100,
+            attack_damage: monsterTemplate.damage_base,
+            defense: Math.floor(monsterTemplate.damage_base * 0.2),
+            speed: 8,
+            attack_range: 1,
+            crit_chance: 0.02,
+            crit_damage: 1.2,
+            dodge_rate: 2
+        };
 
-        const replay = [];
-        let tick = 0;
-        let victory = false;
-        let defeat = false;
+        sim.addUnit({
+            instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).substr(2, 5)}`,
+            id: monsterTemplate.id,
+            name: monsterTemplate.name,
+            exp_reward: 20
+        }, 1, { x: 25, y: 5 }, monsterStats);
 
         // 4. Run Simulation
-        while (tick < this.MAX_TICKS && !victory && !defeat) {
-            const tickEvents = [];
+        const battleResult = sim.run();
 
-            for (let unit of units) {
-                if (unit.isDead) continue;
-
-                // Find closest target
-                const target = units
-                    .filter(u => !u.isDead && u.team !== unit.team)
-                    .sort((a, b) => {
-                        const distA = Math.abs(unit.x - a.x) + Math.abs(unit.y - a.y);
-                        const distB = Math.abs(unit.x - b.x) + Math.abs(unit.y - b.y);
-                        return distA - distB;
-                    })[0];
-
-                if (!target) continue;
-
-                const distX = Math.abs(unit.x - target.x);
-                const distY = Math.abs(unit.y - target.y);
-
-                if (distX <= 1 && distY <= 1) {
-                    // ATTACK
-                    target.hp -= unit.atk;
-                    tickEvents.push({
-                        type: "ATTACK",
-                        attacker: unit.id,
-                        target: target.id,
-                        damage: unit.atk,
-                        targetHp: Math.max(0, target.hp)
-                    });
-
-                    if (target.hp <= 0) {
-                        target.isDead = true;
-                        tickEvents.push({ type: "DEATH", unitId: target.id });
-                    }
-                } else {
-                    // MOVE (Simple Greedy)
-                    const oldX = unit.x;
-                    const oldY = unit.y;
-                    
-                    if (distX > distY) {
-                        unit.x += (target.x > unit.x ? 1 : -1);
-                    } else {
-                        unit.y += (target.y > unit.y ? 1 : -1);
-                    }
-
-                    tickEvents.push({
-                        type: "MOVE",
-                        unitId: unit.id,
-                        from: [oldX, oldY],
-                        to: [unit.x, unit.y]
-                    });
-                }
-            }
-
-            if (tickEvents.length > 0) {
-                replay.push({ tick, events: tickEvents });
-            }
-
-            // Check Win/Loss
-            victory = units.filter(u => u.team === "MONSTER").every(u => u.isDead);
-            defeat = units.filter(u => u.team === "PLAYER").every(u => u.isDead);
-            tick++;
-        }
-
-        // 5. Finalize Results
-        const result = victory ? "VICTORY" : "DEFEAT";
+        // 5. Process Rewards (Gold/Loot)
         let lootEarned = [];
-
-        if (result === "VICTORY") {
+        if (battleResult.winner === 0) { // Team 0 is Player
             for (const entry of monsterTemplate.loot) {
                 if (Math.random() < entry.chance) {
                     try {
@@ -154,14 +98,27 @@ class BattleService {
                     }
                 }
             }
+            if (battleResult.rewards.gold > 0) {
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { gold: { increment: battleResult.rewards.gold } }
+                });
+            }
         }
 
         return {
-            result,
-            ticks: tick,
-            replay,
+            result: battleResult.winner === 0 ? "VICTORY" : "DEFEAT",
+            replay: battleResult.logs,
             loot: lootEarned,
-            initialUnits: units.map(u => ({ ...u, hp: u.maxHp })) // Snapshot for UI init
+            rewards: battleResult.rewards,
+            initialUnits: sim.units.map(u => ({
+                id: u.instanceId,
+                name: u.data.name,
+                team: u.teamId === 0 ? "PLAYER" : "MONSTER",
+                maxHp: u.stats.health_max,
+                x: u.gridPos.x,
+                y: u.gridPos.y
+            }))
         };
     }
 }
