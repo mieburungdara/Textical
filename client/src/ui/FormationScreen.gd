@@ -168,25 +168,27 @@ func _handle_touch(gx, gy):
     else:        # MOVE OR SWAP
         if gy < ENEMY_ROWS:
             inspector_name.text = "FORBIDDEN"
-            inspector_details.text = "[color=red]Commander, we cannot deploy units in enemy territory.[/color]"
+            inspector_details.text = "[color=red]Commander, we cannot deploy units in enemy territory.[/color]"    
             selected_hero_id = -1
         else:
-                                    if hero_at_slot == -1:
-                                        # 1. MOVE TO EMPTY
-                                        var old_key = _find_hero_pos(selected_hero_id)
-                                        grid_slots.erase(old_key)
-                                        grid_slots[key] = selected_hero_id
-                                        _sync_move(selected_hero_id, gx, gy)
-                                    else:
-                                        # 2. ATOMIC SWAP (Server handles consistency)
-                                        var old_key = _find_hero_pos(selected_hero_id)
-                                        grid_slots[old_key] = hero_at_slot
-                                        grid_slots[key] = selected_hero_id
-                        
-                                        if GameState.current_user:
-                                            ServerConnector.swap_units_position(GameState.current_user.id, current_preset_id, selected_hero_id, hero_at_slot)
-                        
-                                    selected_hero_id = -1    tactical_grid.queue_redraw()
+            if hero_at_slot == -1:
+                # 1. MOVE TO EMPTY
+                var old_key = _find_hero_pos(selected_hero_id)
+                grid_slots.erase(old_key)
+                grid_slots[key] = selected_hero_id
+                _sync_move(selected_hero_id, gx, gy)
+            else:
+                # 2. ATOMIC SWAP (Server handles consistency)
+                var old_key = _find_hero_pos(selected_hero_id)
+                grid_slots[old_key] = hero_at_slot
+                grid_slots[key] = selected_hero_id
+
+                if GameState.current_user:
+                    ServerConnector.swap_units_position(GameState.current_user.id, current_preset_id, selected_hero_id, hero_at_slot)
+
+            selected_hero_id = -1
+        
+    tactical_grid.queue_redraw()
 
 func _sync_move(hid: int, x: int, y: int):
     if GameState.current_user:

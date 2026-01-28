@@ -1,8 +1,8 @@
-[gd_scene load_steps=15 format=3 uid="uid://tavern_screen"]
+[gd_scene load_steps=14 format=3 uid="uid://qglynshcnt8s"]
 
-[ext_resource type="Script" path="res://src/ui/TavernScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_tophud"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="3_nav"]
+[ext_resource type="Script" uid="uid://4humij3qcfng" path="res://src/ui/TavernScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_tophud"]
+[ext_resource type="PackedScene" path="res://src/ui/BottomHUD.tscn" id="3_nav"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 offsets = PackedFloat32Array(0, 0.7, 1)
@@ -23,7 +23,8 @@ fill_from = Vector2(0.5, 1)
 fill_to = Vector2(0.5, 0.2)
 
 [sub_resource type="Gradient" id="Gradient_embers"]
-colors = PackedColorArray(1, 0.6, 0.2, 0, 1, 0.3, 0.1, 0.8, 0.8, 0.1, 0, 0)
+offsets = PackedFloat32Array(0, 0, 1)
+colors = PackedColorArray(1, 0.6, 0.2, 0, 0.8, 0.1, 0, 0, 1, 0.3, 0.1, 0.8)
 
 [sub_resource type="Gradient" id="Gradient_vignette"]
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.7)
@@ -49,7 +50,6 @@ corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.6)
 shadow_size = 20
 shadow_offset = Vector2(0, 10)
 
@@ -154,7 +154,7 @@ theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/normal_font_size = 38
 bbcode_enabled = true
-text = "[center][wave amp=25 freq=2]THE DRUNKEN NOVICE[/wave][/center]"
+text = "[center][wave amp=1 freq=9]THE DRUNKEN NOVICE[/wave][/center]"
 fit_content = true
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/MainBoard/VBox"]

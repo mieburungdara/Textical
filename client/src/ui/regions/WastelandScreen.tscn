@@ -1,46 +1,46 @@
-﻿[gd_scene load_steps=15 format=3 uid=\"uid://wasteland_screen\"]
-[ext_resource type=\"Script\" path=\"res://src/ui/regions/WildernessBase.gd\" id=\"1_script\"]
-[ext_resource type=\"PackedScene\" uid=\"uid://top_hud\" path=\"res://src/ui/TopHUD.tscn\" id=\"2_hud\"]
-[ext_resource type=\"PackedScene\" uid=\"uid://bqe6er2xuyggx\" path=\"res://src/ui/TaskListHUD.tscn\" id=\"3_task\"]
-[ext_resource type=\"PackedScene\" uid=\"uid://bottom_hud\" path=\"res://src/ui/BottomHUD.tscn\" id=\"4_nav\"]
-[sub_resource type=\"Gradient\" id=\"Gradient_bg\"]
+﻿[gd_scene load_steps=15 format=3 uid="uid://wasteland_screen"]
+[ext_resource type="Script" path="res://src/ui/regions/WildernessBase.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[sub_resource type="Gradient" id="Gradient_bg"]
 colors = PackedColorArray(0.1, 0.1, 0, 1, 0.05, 0.05, 0, 1)
-[sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_bg\"]
-gradient = SubResource(\"Gradient_bg\")
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
 fill_from = Vector2(0.5, 0)
 fill_to = Vector2(0.5, 1)
-[sub_resource type=\"Gradient\" id=\"Gradient_static\"]
+[sub_resource type="Gradient" id="Gradient_static"]
 offsets = PackedFloat32Array(0, 0.5, 1)
 colors = PackedColorArray(0.8, 1, 0.4, 0, 0.6, 0.8, 0.2, 0.2, 0.4, 0.6, 0.1, 0)
-[sub_resource type=\"Gradient\" id=\"Gradient_vignette\"]
+[sub_resource type="Gradient" id="Gradient_vignette"]
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.8)
-[sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_vignette\"]
-gradient = SubResource(\"Gradient_vignette\")
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 1)
-[sub_resource type=\"StyleBoxLine\" id=\"StyleBoxLine_sep\"]
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_sep"]
 color = Color(0.8, 1, 0.2, 0.2)
 grow_begin = -50.0
 grow_end = -50.0
 thickness = 2
-[node name=\"WastelandScreen\" type=\"Control\"]
+[node name="WastelandScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource(\"1_script\")
-[node name=\"Background\" type=\"TextureRect\" parent=\".\"]
+script = ExtResource("1_script")
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource(\"GradientTexture2D_bg\")
-[node name=\"StaticNoise\" type=\"CPUParticles2D\" parent=\".\"]
+texture = SubResource("GradientTexture2D_bg")
+[node name="StaticNoise" type="CPUParticles2D" parent="."]
 position = Vector2(360, 640)
 amount = 100
 lifetime = 0.5
@@ -50,16 +50,16 @@ emission_rect_extents = Vector2(360, 640)
 gravity = Vector2(0, 0)
 scale_amount_min = 1.0
 scale_amount_max = 2.0
-color_ramp = SubResource(\"Gradient_static\")
-[node name=\"Vignette\" type=\"TextureRect\" parent=\".\"]
+color_ramp = SubResource("Gradient_static")
+[node name="Vignette" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource(\"GradientTexture2D_vignette\")
-[node name=\"HeaderContainer\" type=\"VBoxContainer\" parent=\".\"]
+texture = SubResource("GradientTexture2D_vignette")
+[node name="HeaderContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -67,26 +67,26 @@ offset_top = 120.0
 offset_bottom = 220.0
 grow_horizontal = 2
 theme_override_constants/separation = 10
-[node name=\"Title\" type=\"Label\" parent=\"HeaderContainer\"]
+[node name="Title" type="Label" parent="HeaderContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.4, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 36
-text = \"THE TOXIC BARRENS\"
+text = "THE TOXIC BARRENS"
 horizontal_alignment = 1
-[node name=\"HSeparator\" type=\"HSeparator\" parent=\"HeaderContainer\"]
+[node name="HSeparator" type="HSeparator" parent="HeaderContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
-theme_override_styles/separator = SubResource(\"StyleBoxLine_sep\")
-[node name=\"Subtitle\" type=\"Label\" parent=\"HeaderContainer\"]
+theme_override_styles/separator = SubResource("StyleBoxLine_sep")
+[node name="Subtitle" type="Label" parent="HeaderContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.7, 0.3, 1)
 theme_override_font_sizes/font_size = 14
-text = \"Rust and rot claim the remains of a fallen civilization\"
+text = "Rust and rot claim the remains of a fallen civilization"
 horizontal_alignment = 1
-[node name=\"MarginContainer\" type=\"MarginContainer\" parent=\".\"]
+[node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -99,14 +99,14 @@ theme_override_constants/margin_left = 30
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 20
-[node name=\"ResourceGrid\" type=\"GridContainer\" parent=\"MarginContainer\"]
+[node name="ResourceGrid" type="GridContainer" parent="MarginContainer"]
 layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 columns = 2
-[node name=\"TopHUD\" parent=\".\" instance=ExtResource(\"2_hud\")]
+[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
-[node name=\"TaskListHUD\" parent=\".\" instance=ExtResource(\"3_task\")]
+[node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
-[node name=\"BottomHUD\" parent=\".\" instance=ExtResource(\"4_nav\")]
+[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1
