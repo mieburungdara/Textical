@@ -18,6 +18,7 @@ var current_region_data = null:
 # PERSISTENCE
 var selected_hero_id: int = -1
 var last_selected_item_id: int = -1
+var target_monster_id: int = -1
 var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
 
 # GEOGRAPHIC ATLAS (5000x5000 World Grid)

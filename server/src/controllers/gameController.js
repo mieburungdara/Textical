@@ -260,10 +260,14 @@ exports.getRegionDetails = async (req, res) => {
             where: { id: regionId },
             include: { 
                 resources: { include: { item: true } },
-                connections: { include: { target: true } }
+                connections: { include: { target: true } },
+                monsters: { include: { monster: true } }
             }
         });
         if (!region) return res.status(404).json({ error: "Region not found" });
-        res.json({ ...region, type: region.visualType });
+        
+        // Flatten monsters for easier client access
+        const flattenedMonsters = region.monsters.map(m => m.monster);
+        res.json({ ...region, type: region.visualType, monsters: flattenedMonsters });
     } catch (e) { res.status(500).json({ error: e.message }); }
 };

@@ -154,8 +154,12 @@ func _play_entry_animation():
         delay += 0.05
 
 func _on_hunt_pressed():
+    var monster_id = 6001 # Fallback
+    if current_region_data and current_region_data.has("monsters") and current_region_data.monsters.size() > 0:
+        monster_id = current_region_data.monsters[0].id
+    
+    GameState.target_monster_id = monster_id
     get_tree().change_scene_to_file("res://src/ui/CombatScreen.tscn")
-
 func _on_gather_pressed(resource_id, btn):
     _last_clicked_button = btn
     if GameState.current_heroes.size() > 0:

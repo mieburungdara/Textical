@@ -52,6 +52,7 @@ model MonsterTemplate {
   categoryId  Int
   category    MonsterCategory @relation(fields: [categoryId], references: [id])
   loot        MonsterLootEntry[]
+  regions     RegionMonster[]
 }
 
 model MonsterCategory {
@@ -107,10 +108,19 @@ model RegionTemplate {
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]
+  monsters        RegionMonster[]
   travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
   residents       User[]
+}
+
+model RegionMonster {
+  id          Int      @id @default(autoincrement())
+  regionId    Int
+  region      RegionTemplate @relation(fields: [regionId], references: [id])
+  monsterId   Int
+  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
 }
 
 model RegionType {
