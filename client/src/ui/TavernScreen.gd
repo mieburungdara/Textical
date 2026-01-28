@@ -15,10 +15,8 @@ func _ready():
     if bottom_hud:
         var town_btn = bottom_hud.find_child("Town")
         if town_btn:
-            # We must override the behavior to ensure server-side exit
-            for connection in town_btn.pressed.get_connections():
-                town_btn.pressed.disconnect(connection.callable)
-            town_btn.pressed.connect(_on_exit_pressed)
+            if not town_btn.pressed.is_connected(_on_exit_pressed):
+                town_btn.pressed.connect(_on_exit_pressed)
 
 func _process(delta):
     # Flickering firelight effect
