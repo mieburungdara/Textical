@@ -5,12 +5,15 @@ const IsTargetInRange = require('./nodes/conditions/IsTargetInRange');
 const CheckHealth = require('./nodes/conditions/CheckHealth');
 const CheckMana = require('./nodes/conditions/CheckMana');
 const HasStatusEffect = require('./nodes/conditions/HasStatusEffect');
+const NearbyUnitsCount = require('./nodes/conditions/NearbyUnitsCount');
+const RandomProbability = require('./nodes/conditions/RandomProbability');
 
 // Import Actions
 const FindTarget = require('./nodes/actions/FindTarget');
 const AttackTarget = require('./nodes/actions/AttackTarget');
 const MoveToTarget = require('./nodes/actions/MoveToTarget');
 const UseSkill = require('./nodes/actions/UseSkill');
+const KiteTarget = require('./nodes/actions/KiteTarget');
 
 class BTManager {
     constructor() {
@@ -22,10 +25,13 @@ class BTManager {
             'CheckHealth': CheckHealth,
             'CheckMana': CheckMana,
             'HasStatusEffect': HasStatusEffect,
+            'NearbyUnitsCount': NearbyUnitsCount,
+            'RandomProbability': RandomProbability,
             'FindTarget': FindTarget,
             'AttackTarget': AttackTarget,
             'MoveToTarget': MoveToTarget,
             'UseSkill': UseSkill,
+            'KiteTarget': KiteTarget,
             'Priority': b3.Selector,
             'Switch': b3.Sequence,
             'Inverter': b3.Inverter
