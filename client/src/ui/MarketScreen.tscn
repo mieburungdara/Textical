@@ -1,51 +1,81 @@
-[gd_scene load_steps=11 format=3 uid="uid://market_screen"]
+[gd_scene load_steps=15 format=3 uid="uid://market_screen"]
 
 [ext_resource type="Script" path="res://src/ui/MarketScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
 [ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
 
-[sub_resource type="Gradient" id="Gradient_market"]
-offsets = PackedFloat32Array(0, 0.6, 1)
-colors = PackedColorArray(0.1, 0.12, 0.2, 1, 0.05, 0.06, 0.12, 1, 0.02, 0.03, 0.08, 1)
+[sub_resource type="Gradient" id="Gradient_medieval"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(0.15, 0.1, 0.05, 1, 0.08, 0.05, 0.02, 1, 0.02, 0.01, 0, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
-gradient = SubResource("Gradient_market")
+gradient = SubResource("Gradient_medieval")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 
-[sub_resource type="LabelSettings" id="LabelSettings_title"]
-font_size = 38
-font_color = Color(0.6, 0.9, 1, 1)
-outline_size = 12
-outline_color = Color(0, 0.1, 0.2, 1)
+[sub_resource type="Gradient" id="Gradient_dust"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.8, 0.7, 0.4, 0, 0.6, 0.5, 0.3, 0.2, 0.4, 0.3, 0.1, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wooden_frame"]
+bg_color = Color(0.12, 0.08, 0.05, 0.95)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.3, 0.2, 0.1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_parchment_tab_active"]
+bg_color = Color(0.9, 0.85, 0.7, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.4, 0.3, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wood_tab_unselected"]
+bg_color = Color(0.2, 0.15, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.1, 0.05, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_appraisal_paper"]
+bg_color = Color(0.9, 0.8, 0.6, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.3, 0.2, 0.1, 1)
+border_blend = true
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_size = 100
+
+[sub_resource type="LabelSettings" id="LabelSettings_market_title"]
+font_size = 36
+font_color = Color(1, 0.8, 0.4, 1)
+outline_size = 8
+outline_color = Color(0.1, 0.05, 0, 1)
 shadow_size = 10
 shadow_color = Color(0, 0, 0, 0.8)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_main_frame"]
-bg_color = Color(0.05, 0.07, 0.15, 0.6)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.4, 0.8, 1, 0.2)
-corner_radius_top_left = 30
-corner_radius_top_right = 30
-corner_radius_bottom_left = 30
-corner_radius_bottom_right = 30
-expand_margin_left = 15.0
-expand_margin_top = 15.0
-expand_margin_right = 15.0
-expand_margin_bottom = 15.0
-shadow_color = Color(0, 0, 0, 0.5)
-shadow_size = 30
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
-bg_color = Color(0.1, 0.3, 0.5, 0.4)
-border_width_bottom = 2
-border_color = Color(0.4, 0.8, 1, 0.5)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
+[sub_resource type="LabelSettings" id="LabelSettings_merchant_sub"]
+font_size = 14
+font_color = Color(0.6, 0.5, 0.4, 1)
 
 [node name="MarketScreen" type="Control"]
 layout_mode = 3
@@ -65,6 +95,18 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_bg")
 
+[node name="DustMotes" type="CPUParticles2D" parent="."]
+position = Vector2(360, 640)
+amount = 15
+lifetime = 8.0
+preprocess = 4.0
+emission_shape = 3
+emission_rect_extents = Vector2(360, 640)
+gravity = Vector2(5, -2)
+scale_amount_min = 1.0
+scale_amount_max = 2.0
+color_ramp = SubResource("Gradient_dust")
+
 [node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
 
@@ -74,7 +116,7 @@ layout_mode = 1
 [node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MainContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -83,81 +125,110 @@ offset_top = 100.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 25
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 25
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 5
 
-[node name="MainFrame" type="PanelContainer" parent="MarginContainer"]
+[node name="WoodenBoard" type="PanelContainer" parent="MainContainer"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_main_frame")
+theme_override_styles/panel = SubResource("StyleBoxFlat_wooden_frame")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainFrame"]
+[node name="VBox" type="VBoxContainer" parent="MainContainer/WoodenBoard"]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 2
 
-[node name="Header" type="PanelContainer" parent="MarginContainer/MainFrame/VBoxContainer"]
+[node name="Title" type="Label" parent="MainContainer/WoodenBoard/VBox"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+text = "MARKET LEDGER"
+label_settings = SubResource("LabelSettings_market_title")
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Title" type="Label" parent="MarginContainer/MainFrame/VBoxContainer/Header"]
+[node name="Subtitle" type="Label" parent="MainContainer/WoodenBoard/VBox"]
 layout_mode = 2
-text = "VILLAGE MARKET"
-label_settings = SubResource("LabelSettings_title")
+text = "The realm's current trade and commerce"
+label_settings = SubResource("LabelSettings_merchant_sub")
 horizontal_alignment = 1
 
-[node name="CategoryBar" type="HBoxContainer" parent="MarginContainer/MainFrame/VBoxContainer"]
+[node name="FilterBar" type="HBoxContainer" parent="MainContainer/WoodenBoard/VBox"]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="TabContainer" type="TabContainer" parent="MarginContainer/MainFrame/VBoxContainer"]
+[node name="SearchEdit" type="LineEdit" parent="MainContainer/WoodenBoard/VBox/FilterBar"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "Search wares..."
+alignment = 1
+
+[node name="CategoryFilter" type="OptionButton" parent="MainContainer/WoodenBoard/VBox/FilterBar"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+item_count = 1
+popup/item_0/text = "All Categories"
+popup/item_0/id = 0
+
+[node name="SortFilter" type="OptionButton" parent="MainContainer/WoodenBoard/VBox/FilterBar"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+item_count = 1
+popup/item_0/text = "Sort: Default"
+popup/item_0/id = 0
+
+[node name="TabContainer" type="TabContainer" parent="MainContainer/WoodenBoard/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 22
+theme_override_colors/font_selected_color = Color(0.2, 0.1, 0, 1)
+theme_override_colors/font_unselected_color = Color(0.6, 0.5, 0.4, 1)
+theme_override_constants/side_margin = 30
+theme_override_font_sizes/font_size = 20
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_parchment_tab_active")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_wood_tab_unselected")
 tab_alignment = 1
 
-[node name="BROWSE" type="Control" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer"]
+[node name="BROWSE" type="MarginContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer"]
 layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer/BROWSE"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Scroll" type="ScrollContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer/BROWSE"]
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="BuyList" type="VBoxContainer" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer/BROWSE/ScrollContainer"]
+[node name="BuyList" type="VBoxContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer/BROWSE/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 5
 
-[node name="SELL" type="Control" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer"]
+[node name="YOUR PACK" type="MarginContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer"]
 visible = false
 layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer/SELL"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Scroll" type="ScrollContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer/YOUR PACK"]
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="SellList" type="VBoxContainer" parent="MarginContainer/MainFrame/VBoxContainer/TabContainer/SELL/ScrollContainer"]
+[node name="SellList" type="VBoxContainer" parent="MainContainer/WoodenBoard/VBox/TabContainer/YOUR PACK/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 5
 
-[node name="StatusLabel" type="Label" parent="MarginContainer/MainFrame/VBoxContainer"]
+[node name="StatusLabel" type="Label" parent="MainContainer/WoodenBoard/VBox"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PricePopup" type="ColorRect" parent="."]
 visible = false
@@ -167,7 +238,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.7)
+color = Color(0, 0, 0, 0.8)
 
 [node name="Panel" type="Panel" parent="PricePopup"]
 custom_minimum_size = Vector2(400, 300)
@@ -179,6 +250,7 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_appraisal_paper")
 
 [node name="VBox" type="VBoxContainer" parent="PricePopup/Panel"]
 layout_mode = 1
@@ -187,17 +259,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
 theme_override_constants/separation = 20
 alignment = 1
 
 [node name="Label" type="Label" parent="PricePopup/Panel/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.1, 0, 1)
 theme_override_font_sizes/font_size = 24
-text = "Set Listing Price"
+text = "VALUATION"
 horizontal_alignment = 1
 
 [node name="PriceInput" type="SpinBox" parent="PricePopup/Panel/VBox"]
@@ -207,7 +280,7 @@ min_value = 1.0
 max_value = 999999.0
 value = 50.0
 alignment = 1
-suffix = "Gold"
+suffix = "GOLD"
 
 [node name="HBox" type="HBoxContainer" parent="PricePopup/Panel/VBox"]
 layout_mode = 2
@@ -215,11 +288,11 @@ theme_override_constants/separation = 20
 alignment = 1
 
 [node name="ConfirmBtn" type="Button" parent="PricePopup/Panel/VBox/HBox"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-text = "CONFIRM"
+text = "OFFER"
 
 [node name="CancelBtn" type="Button" parent="PricePopup/Panel/VBox/HBox"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-text = "CANCEL"
+text = "REJECT"
