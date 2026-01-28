@@ -38,9 +38,17 @@ class BattleService {
         await vitalityService.syncUserVitality(userId);
         await vitalityService.consumeVitality(userId, this.BATTLE_VITALITY_COST);
 
-        // 3. Setup Simulation (Pass Region Type)
-        const regionType = user.region ? user.region.visualType : "FOREST";
+        // 3. Setup Simulation (Pass Region Type and Dynamic Effects)
+        const regionTemplate = await prisma.regionTemplate.findUnique({
+            where: { id: user.currentRegion },
+            include: { type: { include: { effects: true } } }
+        });
+        
+        const regionType = regionTemplate ? regionTemplate.visualType : "FOREST";
+        const terrainEffects = regionTemplate && regionTemplate.type ? regionTemplate.type.effects : [];
+        
         const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
+        sim.terrainEffects = terrainEffects; // Inject database-driven effects
 
         // Add Heroes
         party.forEach(p => {

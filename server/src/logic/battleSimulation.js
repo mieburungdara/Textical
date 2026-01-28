@@ -82,34 +82,36 @@ class BattleSimulation {
     }
 
     _applyTerrainEffects() {
+        if (!this.terrainEffects || this.terrainEffects.length === 0) return;
+
         for (const unit of this.units.filter(u => !u.isDead)) {
-            switch (this.regionType) {
-                case "VOLCANO":
-                case "LAVA":
-                    if (Math.random() < 0.05) {
-                        unit.applyEffect({ type: "BURN", power: 5, duration: 3 });
-                        this.logger.addEvent("TERRAIN_MOD", `${unit.data.name} scorched by volcanic heat`, { type: "BURN", target_id: unit.instanceId });
-                    }
-                    break;
-                case "SNOW":
-                case "ICE":
-                    unit.temporaryStats.speed = (unit.temporaryStats.speed || 0) - (unit.stats.speed * 0.3);
-                    break;
-                case "SWAMP":
-                    unit.temporaryStats.speed = (unit.temporaryStats.speed || 0) - (unit.stats.speed * 0.5);
-                    break;
-                case "GARDEN":
-                case "FAIRY":
-                    if (this.currentTick % 5 === 0) {
-                        unit.currentHealth = Math.min(unit.stats.health_max, unit.currentHealth + 2);
-                    }
-                    break;
-                case "HELL":
-                    unit.takeDamage(1);
-                    break;
-                case "WASTELAND":
-                    unit.temporaryStats.mana_regen = -999;
-                    break;
+            for (const eff of this.terrainEffects) {
+                // Check frequency
+                if (this.currentTick % eff.tickInterval !== 0) continue;
+                
+                // Check chance
+                if (Math.random() > eff.chance) continue;
+
+                switch (eff.effectType) {
+                    case "BURN":
+                        unit.applyEffect({ type: "BURN", power: eff.power, duration: 3 });
+                        this.logger.addEvent("TERRAIN_MOD", `${unit.data.name} scorched by heat`, { type: "BURN", target_id: unit.instanceId });
+                        break;
+                    case "SLOW":
+                        if (eff.statKey && eff.statValue) {
+                            unit.temporaryStats[eff.statKey] = (unit.temporaryStats[eff.statKey] || 0) + (unit.stats[eff.statKey] * eff.statValue);
+                        }
+                        break;
+                    case "HEAL":
+                        unit.currentHealth = Math.min(unit.stats.health_max, unit.currentHealth + eff.power);
+                        break;
+                    case "DRAIN":
+                        unit.takeDamage(eff.power);
+                        break;
+                    case "NO_MANA":
+                        unit.temporaryStats.mana_regen = -999;
+                        break;
+                }
             }
         }
     }
