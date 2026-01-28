@@ -13,6 +13,7 @@ const CheckTerrain = require('./nodes/conditions/CheckTerrain');
 const CheckTargetStatus = require('./nodes/conditions/CheckTargetStatus');
 const CheckAllyCount = require('./nodes/conditions/CheckAllyCount');
 const CheckLineOfSight = require('./nodes/conditions/CheckLineOfSight');
+const CheckTrait = require('./nodes/conditions/CheckTrait');
 
 // Import Actions
 const FindTarget = require('./nodes/actions/FindTarget');
@@ -39,6 +40,7 @@ class BTManager {
             'CheckTargetStatus': CheckTargetStatus,
             'CheckAllyCount': CheckAllyCount,
             'CheckLineOfSight': CheckLineOfSight,
+            'CheckTrait': CheckTrait,
             'FindTarget': FindTarget,
             'AttackTarget': AttackTarget,
             'MoveToTarget': MoveToTarget,

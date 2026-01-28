@@ -43,7 +43,7 @@ class BattleService {
 
         const monsterTemplate = await prisma.monsterTemplate.findUnique({
             where: { id: monsterTemplateId },
-            include: { loot: true }
+            include: { loot: true, traits: { include: { trait: true } } }
         });
         if (!monsterTemplate) throw new Error("Monster not found");
 
@@ -83,6 +83,7 @@ class BattleService {
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 name: p.profile.name,
                 bt_tree: "SimpleAI",
+                traits: p.profile.activeTraits, // Pass traits
                 skills: [
                     { id: 1, name: "Shield Bash", range: 1, aoe_pattern: "SQUARE", aoe_size: 0, damage_multiplier: 0.5, mana_cost: 20, status_effect: { type: "STUN", duration: 2 } }
                 ]
@@ -106,7 +107,8 @@ class BattleService {
             instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).substr(2, 5)}`,
             id: monsterTemplate.id,
             name: monsterTemplate.name,
-            bt_tree: monsterTemplate.behaviorTree, // <--- DINAMIS DARI DATABASE
+            bt_tree: monsterTemplate.behaviorTree, 
+            traits: monsterTemplate.traits.map(t => t.trait.name), // Pass traits
             exp_reward: 20,
             skills: [
                 { id: 101, name: "Fire Breath", range: 3, aoe_pattern: "CIRCLE", aoe_size: 1, damage_multiplier: 1.2, mana_cost: 0, status_effect: { type: "BURN", power: 10, duration: 3 } }

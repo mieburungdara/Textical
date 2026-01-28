@@ -54,6 +54,15 @@ model MonsterTemplate {
   category     MonsterCategory @relation(fields: [categoryId], references: [id])
   loot         MonsterLootEntry[]
   regions      RegionMonster[]
+  traits       MonsterTrait[]
+}
+
+model MonsterTrait {
+  id          Int      @id @default(autoincrement())
+  monsterId   Int
+  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
+  traitId     Int
+  trait       TraitTemplate @relation(fields: [traitId], references: [id])
 }
 
 model MonsterCategory {
@@ -187,6 +196,7 @@ model TraitTemplate {
   category        String   @default("GENERAL")
   items           ItemTrait[]
   heroes          HeroTrait[]
+  monsters        MonsterTrait[]
 }
 
 model ItemEquipSlot {

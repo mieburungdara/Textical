@@ -16,6 +16,7 @@ class BattleUnit {
         this.skillCooldowns = {};
         this.activeEffects = []; 
         this.weaponTraits = [];
+        this.traits = data.traits || []; // NEW: Store general traits (Hero/Monster)
         this.temporaryStats = {}; // To store aura/buff modifiers
         
         if (data.equipment) {

@@ -8,7 +8,6 @@ const server = http.createServer(app);
 const taskProcessor = require('./services/taskProcessor');
 const socketService = require('./services/socketService');
 const apiRoutes = require('./routes/api');
-const adminRoutes = require('./routes/adminRoutes'); // NEW
 
 const PORT = process.env.PORT || 3000;
 
@@ -24,7 +23,6 @@ taskProcessor.start();
 
 // Mount API
 app.use('/api', apiRoutes);
-app.use('/admin/api/bt', adminRoutes); // Mount BT Admin API
 
 app.get('/health', (req, res) => {
     res.json({ status: "alive", engine: "Textical WebSocket Enabled" });
