@@ -4,8 +4,21 @@ extends Control
 @onready var sell_list = $MarginContainer/MainFrame/VBoxContainer/TabContainer/SELL/ScrollContainer/SellList
 @onready var status_label = $MarginContainer/MainFrame/VBoxContainer/StatusLabel
 
+# NEW: Price Prompt Nodes
+@onready var price_popup = $PricePopup
+@onready var price_input = $PricePopup/Panel/VBox/PriceInput
+@onready var confirm_btn = $PricePopup/Panel/VBox/HBox/ConfirmBtn
+@onready var cancel_btn = $PricePopup/Panel/VBox/HBox/CancelBtn
+
+var _pending_list_item_id: int = -1
+
 func _ready():
 	ServerConnector.request_completed.connect(_on_request_completed)
+	
+	# Connect Price Popup Signals
+	confirm_btn.pressed.connect(_on_price_confirmed)
+	cancel_btn.pressed.connect(func(): price_popup.hide())
+	
 	refresh()
 
 func refresh():
@@ -189,7 +202,15 @@ func _create_sell_card(item):
 	return panel
 
 func _on_list_pressed(item_id):
-	# TODO: Implement dynamic price prompt (SpinBox or LineEdit)
-	var default_price = 50 
-	if GameState.current_user:
-		ServerConnector.list_item(GameState.current_user.id, item_id, default_price)
+	_pending_list_item_id = item_id
+	price_popup.show()
+	price_input.value = 50 # Default starting price
+	price_input.get_line_edit().grab_focus()
+
+func _on_price_confirmed():
+	var price = int(price_input.value)
+	if GameState.current_user and _pending_list_item_id != -1:
+		ServerConnector.list_item(GameState.current_user.id, _pending_list_item_id, price)
+		price_popup.hide()
+		status_label.text = "Listing item..."
+		_pending_list_item_id = -1
