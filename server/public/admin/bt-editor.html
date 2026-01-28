@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textical AI Architect v1.7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #020408; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .node rect { stroke-width: 2px; transition: all 0.2s; rx: 8; ry: 8; }
+        .node--selected rect { stroke: #fbbf24 !important; stroke-width: 4px; filter: drop-shadow(0 0 8px #fbbf24); }
+        .node text { font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 600; fill: #f1f5f9; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .link { fill: none; stroke: #1e293b; stroke-width: 2px; transition: stroke 0.3s; }
+        .sidebar { background: rgba(10, 15, 25, 0.98); backdrop-filter: blur(15px); border-right: 1px solid #1e293b; box-shadow: 10px 0 40px rgba(0,0,0,0.7); }
+        input, select, textarea { background: #05070a; border: 1px solid #1e293b; color: white; padding: 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; width: 100%; font-size: 13px; }
+        input:focus, select:focus { border-color: #38bdf8; outline: none; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none; }
+        .btn-ghost { border: 1px solid #1e293b; color: #94a3b8; }
+        .help-box { background: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+        
+        .node-Selector rect { fill: #4c1d95; stroke: #8b5cf6; }
+        .node-Sequence rect { fill: #1e3a8a; stroke: #3b82f6; }
+        .node-Condition rect { fill: #78350f; stroke: #f59e0b; }
+        .node-Inverter rect { fill: #be123c; stroke: #fb7185; }
+        .node-Action rect { fill: #064e3b; stroke: #10b981; }
+        
+        #toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 30px; border-radius: 10px; background: #059669; color: white; font-weight: bold; transform: translateY(100px); transition: all 0.4s; z-index: 100; }
+        #toast.show { transform: translateY(0); }
+    </style>
+</head>
+<body class="h-screen w-screen flex">
+
+    <div id="toast">Changes Synchronized</div>
+
+    <!-- Sidebar -->
+    <div class="w-96 h-full sidebar p-6 flex flex-col gap-6 z-10 overflow-hidden">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-500">AI ARCHITECT</h1>
+                <p class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Version 1.7</p>
+            </div>
+            <button class="text-sky-400 hover:text-sky-300 text-xs font-bold" onclick="createNewTree()">[ NEW ]</button>
+        </div>
+        
+        <div class="space-y-2">
+            <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-widest">Logic Vessel</label>
+            <select id="treeSelector" onchange="loadSelectedTree()" class="cursor-pointer"></select>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- Node Editor -->
+        <div id="inspector" class="flex-1 overflow-y-auto pr-2 space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-bold text-sky-400 uppercase tracking-widest">Inspector</h2>
+                <button class="text-red-500 hover:text-red-400 text-[10px] font-bold" onclick="deleteNode()">[ DELETE ]</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-500 uppercase font-bold">Node Title</label>
+                    <input type="text" id="nodeTitle" oninput="updateNodePreview()" placeholder="Friendly Name">
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-500 uppercase font-bold">Logic Type</label>
+                    <select id="nodeType" onchange="updateNodePreview()">
+                        <option value="Selector">PRIORITY (Pilih salah satu)</option>
+                        <option value="Sequence">SEQUENCE (Lakukan berurutan)</option>
+                        <option value="Condition">IF (Jika...)</option>
+                        <option value="Inverter">IF NOT (Jika tidak...)</option>
+                        <option value="Action">DO (Lakukan!)</option>
+                    </select>
+                    <div id="typeHelp" class="help-box mt-2 italic"></div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-500 uppercase font-bold">Class Implementation</label>
+                    <select id="nodeClass" onchange="updateNodePreview()">
+                        <option value="">Standard Logic</option>
+                        <optgroup label="Conditions (If)">
+                            <option value="IsTargetInRange">IsTargetInRange</option>
+                            <option value="IsLowHP">IsLowHP</option>
+                            <option value="IsStunned">IsStunned</option>
+                        </optgroup>
+                        <optgroup label="Actions (Do)">
+                            <option value="AttackTarget">AttackTarget</option>
+                            <option value="MoveToTarget">MoveToTarget</option>
+                        </optgroup>
+                    </select>
+                    <div id="classHelp" class="help-box mt-2 text-sky-200/70 border-sky-900/30"></div>
+                </div>
+            </div>
+
+            <div class="pt-4 space-y-3 border-t border-slate-800">
+                <button class="btn btn-ghost w-full text-xs" onclick="addChildNode()">+ Attach Child Branch</button>
+            </div>
+        </div>
+
+        <div id="noSelection" class="flex-1 flex items-center justify-center text-center p-8 opacity-30">
+            <p class="text-sm italic">Select a logic block to reveal its secrets</p>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 space-y-4">
+            <button class="btn btn-primary w-full" onclick="saveTree()">SYNCHRONIZE AI</button>
+        </div>
+    </div>
+
+    <!-- Main Canvas -->
+    <div id="canvas" class="flex-1 h-full relative bg-[#020408]">
+        <div class="absolute top-8 left-8 pointer-events-none select-none">
+            <p id="treeTitle" class="text-5xl font-black text-slate-900 uppercase italic tracking-tighter"></p>
+        </div>
+
+        <!-- Legend Overlay -->
+        <div class="absolute bottom-8 left-8 p-4 bg-black/50 backdrop-blur-md border border-slate-800 rounded-lg flex flex-col gap-2 pointer-events-none">
+            <div class="flex items-center gap-3"><div class="w-3 h-3 bg-[#4c1d95] rounded"></div><span class="text-[10px] font-bold uppercase tracking-widest">Priority</span></div>
+            <div class="flex items-center gap-3"><div class="w-3 h-3 bg-[#1e3a8a] rounded"></div><span class="text-[10px] font-bold uppercase tracking-widest">Sequence</span></div>
+            <div class="flex items-center gap-3"><div class="w-3 h-3 bg-[#78350f] rounded"></div><span class="text-[10px] font-bold uppercase tracking-widest">IF</span></div>
+            <div class="flex items-center gap-3"><div class="w-3 h-3 bg-[#be123c] rounded"></div><span class="text-[10px] font-bold uppercase tracking-widest">IF NOT</span></div>
+            <div class="flex items-center gap-3"><div class="w-3 h-3 bg-[#064e3b] rounded"></div><span class="text-[10px] font-bold uppercase tracking-widest">DO (Action)</span></div>
+        </div>
+    </div>
+
+    <script>
+        const TYPE_DESCRIPTIONS = {
+            "Selector": "PRIORITAS: Mencoba menjalankan anak-anaknya dari kiri ke kanan sampai ada yang BERHASIL. Cocok untuk daftar prioritas.",
+            "Sequence": "URUTAN: Menjalankan anak-anaknya dari kiri ke kanan. Jika ada satu yang GAGAL, seluruh urutan berhenti.",
+            "Condition": "IF (JIKA): Digunakan untuk mengecek kondisi (contoh: HP < 40%). Mengembalikan Berhasil atau Gagal.",
+            "Inverter": "IF NOT (JIKA TIDAK): Membalikkan hasil dari anak di bawahnya. Jika pertanyaan di bawahnya Gagal, maka node ini menjadi Berhasil.",
+            "Action": "DO (LAKUKAN): Perintah melakukan aksi nyata seperti Serang atau Jalan."
+        };
+
+        const CLASS_DESCRIPTIONS = {
+            "IsTargetInRange": "Server mengecek jarak di grid 50x50. Berhasil jika musuh dalam jangkauan.",
+            "IsLowHP": "Berhasil jika HP unit di bawah 40%.",
+            "IsStunned": "Berhasil jika unit sedang dalam status STUN.",
+            "AttackTarget": "Unit mengeksekusi serangan fisik ke musuh terdekat.",
+            "MoveToTarget": "Unit bergerak mendekati musuh menggunakan pathfinding server.",
+            "": "Gunakan tipe standar jika node ini hanya berfungsi sebagai pengatur alur."
+        };
+
+        let currentTreeData = null;
+        let selectedNodeId = null;
+        let svg, g, zoom;
+
+        async function init() {
+            const res = await fetch('/admin/api/bt/list');
+            const list = await res.json();
+            const selector = document.getElementById('treeSelector');
+            selector.innerHTML = '<option value="">Choose Logic...</option>';
+            list.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name.toUpperCase();
+                selector.appendChild(opt);
+            });
+            setupCanvas();
+        }
+
+        function setupCanvas() {
+            zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", (event) => g.attr("transform", event.transform));
+            svg = d3.select("#canvas").append("svg").attr("width", "100%").attr("height", "100%").call(zoom);
+            g = svg.append("g");
+        }
+
+        async function createNewTree() {
+            const name = prompt("Enter new AI name:");
+            if (!name) return;
+            const newTree = { title: name, root: "root", nodes: { "root": { id: "root", name: "Selector", title: "Brain", children: [] } } };
+            await fetch(`/admin/api/bt/${name}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(newTree) });
+            init();
+        }
+
+        async function loadSelectedTree() {
+            const name = document.getElementById('treeSelector').value;
+            if (!name) return;
+            const res = await fetch(`/admin/api/bt/${name}`);
+            currentTreeData = await res.json();
+            document.getElementById('treeTitle').textContent = currentTreeData.title;
+            selectedNodeId = null;
+            document.getElementById('inspector').classList.add('hidden');
+            document.getElementById('noSelection').classList.remove('hidden');
+            renderTree();
+        }
+
+        function renderTree() {
+            g.selectAll("*").remove();
+            if (!currentTreeData) return;
+            const hierarchyData = buildHierarchy(currentTreeData.root, currentTreeData.nodes);
+            const root = d3.hierarchy(hierarchyData);
+            const treeLayout = d3.tree().nodeSize([120, 300]);
+            treeLayout(root);
+            if (!selectedNodeId) svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity.translate(200, window.innerHeight/2).scale(0.7));
+
+            g.selectAll(".link").data(root.links()).enter().append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
+                .attr("stroke", d => d.target.data.id === selectedNodeId ? "#38bdf8" : "#1e293b")
+                .attr("stroke-width", d => d.target.data.id === selectedNodeId ? "3px" : "2px");
+
+            const nodes = g.selectAll(".node").data(root.descendants()).enter().append("g")
+                .attr("class", d => `node node-${d.data.name} ${d.data.id === selectedNodeId ? 'node--selected' : ''}`)
+                .attr("transform", d => `translate(${d.y},${d.x})`)
+                .on("click", (event, d) => { event.stopPropagation(); selectNode(d.data.id); });
+
+            nodes.append("rect").attr("width", 180).attr("height", 50).attr("x", -90).attr("y", -25);
+            nodes.append("text").attr("text-anchor", "middle").attr("dy", "5").text(d => d.data.title);
+        }
+
+        function buildHierarchy(nodeId, nodeMap) {
+            const node = nodeMap[nodeId];
+            return { id: nodeId, title: node.title || node.name, name: node.name, children: (node.children || []).map(cid => buildHierarchy(cid, nodeMap)) };
+        }
+
+        function selectNode(id) {
+            selectedNodeId = id;
+            const node = currentTreeData.nodes[id];
+            document.getElementById('inspector').classList.remove('hidden');
+            document.getElementById('noSelection').classList.add('hidden');
+            document.getElementById('nodeTitle').value = node.title || "";
+            document.getElementById('nodeType').value = ["Selector", "Sequence", "Condition", "Inverter", "Action"].includes(node.name) ? node.name : (node.name.startsWith("Is") ? "Condition" : "Action");
+            document.getElementById('nodeClass').value = ["IsTargetInRange", "IsLowHP", "IsStunned", "AttackTarget", "MoveToTarget"].includes(node.name) ? node.name : "";
+            updateHelpText();
+            renderTree();
+        }
+
+        function updateHelpText() {
+            const type = document.getElementById('nodeType').value;
+            const className = document.getElementById('nodeClass').value;
+            document.getElementById('typeHelp').textContent = TYPE_DESCRIPTIONS[type] || "";
+            document.getElementById('classHelp').textContent = CLASS_DESCRIPTIONS[className] || "";
+        }
+
+        function updateNodePreview() {
+            if (!selectedNodeId) return;
+            const node = currentTreeData.nodes[selectedNodeId];
+            node.title = document.getElementById('nodeTitle').value;
+            node.name = document.getElementById('nodeClass').value || document.getElementById('nodeType').value;
+            updateHelpText();
+            renderTree();
+        }
+
+        function addChildNode() {
+            if (!selectedNodeId) return;
+            const newId = 'node-' + Math.random().toString(36).substr(2, 9);
+            currentTreeData.nodes[newId] = { id: newId, name: 'Action', title: 'New Logic', children: [] };
+            if (!currentTreeData.nodes[selectedNodeId].children) currentTreeData.nodes[selectedNodeId].children = [];
+            currentTreeData.nodes[selectedNodeId].children.push(newId);
+            selectNode(newId);
+        }
+
+        function deleteNode() {
+            if (!selectedNodeId || selectedNodeId === currentTreeData.root) { alert("Origin cannot be erased."); return; }
+            for (let nid in currentTreeData.nodes) {
+                if (currentTreeData.nodes[nid].children) {
+                    currentTreeData.nodes[nid].children = currentTreeData.nodes[nid].children.filter(id => id !== selectedNodeId);
+                }
+            }
+            delete currentTreeData.nodes[selectedNodeId];
+            selectedNodeId = null;
+            document.getElementById('inspector').classList.add('hidden');
+            document.getElementById('noSelection').classList.remove('hidden');
+            renderTree();
+        }
+
+        async function saveTree() {
+            const name = document.getElementById('treeSelector').value;
+            if (!name) return;
+            await fetch(`/admin/api/bt/${name}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(currentTreeData) });
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

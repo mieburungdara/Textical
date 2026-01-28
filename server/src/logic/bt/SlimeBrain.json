@@ -1,0 +1,12 @@
+{
+  "title": "SlimeBrain",
+  "root": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "name": "Selector",
+      "title": "Brain",
+      "children": []
+    }
+  }
+}

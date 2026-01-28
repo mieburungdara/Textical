@@ -18,6 +18,29 @@ class IsTargetInRange extends b3.Condition {
 }
 
 /**
+ * Custom Condition: Is HP Below Threshold?
+ */
+class IsLowHP extends b3.Condition {
+    constructor() { super({ name: 'IsLowHP' }); }
+    tick(tick) {
+        const { unit } = tick.blackboard.get('context');
+        const threshold = 0.4; // 40%
+        return (unit.currentHealth / unit.stats.health_max) < threshold ? b3.SUCCESS : b3.FAILURE;
+    }
+}
+
+/**
+ * Custom Condition: Is Unit Stunned?
+ */
+class IsStunned extends b3.Condition {
+    constructor() { super({ name: 'IsStunned' }); }
+    tick(tick) {
+        const { unit } = tick.blackboard.get('context');
+        return unit.activeEffects.some(e => e.type === "STUN") ? b3.SUCCESS : b3.FAILURE;
+    }
+}
+
+/**
  * Custom Action: Attack Target
  */
 class AttackTarget extends b3.Action {
@@ -61,6 +84,9 @@ class BTManager {
         // Register custom nodes so the parser recognizes them
         const customNodes = {
             'IsTargetInRange': IsTargetInRange,
+            'IsLowHP': IsLowHP,
+            'IsStunned': IsStunned,
+            'Inverter': b3.Inverter, // <--- UNTUK LOGIKA "IF NOT"
             'AttackTarget': AttackTarget,
             'MoveToTarget': MoveToTarget
         };
