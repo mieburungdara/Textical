@@ -1,30 +1,30 @@
-﻿[gd_scene load_steps=15 format=3 uid=\"uid://underdark_screen\"]
+﻿[gd_scene load_steps=15 format=3 uid=\"uid://storm_screen\"]
 [ext_resource type=\"Script\" path=\"res://src/ui/regions/WildernessBase.gd\" id=\"1_script\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://top_hud\" path=\"res://src/ui/TopHUD.tscn\" id=\"2_hud\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://bqe6er2xuyggx\" path=\"res://src/ui/TaskListHUD.tscn\" id=\"3_task\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://bottom_hud\" path=\"res://src/ui/BottomHUD.tscn\" id=\"4_nav\"]
 [sub_resource type=\"Gradient\" id=\"Gradient_bg\"]
-colors = PackedColorArray(0, 0.05, 0.05, 1, 0, 0.02, 0.02, 1)
+colors = PackedColorArray(0.05, 0.05, 0.1, 1, 0.02, 0.02, 0.05, 1)
 [sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_bg\"]
 gradient = SubResource(\"Gradient_bg\")
 fill_from = Vector2(0.5, 0)
 fill_to = Vector2(0.5, 1)
-[sub_resource type=\"Gradient\" id=\"Gradient_spores\"]
+[sub_resource type=\"Gradient\" id=\"Gradient_rain\"]
 offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0, 1, 0.8, 0, 0.2, 0.8, 1, 0.4, 0, 0.4, 0.4, 0)
+colors = PackedColorArray(0.6, 0.8, 1, 0, 0.4, 0.6, 1, 0.6, 0.2, 0.4, 0.8, 0)
 [sub_resource type=\"Gradient\" id=\"Gradient_vignette\"]
-colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.9)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.8)
 [sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_vignette\"]
 gradient = SubResource(\"Gradient_vignette\")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 1)
 [sub_resource type=\"StyleBoxLine\" id=\"StyleBoxLine_sep\"]
-color = Color(0, 0.8, 0.6, 0.3)
+color = Color(0.4, 0.6, 1, 0.3)
 grow_begin = -50.0
 grow_end = -50.0
 thickness = 2
-[node name=\"UnderdarkScreen\" type=\"Control\"]
+[node name=\"StormScreen\" type=\"Control\"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,19 +40,21 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource(\"GradientTexture2D_bg\")
-[node name=\"FungalSpores\" type=\"CPUParticles2D\" parent=\".\"]
-position = Vector2(360, 640)
-amount = 30
-lifetime = 12.0
-preprocess = 6.0
+[node name=\"Rain\" type=\"CPUParticles2D\" parent=\".\"]
+position = Vector2(360, -50)
+amount = 100
+lifetime = 1.5
+preprocess = 2.0
 emission_shape = 3
-emission_rect_extents = Vector2(360, 640)
-gravity = Vector2(0, -5)
-angular_velocity_min = -20.0
-angular_velocity_max = 20.0
-scale_amount_min = 2.0
-scale_amount_max = 5.0
-color_ramp = SubResource(\"Gradient_spores\")
+emission_rect_extents = Vector2(360, 1)
+direction = Vector2(0.2, 1)
+spread = 5.0
+gravity = Vector2(0, 800)
+initial_velocity_min = 400.0
+initial_velocity_max = 600.0
+scale_amount_min = 1.0
+scale_amount_max = 3.0
+color_ramp = SubResource(\"Gradient_rain\")
 [node name=\"Vignette\" type=\"TextureRect\" parent=\".\"]
 layout_mode = 1
 anchors_preset = 15
@@ -71,12 +73,12 @@ grow_horizontal = 2
 theme_override_constants/separation = 10
 [node name=\"Title\" type=\"Label\" parent=\"HeaderContainer\"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 1, 0.8, 1)
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 36
-text = \"THE GLOWING DEPTHS\"
+text = \"THE STORMY PEAKS\"
 horizontal_alignment = 1
 [node name=\"HSeparator\" type=\"HSeparator\" parent=\"HeaderContainer\"]
 layout_mode = 2
@@ -84,9 +86,9 @@ theme_override_constants/separation = 10
 theme_override_styles/separator = SubResource(\"StyleBoxLine_sep\")
 [node name=\"Subtitle\" type=\"Label\" parent=\"HeaderContainer\"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.7, 0.6, 1)
+theme_override_colors/font_color = Color(0.4, 0.6, 0.8, 1)
 theme_override_font_sizes/font_size = 14
-text = \"Gigantic mushrooms illuminate the path through the abyss\"
+text = \"Lightning cleaves the sky above the jagged spires\"
 horizontal_alignment = 1
 [node name=\"MarginContainer\" type=\"MarginContainer\" parent=\".\"]
 layout_mode = 1

@@ -1,30 +1,30 @@
-﻿[gd_scene load_steps=15 format=3 uid=\"uid://crystal_screen\"]
+﻿[gd_scene load_steps=15 format=3 uid=\"uid://glacier_screen\"]
 [ext_resource type=\"Script\" path=\"res://src/ui/regions/WildernessBase.gd\" id=\"1_script\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://top_hud\" path=\"res://src/ui/TopHUD.tscn\" id=\"2_hud\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://bqe6er2xuyggx\" path=\"res://src/ui/TaskListHUD.tscn\" id=\"3_task\"]
 [ext_resource type=\"PackedScene\" uid=\"uid://bottom_hud\" path=\"res://src/ui/BottomHUD.tscn\" id=\"4_nav\"]
 [sub_resource type=\"Gradient\" id=\"Gradient_bg\"]
-colors = PackedColorArray(0.1, 0, 0.15, 1, 0.05, 0, 0.1, 1)
+colors = PackedColorArray(0.2, 0.4, 0.5, 1, 0.1, 0.2, 0.3, 1)
 [sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_bg\"]
 gradient = SubResource(\"Gradient_bg\")
 fill_from = Vector2(0.5, 0)
 fill_to = Vector2(0.5, 1)
-[sub_resource type=\"Gradient\" id=\"Gradient_prism\"]
+[sub_resource type=\"Gradient\" id=\"Gradient_frost\"]
 offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(1, 0.4, 1, 0, 0.8, 0.6, 1, 0.4, 0.6, 0.8, 1, 0)
+colors = PackedColorArray(1, 1, 1, 0, 0.8, 1, 1, 0.4, 0.6, 0.9, 1, 0)
 [sub_resource type=\"Gradient\" id=\"Gradient_vignette\"]
-colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.7)
+colors = PackedColorArray(0.2, 0.4, 0.6, 0, 0, 0, 0, 0.7)
 [sub_resource type=\"GradientTexture2D\" id=\"GradientTexture2D_vignette\"]
 gradient = SubResource(\"Gradient_vignette\")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 1)
 [sub_resource type=\"StyleBoxLine\" id=\"StyleBoxLine_sep\"]
-color = Color(1, 0.5, 1, 0.3)
+color = Color(0.6, 0.9, 1, 0.3)
 grow_begin = -50.0
 grow_end = -50.0
 thickness = 2
-[node name=\"CrystalScreen\" type=\"Control\"]
+[node name=\"GlacierScreen\" type=\"Control\"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,19 +40,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource(\"GradientTexture2D_bg\")
-[node name=\"CrystalPrisms\" type=\"CPUParticles2D\" parent=\".\"]
+[node name=\"FrostDust\" type=\"CPUParticles2D\" parent=\".\"]
 position = Vector2(360, 640)
-amount = 20
-lifetime = 8.0
-preprocess = 4.0
+amount = 40
+lifetime = 6.0
+preprocess = 3.0
 emission_shape = 3
 emission_rect_extents = Vector2(360, 640)
-gravity = Vector2(0, 0)
-angular_velocity_min = -20.0
-angular_velocity_max = 20.0
-scale_amount_min = 10.0
-scale_amount_max = 30.0
-color_ramp = SubResource(\"Gradient_prism\")
+gravity = Vector2(0, 5)
+scale_amount_min = 1.0
+scale_amount_max = 3.0
+color_ramp = SubResource(\"Gradient_frost\")
 [node name=\"Vignette\" type=\"TextureRect\" parent=\".\"]
 layout_mode = 1
 anchors_preset = 15
@@ -71,12 +69,12 @@ grow_horizontal = 2
 theme_override_constants/separation = 10
 [node name=\"Title\" type=\"Label\" parent=\"HeaderContainer\"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.7, 1, 1)
+theme_override_colors/font_color = Color(0.8, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 36
-text = \"THE RESONANT CAVERN\"
+text = \"THE EVERLASTING ICE\"
 horizontal_alignment = 1
 [node name=\"HSeparator\" type=\"HSeparator\" parent=\"HeaderContainer\"]
 layout_mode = 2
@@ -84,9 +82,9 @@ theme_override_constants/separation = 10
 theme_override_styles/separator = SubResource(\"StyleBoxLine_sep\")
 [node name=\"Subtitle\" type=\"Label\" parent=\"HeaderContainer\"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.6, 0.8, 1)
+theme_override_colors/font_color = Color(0.6, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 14
-text = \"Glowing gems hum with the song of the earth\"
+text = \"Ancient glaciers guard the secrets of the first world\"
 horizontal_alignment = 1
 [node name=\"MarginContainer\" type=\"MarginContainer\" parent=\".\"]
 layout_mode = 1
