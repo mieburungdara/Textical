@@ -17,13 +17,23 @@ func _ready():
             get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
             return
 
-    ServerConnector.request_completed.connect(_on_request_completed)
-    	ServerConnector.task_completed.connect(_on_task_completed)
-    	
-    	if get_tree().current_scene:
-    		GameState.last_visited_hub = get_tree().current_scene.scene_file_path
-    	
-    	if GameState.current_user:        _fetch_data()
+        ServerConnector.request_completed.connect(_on_request_completed)
+
+        ServerConnector.task_completed.connect(_on_task_completed)
+
+        
+
+        var active_scene = get_tree().current_scene
+
+        if active_scene:
+
+            GameState.last_visited_hub = active_scene.scene_file_path
+
+        
+
+        if GameState.current_user:
+
+            _fetch_data()
 
 func _fetch_data():
     ServerConnector.get_region_details(GameState.current_user.currentRegion)

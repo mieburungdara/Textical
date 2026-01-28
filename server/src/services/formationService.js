@@ -16,39 +16,38 @@ class FormationService {
     /**
      * Moves or Places a single unit on the grid.
      */
-            async moveUnit(userId, presetId, heroId, gridX, gridY) {
-                // 1. Validation
-                if (gridX < 0 || gridX > 49 || gridY < 25 || gridY > 49) throw new Error("Invalid territory.");
-        
-                const [preset, hero] = await Promise.all([
-                    prisma.formationPreset.findUnique({ where: { id: presetId } }),
-                    prisma.hero.findUnique({ where: { id: heroId } })
-                ]);
-        
-                if (!preset || preset.userId !== userId) throw new Error("Unauthorized preset access.");
-                if (!hero || hero.userId !== userId) throw new Error("Unauthorized hero ownership.");
-        
-                // 2. Atomic Upsert (Prevents race conditions)
-        return await prisma.$transaction(async (tx) => {
-            // First, remove anyone else currently at the target coordinates
-            // to ensure the new hero can move there without violating the unique constraint
-            await tx.formationSlot.deleteMany({
-                where: { 
-                    presetId, 
-                    gridX, 
-                    gridY,
-                    heroId: { not: heroId } // Don't delete ourselves if we are already there
-                }
-            });
+                async moveUnit(userId, presetId, heroId, gridX, gridY) {
+                    // 1. Validation
+                    if (gridX < 0 || gridX > 49 || gridY < 25 || gridY > 49) throw new Error("Invalid territory.");
             
-            return await tx.formationSlot.upsert({
-                where: { presetId_heroId: { presetId, heroId } },
-                update: { gridX, gridY },
-                create: { presetId, heroId, gridX, gridY }
-            });
-        });
-            }
-        
+                    const [preset, hero] = await Promise.all([
+                        prisma.formationPreset.findUnique({ where: { id: presetId } }),
+                        prisma.hero.findUnique({ where: { id: heroId } })
+                    ]);
+            
+                    if (!preset || preset.userId !== userId) throw new Error("Unauthorized preset access.");
+                    if (!hero || hero.userId !== userId) throw new Error("Unauthorized hero ownership.");
+            
+                    // 2. Atomic Upsert (Prevents race conditions)
+                    return await prisma.$transaction(async (tx) => {
+                        // First, remove anyone else currently at the target coordinates
+                        // to ensure the new hero can move there without violating the unique constraint
+                        await tx.formationSlot.deleteMany({
+                            where: { 
+                                presetId, 
+                                gridX, 
+                                gridY,
+                                heroId: { not: heroId } // Don't delete ourselves if we are already there
+                            }
+                        });
+            
+                        return await tx.formationSlot.upsert({
+                            where: { presetId_heroId: { presetId, heroId } },
+                            update: { gridX, gridY },
+                            create: { presetId, heroId, gridX, gridY }
+                        });
+                    });
+                }        
             async swapUnits(userId, presetId, heroA, heroB) {
                 const [preset, slotA, slotB] = await Promise.all([
                     prisma.formationPreset.findUnique({ where: { id: presetId } }),
