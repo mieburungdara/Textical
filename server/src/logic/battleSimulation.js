@@ -8,10 +8,11 @@ const BattleAI = require('./battleAI');
 const traitService = require('../services/traitService'); // UPDATED
 
 class BattleSimulation {
-    constructor(width, height) {
+    constructor(width, height, regionType = "FOREST") {
         this.battleId = uuidv4();
         this.width = width;
         this.height = height;
+        this.regionType = regionType.toUpperCase();
         this.units = [];
         this.currentTick = 0;
         this.isFinished = false;
@@ -54,7 +55,8 @@ class BattleSimulation {
         // Start grouping events for this visual tick
         this.logger.startTick(this.currentTick);
 
-        // --- NEW: Calculate Synergies & Auras ---
+        // --- NEW: Terrain & Auras ---
+        this._applyTerrainEffects();
         this._applyAuras();
 
         _.forEach(this.units, (u) => { if (!u.isDead) { u.tick(1.0); u.applyStatusDamage(); } });
@@ -79,19 +81,48 @@ class BattleSimulation {
         this.logger.commitTick(this.units);
     }
 
+    _applyTerrainEffects() {
+        for (const unit of this.units.filter(u => !u.isDead)) {
+            switch (this.regionType) {
+                case "VOLCANO":
+                case "LAVA":
+                    if (Math.random() < 0.05) {
+                        unit.applyEffect({ type: "BURN", power: 5, duration: 3 });
+                        this.logger.addEvent("TERRAIN_MOD", `${unit.data.name} scorched by volcanic heat`, { type: "BURN", target_id: unit.instanceId });
+                    }
+                    break;
+                case "SNOW":
+                case "ICE":
+                    unit.temporaryStats.speed = (unit.temporaryStats.speed || 0) - (unit.stats.speed * 0.3);
+                    break;
+                case "SWAMP":
+                    unit.temporaryStats.speed = (unit.temporaryStats.speed || 0) - (unit.stats.speed * 0.5);
+                    break;
+                case "GARDEN":
+                case "FAIRY":
+                    if (this.currentTick % 5 === 0) {
+                        unit.currentHealth = Math.min(unit.stats.health_max, unit.currentHealth + 2);
+                    }
+                    break;
+                case "HELL":
+                    unit.takeDamage(1);
+                    break;
+                case "WASTELAND":
+                    unit.temporaryStats.mana_regen = -999;
+                    break;
+            }
+        }
+    }
+
     _applyAuras() {
         for (const unit of this.units.filter(u => !u.isDead)) {
             const allies = this.units.filter(u => !u.isDead && u.teamId === unit.teamId && u.instanceId !== unit.instanceId);
             
             for (const ally of allies) {
                 const dist = this.grid.getDistance(unit.gridPos, ally.gridPos);
-                
-                // 1. Shield Wall (Adjacent allies gain +DEF)
                 if (dist <= 1) {
                     unit.temporaryStats.defense = (unit.temporaryStats.defense || 0) + 5;
                 }
-
-                // 2. Protector (Allies behind high-HP units gain CRIT)
                 if (dist <= 2 && ally.stats.health_max > 150) {
                     unit.temporaryStats.crit_chance = (unit.temporaryStats.crit_chance || 0) + 0.1;
                 }

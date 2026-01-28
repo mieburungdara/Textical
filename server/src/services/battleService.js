@@ -38,8 +38,9 @@ class BattleService {
         await vitalityService.syncUserVitality(userId);
         await vitalityService.consumeVitality(userId, this.BATTLE_VITALITY_COST);
 
-        // 3. Setup Simulation
-        const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT);
+        // 3. Setup Simulation (Pass Region Type)
+        const regionType = user.region ? user.region.visualType : "FOREST";
+        const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
 
         // Add Heroes
         party.forEach(p => {
