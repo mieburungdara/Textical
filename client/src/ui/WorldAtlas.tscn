@@ -27,6 +27,12 @@ offset_bottom = 5000.0
 mouse_filter = 2
 color = Color(0.85, 0.75, 0.55, 1)
 
+[node name="DebugGrid" type="Node2D" parent="MapLayer"]
+z_index = 5
+
+[node name="Connections" type="Node2D" parent="MapLayer"]
+z_index = 10
+
 [node name="Landmarks" type="Node2D" parent="MapLayer"]
 
 [node name="Pins" type="Node2D" parent="MapLayer"]

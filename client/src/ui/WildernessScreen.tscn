@@ -1,0 +1,158 @@
+[gd_scene load_steps=13 format=3 uid="uid://dnjemrk303hej"]
+
+[ext_resource type="Script" path="res://src/ui/WildernessScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+
+[sub_resource type="Gradient" id="Gradient_forest"]
+colors = PackedColorArray(0.02, 0.08, 0.05, 1, 0.01, 0.03, 0.05, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_forest")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+colors = PackedColorArray(0.2, 0.6, 0.4, 0.2, 0.1, 0.3, 0.2, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_glow"]
+gradient = SubResource("Gradient_glow")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_fireflies"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.4, 1, 0.6, 0, 0.6, 1, 0.8, 0.8, 1, 1, 1, 0)
+
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.7)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 1)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_separator"]
+color = Color(0.4, 0.8, 0.6, 0.3)
+grow_begin = -50.0
+grow_end = -50.0
+thickness = 2
+
+[node name="WildernessScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_bg")
+
+[node name="ForestGlow" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -400.0
+offset_right = 400.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_glow")
+
+[node name="Fireflies" type="CPUParticles2D" parent="."]
+position = Vector2(360, 640)
+amount = 25
+lifetime = 8.0
+preprocess = 4.0
+emission_shape = 3
+emission_rect_extents = Vector2(360, 640)
+gravity = Vector2(0, -5)
+tangential_accel_min = -10.0
+tangential_accel_max = 10.0
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color_ramp = SubResource("Gradient_fireflies")
+
+[node name="Vignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_vignette")
+
+[node name="HeaderContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 120.0
+offset_bottom = 220.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 1, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 36
+text = "THE UNKNOWN WILDS"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+theme_override_styles/separator = SubResource("StyleBoxLine_separator")
+
+[node name="Subtitle" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.7, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ancient secrets lie hidden beneath the canopy"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 220.0
+offset_bottom = -110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 20
+
+[node name="ResourceGrid" type="GridContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
+layout_mode = 1
+
+[node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
+layout_mode = 1
+
+[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
+layout_mode = 1
