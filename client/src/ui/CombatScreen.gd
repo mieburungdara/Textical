@@ -111,6 +111,12 @@ async function _run_replay():
                         elif eff == "POISON": tint = Color.GREEN
                         elif eff == "SILENCE": tint = Color.CORNFLOWER_BLUE
                         elif eff == "PROVOKED": tint = Color.MAGENTA
+                        elif eff == "CRYSTALLIZED": tint = Color.WHITE
+                        elif eff == "OVERCHARGE": tint = Color.PURPLE
+                        elif eff == "STEALTH": node.modulate.a = 0.3
+                
+                if not state.has("effects") or not state.effects.has("STEALTH"):
+                    node.modulate.a = 1.0 # Reset transparency if not stealthed
                 
                 var poly = node.get_child(0)
                 if poly is Polygon2D:

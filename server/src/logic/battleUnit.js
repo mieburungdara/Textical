@@ -52,8 +52,8 @@ class BattleUnit {
     }
 
     isReady() { 
-        // Cannot act if STUNNED
-        if (this.activeEffects.some(e => e.type === "STUN")) return false;
+        // Cannot act if STUNNED or CRYSTALLIZED
+        if (this.activeEffects.some(e => e.type === "STUN" || e.type === "CRYSTALLIZED")) return false;
         return this.currentActionPoints >= 100.0; 
     }
 
@@ -61,9 +61,12 @@ class BattleUnit {
         return this.activeEffects.some(e => e.type === "SILENCE");
     }
 
-    getProvokerId() {
-        const provokedEff = this.activeEffects.find(e => e.type === "PROVOKED");
-        return provokedEff ? provokedEff.provokerId : null;
+    isStealth() {
+        return this.activeEffects.some(e => e.type === "STEALTH");
+    }
+
+    removeEffect(type) {
+        this.activeEffects = this.activeEffects.filter(e => e.type !== type);
     }
 
     applyStatusDamage() {
@@ -71,22 +74,41 @@ class BattleUnit {
         this.temporaryStats = {}; // Reset every tick to recalculate auras/buffs
 
         this.activeEffects = this.activeEffects.filter(eff => {
-            // 1. Process DoT (BURN is fast/strong, POISON is slow/weak but lasts)
+            // 1. Process DoT
             if (eff.type === "BURN" || eff.type === "POISON") {
                 const dmg = eff.power || 5;
                 this.takeDamage(dmg);
                 totalDot += dmg;
             }
 
-            // 2. Process Stat Modifiers (Calculated in getStat)
+            // 2. Process Stat Modifiers
             if (eff.stat_mod) {
                 for (const [sKey, sVal] of Object.entries(eff.stat_mod)) {
                     this.temporaryStats[sKey] = (this.temporaryStats[sKey] || 0) + sVal;
                 }
             }
 
+            // 3. Specialized Logic: CRYSTALLIZED (DEF +500%)
+            if (eff.type === "CRYSTALLIZED") {
+                this.temporaryStats.defense = (this.temporaryStats.defense || 0) + (this.stats.defense * 5);
+            }
+
+            // 4. Specialized Logic: OVERCHARGE (SPD +200%)
+            if (eff.type === "OVERCHARGE") {
+                this.temporaryStats.speed = (this.temporaryStats.speed || 0) + (this.stats.speed * 2);
+            }
+
             eff.duration--;
-            return eff.duration > 0;
+
+            // Handle Expiration Logic
+            if (eff.duration <= 0) {
+                // OVERCHARGE Penalty: STUN after finish
+                if (eff.type === "OVERCHARGE") {
+                    this.applyEffect({ type: "STUN", duration: 3 });
+                }
+                return false;
+            }
+            return true;
         });
         return totalDot;
     }

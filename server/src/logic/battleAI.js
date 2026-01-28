@@ -18,26 +18,36 @@ class BattleAI {
         if (skill) { this.sim.rules.performSkill(actor, skill, target.gridPos); return; }
 
         const range = actor.stats.attack_range || 1;
-        if (dist <= range) { this.sim.rules.performAttack(actor, target); }
+        if (dist <= range) { 
+            // Break Stealth when attacking
+            if (actor.isStealth()) actor.removeEffect("STEALTH");
+            this.sim.rules.performAttack(actor, target); 
+        }
         else {
             if (traitService.executeHook("onBeforeMove", actor, this.sim) !== false) this.moveTowards(actor, target);
         }
     }
 
     findTarget(actor) {
-        // --- NEW: Check Provoked (Taunt) ---
+        // --- Check Provoked (Taunt) ---
         const provokerId = actor.getProvokerId();
         if (provokerId) {
             const provoker = this.sim.units.find(u => u.instanceId === provokerId && !u.isDead);
             if (provoker) return provoker;
         }
 
-        const enemies = this.sim.units.filter(u => !u.isDead && u.teamId !== actor.teamId);
-        if (enemies.length === 0) return null;
+        // --- Filter out Stealth units unless they are the only ones left ---
+        const enemies = this.sim.units.filter(u => !u.isDead && u.teamId !== actor.teamId && !u.isStealth());
+        
+        // Fallback to stealth units if no visible enemies exist
+        const targetableEnemies = enemies.length > 0 ? enemies : this.sim.units.filter(u => !u.isDead && u.teamId !== actor.teamId);
+        
+        if (targetableEnemies.length === 0) return null;
+        
         switch (actor.behavior) {
-            case "assassin": return enemies.sort((a, b) => (a.currentHealth - b.currentHealth) || (actor.teamId === 0 ? b.gridPos.x - a.gridPos.x : a.gridPos.x - b.gridPos.x))[0];
-            case "berserker": return enemies.sort((a, b) => this.sim.grid.getDistance(actor.gridPos, a.gridPos) - this.sim.grid.getDistance(actor.gridPos, b.gridPos))[0];
-            default: return enemies.sort((a, b) => this.sim.grid.getDistance(actor.gridPos, a.gridPos) - this.sim.grid.getDistance(actor.gridPos, b.gridPos))[0];
+            case "assassin": return targetableEnemies.sort((a, b) => (a.currentHealth - b.currentHealth) || (actor.teamId === 0 ? b.gridPos.x - a.gridPos.x : a.gridPos.x - b.gridPos.x))[0];
+            case "berserker": return targetableEnemies.sort((a, b) => this.sim.grid.getDistance(actor.gridPos, a.gridPos) - this.sim.grid.getDistance(actor.gridPos, b.gridPos))[0];
+            default: return targetableEnemies.sort((a, b) => this.sim.grid.getDistance(actor.gridPos, a.gridPos) - this.sim.grid.getDistance(actor.gridPos, b.gridPos))[0];
         }
     }
 
