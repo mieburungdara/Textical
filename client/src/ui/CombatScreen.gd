@@ -103,11 +103,14 @@ async function _run_replay():
                 var base_color = Color.CYAN if "hero_" in uid else Color.RED
                 var tint = base_color
                 
-                # Check for active effects in unit_states (we need to send this from server)
+                # Check for active effects in unit_states
                 if state.has("effects"):
                     for eff in state.effects:
                         if eff == "STUN": tint = Color.YELLOW
                         elif eff == "BURN": tint = Color.ORANGE
+                        elif eff == "POISON": tint = Color.GREEN
+                        elif eff == "SILENCE": tint = Color.CORNFLOWER_BLUE
+                        elif eff == "PROVOKED": tint = Color.MAGENTA
                 
                 var poly = node.get_child(0)
                 if poly is Polygon2D:

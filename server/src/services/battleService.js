@@ -60,7 +60,7 @@ class BattleService {
                 name: p.profile.name,
                 skills: [
                     { id: 1, name: "Shield Bash", range: 1, aoe_pattern: "SQUARE", aoe_size: 0, damage_multiplier: 0.5, mana_cost: 20, status_effect: { type: "STUN", duration: 2 } },
-                    { id: 2, name: "Heavy Cleave", range: 1, aoe_pattern: "CROSS", aoe_size: 1, damage_multiplier: 1.5, mana_cost: 20 }
+                    { id: 3, name: "Warcry", range: 3, aoe_pattern: "CIRCLE", aoe_size: 2, damage_multiplier: 0.1, mana_cost: 30, status_effect: { type: "PROVOKED", duration: 4 } }
                 ]
             }, 0, { x: p.grid.x, y: p.grid.y }, stats);
         });
@@ -84,7 +84,8 @@ class BattleService {
             name: monsterTemplate.name,
             exp_reward: 20,
             skills: [
-                { id: 101, name: "Fire Breath", range: 3, aoe_pattern: "CIRCLE", aoe_size: 1, damage_multiplier: 1.2, mana_cost: 0, status_effect: { type: "BURN", power: 10, duration: 3 } }
+                { id: 102, name: "Toxic Spit", range: 4, aoe_pattern: "SQUARE", aoe_size: 0, damage_multiplier: 0.8, mana_cost: 0, status_effect: { type: "POISON", power: 5, duration: 10 } },
+                { id: 103, name: "Muzzle", range: 2, aoe_pattern: "SQUARE", aoe_size: 0, damage_multiplier: 0.5, mana_cost: 0, status_effect: { type: "SILENCE", duration: 5 } }
             ]
         }, 1, { x: 25, y: 5 }, monsterStats);
 

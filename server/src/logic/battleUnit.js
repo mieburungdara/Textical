@@ -57,12 +57,21 @@ class BattleUnit {
         return this.currentActionPoints >= 100.0; 
     }
 
+    isSilenced() {
+        return this.activeEffects.some(e => e.type === "SILENCE");
+    }
+
+    getProvokerId() {
+        const provokedEff = this.activeEffects.find(e => e.type === "PROVOKED");
+        return provokedEff ? provokedEff.provokerId : null;
+    }
+
     applyStatusDamage() {
         let totalDot = 0;
         this.temporaryStats = {}; // Reset every tick to recalculate auras/buffs
 
         this.activeEffects = this.activeEffects.filter(eff => {
-            // 1. Process DoT
+            // 1. Process DoT (BURN is fast/strong, POISON is slow/weak but lasts)
             if (eff.type === "BURN" || eff.type === "POISON") {
                 const dmg = eff.power || 5;
                 this.takeDamage(dmg);

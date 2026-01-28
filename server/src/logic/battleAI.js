@@ -13,7 +13,8 @@ class BattleAI {
         const dist = this.sim.grid.getDistance(actor.gridPos, target.gridPos);
         if (actor.behavior === "coward" && (actor.currentHealth / actor.stats.health_max) < 0.4) { this.executeFlee(actor, target); return; }
 
-        const skill = this.getBestUsableSkill(actor, dist);
+        // --- NEW: Check Silence ---
+        const skill = actor.isSilenced() ? null : this.getBestUsableSkill(actor, dist);
         if (skill) { this.sim.rules.performSkill(actor, skill, target.gridPos); return; }
 
         const range = actor.stats.attack_range || 1;
@@ -24,6 +25,13 @@ class BattleAI {
     }
 
     findTarget(actor) {
+        // --- NEW: Check Provoked (Taunt) ---
+        const provokerId = actor.getProvokerId();
+        if (provokerId) {
+            const provoker = this.sim.units.find(u => u.instanceId === provokerId && !u.isDead);
+            if (provoker) return provoker;
+        }
+
         const enemies = this.sim.units.filter(u => !u.isDead && u.teamId !== actor.teamId);
         if (enemies.length === 0) return null;
         switch (actor.behavior) {

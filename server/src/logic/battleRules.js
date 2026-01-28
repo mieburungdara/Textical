@@ -70,7 +70,9 @@ class BattleRules {
                 
                 // Apply Status Effect if skill has one
                 if (skill.status_effect) {
-                    victim.applyEffect({ ...skill.status_effect });
+                    const eff = { ...skill.status_effect };
+                    if (eff.type === "PROVOKED") eff.provokerId = actor.instanceId;
+                    victim.applyEffect(eff);
                 }
 
                 hitIds.push(victim.instanceId);
