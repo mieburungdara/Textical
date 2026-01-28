@@ -171,31 +171,28 @@ func _handle_touch(gx, gy):
             inspector_details.text = "[color=red]Commander, we cannot deploy units in enemy territory.[/color]"
             selected_hero_id = -1
         else:
-            if hero_at_slot == -1:
-                # 1. MOVE TO EMPTY
-                var old_key = _find_hero_pos(selected_hero_id)
-                grid_slots.erase(old_key)
-                grid_slots[key] = selected_hero_id
-                
-                # Server Sync (Single Unit)
-                _sync_move(selected_hero_id, gx, gy)
-            else:
-                # 2. SWAP (Two units involved)
-                var old_key = _find_hero_pos(selected_hero_id)
-                var old_pos = old_key.split(",")
-                var old_gx = int(old_pos[0])
-                var old_gy = int(old_pos[1])
-                
-                # Update Local State
-                grid_slots[old_key] = hero_at_slot
-                grid_slots[key] = selected_hero_id
-                
-                # Server Sync (Two Units)
-                _sync_move(selected_hero_id, gx, gy)
-                _sync_move(hero_at_slot, old_gx, old_gy)
-                
-            selected_hero_id = -1
-        
+                        if hero_at_slot == -1:
+                            # 1. MOVE TO EMPTY
+                            var old_key = _find_hero_pos(selected_hero_id)
+                            grid_slots.erase(old_key)
+                            grid_slots[key] = selected_hero_id
+                            _sync_move(selected_hero_id, gx, gy)
+                        else:
+                            # 2. SWAP (Two units involved)
+                            var old_key = _find_hero_pos(selected_hero_id)
+                            var old_pos = old_key.split(",")
+                            var old_gx = int(old_pos[0])
+                            var old_gy = int(old_pos[1])
+            
+                            grid_slots[old_key] = hero_at_slot
+                            grid_slots[key] = selected_hero_id
+            
+                            # To ensure consistency on the server without a batch API yet,
+                            # we must perform these sequentially or handle failures carefully.
+                            _sync_move(selected_hero_id, gx, gy)
+                            _sync_move(hero_at_slot, old_gx, old_gy)
+            
+                        selected_hero_id = -1        
     tactical_grid.queue_redraw()
 
 func _sync_move(hid: int, x: int, y: int):

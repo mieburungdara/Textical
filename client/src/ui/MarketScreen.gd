@@ -189,5 +189,7 @@ func _create_sell_card(item):
 	return panel
 
 func _on_list_pressed(item_id):
+	# TODO: Implement dynamic price prompt (SpinBox or LineEdit)
+	var default_price = 50 
 	if GameState.current_user:
-		ServerConnector.list_item(GameState.current_user.id, item_id, 10)
+		ServerConnector.list_item(GameState.current_user.id, item_id, default_price)

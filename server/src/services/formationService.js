@@ -16,57 +16,54 @@ class FormationService {
     /**
      * Moves or Places a single unit on the grid.
      */
-    async moveUnit(userId, presetId, heroId, gridX, gridY) {
-        // 1. Validation
-        if (gridX < 0 || gridX > 49 || gridY < 25 || gridY > 49) {
-            throw new Error("Invalid territory.");
-        }
-
-        const preset = await prisma.formationPreset.findUnique({ where: { id: presetId } });
-        if (!preset || preset.userId !== userId) throw new Error("Unauthorized.");
-
-        // 2. Atomic Move
-        return await prisma.$transaction(async (tx) => {
-            // A. Remove this hero from any existing slot in this preset
-            await tx.formationSlot.deleteMany({
-                where: { presetId, heroId }
+        async moveUnit(userId, presetId, heroId, gridX, gridY) {
+            // 1. Validation
+            if (gridX < 0 || gridX > 49 || gridY < 25 || gridY > 49) throw new Error("Invalid territory.");
+    
+            const [preset, hero] = await Promise.all([
+                prisma.formationPreset.findUnique({ where: { id: presetId } }),
+                prisma.hero.findUnique({ where: { id: heroId } })
+            ]);
+    
+            if (!preset || preset.userId !== userId) throw new Error("Unauthorized preset access.");
+            if (!hero || hero.userId !== userId) throw new Error("Unauthorized hero ownership.");
+    
+            // 2. Atomic Move
+            return await prisma.$transaction(async (tx) => {
+                await tx.formationSlot.deleteMany({ where: { presetId, heroId } });
+                await tx.formationSlot.deleteMany({ where: { presetId, gridX, gridY } });
+                return await tx.formationSlot.create({
+                    data: { presetId, heroId, gridX, gridY }
+                });
             });
-
-            // B. Remove whatever was at the target coordinate (it will be replaced)
-            await tx.formationSlot.deleteMany({
+        }
+    
+        async removeUnit(userId, presetId, gridX, gridY) {
+            const preset = await prisma.formationPreset.findUnique({ where: { id: presetId } });
+            if (!preset || preset.userId !== userId) throw new Error("Unauthorized.");
+    
+            return await prisma.formationSlot.deleteMany({
                 where: { presetId, gridX, gridY }
             });
-
-            // C. Create the new slot
-            return await tx.formationSlot.create({
-                data: { presetId, heroId, gridX, gridY }
+        }
+    
+        async updateFormation(userId, presetId, slots) {
+            // 1. Massive Grid Validation (50x50)
+            if (slots.length > 2500) throw new Error("Formation cannot exceed 2500 units.");
+    
+            const preset = await prisma.formationPreset.findUnique({
+                where: { id: presetId }
             });
-        });
-    }
-
-    /**
-     * Removes a unit from the grid entirely.
-     */
-    async removeUnit(userId, presetId, gridX, gridY) {
-        const preset = await prisma.formationPreset.findUnique({ where: { id: presetId } });
-        if (!preset || preset.userId !== userId) throw new Error("Unauthorized.");
-
-        return await prisma.formationSlot.deleteMany({
-            where: { presetId, gridX, gridY }
-        });
-    }
-
-    async updateFormation(userId, presetId, slots) {
-        // 1. Massive Grid Validation (50x50)
-        if (slots.length > 2500) throw new Error("Formation cannot exceed 2500 units.");
-        
-        const preset = await prisma.formationPreset.findUnique({
-            where: { id: presetId }
-        });
-        if (!preset || preset.userId !== userId) throw new Error("Invalid preset.");
-
-        // 2. Clear old slots and Validate boundaries
-        const usedPositions = new Set();
+            if (!preset || preset.userId !== userId) throw new Error("Invalid preset.");
+    
+            // SECURITY: Verify all heroes in batch belong to the user
+            const heroIds = slots.map(s => s.heroId);
+            const ownedCount = await prisma.hero.count({
+                where: { id: { in: heroIds }, userId }
+            });
+            if (ownedCount !== heroIds.length) throw new Error("Unauthorized hero ownership in batch update.");
+    
+            // 2. Clear old slots and Validate boundaries        const usedPositions = new Set();
         const usedHeroes = new Set();
 
         for (const slot of slots) {
