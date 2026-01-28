@@ -91,4 +91,4 @@ func _update_ui():
         else:
             # Inactive: Muted Blue-Grey + Transparent Style
             btn.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7, 1))
-            btn.add_theme_stylebox_override("normal", _style_normal)
+            btn.remove_theme_stylebox_override("normal") # Revert to default or normal style

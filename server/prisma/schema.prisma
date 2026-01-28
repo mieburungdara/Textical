@@ -267,6 +267,7 @@ model FormationSlot {
   gridX       Int      
   gridY       Int      
   @@unique([presetId, gridX, gridY])
+  @@unique([presetId, heroId])
 }
 
 model HeroEquipment {

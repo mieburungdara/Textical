@@ -163,6 +163,14 @@ exports.moveFormationUnit = async (req, res) => {
     } catch (e) { res.status(400).json({ error: e.message }); }
 };
 
+exports.swapFormationUnits = async (req, res) => {
+    try {
+        const { userId, presetId, heroA, heroB } = req.body;
+        const result = await formationService.swapUnits(userId, presetId, heroA, heroB);
+        res.json({ success: true, result });
+    } catch (e) { res.status(400).json({ error: e.message }); }
+};
+
 // --- EQUIPMENT ---
 exports.equipItem = async (req, res) => {
     try {

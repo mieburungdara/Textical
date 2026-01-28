@@ -123,7 +123,9 @@ func _spawn_ripple(pos: Vector2):
     tween.tween_property(ripple, "scale", Vector2(4, 4), 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT) 
     tween.tween_property(ripple, "modulate:a", 0.0, 0.6)
     await tween.finished
-    if is_instance_valid(ripple): ripple.queue_free()
+    if is_instance_valid(ripple): 
+        ripple.texture = null
+        ripple.queue_free()
 
 func _generate_rune_dust(count):
     for i in range(count):
