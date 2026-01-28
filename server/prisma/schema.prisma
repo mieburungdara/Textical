@@ -45,14 +45,15 @@ model User {
 }
 
 model MonsterTemplate {
-  id          Int      @id
-  name        String
-  hp_base     Int
-  damage_base Int
-  categoryId  Int
-  category    MonsterCategory @relation(fields: [categoryId], references: [id])
-  loot        MonsterLootEntry[]
-  regions     RegionMonster[]
+  id           Int      @id
+  name         String
+  hp_base      Int
+  damage_base  Int
+  behaviorTree String   @default("SimpleAI") // Nama file JSON di folder bt/
+  categoryId   Int
+  category     MonsterCategory @relation(fields: [categoryId], references: [id])
+  loot         MonsterLootEntry[]
+  regions      RegionMonster[]
 }
 
 model MonsterCategory {

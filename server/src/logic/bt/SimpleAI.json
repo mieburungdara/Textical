@@ -1,0 +1,34 @@
+{
+    "title": "SimpleAI",
+    "description": "Attack if in range, otherwise move towards target.",
+    "root": "root-node",
+    "nodes": {
+        "root-node": {
+            "id": "root-node",
+            "name": "Priority",
+            "title": "Main Logic",
+            "children": ["attack-seq", "move-act"]
+        },
+        "attack-seq": {
+            "id": "attack-seq",
+            "name": "Sequence",
+            "title": "Attack If Possible",
+            "children": ["in-range-cond", "attack-act"]
+        },
+        "in-range-cond": {
+            "id": "in-range-cond",
+            "name": "IsTargetInRange",
+            "title": "Target in Range?"
+        },
+        "attack-act": {
+            "id": "attack-act",
+            "name": "AttackTarget",
+            "title": "Execute Attack"
+        },
+        "move-act": {
+            "id": "move-act",
+            "name": "MoveToTarget",
+            "title": "Walk Closer"
+        }
+    }
+}

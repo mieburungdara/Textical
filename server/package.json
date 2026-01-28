@@ -12,6 +12,7 @@
     "@prisma/client": "^5.10.0",
     "ajv": "^8.17.1",
     "bcryptjs": "^3.0.3",
+    "behavior3js": "^0.2.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "easystarjs": "^0.4.4",

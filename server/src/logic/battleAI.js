@@ -1,4 +1,5 @@
 const traitService = require('../services/traitService'); // UPDATED
+const btManager = require('./bt/BTManager');
 
 class BattleAI {
     constructor(sim) {
@@ -6,6 +7,15 @@ class BattleAI {
     }
 
     decideAction(actor) {
+        // --- NEW: Behavior Tree Logic ---
+        // If the unit has a specific BT assigned (e.g., 'BaseAI'), use it
+        const treeName = actor.data.bt_tree || null; 
+        if (treeName) {
+            btManager.execute(treeName, actor, this.sim);
+            return; // BT took control
+        }
+
+        // --- Fallback: Hardcoded Legacy Logic ---
         for (let skillId in actor.skillCooldowns) { if (actor.skillCooldowns[skillId] > 0) actor.skillCooldowns[skillId]--; }
         const target = traitService.executeHook("onTargetAcquisition", actor, this.sim) || this.findTarget(actor);
         if (!target) return;
