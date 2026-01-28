@@ -145,12 +145,9 @@ func _check_transition():
                 get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
                 return
         
-        if region_data.type == "TOWN":
-            GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
-            get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn")
-        else:
-            GameState.last_visited_hub = "res://src/ui/WildernessScreen.tscn"
-            get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
+        var target_scene = GameState.get_region_scene(region_data.type)
+        GameState.last_visited_hub = target_scene
+        get_tree().change_scene_to_file(target_scene)
 
 func _on_login_failed(error):
     _login_in_progress = false

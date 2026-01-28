@@ -87,5 +87,21 @@ func update_vitality(new_vitality):
     if current_user:
         current_user.vitality = new_vitality
 
+func get_region_scene(r_type: String) -> String:
+	match r_type.to_upper():
+		"TOWN": return "res://src/ui/TownScreen.tscn"
+		"FOREST": return "res://src/ui/regions/ForestScreen.tscn"
+		"MINE": return "res://src/ui/regions/MineScreen.tscn"
+		"DUNGEON": return "res://src/ui/regions/DungeonScreen.tscn"
+		"RUINS": return "res://src/ui/regions/RuinsScreen.tscn"
+		"VOLCANO": return "res://src/ui/regions/VolcanoScreen.tscn"
+		"DESERT": return "res://src/ui/regions/DesertScreen.tscn"
+		"SNOW": return "res://src/ui/regions/SnowScreen.tscn"
+		"SWAMP": return "res://src/ui/regions/SwampScreen.tscn"
+		"GRAVEYARD": return "res://src/ui/regions/GraveyardScreen.tscn"
+		"OCEAN": return "res://src/ui/regions/OceanScreen.tscn"
+		"SKY": return "res://src/ui/regions/SkyScreen.tscn"
+		_: return "res://src/ui/regions/ForestScreen.tscn" # Fallback
+
 func is_in_town():
     return current_user and current_user.currentRegion == 1

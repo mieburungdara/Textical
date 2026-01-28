@@ -31,7 +31,7 @@ func _on_error(endpoint, message):
 		log_label.append_text("Returning to wilderness in 3s...\n")
 		await get_tree().create_timer(3.0).timeout
 		if is_inside_tree():
-			get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
+			get_tree().change_scene_to_file(GameState.last_visited_hub)
 
 func _on_request_completed(endpoint, data):
 	if "battle/start" in endpoint:
@@ -93,4 +93,4 @@ func _show_result():
 	popup.show()
 
 func _on_close_pressed():
-	get_tree().change_scene_to_file("res://src/ui/WildernessScreen.tscn")
+	get_tree().change_scene_to_file(GameState.last_visited_hub)

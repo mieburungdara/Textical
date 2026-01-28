@@ -54,12 +54,12 @@ func _on_nav_pressed(path: String):
     get_tree().change_scene_to_file(path)
 
 func _on_hub_pressed():
-    var path = "res://src/ui/TownScreen.tscn"
-    if GameState.current_region_data and GameState.current_region_data.get("type") != "TOWN":
-        path = "res://src/ui/WildernessScreen.tscn"
-    
-    if get_tree().current_scene.scene_file_path == path: return
-    get_tree().change_scene_to_file(path)
+	var path = "res://src/ui/TownScreen.tscn"
+	if GameState.current_region_data:
+		path = GameState.get_region_scene(GameState.current_region_data.get("type", "TOWN"))
+	
+	if get_tree().current_scene.scene_file_path == path: return
+	get_tree().change_scene_to_file(path)
 
 func _update_ui():
     var current_path = get_tree().current_scene.scene_file_path

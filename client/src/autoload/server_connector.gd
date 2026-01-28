@@ -12,14 +12,14 @@ signal task_failed(data)
 
 var base_url = "http://localhost:3000/api"
 
-var auth: AuthHandler
-var world: WorldHandler
-var tavern: TavernHandler
-var market: MarketHandler
-var quest: QuestHandler
-var inventory: InventoryHandler
-var battle: BattleHandler
-var socket: SocketHandler
+var auth
+var world
+var tavern
+var market
+var quest
+var inventory
+var battle
+var socket
 
 func _ready():
     auth = AuthHandler.new()

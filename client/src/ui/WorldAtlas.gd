@@ -50,4 +50,4 @@ func _on_travel_finished(tid, t_type):
     _route_to(t_type)
 
 func _route_to(r_type):
-    get_tree().change_scene_to_file("res://src/ui/TownScreen.tscn" if r_type == "TOWN" else "res://src/ui/WildernessScreen.tscn")
+    get_tree().change_scene_to_file(GameState.get_region_scene(r_type))
