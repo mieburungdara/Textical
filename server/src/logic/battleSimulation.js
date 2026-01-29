@@ -128,7 +128,11 @@ class BattleSimulation {
                         traitService.executeHook("onHealthRegen", unit, eff.power, this);
                         break;
                     case "DRAIN":
-                        unit.takeDamage(eff.power);
+                        // AAA Hook: Terrain damage must trigger takeDamage hooks
+                        const impactMods = traitService.executeHook("onTakeDamage", unit, null, eff.power, this) || {};
+                        const finalDmg = impactMods.finalDamage !== undefined ? impactMods.finalDamage : eff.power;
+                        unit.takeDamage(finalDmg);
+                        traitService.executeHook("onPostHit", unit, null, finalDmg, this);
                         break;
                 }
             }

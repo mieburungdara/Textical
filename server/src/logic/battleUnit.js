@@ -12,7 +12,7 @@ class BattleUnit {
         
         this.currentHealth = stats.health_max;
         this.currentMana = stats.mana_max;
-        this.currentActionPoints = 0.0;
+        this._actionPoints = 0.0; // Private backing variable
         this.isDead = false;
         
         this.skillCooldowns = {};
@@ -22,10 +22,29 @@ class BattleUnit {
         this.temporaryStats = {}; 
     }
 
+    // Property Getter/Setter for Action Points to trigger hooks
+    get currentActionPoints() { return this._actionPoints; }
+    set currentActionPoints(val) {
+        const old = this._actionPoints;
+        this._actionPoints = val;
+        // Trigger hook only for major changes (>= 1.0) to avoid tick noise
+        if (Math.abs(val - old) >= 1.0) {
+            // Context simulation should be passed here, but BattleUnit doesn't hold it.
+            // We use global context or sim reference if available in the call stack.
+        }
+    }
+
+    // Manual AP update with hook support
+    modifyAP(amount, sim) {
+        const old = this._actionPoints;
+        this._actionPoints += amount;
+        traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
+    }
+
     tick(delta) {
         if (this.isDead) return;
         const effectiveSpeed = this.getStat("speed");
-        this.currentActionPoints += effectiveSpeed * delta;
+        this._actionPoints += effectiveSpeed * delta;
     }
 
     getStat(key) {
@@ -76,7 +95,7 @@ class BattleUnit {
 
     isReady() { 
         if (this.activeEffects.some(e => e.type === "STUN" || e.type === "CRYSTALLIZED")) return false;
-        return this.currentActionPoints >= 100.0; 
+        return this._actionPoints >= 100.0; 
     }
 
     applyStatusDamage(sim) {

@@ -48,6 +48,7 @@ class BaseTrait {
     onStatusPurged(unit, effect, sim) {}
 
     // --- 7. RESOURCE & VITALITY ---
+    onActionPointsChange(unit, oldVal, newVal, sim) {}
     onManaGain(unit, amount, sim) {}
     onManaSpend(unit, amount, sim) {}
     onHealthRegen(unit, amount, sim) {}
