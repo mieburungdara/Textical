@@ -91,6 +91,17 @@ class BattleRules {
         tiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (victim && victim.teamId !== actor.teamId) {
+                // --- AAA Skill Hook: Pre-Defend & Dodge ---
+                const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim) || {};
+                const dodgeChance = (victim.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
+                
+                if (Math.random() * 100 < dodgeChance) {
+                    traitService.executeHook("onDodge", victim, actor, this.sim);
+                    traitService.executeHook("onAttackMissed", actor, victim, this.sim);
+                    this.sim.logger.addEvent("MISS", `${victim.data.name} evaded ${actor.data.name}'s skill!`, { target_id: victim.instanceId });
+                    return;
+                }
+
                 const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0, skill.element || 0);
                 const impactMods = traitService.executeHook("onTakeDamage", victim, actor, result.damage, this.sim) || {};
                 const finalDmg = impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage;

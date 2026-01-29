@@ -87,9 +87,12 @@ class BattleUnit {
         if (this.currentHealth < 0) this.currentHealth = 0;
     }
 
-    applyRegen() {
+    applyRegen(sim) {
         const regen = Math.floor(this.stats.health_max * 0.02);
         this.currentHealth = Math.min(this.stats.health_max, this.currentHealth + regen);
+        if (regen > 0) {
+            traitService.executeHook("onHealthRegen", this, regen, sim);
+        }
         return regen;
     }
 

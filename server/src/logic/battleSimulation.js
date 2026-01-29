@@ -94,11 +94,8 @@ class BattleSimulation {
             
             traitService.executeHook("onTurnEnd", actor, this);
             
-            actor.currentActionPoints -= 100.0;
-            const regenAmount = actor.applyRegen();
-            if (regenAmount > 0) {
-                traitService.executeHook("onHealthRegen", actor, regenAmount, this);
-            }
+            actor.modifyAP(-100.0, this);
+            actor.applyRegen(this);
             
             if (this.rules.checkWinCondition()) break;
         }
