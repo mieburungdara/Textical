@@ -59,6 +59,7 @@ class BattleUnit {
         const existingIdx = this.activeEffects.findIndex(e => e.type === effect.type);
         if (existingIdx !== -1) {
             this.activeEffects[existingIdx] = effect;
+            traitService.executeHook("onStatusRefreshed", this, effect, sim); // NEW
         } else {
             this.activeEffects.push(effect);
         }

@@ -25,7 +25,6 @@ class BattleRules {
             return;
         }
 
-        // --- Block Hook (AAA) ---
         const isBlocked = Math.random() < (defMods.blockChance || 0);
         if (isBlocked) {
             traitService.executeHook("onBlock", defender, attacker, this.sim);
@@ -49,10 +48,7 @@ class BattleRules {
 
         // 7. Apply Physical Change
         defender.takeDamage(finalDamage);
-        
-        // --- AAA Hook: Synergy (onAllyDamage) ---
         this._broadcastAllyEvent("onAllyDamage", defender, finalDamage);
-
         this.sim.unitDeeds[attacker.instanceId] = (this.sim.unitDeeds[attacker.instanceId] || 0) + finalDamage;
 
         // 8. Post-Impact Life Cycle
@@ -60,15 +56,41 @@ class BattleRules {
         traitService.executeHook("onPostAttack", attacker, defender, finalDamage, this.sim);
         traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
 
+        // --- AAA Hook: Knockback with full Sensing ---
+        let knockbackData = null;
+        if (Math.random() < 0.15 && !defender.isDead) {
+            const dx = Math.sign(defender.gridPos.x - attacker.gridPos.x);
+            const dy = Math.sign(defender.gridPos.y - attacker.gridPos.y);
+            const nextX = defender.gridPos.x + dx;
+            const nextY = defender.gridPos.y + dy;
+
+            if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
+                const oldPos = { ...defender.gridPos };
+                
+                this._broadcastAdjacencyLost(defender);
+                traitService.executeHook("onTileExit", defender, oldPos, this.sim);
+
+                this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
+                defender.gridPos = { x: nextX, y: nextY };
+                this.sim.grid.unitGrid[nextY][nextX] = defender;
+
+                traitService.executeHook("onTileEnter", defender, defender.gridPos, this.sim);
+                traitService.executeHook("onMoveStep", defender, defender.gridPos, this.sim);
+                this._broadcastAdjacencyGained(defender);
+
+                knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
+            }
+        }
+
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
             actor_id: attacker.instanceId, target_id: defender.instanceId, 
-            damage: finalDamage, is_crit: result.isCrit
+            damage: finalDamage, is_crit: result.isCrit, knockback: knockbackData
         });
 
         // 9. Kill Life Cycle
         if (defender.currentHealth <= 0) {
             traitService.executeHook("onKill", attacker, defender, this.sim);
-            this._broadcastAllyEvent("onAllyKill", attacker, defender); // Attacker's allies celebrate
+            this._broadcastAllyEvent("onAllyKill", attacker, defender);
         }
 
         traitService.executeHook("onPostAction", attacker, this.sim);
@@ -81,6 +103,28 @@ class BattleRules {
         allies.forEach(ally => traitService.executeHook(hookName, ally, actor, ...args));
     }
 
+    _broadcastAdjacencyLost(unit) {
+        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
+        neighbors.forEach(pos => {
+            const neighbor = this.sim.grid.unitGrid[pos.y][pos.x];
+            if (neighbor) {
+                traitService.executeHook("onAdjacencyLost", unit, neighbor, this.sim);
+                traitService.executeHook("onAdjacencyLost", neighbor, unit, this.sim);
+            }
+        });
+    }
+
+    _broadcastAdjacencyGained(unit) {
+        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
+        neighbors.forEach(pos => {
+            const neighbor = this.sim.grid.unitGrid[pos.y][pos.x];
+            if (neighbor) {
+                traitService.executeHook("onAdjacencyGained", unit, neighbor, this.sim);
+                traitService.executeHook("onAdjacencyGained", neighbor, unit, this.sim);
+            }
+        });
+    }
+
     performSkill(actor, skill, targetPos) {
         if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
         
@@ -91,14 +135,12 @@ class BattleRules {
         tiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (victim && victim.teamId !== actor.teamId) {
-                // --- AAA Skill Hook: Pre-Defend & Dodge ---
                 const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim) || {};
                 const dodgeChance = (victim.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
                 
                 if (Math.random() * 100 < dodgeChance) {
                     traitService.executeHook("onDodge", victim, actor, this.sim);
                     traitService.executeHook("onAttackMissed", actor, victim, this.sim);
-                    this.sim.logger.addEvent("MISS", `${victim.data.name} evaded ${actor.data.name}'s skill!`, { target_id: victim.instanceId });
                     return;
                 }
 
@@ -129,22 +171,10 @@ class BattleRules {
         const currentDead = this.sim.units.filter(u => !u.isDead && u.currentHealth <= 0);
         currentDead.forEach(u => {
             if (traitService.executeHook("onBeforeDeath", u, this.sim)) return;
-            
-            // --- AAA Hook: Adjacency Lost Sensing (Before removal) ---
-            const neighbors = this.sim.grid.getNeighbors(u.gridPos);
-            neighbors.forEach(nPos => {
-                const neighbor = this.sim.grid.unitGrid[nPos.y][nPos.x];
-                if (neighbor) {
-                    traitService.executeHook("onAdjacencyLost", u, neighbor, this.sim);
-                    traitService.executeHook("onAdjacencyLost", neighbor, u, this.sim);
-                }
-            });
-
+            this._broadcastAdjacencyLost(u);
             u.isDead = true;
             this.sim.grid.unitGrid[u.gridPos.y][u.gridPos.x] = null;
             traitService.executeHook("onDeath", u, this.sim);
-            
-            // AAA Hook: Team Vengeance/Morale
             this._broadcastAllyEvent("onAllyDeath", u);
 
             if (u.teamId === 1) this.sim.killedMonsterIds.push(u.data.id);
