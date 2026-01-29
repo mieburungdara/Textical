@@ -20,11 +20,11 @@ class CraftingService {
         if (user.taskQueue.length > 0) throw new Error("You are too busy to start crafting right now.");
 
         const region = await prisma.regionTemplate.findUnique({ where: { id: user.currentRegion } });
-        if (!region || region.type !== "TOWN") throw new Error("Town-only.");
+        if (!region || region.visualType !== "TOWN") throw new Error("Town-only.");
         
         const recipe = await prisma.recipeTemplate.findUnique({
             where: { id: recipeId },
-            include: { ingredients: true }
+            include: { ingredients: { include: { item: true } } }
         });
 
         // Unified Slot Check
