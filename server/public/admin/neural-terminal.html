@@ -121,12 +121,20 @@
                 block.className = "tick-block";
                 
                 let html = `<div class="tick-header">TICK ${tick.tick}</div><div class="events-container">`;
-                filteredEvents.forEach(e => {
+                tick.events.forEach(e => {
                     const dataStr = e.data ? JSON.stringify(e.data, null, 2) : "No state data captured.";
+                    
+                    let extraInfo = "";
+                    if (e.type === "ATTACK" || e.type === "DAMAGE") {
+                        extraInfo = `<span style="color:#f87171; font-weight:bold; margin-left:10px">-${e.data.damage} HP</span>`;
+                        if (e.data.is_crit) extraInfo += ` <span style="color:#fbbf24; font-weight:bold">CRITICAL!</span>`;
+                    }
+
                     html += `<div class="event">
-                        <div style="display:flex; gap:15px">
+                        <div style="display:flex; gap:15px; align-items:center">
                             <span class="type type-${e.type}">[${e.type}]</span>
                             <span class="msg">${e.msg}</span>
+                            ${extraInfo}
                         </div>
                         <pre class="data-trace">${dataStr}</pre>
                     </div>`;
