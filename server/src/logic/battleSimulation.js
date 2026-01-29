@@ -76,9 +76,10 @@ class BattleSimulation {
         _.forEach(this.units, (u) => { 
             if (!u.isDead) { 
                 u.tick(1.0, this); 
-                const dotDamage = u.applyStatusDamage(this); // Passes 'this' for status hooks
+                const dotDamage = u.applyStatusDamage(this);
                 if (dotDamage > 0) {
-                    // Could trigger onPostHit for DoT if needed
+                    // AAA Hook: Sense DoT impact
+                    traitService.executeHook("onPostHit", u, null, dotDamage, this);
                 }
             } 
         });

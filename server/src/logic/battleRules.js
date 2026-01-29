@@ -150,7 +150,11 @@ class BattleRules {
                     traitService.executeHook("onBlock", victim, actor, this.sim);
                 }
 
-                const result = CombatRules.calculateDamage(actor, victim, (skill.damage_multiplier || 1.0) * (isBlocked ? 0.5 : 1.0), skill.element || 0);
+                // --- AAA Skill Hook: Pre-Attack Scaling ---
+                const atkMods = traitService.executeHook("onPreAttack", actor, victim, this.sim) || {};
+                const skillMult = (skill.damage_multiplier || 1.0) * (atkMods.dmgMult || 1.0) * (isBlocked ? 0.5 : 1.0);
+
+                const result = CombatRules.calculateDamage(actor, victim, skillMult, skill.element || 0);
                 
                 if (result.isCrit) {
                     traitService.executeHook("onCrit", actor, victim, result.damage, this.sim);
