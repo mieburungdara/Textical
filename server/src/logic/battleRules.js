@@ -99,6 +99,7 @@ class BattleRules {
                 this._broadcastAllyEvent("onAllyDamage", victim, finalDmg);
                 
                 traitService.executeHook("onPostHit", victim, actor, finalDmg, this.sim);
+                traitService.executeHook("onPostAttack", actor, victim, finalDmg, this.sim);
                 traitService.executeHook("onLifesteal", actor, finalDmg, this.sim);
                 
                 if (skill.status_effect) {
@@ -117,6 +118,17 @@ class BattleRules {
         const currentDead = this.sim.units.filter(u => !u.isDead && u.currentHealth <= 0);
         currentDead.forEach(u => {
             if (traitService.executeHook("onBeforeDeath", u, this.sim)) return;
+            
+            // --- AAA Hook: Adjacency Lost Sensing (Before removal) ---
+            const neighbors = this.sim.grid.getNeighbors(u.gridPos);
+            neighbors.forEach(nPos => {
+                const neighbor = this.sim.grid.unitGrid[nPos.y][nPos.x];
+                if (neighbor) {
+                    traitService.executeHook("onAdjacencyLost", u, neighbor, this.sim);
+                    traitService.executeHook("onAdjacencyLost", neighbor, u, this.sim);
+                }
+            });
+
             u.isDead = true;
             this.sim.grid.unitGrid[u.gridPos.y][u.gridPos.x] = null;
             traitService.executeHook("onDeath", u, this.sim);

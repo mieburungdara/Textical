@@ -32,6 +32,17 @@ class BattleSimulation {
         const unit = new BattleUnit(data, teamId, { x: _.clamp(pos.x, 0, this.width-1), y: _.clamp(pos.y, 0, this.height-1) }, stats);
         this.units.push(unit);
         this.grid.unitGrid[unit.gridPos.y][unit.gridPos.x] = unit;
+
+        // --- AAA Hook: Spawn Sensing ---
+        const neighbors = this.grid.getNeighbors(unit.gridPos);
+        neighbors.forEach(nPos => {
+            const neighbor = this.grid.unitGrid[nPos.y][nPos.x];
+            if (neighbor) {
+                traitService.executeHook("onAdjacencyGained", unit, neighbor, this);
+                traitService.executeHook("onAdjacencyGained", neighbor, unit, this);
+            }
+        });
+
         return unit;
     }
 
