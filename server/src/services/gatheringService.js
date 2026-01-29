@@ -34,13 +34,28 @@ class GatheringService {
         const str = heroStats.attributes.str || 10;
         const hardness = resource.item.hardness || 1;
         const minStr = resource.item.minStr || 0;
+        const minToolTier = resource.item.minToolTier || 0;
 
-        // 1. Requirement Check
+        // 1. Physical Requirement Check
         if (str < minStr) {
             throw new Error(`Hero is not strong enough to mine this material. (Required: ${minStr} STR, Have: ${str} STR)`);
         }
+
+        // 2. Tool Tier Check
+        const heroData = await prisma.hero.findUnique({
+            where: { id: heroId },
+            include: { equipment: { include: { itemInstance: { include: { template: true } } } } }
+        });
+
+        const equippedPickaxe = heroData.equipment.find(eq => eq.itemInstance.template.category === "PICKAXE");
+        const currentToolTier = equippedPickaxe ? (equippedPickaxe.itemInstance.template.toolTier || 0) : -1;
+
+        if (currentToolTier < minToolTier) {
+            const toolMsg = minToolTier === 0 ? "a basic pickaxe" : `a Tier ${minToolTier} pickaxe`;
+            throw new Error(`You need ${toolMsg} to mine this material. (Current Tier: ${currentToolTier === -1 ? 'None' : currentToolTier})`);
+        }
         
-        // 2. Duration Logic
+        // 3. Duration Logic
         const strFactor = Math.max(0.5, str / 10);
         let duration = Math.ceil((resource.gatherTimeSeconds * hardness) / strFactor);
         

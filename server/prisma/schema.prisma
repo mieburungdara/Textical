@@ -100,6 +100,8 @@ model ItemTemplate {
   // AAA Mineral Metadata
   hardness        Int      @default(1) // Mining difficulty multiplier
   minStr          Int      @default(0) // Minimum Strength required to mine
+  minToolTier     Int      @default(0) // Minimum Tool Tier (Pickaxe) required
+  toolTier        Int      @default(0) // If this is a tool, what is its tier?
   elementalAffinity Int    @default(0) // Matches CombatRules.ELEMENTS
   
   traits          ItemTrait[]
@@ -357,6 +359,8 @@ model HeroEquipment {
   slotKey     String
   itemInstanceId Int      @unique
   itemInstance   InventoryItem @relation(fields: [itemInstanceId], references: [id])
+
+  @@unique([heroId, slotKey])
 }
 
 model InventoryItem {
