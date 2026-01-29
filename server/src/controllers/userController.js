@@ -1,106 +1,131 @@
+const BaseController = require('./BaseController');
+const vitalityService = require('../services/vitalityService');
+const formationService = require('../services/formationService');
+const inventoryService = require('../services/inventoryService');
 const prisma = require('../db');
 
-const vitalityService = require('../services/vitalityService');
-const inventoryService = require('../services/inventoryService');
+class UserController extends BaseController {
+    async login(req, res) {
+        await this.execute(res, async () => {
+            const { username, password } = req.body;
+            const user = await prisma.user.findUnique({ where: { username } });
+            
+            if (!user) return this.sendError(res, "User not found", 404);
 
-exports.login = async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const user = await prisma.user.findUnique({ where: { username } });
-        
-        if (!user) return res.status(404).json({ error: "User not found" });
-        
-        // Simple password check (In production, use bcrypt)
-        if (user.password !== password) {
-            return res.status(401).json({ error: "Invalid password" });
-        }
-        
-        res.json(user);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-};
-
-exports.getProfile = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        // Sync vitality before returning
-        const user = await vitalityService.syncUserVitality(userId);
-        res.json(user);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-};
-
-exports.getHeroes = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        const heroes = await prisma.hero.findMany({
-            where: { userId },
-            include: { combatClass: true, equipment: true }
-        });
-        res.json(heroes);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-};
-
-exports.getInventory = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        const items = await prisma.inventoryItem.findMany({
-            where: { userId },
-            include: { template: true }
-        });
-        const status = await inventoryService.getStatus(userId);
-        res.json({ status, items });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-};
-
-exports.getRecipes = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        const userRecipes = await prisma.userRecipe.findMany({
-            where: { userId },
-            include: { 
-                recipe: { 
-                    include: { 
-                        ingredients: { include: { item: true } },
-                        resultItem: true 
-                    } 
-                } 
+            // Simple password check (In production, use bcrypt)
+            if (user.password !== password) {
+                return this.sendError(res, "Invalid password", 401);
             }
+            
+            this.sendSuccess(res, user);
         });
-        res.json(userRecipes.map(ur => ur.recipe));
-    } catch (e) {
-        res.status(500).json({ error: e.message });
     }
-};
 
-exports.getFormation = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        // For simplicity, we assume the user has at least one preset (created during seed)
-        const preset = await prisma.formationPreset.findFirst({
-            where: { userId },
-            include: { slots: true }
+    async getHeroProfile(req, res) {
+        await this.execute(res, async () => {
+            const heroId = parseInt(req.params.id);
+            const profile = await formationService.getHeroCombatProfile(heroId);
+            this.sendSuccess(res, profile);
         });
-        res.json(preset);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
     }
-};
 
-exports.getActiveTask = async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id);
-        const task = await prisma.taskQueue.findFirst({
-            where: { userId, status: "RUNNING" }
+    async getHeroes(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            const heroes = await prisma.hero.findMany({
+                where: { userId },
+                include: { combatClass: true, equipment: true }
+            });
+            this.sendSuccess(res, heroes);
         });
-        res.json(task || null); // Return null if idle
-    } catch (e) {
-        res.status(500).json({ error: e.message });
     }
-};
+
+    async getInventory(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            const items = await prisma.inventoryItem.findMany({
+                where: { userId },
+                include: { template: true }
+            });
+            const status = await inventoryService.getStatus(userId);
+            this.sendSuccess(res, { status, items });
+        });
+    }
+
+    async getRecipes(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            const recipes = await prisma.userRecipe.findMany({
+                where: { userId },
+                include: { recipe: { include: { resultItem: true } } }
+            });
+            this.sendSuccess(res, recipes.map(r => r.recipe));
+        });
+    }
+
+    async getFormation(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            const presets = await prisma.formationPreset.findMany({
+                where: { userId },
+                include: { slots: { include: { hero: true } } }
+            });
+            this.sendSuccess(res, presets);
+        });
+    }
+
+    async getActiveTask(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            const tasks = await prisma.taskQueue.findMany({
+                where: { userId, status: "RUNNING" },
+                include: { targetRegion: true }
+            });
+            this.sendSuccess(res, tasks[0] || null);
+        });
+    }
+
+    async getUserProfile(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            
+            // Sync vitality first
+            await vitalityService.syncUserVitality(userId);
+
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                include: { 
+                    inventory: { include: { template: true } },
+                    taskQueue: { 
+                        where: { status: "RUNNING" },
+                        include: { targetRegion: true }
+                    },
+                    premiumTier: true,
+                    region: true
+                }
+            });
+            
+            if (!user) return this.sendError(res, "User not found", 404);
+
+            const activeTask = user.taskQueue.length > 0 ? {
+                ...user.taskQueue[0],
+                targetRegionType: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.type : "TOWN",
+                targetRegionName: user.taskQueue[0].targetRegion ? user.taskQueue[0].targetRegion.name : "Destination"
+            } : null;
+            
+            const regionMetadata = user.region ? { 
+                type: user.region.visualType, 
+                visualType: user.region.visualType,
+                name: user.region.name 
+            } : { type: "TOWN", name: "Unknown" };
+
+            this.sendSuccess(res, { 
+                ...user, 
+                activeTask,
+                currentRegionData: regionMetadata
+            });
+        });
+    }
+}
+
+module.exports = new UserController();
