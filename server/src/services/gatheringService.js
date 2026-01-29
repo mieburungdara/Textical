@@ -1,7 +1,7 @@
 const prisma = require('../db');
-
 const vitalityService = require('./vitalityService');
 const inventoryService = require('./inventoryService');
+const statService = require('./statService');
 
 class GatheringService {
     constructor() {
@@ -25,14 +25,27 @@ class GatheringService {
         if (user.currentRegion !== resource.regionId) throw new Error("Incorrect region.");
         if (user.taskQueue.length > 0) throw new Error("Busy.");
 
-        // Unified Slot Check
         const hasSpace = await inventoryService.hasSpace(userId, resource.itemId);
         if (!hasSpace) throw new Error("Inventory full.");
+
+        // --- AAA SPECIALIZED MINING LOGIC ---
+        // Calculate dynamic duration based on Hero STR and Item Hardness
+        const heroStats = await statService.calculateHeroStats(heroId);
+        const str = heroStats.attributes.str || 10;
+        const hardness = resource.item.hardness || 1;
+        
+        // Formula: BaseTime * Hardness / (STR factor)
+        // Harder stones take longer, more STR makes it faster
+        const strFactor = Math.max(0.5, str / 10);
+        let duration = Math.ceil((resource.gatherTimeSeconds * hardness) / strFactor);
+        
+        // Cap duration to realistic limits
+        duration = Math.max(5, Math.min(3600, duration)); 
 
         await vitalityService.consumeVitality(userId, this.BASE_GATHER_VITALITY_COST);
 
         const now = new Date();
-        const finishesAt = new Date(now.getTime() + (resource.gatherTimeSeconds * 1000));
+        const finishesAt = new Date(now.getTime() + (duration * 1000));
 
         return await prisma.taskQueue.create({
             data: {
@@ -46,7 +59,6 @@ class GatheringService {
         const task = await prisma.taskQueue.findUnique({ where: { id: taskId } });
         if (!task || task.status !== "RUNNING") return;
 
-        // Unified Item Addition
         await inventoryService.addItem(userId, task.targetItemId, 1);
 
         return await prisma.taskQueue.update({

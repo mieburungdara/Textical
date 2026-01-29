@@ -96,6 +96,11 @@ model ItemTemplate {
   baseValue       Int      @default(10)
   rarity          String   @default("COMMON")
   isTwoHanded     Boolean  @default(false)
+  
+  // AAA Mineral Metadata
+  hardness        Int      @default(1) // Mining difficulty multiplier
+  elementalAffinity Int    @default(0) // Matches CombatRules.ELEMENTS
+  
   traits          ItemTrait[]
   equipSlots      ItemEquipSlot[]
   stats           ItemStat[]
@@ -252,6 +257,13 @@ model Hero {
   xp          Int      @default(0) // NEW: Track progression
   hp_base     Int      @default(100)
   damage_base Int      @default(10)
+  
+  // Primary Attributes
+  str         Int      @default(10)
+  dex         Int      @default(10)
+  int         Int      @default(10)
+  vit         Int      @default(10)
+  
   classId     Int      
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   jobId       Int?
