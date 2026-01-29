@@ -1,37 +1,16 @@
-const prisma = require('../db');
-const fs = require('fs');
-const path = require('path');
-
-const ASSET_ROOT = path.join(__dirname, '../../public/assets/raw');
+const BaseService = require('./BaseService');
+const assetManifestManager = require('./asset/AssetManifestManager');
+const diskMirroringSystem = require('./asset/DiskMirroringSystem');
 
 /**
- * AssetService
- * Manages granular data fragments for Client-Side caching.
- * Mirrors DB records to physical JSON files for regions, items, and monsters.
+ * AssetService (v2.0 - Modular Orchestrator)
+ * Manages granular data fragments for Client-Side caching by composing
+ * manifest management and disk mirroring logic.
  */
-class AssetService {
-    constructor() {
-        this._ensureDirs();
-    }
-
-    _ensureDirs() {
-        const cats = ["regions", "items", "monsters"];
-        cats.forEach(c => {
-            const dir = path.join(ASSET_ROOT, c);
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        });
-    }
-
+class AssetService extends BaseService {
+    
     async getManifest() {
-        const regions = await prisma.regionTemplate.findMany({ select: { id: true } });
-        const items = await prisma.itemTemplate.findMany({ select: { id: true } });
-        const monsters = await prisma.monsterTemplate.findMany({ select: { id: true } });
-
-        return {
-            regions: regions.map(r => r.id),
-            items: items.map(i => i.id),
-            monsters: monsters.map(m => m.id)
-        };
+        return await assetManifestManager.getManifest();
     }
 
     async getRawAsset(category, id) {
@@ -40,16 +19,22 @@ class AssetService {
 
         switch (category) {
             case "regions":
-                data = await prisma.regionTemplate.findUnique({ 
+                data = await this.db.regionTemplate.findUnique({ 
                     where: { id: idInt },
                     include: { resources: { include: { item: true } }, connections: true }
                 });
                 break;
             case "items":
-                data = await prisma.itemTemplate.findUnique({ where: { id: idInt }, include: { stats: true, traits: true } });
+                data = await this.db.itemTemplate.findUnique({ 
+                    where: { id: idInt }, 
+                    include: { stats: true, traits: true } 
+                });
                 break;
             case "monsters":
-                data = await prisma.monsterTemplate.findUnique({ where: { id: idInt }, include: { loot: true } });
+                data = await this.db.monsterTemplate.findUnique({ 
+                    where: { id: idInt }, 
+                    include: { loot: true } 
+                });
                 break;
         }
 
@@ -57,34 +42,28 @@ class AssetService {
         return data;
     }
 
-    /**
-     * DATABASE -> DISK (Full Export)
-     */
     async loadAllAssets() {
         console.log("[ASSET] Mirroring Database to Disk...");
         const manifest = await this.getManifest();
         
         for (const rid of manifest.regions) {
             const data = await this.getRawAsset("regions", rid);
-            this._writeAsset("regions", rid, data);
+            diskMirroringSystem.writeAsset("regions", rid, data);
         }
         for (const iid of manifest.items) {
             const data = await this.getRawAsset("items", iid);
-            this._writeAsset("items", iid, data);
+            diskMirroringSystem.writeAsset("items", iid, data);
         }
         for (const mid of manifest.monsters) {
             const data = await this.getRawAsset("monsters", mid);
-            this._writeAsset("monsters", mid, data);
+            diskMirroringSystem.writeAsset("monsters", mid, data);
         }
         console.log("[ASSET] Initial Sync Complete.");
     }
 
-    /**
-     * SAVE & MIRROR: MONSTER
-     */
     async saveMonster(id, body) {
         const idInt = parseInt(id);
-        const updated = await prisma.monsterTemplate.upsert({
+        const updated = await this.db.monsterTemplate.upsert({
             where: { id: idInt },
             update: {
                 name: body.name,
@@ -102,16 +81,13 @@ class AssetService {
             include: { loot: true }
         });
 
-        this._writeAsset("monsters", idInt, updated);
+        diskMirroringSystem.writeAsset("monsters", idInt, updated);
         return updated;
     }
 
-    /**
-     * SAVE & MIRROR: REGION
-     */
     async saveRegion(id, body) {
         const idInt = parseInt(id);
-        const updated = await prisma.regionTemplate.upsert({
+        const updated = await this.db.regionTemplate.upsert({
             where: { id: idInt },
             update: {
                 name: body.name,
@@ -130,16 +106,13 @@ class AssetService {
             }
         });
 
-        this._writeAsset("regions", idInt, updated);
+        diskMirroringSystem.writeAsset("regions", idInt, updated);
         return updated;
     }
 
-    /**
-     * SAVE & MIRROR: ITEM
-     */
     async saveItem(id, body) {
         const idInt = parseInt(id);
-        const updated = await prisma.itemTemplate.upsert({
+        const updated = await this.db.itemTemplate.upsert({
             where: { id: idInt },
             update: {
                 name: body.name,
@@ -159,14 +132,8 @@ class AssetService {
             include: { stats: true, traits: true }
         });
 
-        this._writeAsset("items", idInt, updated);
+        diskMirroringSystem.writeAsset("items", idInt, updated);
         return updated;
-    }
-
-    _writeAsset(category, id, data) {
-        const filePath = path.join(ASSET_ROOT, category, `${id}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-        console.log(`[ASSET] Mirrored: ${category}/${id}.json`);
     }
 }
 

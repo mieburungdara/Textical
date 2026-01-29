@@ -1,12 +1,17 @@
 const prisma = require('../db');
-
-const travelService = require('./travelService');
-const gatheringService = require('./gatheringService');
-const tavernService = require('./tavernService');
-const craftingService = require('./craftingService');
-const marketService = require('./marketService');
 const socketService = require('./socketService');
+const tavernService = require('./tavernService');
+const marketService = require('./marketService');
 
+// Strategy Imports
+const TravelTaskHandler = require('./tasks/TravelTaskHandler');
+const GatheringTaskHandler = require('./tasks/GatheringTaskHandler');
+const CraftingTaskHandler = require('./tasks/CraftingTaskHandler');
+
+/**
+ * TaskProcessor (Heartbeat v2.0)
+ * Uses a component-based pipeline to process and promote user tasks.
+ */
 class TaskProcessor {
     constructor() {
         this.interval = null;
@@ -14,11 +19,18 @@ class TaskProcessor {
         this.isProcessing = false;
         this.tavernTickCounter = 0;
         this.TAVERN_TICK_THRESHOLD = 30;
+
+        // Initialize Handlers
+        this.handlers = {
+            "TRAVEL": new TravelTaskHandler(prisma),
+            "GATHERING": new GatheringTaskHandler(prisma),
+            "CRAFTING": new CraftingTaskHandler(prisma)
+        };
     }
 
     start() {
         if (this.interval) return;
-        console.log("[HEARTBEAT] Task Processor started.");
+        console.log("[HEARTBEAT] Modular Task Pipeline Engaged.");
         this.interval = setInterval(() => this.tick(), this.HEARTBEAT_MS);
     }
 
@@ -28,14 +40,9 @@ class TaskProcessor {
         try {
             await this._processFinishedTasks();
             await this._promotePendingTasks();
-            this.tavernTickCounter++;
-            if (this.tavernTickCounter >= this.TAVERN_TICK_THRESHOLD) {
-                await tavernService.tick();
-                await marketService.archiveExpiredListings(); // CLEANUP EXPIRED LISTINGS
-                this.tavernTickCounter = 0;
-            }
+            await this._processWorldTicks();
         } catch (err) {
-            console.error("[HEARTBEAT] Error during tick:", err.message);
+            console.error("[HEARTBEAT] Pipe Error:", err.message);
         } finally {
             this.isProcessing = false;
         }
@@ -45,42 +52,30 @@ class TaskProcessor {
         const now = new Date();
         const finishedTasks = await prisma.taskQueue.findMany({
             where: { status: "RUNNING", finishesAt: { lte: now } },
-            include: { targetRegion: true } // LOAD METADATA HERE
+            include: { targetRegion: true }
         });
 
         for (const task of finishedTasks) {
-            console.log(`[HEARTBEAT] Completing ${task.type} task ID: ${task.id}`);
+            const handler = this.handlers[task.type];
+            if (!handler) {
+                console.warn(`[HEARTBEAT] No handler for task type: ${task.type}`);
+                continue;
+            }
+
             try {
-                let payload = { taskId: task.id, type: task.type, message: `${task.type} Finished!` };
-
-                if (task.type === "TRAVEL") {
-                    await travelService.completeTravel(task.userId, task.id);
-                    // ENSURE FULL METADATA IS IN SOCKET PAYLOAD
-                    payload.targetRegionId = task.targetRegionId;
-                    payload.targetRegionType = task.targetRegion ? task.targetRegion.visualType : "TOWN";
-                    payload.targetRegion = task.targetRegion ? { ...task.targetRegion, type: task.targetRegion.visualType } : null;
-                } else if (task.type === "GATHERING") {
-                    await gatheringService.completeGathering(task.userId, task.id);
-                } else if (task.type === "CRAFTING") {
-                    await craftingService.completeCrafting(task.userId, task.id);
-                }
-
-                socketService.emitToUser(task.userId, "task_completed", payload);
-            } catch (err) {
-                console.error(`[HEARTBEAT] Failed to complete task ${task.id}:`, err.message);
+                await handler.complete(task);
+                const extraPayload = await handler.getCompletionPayload(task);
                 
-                // BUG FIX: Prevent Zombie Tasks (Looping failure)
-                // Mark as FAILED so heartbeat stops processing it
-                await prisma.taskQueue.update({
-                    where: { id: task.id },
-                    data: { status: "FAILED" }
-                });
-
-                socketService.emitToUser(task.userId, "task_failed", {
+                socketService.emitToUser(task.userId, "task_completed", {
                     taskId: task.id,
                     type: task.type,
-                    error: err.message
+                    message: `${task.type} Finished!`,
+                    ...extraPayload
                 });
+            } catch (err) {
+                console.error(`[HEARTBEAT] Task ${task.id} failed:`, err.message);
+                await prisma.taskQueue.update({ where: { id: task.id }, data: { status: "FAILED" } });
+                socketService.emitToUser(task.userId, "task_failed", { taskId: task.id, type: task.type, error: err.message });
             }
         }
     }
@@ -96,41 +91,37 @@ class TaskProcessor {
                 const nextTask = await prisma.taskQueue.findFirst({
                     where: { userId: user.id, status: "PENDING" },
                     orderBy: { id: 'asc' },
-                    include: { targetRegion: true } // LOAD METADATA DURING PROMOTION
+                    include: { targetRegion: true }
                 });
 
                 if (nextTask) {
-                    let durationSeconds = 5; 
-
-                    if (nextTask.type === "GATHERING") {
-                        const res = await prisma.regionResource.findFirst({ where: { regionId: user.currentRegion, itemId: nextTask.targetItemId } });
-                        durationSeconds = res ? res.gatherTimeSeconds : 5;
-                    } else if (nextTask.type === "CRAFTING") {
-                        const recipe = await prisma.recipeTemplate.findFirst({ where: { resultItemId: nextTask.targetItemId } });
-                        durationSeconds = recipe ? recipe.craftTimeSeconds : 5;
-                    }
-
+                    const handler = this.handlers[nextTask.type];
+                    const duration = handler ? await handler.getDuration(nextTask, user) : 5;
                     const now = new Date();
                     
-                    await prisma.$transaction([
-                        prisma.taskQueue.update({
-                            where: { id: nextTask.id },
-                            data: { 
-                                status: "RUNNING", 
-                                startedAt: now, 
-                                finishesAt: new Date(now.getTime() + (durationSeconds * 1000)) 
-                            }
-                        })
-                    ]);
+                    await prisma.taskQueue.update({
+                        where: { id: nextTask.id },
+                        data: { 
+                            status: "RUNNING", 
+                            startedAt: now, 
+                            finishesAt: new Date(now.getTime() + (duration * 1000)) 
+                        }
+                    });
 
                     socketService.emitToUser(user.id, "task_started", {
-                        taskId: nextTask.id,
-                        type: nextTask.type,
-                        duration: durationSeconds,
-                        targetRegion: nextTask.targetRegion // FORWARD METADATA TO UI
+                        taskId: nextTask.id, type: nextTask.type, duration, targetRegion: nextTask.targetRegion
                     });
                 }
             }
+        }
+    }
+
+    async _processWorldTicks() {
+        this.tavernTickCounter++;
+        if (this.tavernTickCounter >= this.TAVERN_TICK_THRESHOLD) {
+            await tavernService.tick();
+            await marketService.archiveExpiredListings();
+            this.tavernTickCounter = 0;
         }
     }
 }
