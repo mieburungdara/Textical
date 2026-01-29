@@ -1,47 +1,38 @@
 const statService = require('../services/statService');
 const prisma = require('../db');
 
-async function runGrowthAudit() {
+async function runStressTest() {
     console.log("--------------------------------------------------");
-    console.log("📈 STARTING STAT GROWTH MODULAR AUDIT");
+    console.log("💎 STARTING END-GAME STAT STRESS TEST");
     console.log("--------------------------------------------------\n");
 
-    const heroId = 999; 
+    const heroId = 999;
 
-    console.log("[0/2] Ensuring Test Hero Exists...");
-    await prisma.hero.upsert({
-        where: { id: heroId },
-        update: {},
-        create: {
-            id: heroId,
-            name: "Progression Dummy",
-            classId: 3001, // Knight
-            hp_base: 100,
-            damage_base: 10
-        }
-    });
-
-    const testGrowth = async (level) => {
-        await prisma.hero.update({ where: { id: heroId }, data: { level: level } });
-        const stats = await statService.calculateHeroStats(heroId);
-        console.log(`   Level ${level.toString().padEnd(2)} Knight | HP: ${stats.health_max.toString().padStart(4)} | ATK: ${stats.attack_damage.toString().padStart(3)}`);
-        return stats;
+    const getStatsAtLvl100 = async (classId) => {
+        await prisma.hero.update({ where: { id: heroId }, data: { level: 100, classId: classId } });
+        return await statService.calculateHeroStats(heroId);
     };
 
-    console.log("[1/2] Comparing Levels...");
-    const s1 = await testGrowth(1);
-    const s20 = await testGrowth(20);
-    const s50 = await testGrowth(50);
+    console.log("[1/2] Comparing Tier 2 vs Tier 3 (Level 100)");
+    
+    const knight = await getStatsAtLvl100(2101);
+    console.log(`   Level 100 Knight (T2)         | HP: ${knight.health_max.toString().padStart(5)} | ATK: ${knight.attack_damage.toString().padStart(4)}`);
 
-    console.log("\n[2/2] Growth Verification...");
-    const hpGain = s20.health_max - s1.health_max;
-    console.log(`   HP Gain (Lvl 1 -> 20): ${hpGain} (Expected: 475)`);
+    const lord = await getStatsAtLvl100(3101);
+    console.log(`   Level 100 Lord Commander (T3) | HP: ${lord.health_max.toString().padStart(5)} | ATK: ${lord.attack_damage.toString().padStart(4)}`);
 
-    if (hpGain === 475) {
-        console.log("\n✅ STAT GROWTH AUDIT PASSED: Progression is mathematically perfect.");
+    const hpDiff = lord.health_max - knight.health_max;
+    const atkDiff = lord.attack_damage - knight.attack_damage;
+
+    console.log(`\n   --- LEGENDARY GAP ---`);
+    console.log(`   HP Bonus : +${hpDiff}`);
+    console.log(`   ATK Bonus: +${atkDiff}`);
+
+    if (hpDiff > 500 && atkDiff > 100) {
+        console.log("\n✅ STRESS TEST PASSED: Tier 3 classes are truly Legendary.");
     } else {
-        console.log("\n❌ STAT GROWTH AUDIT FAILED.");
+        console.log("\n❌ STRESS TEST FAILED: Power gap is too small.");
     }
 }
 
-runGrowthAudit().catch(err => console.error(err));
+runStressTest().catch(err => console.error(err));
