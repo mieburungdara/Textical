@@ -12,7 +12,11 @@ class BattleUnit {
         this.facing = "SOUTH"; // NEW: Directional combat support
         
         this.currentHealth = stats.health_max;
-        this.currentMana = stats.mana_max;
+        
+        // AAA: Dynamic Resource Initialization
+        const resType = data.resourceType || "MANA";
+        this.currentMana = (resType === "RAGE") ? 0 : stats.mana_max; 
+        
         this._actionPoints = stats.initiative || 0.0; // AAA: Starting AP based on Initiative
         this.isDead = false;
         
@@ -88,15 +92,26 @@ class BattleUnit {
         traitService.executeHook("onManaGain", this, amount, sim);
     }
 
-    takeDamage(amount) {
+    takeDamage(amount, sim) {
         this.currentHealth -= amount;
         if (this.currentHealth < 0) this.currentHealth = 0;
+
+        if (sim) {
+            const resourceResolver = require('./rules/ResourceResolver');
+            resourceResolver.handleCombatGain(this, "TAKE_DAMAGE", amount, sim);
+        }
     }
 
     applyRegen(sim) {
+        // 1. HP Regen (Standard)
         const regen = Math.floor(this.stats.health_max * 0.02);
         this.currentHealth = Math.min(this.stats.health_max, this.currentHealth + regen);
         if (regen > 0) traitService.executeHook("onHealthRegen", this, regen, sim);
+
+        // 2. Dynamic Resource Regen (Rage/Energy/Mana)
+        const resourceResolver = require('./rules/ResourceResolver');
+        resourceResolver.applyRegen(this, sim);
+        
         return regen;
     }
 

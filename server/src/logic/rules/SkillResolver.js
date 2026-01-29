@@ -59,7 +59,7 @@ class SkillResolver {
             victim.currentHealth = Math.min(victim.stats.health_max, victim.currentHealth + finalVal);
             traitService.executeHook("onHealthRegen", victim, finalVal, this.sim);
         } else {
-            victim.takeDamage(finalVal);
+            victim.takeDamage(finalVal, this.sim); // ADDED this.sim
             this.sim.rules._broadcastAllyEvent("onAllyDamage", victim, finalVal);
             traitService.executeHook("onPostHit", victim, actor, finalVal, this.sim, skill);
         }

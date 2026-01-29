@@ -3,8 +3,21 @@ const traitService = require('../../services/traitService');
 
 class AStarMovement extends MovementStrategy {
     execute(actor, target) {
+        // AAA: Check for Slipstream capability
+        const canSlipstream = actor.traits.includes("disruptor");
+        
+        if (canSlipstream) {
+            // Temporarily disable obstacle avoidance for pathfinding calculation
+            this.sim.grid.easystar.stopAvoidingAllAdditionalPoints();
+        }
+
         const path = this.sim.grid.findPath(actor.gridPos, target.gridPos);
         
+        if (canSlipstream) {
+            // Restore obstacles for other units
+            this.sim.grid.updateObstacles(this.sim.units);
+        }
+
         if (!path || path.length <= 1) {
             this.sim.logger.addEvent("ENGINE", `[PATH_FAIL] ${actor.data.name} blocked.`, { unit_id: actor.instanceId });
             return false;

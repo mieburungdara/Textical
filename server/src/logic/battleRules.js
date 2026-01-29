@@ -66,7 +66,7 @@ class BattleRules {
         const impactMods = traitService.executeHook("onTakeDamage", defender, attacker, result.damage, this.sim) || {};
         const finalDamage = Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus);
 
-        defender.takeDamage(finalDamage);
+        defender.takeDamage(finalDamage, this.sim); // ADDED this.sim
         this._broadcastAllyEvent("onAllyDamage", defender, finalDamage);
         this.sim.unitDeeds[attacker.instanceId] = (this.sim.unitDeeds[attacker.instanceId] || 0) + finalDamage;
 
