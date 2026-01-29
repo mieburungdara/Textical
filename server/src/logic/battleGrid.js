@@ -76,6 +76,32 @@ class BattleGrid {
         return Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
     }
 
+    /**
+     * hasLineOfSight: Checks if two points have a clear path (no walls).
+     */
+    hasLineOfSight(p1, p2) {
+        let x0 = p1.x; let y0 = p1.y;
+        let x1 = p2.x; let y1 = p2.y;
+        
+        let dx = Math.abs(x1 - x0);
+        let dy = Math.abs(y1 - y0);
+        let sx = (x0 < x1) ? 1 : -1;
+        let sy = (y0 < y1) ? 1 : -1;
+        let err = dx - dy;
+
+        while (true) {
+            // If we hit a wall/obstacle (Terrain ID 6)
+            if (this.terrainGrid[y0][x0] === 6) return false;
+            
+            if (x0 === x1 && y0 === y1) break;
+            
+            let e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+        return true;
+    }
+
     getTilesInPattern(center, pattern, size) {
         if (!center) return [];
         const tiles = [center];

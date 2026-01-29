@@ -1,15 +1,22 @@
+const b3 = require('behavior3js');
 const LogicGate = require('./LogicGate');
 
-class IsStunned extends LogicGate {
-    constructor(params) { super({ name: 'IsStunned', children: params.children, properties: params.properties }); }
-    
-    tick(tick) {
-        const { unit, sim } = tick.blackboard.get('context');
-        const isStunned = unit.activeEffects.some(e => e.type === "STUN");
+/**
+ * IsStunned: Checks if unit has STUN effect.
+ */
+const IsStunned = b3.Class(LogicGate);
 
-        sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} checking Stun status. Result: ${isStunned}`);
-        return this.executePath(tick, isStunned);
-    }
+IsStunned.prototype.initialize = function(params = {}) {
+    LogicGate.prototype.initialize.call(this, params);
+    this.name = 'IsStunned';
+}
+
+IsStunned.prototype.tick = function(tick) {
+    const { unit, sim } = tick.blackboard.get('context');
+    const isStunned = unit.activeEffects.some(e => e.type === "STUN");
+
+    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} checking Stun status. Result: ${isStunned}`);
+    return this.executePath(tick, isStunned);
 }
 
 module.exports = IsStunned;
