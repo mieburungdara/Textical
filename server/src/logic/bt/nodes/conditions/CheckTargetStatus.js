@@ -1,10 +1,5 @@
 const LogicGate = require('./LogicGate');
 
-/**
- * CheckTargetStatus: Mengecek status effect pada TARGET saat ini.
- * Properties:
- * - effectType: 'STUN', 'BURN', 'POISON', dll.
- */
 class CheckTargetStatus extends LogicGate {
     constructor(params) { super({ name: 'CheckTargetStatus', children: params.children, properties: params.properties }); }
     
@@ -16,6 +11,8 @@ class CheckTargetStatus extends LogicGate {
         
         const effectType = this.properties.effectType || 'BURN';
         const hasEffect = target.activeEffects.some(e => e.type === effectType);
+
+        sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} checking target ${target.data.name} for ${effectType}. Result: ${hasEffect}`);
         
         return this.executePath(tick, hasEffect);
     }
