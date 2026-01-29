@@ -75,7 +75,7 @@ class BattleSimulation {
 
         _.forEach(this.units, (u) => { 
             if (!u.isDead) { 
-                u.tick(1.0); 
+                u.tick(1.0, this); 
                 const dotDamage = u.applyStatusDamage(this); // Passes 'this' for status hooks
                 if (dotDamage > 0) {
                     // Could trigger onPostHit for DoT if needed

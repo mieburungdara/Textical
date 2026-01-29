@@ -90,7 +90,7 @@ class BattleAI {
         const neighbors = this.sim.grid.getNeighbors(actor.gridPos);
         neighbors.forEach(pos => {
             const unit = this.sim.grid.unitGrid[pos.y][pos.x];
-            if (unit) {
+            if (unit && !unit.isDead) {
                 traitService.executeHook("onAdjacencyGained", actor, unit, this.sim);
                 traitService.executeHook("onAdjacencyGained", unit, actor, this.sim);
             }

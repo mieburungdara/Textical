@@ -41,10 +41,16 @@ class BattleUnit {
         traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
     }
 
-    tick(delta) {
+    tick(delta, sim) {
         if (this.isDead) return;
+        const old = this._actionPoints;
         const effectiveSpeed = this.getStat("speed");
         this._actionPoints += effectiveSpeed * delta;
+        
+        // Trigger hook if we crossed a whole number (for performance and sensing)
+        if (Math.floor(this._actionPoints) !== Math.floor(old)) {
+            traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
+        }
     }
 
     getStat(key) {

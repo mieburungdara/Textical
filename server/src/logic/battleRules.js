@@ -135,6 +135,7 @@ class BattleRules {
         tiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (victim && victim.teamId !== actor.teamId) {
+                // --- AAA Skill Hook: Pre-Defend, Dodge & Block ---
                 const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim) || {};
                 const dodgeChance = (victim.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
                 
@@ -144,7 +145,17 @@ class BattleRules {
                     return;
                 }
 
-                const result = CombatRules.calculateDamage(actor, victim, skill.damage_multiplier || 1.0, skill.element || 0);
+                const isBlocked = Math.random() < (defMods.blockChance || 0);
+                if (isBlocked) {
+                    traitService.executeHook("onBlock", victim, actor, this.sim);
+                }
+
+                const result = CombatRules.calculateDamage(actor, victim, (skill.damage_multiplier || 1.0) * (isBlocked ? 0.5 : 1.0), skill.element || 0);
+                
+                if (result.isCrit) {
+                    traitService.executeHook("onCrit", actor, victim, result.damage, this.sim);
+                }
+
                 const impactMods = traitService.executeHook("onTakeDamage", victim, actor, result.damage, this.sim) || {};
                 const finalDmg = impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage;
                 
