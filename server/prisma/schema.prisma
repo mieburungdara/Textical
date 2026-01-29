@@ -99,6 +99,7 @@ model ItemTemplate {
   
   // AAA Mineral Metadata
   hardness        Int      @default(1) // Mining difficulty multiplier
+  minStr          Int      @default(0) // Minimum Strength required to mine
   elementalAffinity Int    @default(0) // Matches CombatRules.ELEMENTS
   
   traits          ItemTrait[]

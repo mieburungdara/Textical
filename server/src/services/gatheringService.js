@@ -33,9 +33,14 @@ class GatheringService {
         const heroStats = await statService.calculateHeroStats(heroId);
         const str = heroStats.attributes.str || 10;
         const hardness = resource.item.hardness || 1;
+        const minStr = resource.item.minStr || 0;
+
+        // 1. Requirement Check
+        if (str < minStr) {
+            throw new Error(`Hero is not strong enough to mine this material. (Required: ${minStr} STR, Have: ${str} STR)`);
+        }
         
-        // Formula: BaseTime * Hardness / (STR factor)
-        // Harder stones take longer, more STR makes it faster
+        // 2. Duration Logic
         const strFactor = Math.max(0.5, str / 10);
         let duration = Math.ceil((resource.gatherTimeSeconds * hardness) / strFactor);
         
