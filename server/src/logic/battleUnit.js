@@ -9,6 +9,7 @@ class BattleUnit {
         this.stats = stats; 
         this.teamId = teamId;
         this.gridPos = pos;
+        this.facing = "SOUTH"; // NEW: Directional combat support
         
         this.currentHealth = stats.health_max;
         this.currentMana = stats.mana_max;

@@ -3,7 +3,6 @@ const traitService = require('../../services/traitService');
 
 class AStarMovement extends MovementStrategy {
     execute(actor, target) {
-        // 1. Calculate Path
         const path = this.sim.grid.findPath(actor.gridPos, target.gridPos);
         
         if (!path || path.length <= 1) {
@@ -12,18 +11,17 @@ class AStarMovement extends MovementStrategy {
         }
 
         const next = path[1];
-        
-        // 2. Pre-Move Hooks
         const oldPos = { ...actor.gridPos };
         traitService.executeHook("onTileExit", actor, oldPos, this.sim);
 
-        // 3. Execute Move
         const moveEvent = this._teleport(actor, { x: next.x, y: next.y });
 
-        // 4. Post-Move Hooks
         traitService.executeHook("onTileEnter", actor, actor.gridPos, this.sim);
         traitService.executeHook("onMoveStep", actor, actor.gridPos, this.sim);
         
+        // --- AAA FEATURE 3: Attack of Opportunity ---
+        this._triggerOpportunityAttacks(actor);
+
         this.sim.logger.addEvent("MOVE", `${actor.data.name} moved to [${next.x}, ${next.y}]`, {
             actor_id: actor.instanceId,
             from: moveEvent.from,
@@ -31,6 +29,20 @@ class AStarMovement extends MovementStrategy {
         });
 
         return true;
+    }
+
+    _triggerOpportunityAttacks(actor) {
+        const neighbors = this.sim.grid.getNeighbors(actor.gridPos);
+        neighbors.forEach(pos => {
+            const unit = this.sim.grid.unitGrid[pos.y][pos.x];
+            if (unit && unit.teamId !== actor.teamId && !unit.isDead) {
+                // Ensure only melee units perform AoO
+                if ((unit.stats.attack_range || 1) <= 1) {
+                    this.sim.logger.addEvent("REACTION", `${unit.data.name} takes an opportunity strike!`);
+                    this.sim.rules.performAttack(unit, actor); 
+                }
+            }
+        });
     }
 }
 

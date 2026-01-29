@@ -31,6 +31,7 @@ class BattleSimulation {
 
     addUnit(data, teamId, pos, stats) {
         const unit = new BattleUnit(data, teamId, { x: _.clamp(pos.x, 0, this.width-1), y: _.clamp(pos.y, 0, this.height-1) }, stats);
+        if (data.facing) unit.facing = data.facing; // AAA: Manual facing support
         this.units.push(unit);
         this.grid.unitGrid[unit.gridPos.y][unit.gridPos.x] = unit;
         this.notifyAdjacencyGained(unit);
