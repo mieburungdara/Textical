@@ -1,59 +1,48 @@
-const math = require('mathjs');
+const traitService = require('../services/traitService');
 
+/**
+ * AAA Combat Rules (v3.0 - Professional Standard)
+ */
 class CombatRules {
-    /**
-     * Professional Grade Damage Calculator.
-     * Uses mathjs for floating point safety and consistent results.
-     */
-    static calculateDamage(attacker, defender, skillMult = 1.0, skillElement = 0, attackerTerrain = 0, defenderTerrain = 0) {
-        const aTerr = attackerTerrain || 0;
-        const dTerr = defenderTerrain || 0;
+    static ELEMENTS = { NEUTRAL: 0, FIRE: 1, WATER: 2, NATURE: 3, EARTH: 4, LIGHTNING: 5, HOLY: 6, VOID: 7 };
 
-        // 1. Dodge Check
-        let dodgeRate = defender.stats.dodge_rate || 0;
-        if (dTerr === 5) dodgeRate += 20; // Forest
+    static calculateDamage(attacker, defender, dmgMult = 1.0, element = 0) {
+        // 1. Accuracy Check (DEX based)
+        const acc = attacker.getStat("accuracy");
+        const dodge = defender.getStat("dodge_rate");
+        const hitChance = Math.min(100, Math.max(5, acc - dodge));
         
-        if (math.random() < (dodgeRate / 100.0)) {
-            return { damage: 0, isHit: false, isCrit: false, message: "MISS!" };
+        if (Math.random() * 100 > hitChance) {
+            return { damage: 0, isMiss: true, isCrit: false };
         }
 
-        // 2. Base Damage Calculation
-        let rawDamage = math.multiply(attacker.stats.attack_damage || 0, skillMult);
-        let mitigation = defender.stats.defense || 0;
-        let damage = math.subtract(rawDamage, mitigation);
-        
-        // Terrain Bonus (Ruins = 8)
-        if (aTerr === 8) damage = math.multiply(damage, 1.15);
+        // 2. Armor Penetration Logic
+        const rawDef = defender.getStat("defense");
+        const arPen = attacker.getStat("armor_penetration");
+        const effectiveDef = Math.max(0, rawDef - arPen);
 
-        // 3. Critical Hit Check
-        let isCrit = false;
-        const critChance = attacker.stats.crit_chance || 0.05;
-        if (math.random() < critChance) {
-            isCrit = true;
-            damage = math.multiply(damage, (attacker.stats.crit_damage || 1.5));
+        // 3. Base Damage & Multipliers
+        const baseAtk = attacker.getStat("attack_damage");
+        let damage = Math.max(1, (baseAtk * dmgMult) - effectiveDef);
+
+        // 4. Critical Hit
+        const isCrit = Math.random() < attacker.getStat("crit_chance");
+        if (isCrit) {
+            damage = Math.floor(damage * attacker.getStat("crit_damage"));
         }
 
-        // 4. Elemental Mapping
-        const elementToCheck = skillElement !== 0 ? skillElement : (attacker.data.element || 0);
-        const resMap = { 1: "res_fire", 2: "res_water", 3: "res_wind", 4: "res_earth", 5: "res_lightning" };
-        const resKey = resMap[elementToCheck];
-        
-        if (resKey) {
-            const resMultiplier = defender.stats[resKey] || 1.0;
-            damage = math.multiply(damage, resMultiplier);
+        // 5. Block Logic (STR based Block Power)
+        const isBlocked = Math.random() < defender.getStat("block_chance");
+        if (isBlocked) {
+            const blockMitigation = defender.getStat("block_power") || 0.5;
+            damage = Math.floor(damage * (1 - blockMitigation));
         }
 
-        // Water vs Fire Interaction
-        if (elementToCheck === 1 && dTerr === 4) damage = math.multiply(damage, 0.7);
-
-        // 5. Final Floor and Safety
-        damage = math.floor(math.max(1, damage));
-        
-        return { 
-            damage: damage, 
-            isHit: true, 
-            isCrit: isCrit, 
-            message: isCrit ? "CRITICAL!" : "HIT" 
+        return {
+            damage,
+            isCrit,
+            isMiss: false,
+            isBlocked
         };
     }
 }

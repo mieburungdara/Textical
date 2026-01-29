@@ -12,7 +12,7 @@ class BattleUnit {
         
         this.currentHealth = stats.health_max;
         this.currentMana = stats.mana_max;
-        this._actionPoints = 0.0;
+        this._actionPoints = stats.initiative || 0.0; // AAA: Starting AP based on Initiative
         this.isDead = false;
         
         this.skillCooldowns = {};
