@@ -21,6 +21,13 @@ class BattleUnit {
         this.weaponTraits = [];
         this.traits = data.traits || [];
         this.temporaryStats = {}; 
+        this.isStealthed = false; // NEW: Stealth support
+    }
+
+    reveal(sim) {
+        if (this.isStealthed) {
+            this.removeEffect("STEALTH", sim);
+        }
     }
 
     get currentActionPoints() { return this._actionPoints; }

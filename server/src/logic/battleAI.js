@@ -40,7 +40,20 @@ class BattleAI {
 
     findTarget(actor) {
         const units = this.sim.units || [];
-        let targets = units.filter(u => u && u.teamId !== actor.teamId && !u.isDead);
+        const hasTrueSight = traitService.executeHook("CheckTrait", actor, this.sim, { traitName: "truesight" });
+
+        let targets = units.filter(u => {
+            if (!u || u.teamId === actor.teamId || u.isDead) return false;
+            
+            // AAA Logic: Stealth Check
+            if (u.isStealthed && !hasTrueSight) {
+                const dist = this.sim.grid.getDistance(actor.gridPos, u.gridPos);
+                if (dist > 1) return false; // Reveal range is 1 tile
+            }
+            
+            return true;
+        });
+
         if (targets.length === 0) return null;
         return _.minBy(targets, (t) => this.sim.grid.getDistance(actor.gridPos, t.gridPos));
     }
