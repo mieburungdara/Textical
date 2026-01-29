@@ -142,6 +142,7 @@ class FormationService {
         });
 
         const profile = {
+            id: hero.id, // NEW
             name: hero.name,
             totalStats: {},
             activeTraits: []

@@ -249,6 +249,7 @@ model Hero {
   user        User?    @relation(fields: [userId], references: [id])
   name        String
   level       Int      @default(1)
+  xp          Int      @default(0) // NEW: Track progression
   classId     Int      
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   jobId       Int?

@@ -120,7 +120,41 @@ class BattleService {
 
         // 5. Process Rewards
         let lootEarned = [];
+        let heroResults = [];
+
         if (battleResult.winner === 0) { 
+            const totalExp = battleResult.rewards.exp || 0;
+            const heroShare = Math.floor(totalExp / party.length);
+
+            // Update Heroes XP and Level
+            for (const p of party) {
+                const progression = require('./progressionService');
+                const hero = await prisma.hero.findUnique({ where: { id: p.profile.id } });
+                if (hero) {
+                    const newXp = hero.xp + heroShare;
+                    const newLevel = progression.checkLevelUp(hero.level, newXp);
+                    const leveledUp = newLevel > hero.level;
+
+                    await prisma.hero.update({
+                        where: { id: hero.id },
+                        data: { 
+                            xp: newXp,
+                            level: newLevel
+                        }
+                    });
+
+                    heroResults.push({
+                        id: hero.id,
+                        name: hero.name,
+                        xpGained: heroShare,
+                        totalXp: newXp,
+                        currentLevel: newLevel,
+                        leveledUp: leveledUp
+                    });
+                }
+            }
+
+            // Process Loot
             for (const entry of monsterTemplate.loot) {
                 if (Math.random() < entry.chance) {
                     try {
@@ -142,6 +176,7 @@ class BattleService {
             replay: battleResult.logs,
             loot: lootEarned,
             rewards: battleResult.rewards,
+            heroProgress: heroResults, // NEW: Return XP data to client
             initialUnits: sim.units.map(u => ({
                 id: u.instanceId,
                 name: u.data.name,
