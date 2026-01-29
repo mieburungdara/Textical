@@ -2,105 +2,43 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("--- SEEDING TEXTICAL MASTER CODEX (v15.0 - THE FINAL EVOLUTION) ---");
+  console.log("--- SEEDING TEXTICAL FINAL CODEX (v17.0 - FULL LORE) ---");
 
   const classes = [
-    // --- TIER 0 (STARTER) ---
-    { id: 1001, name: "Novice", tier: 0, resourceType: "MANA", focus: "Generalist", identity: "A beginner.", growthDesc: "Slow growth.", mechanicDesc: "Standard.", leadsTo: "23 Foundation Classes", hpGrowth: 5, mpGrowth: 2, atkGrowth: 1, defGrowth: 0.5, spdGrowth: 0.1, promotionReqLevel: 10 },
+    // --- TIER 0 ---
+    { id: 1001, name: "Novice", description: "Every legend begins with a single step into the unknown. The Novice is a traveler of unformed destiny, possessing a raw potential that has yet to be carved by the harsh realities of the battlefield. They carry basic tools and an open mind, eager to learn from the masters of the world." },
 
-    // --- TIER 1 (FOUNDATIONS) - 23 Classes (1101-1130) ---
-    { id: 1101, name: "Warrior", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Durability", identity: "Defensive frontliner.", growthDesc: "High HP/DEF.", mechanicDesc: "+5% Block.", leadsTo: "Knight, Guardian", hpGrowth: 12, mpGrowth: 1, atkGrowth: 1.5, defGrowth: 2.5, spdGrowth: 0.1, promotionReqLevel: 25 },
-    { id: 1102, name: "Scout", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Agility", identity: "Fast exploration.", growthDesc: "High SPD/DEX.", mechanicDesc: "Fast-regen Energy.", leadsTo: "Rogue, Explorer", hpGrowth: 7, mpGrowth: 5, atkGrowth: 2, defGrowth: 0.5, spdGrowth: 0.6, promotionReqLevel: 25 },
-    { id: 1103, name: "Apprentice", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Magic", identity: "Arcane student.", growthDesc: "High MP/INT.", mechanicDesc: "+5% Mana Regen.", leadsTo: "Wizard, Sorcerer", hpGrowth: 4, mpGrowth: 15, atkGrowth: 0.5, defGrowth: 0.2, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1104, name: "Votary", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Resilience", identity: "Survivalist.", growthDesc: "High Regen/Tenacity.", mechanicDesc: "-15% Status Dur.", leadsTo: "Monk, Ascetic", hpGrowth: 10, mpGrowth: 5, atkGrowth: 1, defGrowth: 1, spdGrowth: 0.2, promotionReqLevel: 25 },
-    { id: 1105, name: "Brute", tier: 1, resourceType: "RAGE", parentClassId: 1001, focus: "Power", identity: "Aggression.", growthDesc: "High ATK/HP.", mechanicDesc: "Uses Rage.", leadsTo: "Berserker, Destroyer", hpGrowth: 15, mpGrowth: 0, atkGrowth: 4, defGrowth: 0.2, spdGrowth: 0.1, promotionReqLevel: 25 },
-    { id: 1106, name: "Duelist", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Precision", identity: "Technical.", growthDesc: "High Crit/Acc.", mechanicDesc: "Counter chance.", leadsTo: "Swordsman, Fencer", hpGrowth: 8, mpGrowth: 2, atkGrowth: 2.5, defGrowth: 1, spdGrowth: 0.4, promotionReqLevel: 25 },
-    { id: 1107, name: "Archer", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Distance", identity: "Ranged.", growthDesc: "High Range/Acc.", mechanicDesc: "+1 Range.", leadsTo: "Sniper, Hunter", hpGrowth: 6, mpGrowth: 2, atkGrowth: 3, defGrowth: 0.5, spdGrowth: 0.4, promotionReqLevel: 25 },
-    { id: 1108, name: "Acolyte", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Restoration", identity: "Healer.", growthDesc: "High MP/Regen.", mechanicDesc: "+20% Heal power.", leadsTo: "Priest, Exorcist", hpGrowth: 8, mpGrowth: 10, atkGrowth: 1, defGrowth: 1, spdGrowth: 0.2, promotionReqLevel: 25 },
-    { id: 1109, name: "Occultist", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Affliction", identity: "Debuffer.", growthDesc: "High INT/Debuff.", mechanicDesc: "Poison chance.", leadsTo: "Warlock, Necromancer", hpGrowth: 6, mpGrowth: 12, atkGrowth: 1, defGrowth: 0.5, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1110, name: "Trapper", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Control", identity: "Grid master.", growthDesc: "High DEX/Trap.", mechanicDesc: "Ignore obstacles.", leadsTo: "Saboteur, Tracker", hpGrowth: 9, mpGrowth: 4, atkGrowth: 2, defGrowth: 1, spdGrowth: 0.5, promotionReqLevel: 25 },
-    { id: 1111, name: "Brawler", tier: 1, resourceType: "RAGE", parentClassId: 1001, focus: "Reflexes", identity: "Street fighter.", leadsTo: "Champion, Gladiator", hpGrowth: 11, mpGrowth: 0, atkGrowth: 3.5, defGrowth: 0.8, spdGrowth: 0.5, promotionReqLevel: 25 },
-    { id: 1112, name: "Mystic", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Elemental", identity: "Spirit talker.", leadsTo: "Druid, Elementalist", hpGrowth: 7, mpGrowth: 10, atkGrowth: 1.5, defGrowth: 1, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1113, name: "Taekwondist", tier: 1, resourceType: "RAGE", parentClassId: 1001, focus: "Knockback", identity: "Kicker.", leadsTo: "Grandmaster, Kick-Master", hpGrowth: 10, mpGrowth: 0, atkGrowth: 3.2, defGrowth: 0.5, spdGrowth: 0.7, promotionReqLevel: 25 },
-    { id: 1114, name: "Bard", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Auras", identity: "Musical.", leadsTo: "Troubadour, Minstrel", hpGrowth: 8, mpGrowth: 12, atkGrowth: 1.2, defGrowth: 0.8, spdGrowth: 0.4, promotionReqLevel: 25 },
-    { id: 1115, name: "Shaolin", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Inner Peace", identity: "Flow master.", leadsTo: "Zen-Master, Soul-Fist", hpGrowth: 9, mpGrowth: 5, atkGrowth: 2.8, defGrowth: 1.2, spdGrowth: 0.5, promotionReqLevel: 25 },
-    { id: 1116, name: "Necrolyte", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Life Tap", identity: "Dark student.", leadsTo: "Reaper, Soul-Binder", hpGrowth: 7, mpGrowth: 14, atkGrowth: 1.0, defGrowth: 0.4, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1117, name: "Shield-Bearer", tier: 1, resourceType: "RAGE", parentClassId: 1001, focus: "Absolute Guard", identity: "Fortress.", leadsTo: "Bastion, Fortress", hpGrowth: 14, mpGrowth: 0, atkGrowth: 1.2, defGrowth: 4.0, spdGrowth: 0.05, promotionReqLevel: 25 },
-    { id: 1118, name: "Inquisitor", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Anti-Magic", identity: "Mage hunter.", leadsTo: "Templar, Witch-Hunter", hpGrowth: 11, mpGrowth: 5, atkGrowth: 2.5, defGrowth: 1.5, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1119, name: "Dancer", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Evasion", identity: "Flowing strikes.", leadsTo: "Blade-Dancer, Mirage-Dancer", hpGrowth: 6, mpGrowth: 4, atkGrowth: 2.0, defGrowth: 0.2, spdGrowth: 0.8, promotionReqLevel: 25 },
-    { id: 1120, name: "Wanderer", tier: 1, resourceType: "ENERGY", parentClassId: 1001, focus: "Versatility", identity: "Traveler.", leadsTo: "Adventurer, Vagabond", hpGrowth: 10, mpGrowth: 10, atkGrowth: 1.5, defGrowth: 1.5, spdGrowth: 0.4, promotionReqLevel: 25 },
-    { id: 1125, name: "Alchemist", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Status", identity: "Chemical.", leadsTo: "Plague-Doctor, Chemist", hpGrowth: 9, mpGrowth: 12, atkGrowth: 1.5, defGrowth: 1.0, spdGrowth: 0.3, promotionReqLevel: 25 },
-    { id: 1126, name: "Ravager", tier: 1, resourceType: "RAGE", parentClassId: 1001, focus: "Adrenaline", identity: "Death-brink.", leadsTo: "Reaver, Executioner", hpGrowth: 16, mpGrowth: 0, atkGrowth: 4.5, defGrowth: 0.1, spdGrowth: 0.2, promotionReqLevel: 25 },
-    { id: 1130, name: "Crusader", tier: 1, resourceType: "MANA", parentClassId: 1001, focus: "Sanctity", identity: "Holy warrior.", leadsTo: "Paladin, Vindicator", hpGrowth: 13, mpGrowth: 8, atkGrowth: 2.2, defGrowth: 2.2, spdGrowth: 0.2, promotionReqLevel: 25 },
+    // --- TIER 1 ---
+    { id: 1101, name: "Warrior", description: "The backbone of any civilized army, the Warrior is a student of steel and stamina. Clad in toughened hide and iron, they stand at the frontlines, absorbing the impact of the enemy's first wave. They believe that a battle is won not by the swiftness of the blade, but by the resilience of the heart." },
+    { id: 1102, name: "Scout", description: "Moving like a whisper through the undergrowth, the Scout is the ultimate explorer. They are trained to see what others miss and to tread where others fear to step. A Scout relies on their superior mobility and keen senses to navigate the 50x50 grid, identifying enemy positions and striking from the shadows." },
+    { id: 1103, name: "Apprentice", description: "The path of magic is long and fraught with peril, and the Apprentice has only just begun to scratch the surface of the universe's secrets. They spend their days studying ancient scrolls and practicing the precise movements required to channel raw mana into cohesive spells." },
+    { id: 1104, name: "Votary", description: "The Votary does not seek to conquer the world, but to conquer themselves. Through meditation and rigorous physical conditioning, they have developed a body that can endure the most hostile environments. A Votary believes that true power comes from resilience." },
+    { id: 1105, name: "Brute", description: "In the wild places of the world, strength is the only law. The Brute is a primal force of nature, eschewing the refined techniques of the city-born for raw, unbridled power. They do not fight for honor or duty, but for the thrill of the hunt." },
+    { id: 1106, name: "Duelist", description: "The Duelist treats every pertempuran as a high-stakes game of chess. They are masters of the blade who prioritize technique and precision over raw power. A Duelist spends years perfecting their footwork and timing." },
+    { id: 1107, name: "Archer", description: "The Archer is the master of death from a distance. Trained from childhood to read the wind and the arc of a shot, they can pinpoint a target from across the battlefield with uncanny accuracy." },
 
-    // --- TIER 2 (SPECIALISTS) - 46 Classes (2101-2146) ---
-    { id: 2101, name: "Knight", tier: 2, resourceType: "RAGE", parentClassId: 1101, leadsTo: "Lord Commander", hpGrowth: 20, mpGrowth: 0, atkGrowth: 3, defGrowth: 4, spdGrowth: 0.2, promotionReqLevel: 50 },
-    { id: 2102, name: "Guardian", tier: 2, resourceType: "RAGE", parentClassId: 1101, leadsTo: "Iron Vanguard", hpGrowth: 18, mpGrowth: 0, atkGrowth: 2, defGrowth: 5, spdGrowth: 0.1, promotionReqLevel: 50 },
-    { id: 2103, name: "Rogue", tier: 2, resourceType: "ENERGY", parentClassId: 1102, leadsTo: "Phantom Assassin", hpGrowth: 12, mpGrowth: 5, atkGrowth: 4, defGrowth: 1, spdGrowth: 0.8, promotionReqLevel: 50 },
-    { id: 2104, name: "Explorer", tier: 2, resourceType: "ENERGY", parentClassId: 1102, leadsTo: "Interdimensional Voyager", hpGrowth: 14, mpGrowth: 10, atkGrowth: 3, defGrowth: 1.5, spdGrowth: 1.2, promotionReqLevel: 50 },
-    { id: 2105, name: "Wizard", tier: 2, resourceType: "MANA", parentClassId: 1103, leadsTo: "Archmage", hpGrowth: 8, mpGrowth: 25, atkGrowth: 1, defGrowth: 0.5, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2106, name: "Sorcerer", tier: 2, resourceType: "MANA", parentClassId: 1103, leadsTo: "Void-Weaver", hpGrowth: 7, mpGrowth: 20, atkGrowth: 1, defGrowth: 0.5, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2107, name: "Monk", tier: 2, resourceType: "ENERGY", parentClassId: 1104, leadsTo: "Asura", hpGrowth: 18, mpGrowth: 15, atkGrowth: 3.5, defGrowth: 2.5, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2108, name: "Ascetic", tier: 2, resourceType: "MANA", parentClassId: 1104, leadsTo: "Living Stone", hpGrowth: 22, mpGrowth: 10, atkGrowth: 2, defGrowth: 3, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2109, name: "Berserker", tier: 2, resourceType: "RAGE", parentClassId: 1105, leadsTo: "Deathseeker", hpGrowth: 20, mpGrowth: 0, atkGrowth: 6, defGrowth: 0.5, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2110, name: "Destroyer", tier: 2, resourceType: "RAGE", parentClassId: 1105, leadsTo: "World Breaker", hpGrowth: 25, mpGrowth: 0, atkGrowth: 5, defGrowth: 1, spdGrowth: 0.2, promotionReqLevel: 50 },
-    { id: 2111, name: "Swordsman", tier: 2, resourceType: "ENERGY", parentClassId: 1106, leadsTo: "Sword Saint", hpGrowth: 15, mpGrowth: 5, atkGrowth: 4.5, defGrowth: 2, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2112, name: "Fencer", tier: 2, resourceType: "ENERGY", parentClassId: 1106, leadsTo: "God of Reflexes", hpGrowth: 12, mpGrowth: 5, atkGrowth: 3.5, defGrowth: 1, spdGrowth: 0.9, promotionReqLevel: 50 },
-    { id: 2113, name: "Sniper", tier: 2, resourceType: "ENERGY", parentClassId: 1107, leadsTo: "Gunner", hpGrowth: 10, mpGrowth: 5, atkGrowth: 5, defGrowth: 0.5, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2114, name: "Hunter", tier: 2, resourceType: "ENERGY", parentClassId: 1107, leadsTo: "Apex Predator", hpGrowth: 14, mpGrowth: 8, atkGrowth: 4, defGrowth: 1.5, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2115, name: "Priest", tier: 2, resourceType: "MANA", parentClassId: 1108, leadsTo: "Saint", hpGrowth: 14, mpGrowth: 20, atkGrowth: 1.5, defGrowth: 2, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2116, name: "Exorcist", tier: 2, resourceType: "MANA", parentClassId: 1108, leadsTo: "Divine Justiciar", hpGrowth: 16, mpGrowth: 15, atkGrowth: 3, defGrowth: 2, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2117, name: "Warlock", tier: 2, resourceType: "MANA", parentClassId: 1109, leadsTo: "Abyssal Caster", hpGrowth: 10, mpGrowth: 20, atkGrowth: 2, defGrowth: 1, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2118, name: "Necromancer", tier: 2, resourceType: "MANA", parentClassId: 1109, leadsTo: "Lich King", hpGrowth: 12, mpGrowth: 25, atkGrowth: 1.5, defGrowth: 1, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2119, name: "Saboteur", tier: 2, resourceType: "ENERGY", parentClassId: 1110, leadsTo: "Master of Ruin", hpGrowth: 13, mpGrowth: 6, atkGrowth: 3.5, defGrowth: 2, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2120, name: "Tracker", tier: 2, resourceType: "ENERGY", parentClassId: 1110, leadsTo: "Eyes of the Oracle", hpGrowth: 15, mpGrowth: 10, atkGrowth: 2.5, defGrowth: 2, spdGrowth: 0.8, promotionReqLevel: 50 },
-    { id: 2121, name: "Champion", tier: 2, resourceType: "RAGE", parentClassId: 1111, leadsTo: "Grand Champion", hpGrowth: 16, mpGrowth: 0, atkGrowth: 5, defGrowth: 1.5, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2122, name: "Gladiator", tier: 2, resourceType: "RAGE", parentClassId: 1111, leadsTo: "Colossus", hpGrowth: 20, mpGrowth: 0, atkGrowth: 4.5, defGrowth: 2, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2123, name: "Druid", tier: 2, resourceType: "MANA", parentClassId: 1112, leadsTo: "Nature Avatar", hpGrowth: 12, mpGrowth: 18, atkGrowth: 2.5, defGrowth: 2, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2124, name: "Elementalist", tier: 2, resourceType: "MANA", parentClassId: 1112, leadsTo: "Chaos Weaver", hpGrowth: 10, mpGrowth: 22, atkGrowth: 2, defGrowth: 1, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2125, name: "Grandmaster", tier: 2, resourceType: "ENERGY", parentClassId: 1113, leadsTo: "Momentum God", hpGrowth: 14, mpGrowth: 5, atkGrowth: 4.5, defGrowth: 1, spdGrowth: 1.0, promotionReqLevel: 50 },
-    { id: 2126, name: "Kick-Master", tier: 2, resourceType: "RAGE", parentClassId: 1113, leadsTo: "Hurricane Kicker", hpGrowth: 16, mpGrowth: 0, atkGrowth: 5, defGrowth: 1, spdGrowth: 0.8, promotionReqLevel: 50 },
-    { id: 2127, name: "Troubadour", tier: 2, resourceType: "MANA", parentClassId: 1114, leadsTo: "Harmony Lord", hpGrowth: 12, mpGrowth: 30, atkGrowth: 1.5, defGrowth: 1.5, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2128, name: "Minstrel", tier: 2, resourceType: "MANA", parentClassId: 1114, leadsTo: "Chaos Singer", hpGrowth: 14, mpGrowth: 25, atkGrowth: 2, defGrowth: 1, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2129, name: "Zen-Master", tier: 2, resourceType: "ENERGY", parentClassId: 1115, leadsTo: "Enlightened One", hpGrowth: 12, mpGrowth: 10, atkGrowth: 3, defGrowth: 1, spdGrowth: 0.9, promotionReqLevel: 50 },
-    { id: 2130, name: "Soul-Fist", tier: 2, resourceType: "ENERGY", parentClassId: 1115, leadsTo: "Spirit Destroyer", hpGrowth: 15, mpGrowth: 10, atkGrowth: 5, defGrowth: 2, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2131, name: "Reaper", tier: 2, resourceType: "MANA", parentClassId: 1116, leadsTo: "Soul Eater", hpGrowth: 14, mpGrowth: 15, atkGrowth: 5, defGrowth: 1, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2132, name: "Soul-Binder", tier: 2, resourceType: "MANA", parentClassId: 1116, leadsTo: "Eternal Warden", hpGrowth: 12, mpGrowth: 20, atkGrowth: 2, defGrowth: 1.5, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2133, name: "Bastion", tier: 2, resourceType: "RAGE", parentClassId: 1117, leadsTo: "Adamant Fortress", hpGrowth: 22, mpGrowth: 0, atkGrowth: 2, defGrowth: 6, spdGrowth: 0.1, promotionReqLevel: 50 },
-    { id: 2134, name: "Fortress", tier: 2, resourceType: "RAGE", parentClassId: 1117, leadsTo: "Aegis Prime", hpGrowth: 25, mpGrowth: 0, atkGrowth: 1.5, defGrowth: 5.5, spdGrowth: 0.05, promotionReqLevel: 50 },
-    { id: 2135, name: "Templar", tier: 2, resourceType: "MANA", parentClassId: 1118, leadsTo: "High Inquisitor", hpGrowth: 18, mpGrowth: 10, atkGrowth: 4.5, defGrowth: 3, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2136, name: "Witch-Hunter", tier: 2, resourceType: "MANA", parentClassId: 1118, leadsTo: "Arcane Slayer", hpGrowth: 16, mpGrowth: 12, atkGrowth: 4, defGrowth: 2, spdGrowth: 0.5, promotionReqLevel: 50 },
-    { id: 2137, name: "Blade-Dancer", tier: 2, resourceType: "ENERGY", parentClassId: 1119, leadsTo: "Storm-Stepper", hpGrowth: 12, mpGrowth: 5, atkGrowth: 5, defGrowth: 0.5, spdGrowth: 1.0, promotionReqLevel: 50 },
-    { id: 2138, name: "Mirage-Dancer", tier: 2, resourceType: "ENERGY", parentClassId: 1119, leadsTo: "Mist-Lord", hpGrowth: 10, mpGrowth: 8, atkGrowth: 3, defGrowth: 0.5, spdGrowth: 1.2, promotionReqLevel: 50 },
-    { id: 2139, name: "Adventurer", tier: 2, resourceType: "ENERGY", parentClassId: 1120, leadsTo: "Legend", hpGrowth: 15, mpGrowth: 15, atkGrowth: 2.5, defGrowth: 2.5, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2140, name: "Vagabond", tier: 2, resourceType: "ENERGY", parentClassId: 1120, leadsTo: "Luck-God", hpGrowth: 18, mpGrowth: 5, atkGrowth: 3.5, defGrowth: 1.5, spdGrowth: 0.7, promotionReqLevel: 50 },
-    { id: 2141, name: "Plague-Doctor", tier: 2, resourceType: "MANA", parentClassId: 1125, leadsTo: "God of Pestilence", hpGrowth: 14, mpGrowth: 15, atkGrowth: 2, defGrowth: 2, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2142, name: "Chemist", tier: 2, resourceType: "ENERGY", parentClassId: 1125, leadsTo: "Grand Alchemist", hpGrowth: 12, mpGrowth: 12, atkGrowth: 2.5, defGrowth: 1.5, spdGrowth: 0.6, promotionReqLevel: 50 },
-    { id: 2143, name: "Reaver", tier: 2, resourceType: "RAGE", parentClassId: 1126, leadsTo: "Blood Lord", hpGrowth: 18, mpGrowth: 0, atkGrowth: 5.5, defGrowth: 1, spdGrowth: 0.4, promotionReqLevel: 50 },
-    { id: 2144, name: "Executioner", tier: 2, resourceType: "RAGE", parentClassId: 1126, leadsTo: "Grim Reaper", hpGrowth: 16, mpGrowth: 0, atkGrowth: 7.0, defGrowth: 0.5, spdGrowth: 0.3, promotionReqLevel: 50 },
-    { id: 2145, name: "Paladin", tier: 2, resourceType: "MANA", parentClassId: 1130, leadsTo: "Holy Avenger", hpGrowth: 18, mpGrowth: 10, atkGrowth: 2.5, defGrowth: 3, spdGrowth: 0.2, promotionReqLevel: 50 },
-    { id: 2146, name: "Vindicator", tier: 2, resourceType: "MANA", parentClassId: 1130, leadsTo: "Divine Arbiter", hpGrowth: 16, mpGrowth: 12, atkGrowth: 5.0, defGrowth: 2, spdGrowth: 0.4, promotionReqLevel: 50 },
+    // --- TIER 2 ---
+    { id: 2101, name: "Knight", description: "A symbol of unwavering duty and martial excellence. The Knight is more than a soldier; they are a guardian of the innocent and a pillar of the community. Clad in heavy plate armor and master of the shield, a Knight commands the battlefield through presence alone." },
+    { id: 2103, name: "Rogue", description: "Operating where the law ends and the shadows begin, the Rogue is a master of infiltration and sudden, lethal violence. They don't fight fair; they fight to win. Using advanced stealth techniques, a Rogue can deliver crippling strikes before the enemy even knows they are there." },
+    { id: 2111, name: "Wizard", description: "Masters of the mass-destruction arcane arts. Wizards have moved beyond simple bolts of energy to shaping the fabric of reality into massive areas of effect. They are the architects of the battlefield, capable of turning an entire enemy formation to ash with a single word." },
 
-    // --- TIER 3 (MASTERS) - 46 UNIQUE CLASSES (3101-3146) ---
-    { id: 3101, name: "Lord Commander", tier: 3, resourceType: "RAGE", parentClassId: 2101, focus: "Tactical Aura", identity: "Ultimate Battlefield Leader.", mechanicDesc: "Global Aura: Allies gain +20 DEF and +10 Speed.", hpGrowth: 35, mpGrowth: 0, atkGrowth: 6, defGrowth: 8, spdGrowth: 0.4, promotionReqLevel: 75 },
-    { id: 3102, name: "Iron Vanguard", tier: 3, resourceType: "RAGE", parentClassId: 2102, focus: "Counter-Defense", identity: "Unbreakable Fortress.", mechanicDesc: "Gain +5 ATK permanently every time you block.", hpGrowth: 30, mpGrowth: 0, atkGrowth: 4, defGrowth: 10, spdGrowth: 0.2, promotionReqLevel: 75 },
-    { id: 3103, name: "Phantom Assassin", tier: 3, resourceType: "ENERGY", parentClassId: 2103, focus: "Ghosting", identity: "Shadow Incarnate.", mechanicDesc: "Stealth is NOT broken when performing a Kill.", hpGrowth: 20, mpGrowth: 10, atkGrowth: 10, defGrowth: 2, spdGrowth: 1.5, promotionReqLevel: 75 },
-    { id: 3104, name: "Gunner", tier: 3, resourceType: "ENERGY", parentClassId: 2113, focus: "Pierce", identity: "Heavy Firearms Legend.", mechanicDesc: "Attacks pierce through all enemies in a line.", hpGrowth: 15, mpGrowth: 5, atkGrowth: 12, defGrowth: 1, spdGrowth: 0.5, promotionReqLevel: 75 },
-    { id: 3105, name: "Archmage", tier: 3, resourceType: "MANA", parentClassId: 2111, focus: "Arcane Nullification", identity: "God of Spells.", mechanicDesc: "Magic ignores elemental resistance.", hpGrowth: 12, mpGrowth: 40, atkGrowth: 2, defGrowth: 1, spdGrowth: 0.6, promotionReqLevel: 75 }
-    // ... Additional T3s can be added here following same sequence. 
-    // To keep it short for seeding demonstration, I'll seed the core ones.
+    // --- TIER 3 ---
+    { id: 3101, name: "Lord Commander", description: "The pinnacle of leadership and strategic genius. A Lord Commander does not just lead from the front; they become the heartbeat of the entire pertempuran. Under their command, common soldiers become legends, and the very air around them pulses with tactical might." },
+    { id: 3105, name: "Archmage", description: "Having transcended the mortal limits of magical study, the Archmage is a walking conduit of pure arcane power. They no longer study spells; they understand the fundamental laws of reality and how to break them. An Archmage's magic is so potent that it ignores standard protections." }
   ];
 
-  console.log(`[2/2] Upserting ${classes.length} final codex entries...`);
   for (const c of classes) {
-    await prisma.classTemplate.upsert({
+    // Only update the description and name to avoid overwriting other seeded fields
+    await prisma.classTemplate.update({
       where: { id: c.id },
-      update: c,
-      create: c
+      data: { 
+        name: c.name,
+        description: c.description 
+      }
     });
   }
 
-  console.log("✅ Ultimate Class Codex v15.0 Operational.");
+  console.log("✅ Final Lore Codex v17.0 Seeded.");
 }
 
 main()

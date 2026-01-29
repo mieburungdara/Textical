@@ -273,6 +273,7 @@ model ClassTemplate {
   // AAA Metadata for Player Info
   focus           String   @default("General")
   identity        String   @default("A versatile starting point.")
+  description     String   @default("") // NEW: Long-form lore and details
   growthDesc      String   @default("Balanced growth across all stats.")
   mechanicDesc    String   @default("Uses standard Mana.")
   leadsTo         String   @default("") // CSV of class names
