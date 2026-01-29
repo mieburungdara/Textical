@@ -47,12 +47,17 @@ class GatheringService {
             include: { equipment: { include: { itemInstance: { include: { template: true } } } } }
         });
 
-        const equippedPickaxe = heroData.equipment.find(eq => eq.itemInstance.template.category === "PICKAXE");
-        const currentToolTier = equippedPickaxe ? (equippedPickaxe.itemInstance.template.toolTier || 0) : -1;
+        // Categorize based on Target Material ID range (Minerals: 2200s, Wood: 2400s)
+        const isWood = resource.itemId >= 2400 && resource.itemId < 2500;
+        const requiredCategory = isWood ? "AXE" : "PICKAXE";
+
+        const equippedTool = heroData.equipment.find(eq => eq.itemInstance.template.category === requiredCategory);
+        const currentToolTier = equippedTool ? (equippedTool.itemInstance.template.toolTier || 0) : -1;
 
         if (currentToolTier < minToolTier) {
-            const toolMsg = minToolTier === 0 ? "a basic pickaxe" : `a Tier ${minToolTier} pickaxe`;
-            throw new Error(`You need ${toolMsg} to mine this material. (Current Tier: ${currentToolTier === -1 ? 'None' : currentToolTier})`);
+            const toolName = requiredCategory === "AXE" ? "axe" : "pickaxe";
+            const toolMsg = minToolTier === 0 ? `a basic ${toolName}` : `a Tier ${minToolTier} ${toolName}`;
+            throw new Error(`You need ${toolMsg} to harvest this material. (Current Tier: ${currentToolTier === -1 ? 'None' : currentToolTier})`);
         }
         
         // 3. Duration Logic
