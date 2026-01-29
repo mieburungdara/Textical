@@ -44,6 +44,18 @@ class BattleGrid {
         return pathFound;
     }
 
+    isTileOccupied(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return true;
+        return this.unitGrid[y] && this.unitGrid[y][x] !== null;
+    }
+
+    isWalkable(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
+        // Terrain ID 6 usually means WALL/Obstacle
+        if (this.terrainGrid[y][x] === 6) return false;
+        return this.unitGrid[y][x] === null;
+    }
+
     getNeighbors(pos) {
         if (!pos) return [];
         const results = [];
@@ -57,11 +69,6 @@ class BattleGrid {
             }
         });
         return results;
-    }
-
-    isTileOccupied(x, y) {
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return true;
-        return this.unitGrid[y] && this.unitGrid[y][x] !== null;
     }
 
     getDistance(p1, p2) {

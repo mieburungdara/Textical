@@ -1,0 +1,72 @@
+{
+  "title": "SkirmisherAI",
+  "description": "Archer logic: Keep distance and shoot.",
+  "root": "priority-main",
+  "nodes": {
+    "priority-main": {
+      "id": "priority-main",
+      "name": "Priority",
+      "title": "Main Brain",
+      "children": [
+        "logic-switch"
+      ]
+    },
+    "logic-switch": {
+      "id": "logic-switch",
+      "name": "Switch",
+      "title": "Targeting & Action",
+      "children": [
+        "find-target",
+        "action-selector"
+      ]
+    },
+    "find-target": {
+      "id": "find-target",
+      "name": "FindTarget",
+      "title": "Locate Prey",
+      "properties": { "strategy": "ENEMIES" }
+    },
+    "action-selector": {
+      "id": "action-selector",
+      "name": "Priority",
+      "title": "Decide Move/Attack",
+      "children": [
+        "gate-too-close",
+        "gate-range",
+        "move-act"
+      ]
+    },
+    "gate-too-close": {
+      "id": "gate-too-close",
+      "name": "CheckDistance",
+      "title": "Too close?",
+      "properties": { "distance": 2, "operator": "<=" },
+      "children": [
+        "kite-act"
+      ]
+    },
+    "kite-act": {
+      "id": "kite-act",
+      "name": "KiteTarget",
+      "title": "Strategic Retreat"
+    },
+    "gate-range": {
+      "id": "gate-range",
+      "name": "IsTargetInRange",
+      "title": "In range?",
+      "children": [
+        "attack-act"
+      ]
+    },
+    "attack-act": {
+      "id": "attack-act",
+      "name": "AttackTarget",
+      "title": "Shoot"
+    },
+    "move-act": {
+      "id": "move-act",
+      "name": "MoveToTarget",
+      "title": "Positioning"
+    }
+  }
+}

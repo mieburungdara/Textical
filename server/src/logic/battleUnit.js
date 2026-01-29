@@ -12,29 +12,19 @@ class BattleUnit {
         
         this.currentHealth = stats.health_max;
         this.currentMana = stats.mana_max;
-        this._actionPoints = 0.0; // Private backing variable
+        this._actionPoints = 0.0;
         this.isDead = false;
         
         this.skillCooldowns = {};
-        this.activeEffects = []; 
+        this.activeEffects = []; // Now stores Status instances
         this.weaponTraits = [];
         this.traits = data.traits || [];
         this.temporaryStats = {}; 
     }
 
-    // Property Getter/Setter for Action Points to trigger hooks
     get currentActionPoints() { return this._actionPoints; }
-    set currentActionPoints(val) {
-        const old = this._actionPoints;
-        this._actionPoints = val;
-        // Trigger hook only for major changes (>= 1.0) to avoid tick noise
-        if (Math.abs(val - old) >= 1.0) {
-            // Context simulation should be passed here, but BattleUnit doesn't hold it.
-            // We use global context or sim reference if available in the call stack.
-        }
-    }
+    set currentActionPoints(val) { this._actionPoints = val; }
 
-    // Manual AP update with hook support
     modifyAP(amount, sim) {
         const old = this._actionPoints;
         this._actionPoints += amount;
@@ -43,15 +33,10 @@ class BattleUnit {
 
     tick(delta, sim) {
         if (this.isDead) return;
-        
-        // AAA: Clear transient stats at start of tick
-        this.temporaryStats = {}; 
-
+        this.temporaryStats = {}; // Clear transient stats
         const old = this._actionPoints;
         const effectiveSpeed = this.getStat("speed");
         this._actionPoints += effectiveSpeed * delta;
-        
-        // Trigger hook if we crossed a whole number (for performance and sensing)
         if (Math.floor(this._actionPoints) !== Math.floor(old)) {
             traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
         }
@@ -63,15 +48,16 @@ class BattleUnit {
         return Math.max(0, base + mod);
     }
 
-    applyEffect(effect, sim) {
-        if (traitService.executeHook("onStatusApplied", this, effect, sim) === false) return;
+    applyEffect(statusInstance, sim) {
+        if (traitService.executeHook("onStatusApplied", this, statusInstance, sim) === false) return;
 
-        const existingIdx = this.activeEffects.findIndex(e => e.type === effect.type);
+        const existingIdx = this.activeEffects.findIndex(e => e.type === statusInstance.type);
         if (existingIdx !== -1) {
-            this.activeEffects[existingIdx] = effect;
-            traitService.executeHook("onStatusRefreshed", this, effect, sim); // NEW
+            this.activeEffects[existingIdx] = statusInstance;
+            traitService.executeHook("onStatusRefreshed", this, statusInstance, sim);
         } else {
-            this.activeEffects.push(effect);
+            this.activeEffects.push(statusInstance);
+            if (statusInstance.onApply) statusInstance.onApply(this, sim);
         }
     }
 
@@ -79,6 +65,7 @@ class BattleUnit {
         const effect = this.activeEffects.find(e => e.type === type);
         if (effect) {
             this.activeEffects = this.activeEffects.filter(e => e.type !== type);
+            if (effect.onExpire) effect.onExpire(this, sim);
             traitService.executeHook("onStatusPurged", this, effect, sim);
         }
     }
@@ -101,9 +88,7 @@ class BattleUnit {
     applyRegen(sim) {
         const regen = Math.floor(this.stats.health_max * 0.02);
         this.currentHealth = Math.min(this.stats.health_max, this.currentHealth + regen);
-        if (regen > 0) {
-            traitService.executeHook("onHealthRegen", this, regen, sim);
-        }
+        if (regen > 0) traitService.executeHook("onHealthRegen", this, regen, sim);
         return regen;
     }
 
@@ -113,39 +98,24 @@ class BattleUnit {
     }
 
     applyStatusDamage(sim) {
-        let totalDot = 0;
+        let totalImpactCount = 0;
 
         this.activeEffects = this.activeEffects.filter(eff => {
             traitService.executeHook("onStatusTick", this, eff, sim);
-
-            if (eff.type === "BURN" || eff.type === "POISON") {
-                const dmg = eff.power || 5;
-                this.takeDamage(dmg);
-                totalDot += dmg;
-            }
-
-            if (eff.stat_mod) {
-                for (const [sKey, sVal] of Object.entries(eff.stat_mod)) {
-                    this.temporaryStats[sKey] = (this.temporaryStats[sKey] || 0) + sVal;
-                }
-            }
-
-            if (eff.type === "CRYSTALLIZED") {
-                this.temporaryStats.defense = (this.temporaryStats.defense || 0) + (this.stats.defense * 5);
-            }
+            
+            // AAA: Execute modular onTick logic
+            if (eff.onTick) eff.onTick(this, sim);
 
             eff.duration--;
 
             if (eff.duration <= 0) {
+                if (eff.onExpire) eff.onExpire(this, sim);
                 traitService.executeHook("onStatusExpired", this, eff, sim);
-                if (eff.type === "OVERCHARGE") {
-                    this.applyEffect({ type: "STUN", duration: 3 }, sim);
-                }
                 return false;
             }
             return true;
         });
-        return totalDot;
+        return totalImpactCount;
     }
 }
 
