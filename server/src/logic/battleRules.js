@@ -55,18 +55,53 @@ class BattleRules {
             const nextX = defender.gridPos.x + dx;
             const nextY = defender.gridPos.y + dy;
 
-            if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
-                const oldPos = { ...defender.gridPos };
-                this._broadcastAdjacencyLost(defender);
-                traitService.executeHook("onTileExit", defender, oldPos, this.sim);
-                this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
-                defender.gridPos = { x: nextX, y: nextY };
-                this.sim.grid.unitGrid[nextY][nextX] = defender;
-                traitService.executeHook("onTileEnter", defender, defender.gridPos, this.sim);
-                traitService.executeHook("onMoveStep", defender, defender.gridPos, this.sim);
-                this._broadcastAdjacencyGained(defender);
-                knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
-            }
+                        if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
+
+                            const oldPos = { ...defender.gridPos };
+
+                            
+
+                            this._broadcastAdjacencyLost(defender);
+
+                            traitService.executeHook("onTileExit", defender, oldPos, this.sim);
+
+            
+
+                            this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
+
+                            defender.gridPos = { x: nextX, y: nextY };
+
+                            this.sim.grid.unitGrid[nextY][nextX] = defender;
+
+            
+
+                            traitService.executeHook("onTileEnter", defender, defender.gridPos, this.sim);
+
+                            traitService.executeHook("onMoveStep", defender, defender.gridPos, this.sim);
+
+                            this._broadcastAdjacencyGained(defender);
+
+            
+
+                            knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
+
+                        } else {
+
+                            // --- AAA Hook: Obstacle Impact ---
+
+                            const obstacle = this.sim.grid.unitGrid[nextY]?.[nextX] || "WALL";
+
+                            traitService.executeHook("onObstacleImpact", defender, obstacle, this.sim);
+
+                            this.sim.logger.addEvent("IMPACT", `${defender.data.name} slammed into ${obstacle === "WALL" ? "a wall" : obstacle.data.name}!`, { 
+
+                                target_id: defender.instanceId,
+
+                                obstacle_type: obstacle === "WALL" ? "GEOMETRY" : "UNIT"
+
+                            });
+
+                        }
         }
 
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {

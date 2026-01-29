@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Modular Traits Manager
- * Automatically loads all trait definitions from the logic/traits/definitions folder.
+ * Modular Traits Manager (v3.5 - Equipment Aware)
+ * Orchestrates hooks for Intrinsic Traits, Racial Traits, and Weapon Traits.
  */
 class TraitsManager {
     constructor() {
@@ -21,24 +21,35 @@ class TraitsManager {
                 const TraitClass = require(path.join(definitionsPath, file));
                 const traitInstance = new TraitClass();
                 this.traits[traitInstance.name] = traitInstance;
-                console.log(`[TRAITS] Loaded: ${traitInstance.name}`);
             }
         });
     }
 
     executeHook(hookName, actor, ...args) {
-        // Support multiple traits per unit. Fallback to race if traits not defined.
-        const traits = actor.traits || [actor.race];
-        let result = null;
+        // AAA: Aggregate ALL potential trait sources
+        // 1. Core Traits (from DB)
+        // 2. Race Trait (Fallback/Identity)
+        // 3. Weapon Traits (from Equipment)
+        const sources = [
+            ...(actor.traits || []),
+            actor.race,
+            ...(actor.weaponTraits || [])
+        ];
 
-        traits.forEach(trait => {
-            const traitKey = (typeof trait === 'string') ? trait.toLowerCase() : trait.name.toLowerCase();
-            const traitDef = this.traits[traitKey];
+        let result = null;
+        const processed = new Set(); // Prevent duplicate trait triggers
+
+        sources.forEach(source => {
+            if (!source) return;
+            const traitKey = (typeof source === 'string') ? source.toLowerCase() : (source.name ? source.name.toLowerCase() : null);
             
-            if (traitDef && typeof traitDef[hookName] === 'function') {
-                const hookResult = traitDef[hookName](actor, ...args);
-                // If any hook returns a non-null value (e.g. death cancel), capture it
-                if (hookResult !== null && hookResult !== undefined) result = hookResult;
+            if (traitKey && !processed.has(traitKey)) {
+                const traitDef = this.traits[traitKey];
+                if (traitDef && typeof traitDef[hookName] === 'function') {
+                    const hookResult = traitDef[hookName](actor, ...args);
+                    if (hookResult !== null && hookResult !== undefined) result = hookResult;
+                }
+                processed.add(traitKey);
             }
         });
         return result;

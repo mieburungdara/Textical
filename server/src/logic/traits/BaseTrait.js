@@ -23,6 +23,7 @@ class BaseTrait {
     onTileEnter(unit, toPos, sim) {} 
     onMoveStep(unit, nextPos, sim) {} // Called for every single tile walked
     onMoveEnd(unit, sim) {}
+    onObstacleImpact(unit, obstacle, sim) {} // Triggers when knocked into wall/unit
     onAdjacencyGained(unit, neighbor, sim) {} // When an ally/enemy moves next to unit
     onAdjacencyLost(unit, neighbor, sim) {}
 
