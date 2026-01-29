@@ -1,82 +1,77 @@
-# 🪝 Textical Trait Hooks Reference (v1.0)
+# 🪝 Textical Trait Hooks Reference (v3.0 - AAA Edition)
 
-Hooks are the bridge between a unit's **Traits** and the **Battle Engine**. By overriding these methods in a modular trait file, you can influence every aspect of combat, from movement to death prevention.
+The Textical Engine provides extreme granularity for tactical combat. Every micro-event in the simulation is a potential trigger for a Trait. This document defines all available hooks for professional-grade RPG development.
 
 ---
 
-## ⏳ Battle Lifecycle Hooks
-These hooks trigger based on the flow of time and turn order.
-
-| Hook Name | Timing | Context | Use Case |
+## ⏳ Battle Lifecycle
+| Hook Name | Timing | Context | Strategy |
 | :--- | :--- | :--- | :--- |
-| `onBattleStart` | Once, at Tick 0. | `(unit, sim)` | Permenant stat boosts, spawning unique VFX, or setting initial unit state. |
-| `onTickStart` | Every single simulation tick. | `(unit, sim)` | Continuous regen, poison damage, or speed adjustments based on distance. |
-| `onTurnStart` | When unit AP reaches 100. | `(unit, sim)` | Purging debuffs, calculating "Berserker" bonuses, or mana regeneration. |
-| `onTurnEnd` | After unit completes its action. | `(unit, sim)` | Post-action cooldown reduction or "End of Turn" damage effects. |
-| `onBattleEnd` | When a winner is declared. | `(unit, sim)` | Awarding unique trophies or triggering "Escape" emotes. |
+| `onBattleStart` | Start of battle (Tick 0) | `(unit, sim)` | Permanent buff application (e.g. Giant growth). |
+| `onRoundStart` | Every 100 total ticks | `(unit, sim)` | Round-based regenerative logic or timed reinforcements. |
+| `onTickStart` | Every single tick | `(unit, sim)` | Continuous sensing or DoT (Burn/Poison) processing. |
+| `onBattleEnd` | When a winner is set | `(unit, sim)` | Victory poses or "Coward" escape logic. |
 
 ---
 
-## 🏹 Movement & Targeting Hooks
-Used to control how units navigate the 50x50 grid and choose their prey.
-
-| Hook Name | Parameters | Return Value | Effect |
+## 🔄 Unit Turn Flow
+| Hook Name | Timing | Context | Strategy |
 | :--- | :--- | :--- | :--- |
-| `onTargetAcquisition` | `(unit, sim)` | `targetUnit` or `null` | Return a unit to **force** the AI to target them (e.g. Taunt mechanics). |
-| `onBeforeMove` | `(unit, sim)` | `Boolean` | Return `false` to prevent the unit from moving this turn (e.g. Root/Entangle). |
-| `onMoveStep` | `(unit, nextPos, sim)` | None | Triggers for **every ubin** walked. Useful for traps or "Trail" effects (e.g. leaving fire behind). |
-| `onMoveEnd` | `(unit, sim)` | None | Triggers after the unit finishes its full path. |
+| `onTurnStart` | Unit AP reaches 100 | `(unit, sim)` | Purging status effects (e.g. Skeleton immunity). |
+| `onPreAction` | Before choosing move/skill | `(unit, sim)` | Chance to skip action (e.g. Fear/Paralysis). |
+| `onPostAction` | After action finishes | `(unit, sim)` | Cooldown modifications or "Quick-Step" movement. |
+| `onTurnEnd` | Before AP deduction | `(unit, sim)` | Post-turn regeneration or resource balance. |
 
 ---
 
-## ⚔️ Combat & Damage Hooks
-The heart of the system. These hooks allow you to modify damage, reflect hits, or heal on hit.
-
-| Hook Name | Parameters | Return Value | Effect |
+## 🗺️ Movement & Grid Intelligence
+| Hook Name | Parameters | Return | Description |
 | :--- | :--- | :--- | :--- |
-| `onBeforeAction` | `(unit, sim)` | `Boolean` | Return `false` to cancel the current attack/skill (e.g. Confusion/Fear). |
-| `onActionImpact` | `(attacker, defender, sim)`| `Object` | Return `{ damageMult: 1.5 }` to modify the damage of the hit before it lands. |
-| `onTakeDamage` | `(defender, amount, sim)` | `Object` | Return `{ reflectPercent: 0.2 }` to damage the attacker back (Thorns logic). |
-| `onLifesteal` | `(attacker, damage, sim)` | None | Triggers after damage is dealt. Apply healing here (Vampire logic). |
-| `onKill` | `(attacker, victim, sim)` | None | Triggers when the attacker deals a killing blow. (Bloodlust/Bounty logic). |
+| `onBeforeMove` | `(unit, sim)` | `Boolean` | Return `false` to root the unit in place. |
+| `onTileEnter` | `(unit, toPos, sim)` | None | Triggers traps or "Charge" damage bonuses. |
+| `onTileExit` | `(unit, fromPos, sim)`| None | Leave fire trails or trigger opportunity attacks. |
+| `onMoveStep` | `(unit, nextPos, sim)`| None | Called for every single tile walked. |
+| `onAdjacencyGained`| `(unit, target, sim)` | None | Activate auras like **Shield Wall** instantly. |
 
 ---
 
-## 💀 Vitality & Death Hooks
-Control the boundary between life and death.
+## ⚔️ Combat Micro-Phases (The AAA Core)
+These hooks trigger inside the exact calculation window of an attack or skill.
 
-| Hook Name | Parameters | Return Value | Effect |
+| Hook Name | Perspectives | Context | Impact |
 | :--- | :--- | :--- | :--- |
-| `onBeforeDeath` | `(unit, sim)` | `Boolean` | Return **`true`** to cancel death and keep unit at 1 HP (Undead/Revive logic). |
-| `onDeath` | `(unit, sim)` | None | Final triggers before unit removal. (Explosion on death or Slime splitting). |
+| `onPreAttack` | Attacker | `(atk, def, sim)` | Stat gathering (e.g. "Focus" bonus). |
+| `onPreDefend` | Defender | `(def, atk, sim)` | Preparation (e.g. "Brace" for impact). |
+| `onDodge` | Defender | `(def, atk, sim)` | Triggers ninja-style counter-attacks. |
+| `onCrit` | Attacker | `(atk, def, dmg, sim)`| Apply extra debuffs on critical hits. |
+| `onTakeDamage` | Defender | `(def, atk, dmg, sim)`| Mitigation, reflection (Thorns), or mana shield. |
+| `onPostHit` | Defender | `(def, atk, dmg, sim)`| "Pain" triggers or reactive healing. |
+| `onLifesteal` | Attacker | `(atk, dmg, sim)` | Specialized healing (Vampire logic). |
+| `onKill` | Attacker | `(atk, victim, sim)` | "Bloodlust" (AP gain) or "Bounty" (Gold gain). |
 
 ---
 
-## 💻 Developer Implementation Example
-
-To use a hook, simply create a file in `server/src/logic/traits/definitions/` and override the method:
-
-```javascript
-const BaseTrait = require('../BaseTrait');
-
-class CounterAttackTrait extends BaseTrait {
-    constructor() { super('counter'); }
-
-    onTakeDamage(defender, amount, sim) {
-        if (Math.random() < 0.25) {
-            // 20% chance to emote a counter-threat
-            sim.logger.addEvent("EMOTE", `${defender.data.name} is preparing to strike back!`, { actor_id: defender.instanceId });
-        }
-        return {};
-    }
-}
-
-module.exports = CounterAttackTrait;
-```
+## 🧪 Status & Resources
+| Hook Name | Parameters | Return | Description |
+| :--- | :--- | :--- | :--- |
+| `onStatusApplied` | `(unit, effect, sim)` | `Boolean` | Return `false` to resist a specific debuff. |
+| `onStatusTick` | `(unit, effect, sim)` | None | Modify behavior based on active DoT intensity. |
+| `onManaGain` | `(unit, amount, sim)` | None | Visual feedback or synergy with other skills. |
+| `onManaSpend` | `(unit, amount, sim)` | None | Triggers "Mana Addict" or "Arcane Overload". |
 
 ---
 
-## 💡 Notes on Return Values
-- **Boolean Hooks**: If a hook expects a Boolean (like `onBeforeMove`), returning `false` will strictly cancel the engine's next step.
-- **Object Hooks**: If a hook returns an object (like `onActionImpact`), the engine will merge that object into its current calculation context.
-- **Multiple Traits**: If a unit has 3 traits that all implement `onTakeDamage`, the engine will execute them in order and the **last non-null return** will take priority.
+## 🤝 Team Synergy
+| Hook Name | Parameters | Logic |
+| :--- | :--- | :--- |
+| `onAllyDamage` | `(unit, ally, dmg, sim)`| Act as a "Guardian" and take damage for friends. |
+| `onAllyKill` | `(unit, ally, vict, sim)`| Morale boost for the whole squad. |
+| `onAllyDeath` | `(unit, ally, sim)` | Enter a "Rage" state (Vengeance) when allies die. |
+
+---
+
+## 💀 Finality
+| Hook Name | Parameters | Return | Description |
+| :--- | :--- | :--- | :--- |
+| `onBeforeDeath` | `(unit, sim)` | `Boolean` | Return **`true`** to cancel death (Undead/Phoenix). |
+| `onDeath` | `(unit, sim)` | None | Explosive death or spawning mini-units (Slime). |
