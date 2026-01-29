@@ -270,6 +270,13 @@ model ClassTemplate {
   tier            Int      @default(1)
   resourceType    String   @default("MANA") // MANA, RAGE, ENERGY
   
+  // AAA Metadata for Player Info
+  focus           String   @default("General")
+  identity        String   @default("A versatile starting point.")
+  growthDesc      String   @default("Balanced growth across all stats.")
+  mechanicDesc    String   @default("Uses standard Mana.")
+  leadsTo         String   @default("") // CSV of class names
+  
   // Growth per level
   hpGrowth        Float    @default(5)
   mpGrowth        Float    @default(2)
