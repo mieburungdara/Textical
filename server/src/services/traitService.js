@@ -3,8 +3,8 @@ const path = require('path');
 const _ = require('lodash');
 
 /**
- * Modular Traits Manager (v3.6 - AAA Multi-Merge)
- * Aggregates hooks and intelligently merges object results.
+ * Modular Traits Manager (v3.7 - Critical Safety)
+ * Aggregates hooks and intelligently merges object results with null-safety.
  */
 class TraitsManager {
     constructor() {
@@ -27,10 +27,16 @@ class TraitsManager {
     }
 
     executeHook(hookName, actor, ...args) {
+        if (!actor) return null;
+
+        // Safety: Ensure source parts are arrays
+        const actorTraits = Array.isArray(actor.traits) ? actor.traits : [];
+        const weaponTraits = Array.isArray(actor.weaponTraits) ? actor.weaponTraits : [];
+        
         const sources = [
-            ...(actor.traits || []),
+            ...actorTraits,
             actor.race,
-            ...(actor.weaponTraits || [])
+            ...weaponTraits
         ];
 
         let result = null;
@@ -43,15 +49,17 @@ class TraitsManager {
             if (traitKey && !processed.has(traitKey)) {
                 const traitDef = this.traits[traitKey];
                 if (traitDef && typeof traitDef[hookName] === 'function') {
-                    const hookResult = traitDef[hookName](actor, ...args);
-                    
-                    if (hookResult !== null && hookResult !== undefined) {
-                        // AAA: Intelligent Result Merging
-                        if (typeof hookResult === 'object' && !Array.isArray(hookResult)) {
-                            result = _.merge(result || {}, hookResult);
-                        } else {
-                            result = hookResult; // Primitives (Boolean/String) take last non-null
+                    try {
+                        const hookResult = traitDef[hookName](actor, ...args);
+                        if (hookResult !== null && hookResult !== undefined) {
+                            if (typeof hookResult === 'object' && !Array.isArray(hookResult)) {
+                                result = _.merge(result || {}, hookResult);
+                            } else {
+                                result = hookResult;
+                            }
                         }
+                    } catch (e) {
+                        console.error(`[TRAIT ERROR] Hook ${hookName} failed for trait ${traitKey}:`, e.message);
                     }
                 }
                 processed.add(traitKey);

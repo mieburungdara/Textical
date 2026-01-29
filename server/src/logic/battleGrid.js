@@ -56,6 +56,21 @@ class BattleGrid {
         return this.unitGrid[y][x] !== null;
     }
 
+    getNeighbors(pos) {
+        const results = [];
+        const directions = [
+            {x: 0, y: 1}, {x: 0, y: -1}, {x: 1, y: 0}, {x: -1, y: 0},
+            {x: 1, y: 1}, {x: -1, y: -1}, {x: 1, y: -1}, {x: -1, y: 1}
+        ];
+        directions.forEach(d => {
+            const next = { x: pos.x + d.x, y: pos.y + d.y };
+            if (next.x >= 0 && next.x < this.width && next.y >= 0 && next.y < this.height) {
+                results.push(next);
+            }
+        });
+        return results;
+    }
+
     getDistance(p1, p2) {
         return Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
     }

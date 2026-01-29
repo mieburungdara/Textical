@@ -35,7 +35,8 @@ class BattleAI {
     }
 
     findTarget(actor) {
-        let targets = this.sim.units.filter(u => u.teamId !== actor.teamId && !u.isDead);
+        const units = this.sim.units || [];
+        let targets = units.filter(u => u && u.teamId !== actor.teamId && !u.isDead);
         if (targets.length === 0) return null;
         return _.minBy(targets, (t) => this.sim.grid.getDistance(actor.gridPos, t.gridPos));
     }

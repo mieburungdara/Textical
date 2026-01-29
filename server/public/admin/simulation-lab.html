@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textical Simulation Lab v3.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #020408; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .log-entry { border-left: 2px solid #1e293b; padding-left: 10px; margin-bottom: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+        .log-MOVE { color: #94a3b8; }
+        .log-ATTACK, .log-DAMAGE, .log-IMPACT { color: #ef4444; font-weight: bold; }
+        .log-HEAL { color: #10b981; }
+        .log-CAST_SKILL { color: #38bdf8; }
+        canvas { background-image: linear-gradient(to right, #0f172a 1px, transparent 1px), linear-gradient(to bottom, #0f172a 1px, transparent 1px); background-size: 12px 12px; border: 1px solid #1e293b; cursor: crosshair; }
+        input, select { background: #05070a; border: 1px solid #1e293b; padding: 5px 10px; border-radius: 4px; font-size: 12px; color: white; width: 100%; }
+        .debug-panel { background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; }
+        .error-toast { background: #991b1b; border: 1px solid #ef4444; color: white; padding: 15px; border-radius: 8px; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col p-6 gap-6">
+
+    <div id="errorBox" class="error-toast shadow-2xl">
+        <h3 class="font-bold uppercase text-xs mb-1">ENGINE CRITICAL ERROR</h3>
+        <p id="errorMsg" class="text-[10px] opacity-90"></p>
+    </div>
+
+    <!-- Header -->
+    <div class="flex justify-between items-center bg-[#0a0f1a] p-4 rounded-xl border border-[#1e293b]">
+        <div>
+            <h1 class="text-xl font-black text-sky-400 italic">SIMULATION <span class="text-slate-500">CONTROL</span></h1>
+            <p class="text-[9px] text-slate-600 font-mono uppercase tracking-widest">Laboratory v3.6 - Deep Debug Enabled</p>
+        </div>
+        <div class="flex gap-4">
+            <div class="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-lg border border-slate-800 text-[10px]">
+                <span class="text-slate-500 font-bold">STATE:</span>
+                <span id="tickDisplay" class="text-sky-400 font-mono font-bold uppercase tracking-widest">Standby</span>
+            </div>
+            <button onclick="runCustomBattle()" class="bg-emerald-600 hover:bg-emerald-500 px-8 py-2 rounded-lg font-black text-xs transition-all active:scale-95 shadow-lg shadow-emerald-900/20">LAUNCH ENGINE</button>
+        </div>
+    </div>
+
+    <div class="flex-1 flex gap-6 overflow-hidden">
+        
+        <!-- LEFT: Sandbox Editor -->
+        <div class="w-80 flex flex-col gap-4 bg-[#0a0f1a] p-6 rounded-xl border border-[#1e293b]">
+            <h2 class="text-xs font-black text-indigo-400 uppercase tracking-widest flex justify-between items-center">
+                Unit Forge
+                <button onclick="addDefaultUnit()" class="text-[10px] text-emerald-400 hover:underline">+ SPAWN</button>
+            </h2>
+            <div id="unitForge" class="flex-1 overflow-y-auto space-y-4 pr-2"></div>
+        </div>
+
+        <!-- CENTER: Visualizer & Debug -->
+        <div class="flex-1 flex flex-col gap-6 overflow-hidden">
+            
+            <div class="flex-1 flex flex-col gap-4 bg-[#0a0f1a] p-6 rounded-xl border border-[#1e293b] relative">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Field Visualizer (50x50)</span>
+                    <div class="flex gap-2">
+                        <button onclick="prevTick()" class="px-3 py-1 bg-slate-800 rounded text-[10px] font-bold">&larr; STEP</button>
+                        <button onclick="toggleAuto()" id="playBtn" class="px-6 py-1 bg-indigo-600 rounded text-[10px] font-black">PLAY ENGINE</button>
+                        <button onclick="nextTick()" class="px-3 py-1 bg-slate-800 rounded text-[10px] font-bold">STEP &rarr;</button>
+                    </div>
+                </div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="battleGrid" width="550" height="550"></canvas>
+                </div>
+            </div>
+
+            <!-- CENTRAL DEBUG INSPECTOR -->
+            <div class="h-48 bg-[#05070a] rounded-xl border border-dashed border-slate-800 p-4 flex gap-4 overflow-hidden shadow-inner">
+                <div class="w-1/3 flex flex-col gap-2">
+                    <h3 class="text-[9px] font-black text-sky-500 uppercase tracking-widest">Engine Performance</h3>
+                    <div class="flex-1 bg-black/40 p-3 rounded-lg border border-slate-900 space-y-2 text-[10px]">
+                        <div class="flex justify-between"><span>Compute Time:</span><span id="perfCompute" class="text-emerald-400 font-bold">0ms</span></div>
+                        <div class="flex justify-between"><span>Hook Density:</span><span id="perfHooks" class="text-sky-400 font-bold">0 events</span></div>
+                        <div class="flex justify-between"><span>Sim Stability:</span><span class="text-indigo-400">100% OK</span></div>
+                    </div>
+                </div>
+                <div class="flex-1 flex flex-col gap-2">
+                    <h3 class="text-[9px] font-black text-indigo-500 uppercase tracking-widest">Deep Unit Inspector</h3>
+                    <div id="unitDebug" class="flex-1 bg-black/40 p-3 rounded-lg border border-slate-900 text-[9px] font-mono text-slate-400 overflow-y-auto whitespace-pre">
+Select a unit from the forge to inspect raw state...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Live Narrative -->
+        <div class="w-96 flex flex-col gap-6">
+            <div class="flex-1 bg-[#0a0f1a] p-6 rounded-xl border border-[#1e293b] flex flex-col overflow-hidden shadow-2xl">
+                <h2 class="text-xs font-black text-sky-400 uppercase tracking-widest mb-4">Neural Narrative</h2>
+                <div id="eventLog" class="flex-1 overflow-y-auto pr-4 space-y-1">
+                    <p class="text-[10px] text-slate-600 italic">Awaiting neural patterns...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sandboxUnits = [];
+        let replayData = [];
+        let currentTickIdx = 0;
+        let isPlaying = false;
+        let playInterval = null;
+
+        const canvas = document.getElementById('battleGrid');
+        const ctx = canvas.getContext('2d');
+        const cellSize = 11;
+
+        function addDefaultUnit() {
+            const team = sandboxUnits.filter(u => u.team === 0).length >= 2 ? 1 : 0;
+            const u = {
+                id: "unit_" + Math.random().toString(36).substr(2, 5),
+                name: team === 0 ? "Hero " + (sandboxUnits.length + 1) : "Mob " + (sandboxUnits.length + 1),
+                team: team,
+                traits: ["vampire"],
+                bt_tree: "SimpleAI",
+                pos: { x: team === 0 ? 10 : 40, y: 25 },
+                stats: { health_max: 100, mana_max: 50, attack_damage: 20, defense: 5, speed: 10, attack_range: 1, dodge_rate: 5, crit_chance: 0.1, crit_damage: 1.5 }
+            };
+            sandboxUnits.push(u);
+            updateForgeUI();
+        }
+
+        function updateForgeUI() {
+            const forge = document.getElementById('unitForge');
+            forge.innerHTML = "";
+            sandboxUnits.forEach((u, idx) => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-black/40 rounded-lg border border-slate-800 space-y-3 relative cursor-pointer hover:bg-slate-900/50";
+                card.onclick = () => inspectUnit(idx);
+                card.innerHTML = `
+                    <button onclick="removeUnit(event, ${idx})" class="absolute top-2 right-2 text-red-500 font-bold text-[10px]">[ X ]</button>
+                    <div class="flex gap-2">
+                        <div class="flex-1"><label class="text-[8px] text-slate-500 font-bold">NAME</label><input type="text" value="${u.name}" oninput="updateVal(${idx}, 'name', this.value)"></div>
+                        <div class="w-16"><label class="text-[8px] text-slate-500 font-bold">TEAM</label><select onchange="updateVal(${idx}, 'team', parseInt(this.value))"<option value="0" ${u.team===0?'selected':''}>0 (Blue)</option><option value="1" ${u.team===1?'selected':''}>1 (Red)</option></select></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="flex-1"><label class="text-[8px] text-slate-500 font-bold">TRAITS</label><input type="text" value="${u.traits.join(',')}" oninput="updateVal(${idx}, 'traits', this.value.split(','))"></div>
+                        <div class="flex-1"><label class="text-[8px] text-slate-500 font-bold">BT</label><input type="text" value="${u.bt_tree}" oninput="updateVal(${idx}, 'bt_tree', this.value)"></div>
+                    </div>
+                `;
+                forge.appendChild(card);
+            });
+        }
+
+        function inspectUnit(idx) {
+            const u = sandboxUnits[idx];
+            document.getElementById('unitDebug').innerHTML = `<b>SELECTED UNIT: ${u.name}</b>\n\n` + JSON.stringify(u, null, 2);
+        }
+
+        function updateVal(idx, key, val) { sandboxUnits[idx][key] = val; }
+        function removeUnit(e, idx) { e.stopPropagation(); sandboxUnits.splice(idx, 1); updateForgeUI(); }
+
+        async function runCustomBattle() {
+            const startTime = performance.now();
+            try {
+                if (playInterval) clearInterval(playInterval);
+                isPlaying = false;
+                document.getElementById('playBtn').textContent = "PLAY ENGINE";
+                
+                const res = await fetch('/api/debug/run-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customUnits: sandboxUnits })
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "Simulation failed");
+                }
+
+                const data = await res.json();
+                replayData = data.replay;
+                currentTickIdx = 0;
+                
+                // Debug Stats
+                const endTime = performance.now();
+                document.getElementById('perfCompute').textContent = Math.floor(endTime - startTime) + "ms";
+                
+                renderTick();
+                document.getElementById('errorBox').style.display = 'none';
+            } catch (e) {
+                document.getElementById('errorBox').style.display = 'block';
+                document.getElementById('errorMsg').textContent = e.message;
+            }
+        }
+
+        function renderTick() {
+            const tick = replayData[currentTickIdx];
+            if (!tick) return;
+            document.getElementById('tickDisplay').textContent = "TICK " + tick.tick;
+            document.getElementById('perfHooks').textContent = tick.events.length + " events";
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tick.units.forEach(u => {
+                const x = u.pos.x * cellSize; const y = u.pos.y * cellSize;
+                ctx.fillStyle = u.team === 0 ? "#38bdf8" : "#ef4444";
+                if (u.hp <= 0) ctx.fillStyle = "#1e293b";
+                ctx.beginPath(); ctx.roundRect(x + 1, y + 1, cellSize - 2, cellSize - 2, 2); ctx.fill();
+                if (u.hp > 0) {
+                    ctx.fillStyle = "#10b981"; ctx.fillRect(x, y - 2, cellSize * (u.hp / u.maxHp), 1.5);
+                }
+            });
+
+            const log = document.getElementById('eventLog');
+            log.innerHTML = "";
+            tick.events.forEach(e => {
+                const entry = document.createElement('div');
+                entry.className = `log-entry log-${e.type}`;
+                entry.textContent = `[${e.type}] ${e.msg}`;
+                log.appendChild(entry);
+            });
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function nextTick() { if (currentTickIdx < replayData.length - 1) { currentTickIdx++; renderTick(); } else { toggleAuto(); } }
+        function prevTick() { if (currentTickIdx > 0) { currentTickIdx--; renderTick(); } }
+        function toggleAuto() {
+            isPlaying = !isPlaying;
+            document.getElementById('playBtn').textContent = isPlaying ? "PAUSE" : "PLAY ENGINE";
+            if (isPlaying) playInterval = setInterval(nextTick, 100);
+            else clearInterval(playInterval);
+        }
+
+        addDefaultUnit();
+        addDefaultUnit();
+    </script>
+</body>
+</html>

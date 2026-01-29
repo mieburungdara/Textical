@@ -84,18 +84,20 @@ class BattleRules {
     }
 
     _broadcastAllyEvent(hookName, actor, ...args) {
-        const allies = this.sim.units.filter(u => 
-            u.teamId === actor.teamId && !u.isDead && u.instanceId !== actor.instanceId
+        const units = this.sim.units || [];
+        const allies = units.filter(u => 
+            u && u.teamId === actor.teamId && !u.isDead && u.instanceId !== actor.instanceId
         );
         allies.forEach(ally => traitService.executeHook(hookName, ally, actor, ...args));
     }
 
     performSkill(actor, skill, targetPos) {
-        if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
+        if (traitService.executeHook("onPreAction", actor, this.sim, skill) === false) return;
+        
         actor.consumeMana(skill.mana_cost || 0, this.sim);
         actor.skillCooldowns[skill.id] = skill.cooldown || 3;
         
-        const tiles = this.sim.grid.getTilesInPattern(targetPos, skill.aoe_pattern, skill.aoe_size);
+        const tiles = this.sim.grid.getTilesInPattern(targetPos, skill.aoe_pattern, skill.aoe_size) || [];
         tiles.forEach(tile => {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (!victim || victim.isDead) return;
@@ -104,23 +106,25 @@ class BattleRules {
             const isTargetEnemy = victim.teamId !== actor.teamId;
 
             if ((isBeneficial && !isTargetEnemy) || (!isBeneficial && isTargetEnemy)) {
-                const atkMods = traitService.executeHook("onPreAttack", actor, victim, this.sim) || {};
-                const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim) || {};
+                // Micro-Phases with SKILL context
+                const atkMods = traitService.executeHook("onPreAttack", actor, victim, this.sim, skill) || {};
+                const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim, skill) || {};
 
                 if (!isBeneficial) {
                     const dodgeChance = (victim.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
                     if (Math.random() * 100 < dodgeChance) {
-                        traitService.executeHook("onDodge", victim, actor, this.sim);
-                        traitService.executeHook("onAttackMissed", actor, victim, this.sim);
+                        traitService.executeHook("onDodge", victim, actor, this.sim, skill);
+                        traitService.executeHook("onAttackMissed", actor, victim, this.sim, skill);
                         return;
                     }
                 }
 
-                const skillMult = (skill.damage_multiplier || 1.0) * (atkMods.dmgMult || 1.0);
-                const result = CombatRules.calculateDamage(actor, victim, skillMult, skill.element || 0);
-                if (result.isCrit) traitService.executeHook("onCrit", actor, victim, result.damage, this.sim);
+                const dmgMult = (skill.damage_multiplier || 1.0) * (atkMods.dmgMult || 1.0);
+                const result = CombatRules.calculateDamage(actor, victim, dmgMult, skill.element || 0);
+                
+                if (result.isCrit) traitService.executeHook("onCrit", actor, victim, result.damage, this.sim, skill);
 
-                const impactMods = traitService.executeHook("onTakeDamage", victim, actor, result.damage, this.sim) || {};
+                const impactMods = traitService.executeHook("onTakeDamage", victim, actor, result.damage, this.sim, skill) || {};
                 const finalVal = impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage;
                 
                 if (isBeneficial) {
@@ -129,20 +133,23 @@ class BattleRules {
                 } else {
                     victim.takeDamage(finalVal);
                     this._broadcastAllyEvent("onAllyDamage", victim, finalVal);
-                    traitService.executeHook("onPostHit", victim, actor, finalVal, this.sim);
-                    traitService.executeHook("onLifesteal", actor, finalVal, this.sim);
+                    traitService.executeHook("onPostHit", victim, actor, finalVal, this.sim, skill);
+                    traitService.executeHook("onLifesteal", actor, finalVal, this.sim, skill);
                 }
                 
-                traitService.executeHook("onPostAttack", actor, victim, finalVal, this.sim);
-                if (skill.status_effect) victim.applyEffect({ ...skill.status_effect }, this.sim);
+                traitService.executeHook("onPostAttack", actor, victim, finalVal, this.sim, skill);
+
+                if (skill.status_effect) {
+                    victim.applyEffect({ ...skill.status_effect }, this.sim);
+                }
 
                 if (victim.currentHealth <= 0) {
-                    traitService.executeHook("onKill", actor, victim, this.sim);
+                    traitService.executeHook("onKill", actor, victim, this.sim, skill);
                     this._broadcastAllyEvent("onAllyKill", actor, victim);
                 }
             }
         });
-        traitService.executeHook("onPostAction", actor, this.sim);
+        traitService.executeHook("onPostAction", actor, this.sim, skill);
     }
 
     resolveDeaths() {
