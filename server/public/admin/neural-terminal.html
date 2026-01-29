@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neural Terminal v3.5 | Advanced Filtering</title>
+    <style>
+        body { background: #020408; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; padding: 30px; font-size: 11px; line-height: 1.6; }
+        .terminal-header { border-bottom: 2px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+        
+        /* Filter Styles */
+        .filter-bar { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .filter-chip { padding: 4px 10px; border-radius: 6px; border: 1px solid #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; user-select: none; }
+        .filter-chip input { display: none; }
+        .filter-chip:hover { border-color: #38bdf8; }
+        .filter-chip.active { background: #38bdf8; color: #020408; border-color: #38bdf8; font-weight: bold; }
+        
+        .tick-block { margin-bottom: 25px; background: rgba(15, 23, 42, 0.3); border-radius: 8px; border: 1px solid #1e293b; }
+        .tick-header { background: #1e293b; color: #38bdf8; padding: 5px 15px; font-weight: bold; }
+        .events-container { padding: 10px 15px; }
+        .event { border-bottom: 1px solid rgba(255,255,255,0.02); padding: 5px 0; }
+        .type { width: 85px; flex-shrink: 0; font-weight: bold; font-size: 10px; display: inline-block; }
+        
+        .type-TRAIT { color: #8b5cf6; }
+        .type-ENGINE { color: #f59e0b; }
+        .type-DAMAGE, .type-ATTACK { color: #f87171; }
+        .type-MOVE { color: #64748b; }
+        .type-CAST_SKILL { color: #38bdf8; }
+        .type-HEAL { color: #10b981; }
+        
+        .data-trace { margin-top: 4px; padding: 8px; background: #000; border-radius: 4px; color: #475569; font-size: 9px; display: none; border: 1px solid #1e293b; }
+        .event:hover .data-trace { display: block; }
+        .btn { background: #38bdf8; color: #020408; border: none; padding: 12px 25px; cursor: pointer; font-weight: 900; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="terminal-header">
+        <div>
+            <h1 style="margin:0; font-size: 18px; letter-spacing: -1px;">NEURAL <span style="color:#38bdf8">DASHBOARD</span></h1>
+            <div style="font-size:10px; color:#64748b">Deep Trace v3.5 | Authoritative Logging</div>
+        </div>
+        <button onclick="runSimulation()" class="btn">GENERATE NEW TRACE</button>
+    </div>
+
+    <!-- Filter Dashboard -->
+    <div class="filter-bar" id="filterBar">
+        <div class="filter-chip active" onclick="toggleFilter('TRAIT', this)">TRAITS</div>
+        <div class="filter-chip active" onclick="toggleFilter('ENGINE', this)">ENGINE</div>
+        <div class="filter-chip active" onclick="toggleFilter('ATTACK', this)">ATTACKS</div>
+        <div class="filter-chip active" onclick="toggleFilter('DAMAGE', this)">DAMAGE</div>
+        <div class="filter-chip active" onclick="toggleFilter('MOVE', this)">MOVEMENT</div>
+        <div class="filter-chip active" onclick="toggleFilter('CAST_SKILL', this)">SKILLS</div>
+        <div class="filter-chip active" onclick="toggleFilter('HEAL', this)">HEALING</div>
+        <div style="flex-grow: 1"></div>
+        <button onclick="setAllFilters(true)" class="text-[9px] uppercase font-bold text-sky-400">All</button>
+        <button onclick="setAllFilters(false)" class="text-[9px] uppercase font-bold text-slate-500">None</button>
+    </div>
+
+    <div id="terminal-output">
+        <p style="color: #475569; font-style: italic;">Launch a trace to populate the neural buffer...</p>
+    </div>
+
+    <script>
+        let globalReplayData = [];
+        let activeFilters = new Set(['TRAIT', 'ENGINE', 'ATTACK', 'DAMAGE', 'MOVE', 'CAST_SKILL', 'HEAL', 'VFX', 'EMOTE', 'DEATH', 'MISS', 'IMPACT']);
+
+        function toggleFilter(type, el) {
+            if (activeFilters.has(type)) {
+                activeFilters.delete(type);
+                el.classList.remove('active');
+            } else {
+                activeFilters.add(type);
+                el.classList.add('active');
+            }
+            renderLogs();
+        }
+
+        function setAllFilters(state) {
+            const chips = document.querySelectorAll('.filter-chip');
+            chips.forEach(chip => {
+                const type = chip.innerText;
+                if (state) {
+                    activeFilters.add(type);
+                    chip.classList.add('active');
+                } else {
+                    activeFilters.delete(type);
+                    chip.classList.remove('active');
+                }
+            });
+            renderLogs();
+        }
+
+        async function runSimulation() {
+            const output = document.getElementById('terminal-output');
+            output.innerHTML = "<p style='color:#fbbf24'>Engaging Simulation Buffer...</p>";
+            try {
+                const res = await fetch('/api/debug/run-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customUnits: [
+                            { id: "walker", name: "The Walker", traits: ["thinker"], bt_tree: "SimpleAI", team: 0, pos: {x:5,y:5}, stats: {health_max:100, attack_damage:0, speed:15, attack_range:1} },
+                            { id: "target", name: "Training Dummy", traits: ["thorns"], bt_tree: "SimpleAI", team: 1, pos: {x:45,y:45}, stats: {health_max:1000, attack_damage:0, speed:0, attack_range:1} }
+                        ]
+                    })
+                });
+                const data = await res.json();
+                globalReplayData = data.replay;
+                renderLogs();
+            } catch (e) { output.innerHTML = `<p style="color:#ef4444">TRACE FAILED: ${e.message}</p>`; }
+        }
+
+        function renderLogs() {
+            const output = document.getElementById('terminal-output');
+            output.innerHTML = "";
+            
+            globalReplayData.forEach(tick => {
+                const filteredEvents = tick.events.filter(e => activeFilters.has(e.type));
+                if (filteredEvents.length === 0) return; // Skip empty ticks after filtering
+
+                const block = document.createElement('div');
+                block.className = "tick-block";
+                
+                let html = `<div class="tick-header">TICK ${tick.tick}</div><div class="events-container">`;
+                filteredEvents.forEach(e => {
+                    const dataStr = e.data ? JSON.stringify(e.data, null, 2) : "No state data captured.";
+                    html += `<div class="event">
+                        <div style="display:flex; gap:15px">
+                            <span class="type type-${e.type}">[${e.type}]</span>
+                            <span class="msg">${e.msg}</span>
+                        </div>
+                        <pre class="data-trace">${dataStr}</pre>
+                    </div>`;
+                });
+                block.innerHTML = html + "</div>";
+                output.appendChild(block);
+            });
+            
+            if (output.innerHTML === "") {
+                output.innerHTML = "<p style='color:#475569; text-align:center'>All logs filtered out. Enable a category to see data.</p>";
+            }
+        }
+
+        runSimulation();
+    </script>
+</body>
+</html>

@@ -1,54 +1,55 @@
+const _ = require('lodash');
+
 class BattleLogger {
     constructor() {
-        this.logs = [];
-        this.currentTickData = null;
+        this.ticks = [];
+        this.currentTick = null;
     }
 
-    /**
-     * Memulai pengumpulan data untuk satu tick visual.
-     */
-    startTick(tick) {
-        this.currentTickData = {
-            tick: tick,
+    startTick(tickNumber) {
+        this.currentTick = {
+            tick: tickNumber,
             events: [],
-            unit_states: {}
+            units: []
         };
     }
 
-    /**
-     * Menambahkan event ke dalam tick yang sedang berjalan.
-     */
-    addEvent(type, message, data = {}) {
-        if (!this.currentTickData) return;
-        this.currentTickData.events.push({
-            type: type,
-            message: message,
-            data: data
+    addEvent(type, msg, data = {}) {
+        if (!this.currentTick) return;
+        this.currentTick.events.push({
+            type, // MOVE, ATTACK, HEAL, TRAIT, AI, STATUS
+            msg,
+            data,
+            timestamp: Date.now()
         });
     }
 
-    /**
-     * Mengunci state posisi dan HP unit di akhir tick, lalu menyimpan tick tersebut.
-     */
     commitTick(units) {
-        if (!this.currentTickData) return;
+        if (!this.currentTick) return;
         
-        units.forEach(u => {
-            this.currentTickData.unit_states[u.instanceId] = { 
-                hp: u.currentHealth, 
-                mana: u.currentMana, 
-                ap: u.currentActionPoints, 
-                pos: { x: u.gridPos.x, y: u.gridPos.y },
-                effects: u.activeEffects.map(e => e.type)
-            };
-        });
+        // AAA: Capture rich unit state snapshots
+        this.currentTick.units = units.map(u => ({
+            id: u.instanceId,
+            name: u.data.name,
+            team: u.teamId,
+            pos: { ...u.gridPos },
+            hp: u.currentHealth,
+            maxHp: u.stats.health_max,
+            mp: u.currentMana,
+            maxMp: u.stats.mana_max,
+            ap: u.currentActionPoints,
+            effects: u.activeEffects.map(e => ({ type: e.type, duration: e.duration })),
+            traits: [...u.traits],
+            // We'll capture a simplified view of unit's intent if available
+            targetId: u.currentTargetId || null 
+        }));
 
-        this.logs.push(this.currentTickData);
-        this.currentTickData = null;
+        this.ticks.push(this.currentTick);
+        this.currentTick = null;
     }
 
     getLogs() {
-        return this.logs;
+        return this.ticks;
     }
 }
 

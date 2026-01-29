@@ -2,10 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('lodash');
 
-/**
- * Modular Traits Manager (v3.7 - Critical Safety)
- * Aggregates hooks and intelligently merges object results with null-safety.
- */
 class TraitsManager {
     constructor() {
         this.traits = {};
@@ -15,7 +11,6 @@ class TraitsManager {
     _loadTraits() {
         const definitionsPath = path.join(__dirname, '../logic/traits/definitions');
         if (!fs.existsSync(definitionsPath)) return;
-
         const files = fs.readdirSync(definitionsPath);
         files.forEach(file => {
             if (file.endsWith('.js')) {
@@ -26,18 +21,11 @@ class TraitsManager {
         });
     }
 
-    executeHook(hookName, actor, ...args) {
+    executeHook(hookName, actor, sim, ...args) {
         if (!actor) return null;
-
-        // Safety: Ensure source parts are arrays
         const actorTraits = Array.isArray(actor.traits) ? actor.traits : [];
         const weaponTraits = Array.isArray(actor.weaponTraits) ? actor.weaponTraits : [];
-        
-        const sources = [
-            ...actorTraits,
-            actor.race,
-            ...weaponTraits
-        ];
+        const sources = [...actorTraits, actor.race, ...weaponTraits];
 
         let result = null;
         const processed = new Set();
@@ -50,7 +38,18 @@ class TraitsManager {
                 const traitDef = this.traits[traitKey];
                 if (traitDef && typeof traitDef[hookName] === 'function') {
                     try {
-                        const hookResult = traitDef[hookName](actor, ...args);
+                        const hookResult = traitDef[hookName](actor, sim, ...args);
+                        
+                        // --- AAA: Deep Trace Logging ---
+                        if (sim && sim.logger) {
+                            let resultStr = hookResult ? JSON.stringify(hookResult) : "VOID";
+                            sim.logger.addEvent("TRAIT", `[${traitKey.toUpperCase()}] executed ${hookName} -> Result: ${resultStr}`, { 
+                                trait: traitKey,
+                                hook: hookName,
+                                output: hookResult
+                            });
+                        }
+
                         if (hookResult !== null && hookResult !== undefined) {
                             if (typeof hookResult === 'object' && !Array.isArray(hookResult)) {
                                 result = _.merge(result || {}, hookResult);
@@ -59,7 +58,7 @@ class TraitsManager {
                             }
                         }
                     } catch (e) {
-                        console.error(`[TRAIT ERROR] Hook ${hookName} failed for trait ${traitKey}:`, e.message);
+                        console.error(`[TRAIT CRITICAL] ${traitKey}.${hookName} crashed:`, e.message);
                     }
                 }
                 processed.add(traitKey);

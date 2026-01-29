@@ -1,23 +1,24 @@
 const b3 = require('behavior3js');
+const BaseMove = require('./BaseMove');
 
-class MoveToTarget extends b3.Action {
-    constructor() { super({ name: 'MoveToTarget' }); }
+const MoveToTarget = b3.Class(BaseMove);
+
+MoveToTarget.prototype.initialize = function(params = {}) {
+    BaseMove.prototype.initialize.call(this, {
+        name: 'MoveToTarget',
+        title: params.title || 'Pursue Enemy',
+        properties: params.properties
+    });
+}
+
+MoveToTarget.prototype.tick = function(tick) {
+    const { unit, sim } = tick.blackboard.get('context');
+    const target = tick.blackboard.get('target', tick.tree.id, unit.instanceId) || sim.ai.findTarget(unit);
     
-    tick(tick) {
-        const { unit, sim } = tick.blackboard.get('context');
-        // Try to get target from blackboard first
-        let target = tick.blackboard.get('target', tick.tree.id, unit.instanceId);
-        
-        // Fallback to finding closest enemy if no specific target set
-        if (!target) {
-            target = sim.ai.findTarget(unit);
-        }
+    if (!target || target.isDead) return b3.FAILURE;
 
-        if (!target) return b3.FAILURE;
-        
-        sim.ai.moveTowards(unit, target);
-        return b3.SUCCESS;
-    }
+    // Execute movement using base class helper
+    return this.stepTowards(unit, target.gridPos, sim);
 }
 
 module.exports = MoveToTarget;

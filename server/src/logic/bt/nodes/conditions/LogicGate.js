@@ -1,25 +1,23 @@
 const b3 = require('behavior3js');
 
 /**
- * Enhanced Logic Gate
- * Supports reading 'properties' from JSON (e.g. threshold, targetType)
+ * AAA Logic Gate (v3.3)
+ * Redefined using b3.Class to match library internals 100%.
  */
-class LogicGate extends b3.Decorator {
-    constructor(params) {
-        super({ 
-            name: params.name, 
-            children: params.children,
-            properties: params.properties || {} 
-        });
-        this.properties = params.properties || {};
-    }
+const LogicGate = b3.Class(b3.Composite);
 
-    executePath(tick, conditionMet) {
-        if (conditionMet) {
-            return this.children[0] ? this.children[0]._execute(tick) : b3.SUCCESS;
-        } else {
-            return this.children[1] ? this.children[1]._execute(tick) : b3.FAILURE;
-        }
+LogicGate.prototype.initialize = function(params = {}) {
+    b3.Composite.prototype.initialize.call(this, params);
+    this.name = params.name || 'LogicGate';
+    this.title = params.title || 'LogicGate';
+    this.properties = params.properties || {};
+}
+
+LogicGate.prototype.executePath = function(tick, conditionMet) {
+    if (conditionMet) {
+        return this.children[0] ? this.children[0]._execute(tick) : b3.SUCCESS;
+    } else {
+        return this.children[1] ? this.children[1]._execute(tick) : b3.FAILURE;
     }
 }
 

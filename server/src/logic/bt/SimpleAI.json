@@ -1,34 +1,47 @@
 {
-    "title": "SimpleAI",
-    "description": "Attack if in range, otherwise move towards target.",
-    "root": "root-node",
-    "nodes": {
-        "root-node": {
-            "id": "root-node",
-            "name": "Priority",
-            "title": "Main Logic",
-            "children": ["attack-seq", "move-act"]
-        },
-        "attack-seq": {
-            "id": "attack-seq",
-            "name": "Sequence",
-            "title": "Attack If Possible",
-            "children": ["in-range-cond", "attack-act"]
-        },
-        "in-range-cond": {
-            "id": "in-range-cond",
-            "name": "IsTargetInRange",
-            "title": "Target in Range?"
-        },
-        "attack-act": {
-            "id": "attack-act",
-            "name": "AttackTarget",
-            "title": "Execute Attack"
-        },
-        "move-act": {
-            "id": "move-act",
-            "name": "MoveToTarget",
-            "title": "Walk Closer"
-        }
+  "title": "SimpleAI",
+  "description": "Tactical logic for standard units.",
+  "root": "priority-main",
+  "nodes": {
+    "priority-main": {
+      "id": "priority-main",
+      "name": "Priority",
+      "title": "Priority",
+      "children": ["logic-sequence"]
+    },
+    "logic-sequence": {
+      "id": "logic-sequence",
+      "name": "Sequence",
+      "title": "Sequence",
+      "children": ["find-target-act", "combat-selector"]
+    },
+    "find-target-act": {
+      "id": "find-target-act",
+      "name": "FindTarget",
+      "title": "Find Closest",
+      "properties": { "strategy": "ENEMIES" }
+    },
+    "combat-selector": {
+      "id": "combat-selector",
+      "name": "Priority",
+      "title": "Strategy",
+      "children": ["gate-range", "move-act"]
+    },
+    "gate-range": {
+      "id": "gate-range",
+      "name": "IsTargetInRange",
+      "title": "Range Check",
+      "children": ["attack-act"]
+    },
+    "attack-act": {
+      "id": "attack-act",
+      "name": "AttackTarget",
+      "title": "Attack"
+    },
+    "move-act": {
+      "id": "move-act",
+      "name": "MoveToTarget",
+      "title": "Pursue"
     }
+  }
 }

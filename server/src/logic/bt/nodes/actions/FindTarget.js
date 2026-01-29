@@ -8,7 +8,7 @@ class FindTarget extends b3.Action {
     
     tick(tick) {
         const { unit, sim } = tick.blackboard.get('context');
-        const strategy = this.properties.strategy || 'ENEMIES'; // ENEMIES, ALLIES, LOWEST_HP
+        const strategy = this.properties.strategy || 'ENEMIES';
         
         let targets = [];
         if (strategy === 'ENEMIES') {
@@ -17,16 +17,18 @@ class FindTarget extends b3.Action {
             targets = sim.units.filter(u => u.teamId === unit.teamId && u.currentHealth > 0);
         }
         
-        if (targets.length === 0) return b3.FAILURE;
+        if (targets.length === 0) {
+            sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} failed to find any targets with strategy: ${strategy}`);
+            return b3.FAILURE;
+        }
         
-        // Simpan target yang ditemukan ke dalam "Memory" (Blackboard) unit ini
-        // Agar node selanjutnya (seperti Attack atau Heal) tahu siapa yang harus diproses
         const closest = targets.sort((a, b) => {
             const distA = sim.grid.getDistance(unit.gridPos, a.gridPos);
             const distB = sim.grid.getDistance(unit.gridPos, b.gridPos);
             return distA - distB;
         })[0];
         
+        sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} targeted ${closest.data.name} at [${closest.gridPos.x}, ${closest.gridPos.y}]`);
         tick.blackboard.set('target', closest, tick.tree.id, unit.instanceId);
         return b3.SUCCESS;
     }

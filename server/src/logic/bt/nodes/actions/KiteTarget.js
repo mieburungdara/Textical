@@ -1,56 +1,48 @@
 const b3 = require('behavior3js');
+const BaseMove = require('./BaseMove');
 
-/**
- * KiteTarget: Moves away from the target while staying within attack range.
- * Useful for Archers and Mages.
- */
-class KiteTarget extends b3.Action {
-    constructor(params) { 
-        super({ name: 'KiteTarget', properties: params.properties || {} }); 
-        this.properties = params.properties || {};
-    }
+const KiteTarget = b3.Class(BaseMove);
+
+KiteTarget.prototype.initialize = function(params = {}) {
+    BaseMove.prototype.initialize.call(this, {
+        name: 'KiteTarget',
+        title: params.title || 'Strategic Kite',
+        properties: params.properties || { safetyDist: 3 }
+    });
+}
+
+KiteTarget.prototype.tick = function(tick) {
+    const { unit, sim } = tick.blackboard.get('context');
+    const target = tick.blackboard.get('target', tick.tree.id, unit.instanceId) || sim.ai.findTarget(unit);
     
-    tick(tick) {
-        const { unit, sim } = tick.blackboard.get('context');
-        const target = tick.blackboard.get('target', tick.tree.id, unit.instanceId) || sim.ai.findTarget(unit);
-        
-        if (!target) return b3.FAILURE;
+    if (!target) return b3.FAILURE;
 
-        const dist = sim.grid.getDistance(unit.gridPos, target.gridPos);
-        const preferredRange = unit.stats.attack_range || 1;
+    const dist = sim.grid.getDistance(unit.gridPos, target.gridPos);
+    const safetyDist = this.properties.safetyDist || 3;
 
-        // If already at a good distance, no need to kite
-        if (dist >= preferredRange) return b3.SUCCESS;
+    // If unit is safe enough, succeed without moving
+    if (dist >= safetyDist) return b3.SUCCESS;
 
-        // Find surrounding tiles and pick the one that increases distance to target
-        const neighbors = [
-            {x: 0, y: 1}, {x: 0, y: -1}, {x: 1, y: 0}, {x: -1, y: 0},
-            {x: 1, y: 1}, {x: -1, y: -1}, {x: 1, y: -1}, {x: -1, y: 1}
-        ];
+    // Tactical escape direction logic
+    const neighbors = sim.grid.getNeighbors(unit.gridPos);
+    let bestTile = null;
+    let maxDist = dist;
 
-        let bestTile = null;
-        let maxDist = dist;
-
-        for (const offset of neighbors) {
-            const checkPos = { x: unit.gridPos.x + offset.x, y: unit.gridPos.y + offset.y };
-            
-            if (sim.grid.isWalkable(checkPos.x, checkPos.y)) {
-                const newDist = sim.grid.getDistance(checkPos, target.gridPos);
-                // We want to move away, but not exceed attack range if possible
-                if (newDist > maxDist && newDist <= preferredRange + 1) {
-                    maxDist = newDist;
-                    bestTile = checkPos;
-                }
+    neighbors.forEach(pos => {
+        if (!sim.grid.isTileOccupied(pos.x, pos.y)) {
+            const newDist = sim.grid.getDistance(pos, target.gridPos);
+            if (newDist > maxDist) {
+                maxDist = newDist;
+                bestTile = pos;
             }
         }
+    });
 
-        if (bestTile) {
-            sim.ai.moveTowards(unit, bestTile);
-            return b3.SUCCESS;
-        }
-
-        return b3.FAILURE;
+    if (bestTile) {
+        return this.stepTowards(unit, bestTile, sim);
     }
+
+    return b3.FAILURE;
 }
 
 module.exports = KiteTarget;

@@ -64,6 +64,7 @@ class BattleSimulation {
     run() {
         this.units.forEach(u => traitService.executeHook("onBattleStart", u, this));
         this.logger.startTick(0);
+        this.logger.addEvent("ENGINE", `Tactical Engine Engaged. Units: ${this.units.length}`, { battle_id: this.battleId });
         this.logger.addEvent("GAME_START", `Battle Engaged!`, { units: this.units.map(u => u.instanceId) });
         this.logger.commitTick(this.units);
 
@@ -88,7 +89,13 @@ class BattleSimulation {
 
         _.forEach(this.units, (u) => { 
             if (!u.isDead) { 
+                const oldAP = u.currentActionPoints;
                 u.tick(1.0, this); 
+                
+                if (u.isReady() && oldAP < 100) {
+                    this.logger.addEvent("ENGINE", `${u.data.name} reached 100 AP and is READY.`, { unit_id: u.instanceId });
+                }
+
                 const dotDamage = u.applyStatusDamage(this);
                 if (dotDamage > 0) {
                     traitService.executeHook("onPostHit", u, null, dotDamage, this);

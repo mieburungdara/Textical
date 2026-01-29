@@ -1,4 +1,6 @@
 const b3 = require('behavior3js');
+const fs = require('fs');
+const path = require('path');
 
 // Import Conditions
 const IsTargetInRange = require('./nodes/conditions/IsTargetInRange');
@@ -16,6 +18,7 @@ const CheckLineOfSight = require('./nodes/conditions/CheckLineOfSight');
 const CheckTrait = require('./nodes/conditions/CheckTrait');
 
 // Import Actions
+const BaseMove = require('./nodes/actions/BaseMove');
 const FindTarget = require('./nodes/actions/FindTarget');
 const AttackTarget = require('./nodes/actions/AttackTarget');
 const MoveToTarget = require('./nodes/actions/MoveToTarget');
@@ -26,6 +29,7 @@ class BTManager {
     constructor() {
         this.trees = {};
         this.blackboards = {};
+        this.initErrors = [];
         
         this.nodeRegistry = {
             'IsTargetInRange': IsTargetInRange,
@@ -43,26 +47,75 @@ class BTManager {
             'CheckTrait': CheckTrait,
             'FindTarget': FindTarget,
             'AttackTarget': AttackTarget,
+            'BaseMove': BaseMove,
             'MoveToTarget': MoveToTarget,
             'UseSkill': UseSkill,
             'KiteTarget': KiteTarget,
-            'Priority': b3.Selector,
+            
+            'Priority': b3.Priority,
             'Switch': b3.Sequence,
             'Inverter': b3.Inverter
+        };
+
+        this._loadAllTrees();
+    }
+
+    _loadAllTrees() {
+        const btDir = __dirname;
+        try {
+            const files = fs.readdirSync(btDir).filter(f => f.endsWith('.json'));
+            files.forEach(file => {
+                const name = path.basename(file, '.json');
+                const data = JSON.parse(fs.readFileSync(path.join(btDir, file), 'utf8'));
+                this.loadTree(name, data);
+            });
+        } catch (e) { this.initErrors.push(`Registry load failed: ${e.message}`); }
+    }
+
+    /**
+     * AAA Transformer: Convert Master-Detail JSON into behavior3js internal format
+     */
+    _formatDataForB3(jsonData) {
+        // behavior3js internal format expects 'nodes' to be an object with IDs as keys
+        // BUT it must NOT have circular references or complex objects during initialization
+        // Our JSON is already an object-map, so the issue might be ID resolution.
+        
+        // Let's ensure EVERY node has an 'id' and 'name'
+        const formattedNodes = {};
+        for (let id in jsonData.nodes) {
+            const node = jsonData.nodes[id];
+            formattedNodes[id] = {
+                id: id,
+                name: node.name,
+                title: node.title,
+                description: node.description || '',
+                properties: node.properties || {},
+                children: node.children || []
+            };
+        }
+
+        return {
+            title: jsonData.title,
+            description: jsonData.description || '',
+            root: jsonData.root,
+            nodes: formattedNodes
         };
     }
 
     loadTree(name, jsonData) {
-        const tree = new b3.BehaviorTree();
-        tree.load(jsonData, this.nodeRegistry);
-        this.trees[name] = tree;
+        try {
+            const tree = new b3.BehaviorTree();
+            const formatted = this._formatDataForB3(jsonData);
+            tree.load(formatted, this.nodeRegistry);
+            this.trees[name] = tree;
+        } catch (e) {
+            this.initErrors.push(`Tree [${name}] parse failed: ${e.message}`);
+        }
     }
 
     execute(treeName, unit, sim) {
         if (!this.trees[treeName]) return;
-        if (!this.blackboards[unit.instanceId]) {
-            this.blackboards[unit.instanceId] = new b3.Blackboard();
-        }
+        if (!this.blackboards[unit.instanceId]) this.blackboards[unit.instanceId] = new b3.Blackboard();
         const blackboard = this.blackboards[unit.instanceId];
         blackboard.set('context', { unit, sim });
         this.trees[treeName].tick(unit, blackboard);

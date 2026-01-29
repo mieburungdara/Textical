@@ -14,14 +14,12 @@
     "aksi-serang": {
       "id": "aksi-serang",
       "name": "AttackTarget",
-      "title": "Ya: Serang Musuh!",
-      "children": []
+      "title": "Ya: Serang Musuh!"
     },
     "aksi-mendekat": {
       "id": "aksi-mendekat",
       "name": "MoveToTarget",
-      "title": "Tidak: Cari Musuh",
-      "children": []
+      "title": "Tidak: Cari Musuh"
     }
   }
 }
