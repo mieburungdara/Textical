@@ -138,8 +138,23 @@ class BattleSimulation {
     }
 
     _applyAuras() {
-        // Auras could trigger onAdjacencyGained if we track state, 
-        // but for now they remain continuous in this helper.
+        for (const unit of this.units.filter(u => !u.isDead)) {
+            const allies = this.units.filter(u => !u.isDead && u.teamId === unit.teamId && u.instanceId !== unit.instanceId);
+            
+            for (const ally of allies) {
+                const dist = this.grid.getDistance(unit.gridPos, ally.gridPos);
+                
+                if (dist <= 1) {
+                    unit.temporaryStats.defense = (unit.temporaryStats.defense || 0) + 5;
+                    // AAA Hook: Momentary proximity sensing
+                    traitService.executeHook("onAdjacencyGained", unit, ally, this);
+                }
+                
+                if (dist <= 2 && ally.stats.health_max > 150) {
+                    unit.temporaryStats.crit_chance = (unit.temporaryStats.crit_chance || 0) + 0.1;
+                }
+            }
+        }
     }
 }
 

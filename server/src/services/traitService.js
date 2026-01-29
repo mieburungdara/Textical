@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const _ = require('lodash');
 
 /**
- * Modular Traits Manager (v3.5 - Equipment Aware)
- * Orchestrates hooks for Intrinsic Traits, Racial Traits, and Weapon Traits.
+ * Modular Traits Manager (v3.6 - AAA Multi-Merge)
+ * Aggregates hooks and intelligently merges object results.
  */
 class TraitsManager {
     constructor() {
@@ -26,10 +27,6 @@ class TraitsManager {
     }
 
     executeHook(hookName, actor, ...args) {
-        // AAA: Aggregate ALL potential trait sources
-        // 1. Core Traits (from DB)
-        // 2. Race Trait (Fallback/Identity)
-        // 3. Weapon Traits (from Equipment)
         const sources = [
             ...(actor.traits || []),
             actor.race,
@@ -37,7 +34,7 @@ class TraitsManager {
         ];
 
         let result = null;
-        const processed = new Set(); // Prevent duplicate trait triggers
+        const processed = new Set();
 
         sources.forEach(source => {
             if (!source) return;
@@ -47,7 +44,15 @@ class TraitsManager {
                 const traitDef = this.traits[traitKey];
                 if (traitDef && typeof traitDef[hookName] === 'function') {
                     const hookResult = traitDef[hookName](actor, ...args);
-                    if (hookResult !== null && hookResult !== undefined) result = hookResult;
+                    
+                    if (hookResult !== null && hookResult !== undefined) {
+                        // AAA: Intelligent Result Merging
+                        if (typeof hookResult === 'object' && !Array.isArray(hookResult)) {
+                            result = _.merge(result || {}, hookResult);
+                        } else {
+                            result = hookResult; // Primitives (Boolean/String) take last non-null
+                        }
+                    }
                 }
                 processed.add(traitKey);
             }

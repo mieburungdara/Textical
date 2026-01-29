@@ -43,6 +43,10 @@ class BattleUnit {
 
     tick(delta, sim) {
         if (this.isDead) return;
+        
+        // AAA: Clear transient stats at start of tick
+        this.temporaryStats = {}; 
+
         const old = this._actionPoints;
         const effectiveSpeed = this.getStat("speed");
         this._actionPoints += effectiveSpeed * delta;
@@ -110,7 +114,6 @@ class BattleUnit {
 
     applyStatusDamage(sim) {
         let totalDot = 0;
-        this.temporaryStats = {}; 
 
         this.activeEffects = this.activeEffects.filter(eff => {
             traitService.executeHook("onStatusTick", this, eff, sim);
