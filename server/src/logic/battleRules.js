@@ -32,10 +32,7 @@ class BattleRules {
         const dmgMult = (atkMods.dmgMult || 1.0) * (attacker.tempDamageMult || 1.0) * (isBlocked ? 0.5 : 1.0);
         
         let result = CombatRules.calculateDamage(attacker, defender, dmgMult, 0, aTerrain, dTerrain);
-        
-        if (result.isCrit) {
-            traitService.executeHook("onCrit", attacker, defender, result.damage, this.sim);
-        }
+        if (result.isCrit) traitService.executeHook("onCrit", attacker, defender, result.damage, this.sim);
 
         const impactMods = traitService.executeHook("onTakeDamage", defender, attacker, result.damage, this.sim) || {};
         const finalDamage = impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage;
@@ -55,53 +52,23 @@ class BattleRules {
             const nextX = defender.gridPos.x + dx;
             const nextY = defender.gridPos.y + dy;
 
-                        if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
+            if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
+                const oldPos = { ...defender.gridPos };
+                
+                this.sim.notifyAdjacencyLost(defender);
+                traitService.executeHook("onTileExit", defender, oldPos, this.sim);
+                this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
+                defender.gridPos = { x: nextX, y: nextY };
+                this.sim.grid.unitGrid[nextY][nextX] = defender;
+                traitService.executeHook("onTileEnter", defender, defender.gridPos, this.sim);
+                traitService.executeHook("onMoveStep", defender, defender.gridPos, this.sim);
+                this.sim.notifyAdjacencyGained(defender);
 
-                            const oldPos = { ...defender.gridPos };
-
-                            
-
-                            this._broadcastAdjacencyLost(defender);
-
-                            traitService.executeHook("onTileExit", defender, oldPos, this.sim);
-
-            
-
-                            this.sim.grid.unitGrid[oldPos.y][oldPos.x] = null;
-
-                            defender.gridPos = { x: nextX, y: nextY };
-
-                            this.sim.grid.unitGrid[nextY][nextX] = defender;
-
-            
-
-                            traitService.executeHook("onTileEnter", defender, defender.gridPos, this.sim);
-
-                            traitService.executeHook("onMoveStep", defender, defender.gridPos, this.sim);
-
-                            this._broadcastAdjacencyGained(defender);
-
-            
-
-                            knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
-
-                        } else {
-
-                            // --- AAA Hook: Obstacle Impact ---
-
-                            const obstacle = this.sim.grid.unitGrid[nextY]?.[nextX] || "WALL";
-
-                            traitService.executeHook("onObstacleImpact", defender, obstacle, this.sim);
-
-                            this.sim.logger.addEvent("IMPACT", `${defender.data.name} slammed into ${obstacle === "WALL" ? "a wall" : obstacle.data.name}!`, { 
-
-                                target_id: defender.instanceId,
-
-                                obstacle_type: obstacle === "WALL" ? "GEOMETRY" : "UNIT"
-
-                            });
-
-                        }
+                knockbackData = { from: oldPos, to: { x: nextX, y: nextY } };
+            } else {
+                const obstacle = this.sim.grid.unitGrid[nextY]?.[nextX] || "WALL";
+                traitService.executeHook("onObstacleImpact", defender, obstacle, this.sim);
+            }
         }
 
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
@@ -123,31 +90,8 @@ class BattleRules {
         allies.forEach(ally => traitService.executeHook(hookName, ally, actor, ...args));
     }
 
-    _broadcastAdjacencyLost(unit) {
-        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
-        neighbors.forEach(pos => {
-            const neighbor = this.sim.grid.unitGrid[pos.y][pos.x];
-            if (neighbor) {
-                traitService.executeHook("onAdjacencyLost", unit, neighbor, this.sim);
-                traitService.executeHook("onAdjacencyLost", neighbor, unit, this.sim);
-            }
-        });
-    }
-
-    _broadcastAdjacencyGained(unit) {
-        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
-        neighbors.forEach(pos => {
-            const neighbor = this.sim.grid.unitGrid[pos.y][pos.x];
-            if (neighbor && !neighbor.isDead) {
-                traitService.executeHook("onAdjacencyGained", unit, neighbor, this.sim);
-                traitService.executeHook("onAdjacencyGained", neighbor, unit, this.sim);
-            }
-        });
-    }
-
     performSkill(actor, skill, targetPos) {
         if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
-        
         actor.consumeMana(skill.mana_cost || 0, this.sim);
         actor.skillCooldowns[skill.id] = skill.cooldown || 3;
         
@@ -156,12 +100,10 @@ class BattleRules {
             const victim = this.sim.grid.unitGrid[tile.y][tile.x];
             if (!victim || victim.isDead) return;
 
-            // Support Skill vs Offensive Skill
             const isBeneficial = (skill.type === "SUPPORT" || skill.type === "HEAL");
             const isTargetEnemy = victim.teamId !== actor.teamId;
 
             if ((isBeneficial && !isTargetEnemy) || (!isBeneficial && isTargetEnemy)) {
-                // Micro-Phases
                 const atkMods = traitService.executeHook("onPreAttack", actor, victim, this.sim) || {};
                 const defMods = traitService.executeHook("onPreDefend", victim, actor, this.sim) || {};
 
@@ -174,9 +116,8 @@ class BattleRules {
                     }
                 }
 
-                const dmgMult = (skill.damage_multiplier || 1.0) * (atkMods.dmgMult || 1.0);
-                const result = CombatRules.calculateDamage(actor, victim, dmgMult, skill.element || 0);
-                
+                const skillMult = (skill.damage_multiplier || 1.0) * (atkMods.dmgMult || 1.0);
+                const result = CombatRules.calculateDamage(actor, victim, skillMult, skill.element || 0);
                 if (result.isCrit) traitService.executeHook("onCrit", actor, victim, result.damage, this.sim);
 
                 const impactMods = traitService.executeHook("onTakeDamage", victim, actor, result.damage, this.sim) || {};
@@ -193,10 +134,7 @@ class BattleRules {
                 }
                 
                 traitService.executeHook("onPostAttack", actor, victim, finalVal, this.sim);
-
-                if (skill.status_effect) {
-                    victim.applyEffect({ ...skill.status_effect }, this.sim);
-                }
+                if (skill.status_effect) victim.applyEffect({ ...skill.status_effect }, this.sim);
 
                 if (victim.currentHealth <= 0) {
                     traitService.executeHook("onKill", actor, victim, this.sim);
@@ -211,9 +149,9 @@ class BattleRules {
         const currentDead = this.sim.units.filter(u => !u.isDead && u.currentHealth <= 0);
         currentDead.forEach(u => {
             if (traitService.executeHook("onBeforeDeath", u, this.sim)) return;
-            this._broadcastAdjacencyLost(u);
+            this.sim.notifyAdjacencyLost(u);
             u.isDead = true;
-            u.modifyAP(-u.currentActionPoints, this.sim); // Reset AP on death
+            u.modifyAP(-u.currentActionPoints, this.sim);
             this.sim.grid.unitGrid[u.gridPos.y][u.gridPos.x] = null;
             traitService.executeHook("onDeath", u, this.sim);
             this._broadcastAllyEvent("onAllyDeath", u);

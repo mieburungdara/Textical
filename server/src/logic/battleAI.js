@@ -8,13 +8,9 @@ class BattleAI {
     }
 
     decideAction(actor) {
-        // --- 1. Pre-Action Hook ---
         if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
-
-        // Reset per-turn tactical state
         actor.temporaryStats.speed_mod = 0;
 
-        // Check for behavior tree override
         const treeName = actor.data.bt_tree || null; 
         if (treeName) {
             btManager.execute(treeName, actor, this.sim);
@@ -22,7 +18,6 @@ class BattleAI {
             return; 
         }
 
-        // Legacy/Fallback Logic
         const target = traitService.executeHook("onTargetAcquisition", actor, this.sim) || this.findTarget(actor);
         if (target) {
             const dist = this.sim.grid.getDistance(actor.gridPos, target.gridPos);
@@ -36,7 +31,6 @@ class BattleAI {
                 }
             }
         }
-        
         traitService.executeHook("onPostAction", actor, this.sim);
     }
 
@@ -52,9 +46,8 @@ class BattleAI {
             const next = path[1];
             const oldPos = { ...actor.gridPos };
 
-            // --- AAA Hooks: Adjacency Lost (Before leaving current spot) ---
-            this._notifyNeighborLoss(actor);
-
+            // AAA: Unified Sensing via Sim Helpers
+            this.sim.notifyAdjacencyLost(actor);
             traitService.executeHook("onTileExit", actor, oldPos, this.sim);
             
             this.sim.grid.unitGrid[actor.gridPos.y][actor.gridPos.x] = null;
@@ -63,38 +56,13 @@ class BattleAI {
 
             traitService.executeHook("onTileEnter", actor, actor.gridPos, this.sim);
             traitService.executeHook("onMoveStep", actor, actor.gridPos, this.sim);
-            
-            this._checkNewNeighbors(actor);
+            this.sim.notifyAdjacencyGained(actor);
 
             this.sim.logger.addEvent("MOVE", `${actor.data.name} moved to [${next.x}, ${next.y}]`, {
-                actor_id: actor.instanceId,
-                from: oldPos,
-                to: actor.gridPos
+                actor_id: actor.instanceId, from: oldPos, to: actor.gridPos
             });
         }
         traitService.executeHook("onMoveEnd", actor, this.sim);
-    }
-
-    _notifyNeighborLoss(actor) {
-        const neighbors = this.sim.grid.getNeighbors(actor.gridPos);
-        neighbors.forEach(pos => {
-            const unit = this.sim.grid.unitGrid[pos.y][pos.x];
-            if (unit) {
-                traitService.executeHook("onAdjacencyLost", actor, unit, this.sim);
-                traitService.executeHook("onAdjacencyLost", unit, actor, this.sim);
-            }
-        });
-    }
-
-    _checkNewNeighbors(actor) {
-        const neighbors = this.sim.grid.getNeighbors(actor.gridPos);
-        neighbors.forEach(pos => {
-            const unit = this.sim.grid.unitGrid[pos.y][pos.x];
-            if (unit && !unit.isDead) {
-                traitService.executeHook("onAdjacencyGained", actor, unit, this.sim);
-                traitService.executeHook("onAdjacencyGained", unit, actor, this.sim);
-            }
-        });
     }
 }
 

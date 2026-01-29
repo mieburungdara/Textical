@@ -33,17 +33,32 @@ class BattleSimulation {
         this.units.push(unit);
         this.grid.unitGrid[unit.gridPos.y][unit.gridPos.x] = unit;
 
-        // --- AAA Hook: Spawn Sensing ---
+        // AAA: Unified Spawn Sensing
+        this.notifyAdjacencyGained(unit);
+
+        return unit;
+    }
+
+    notifyAdjacencyGained(unit) {
         const neighbors = this.grid.getNeighbors(unit.gridPos);
         neighbors.forEach(nPos => {
             const neighbor = this.grid.unitGrid[nPos.y][nPos.x];
-            if (neighbor) {
+            if (neighbor && !neighbor.isDead) {
                 traitService.executeHook("onAdjacencyGained", unit, neighbor, this);
                 traitService.executeHook("onAdjacencyGained", neighbor, unit, this);
             }
         });
+    }
 
-        return unit;
+    notifyAdjacencyLost(unit) {
+        const neighbors = this.grid.getNeighbors(unit.gridPos);
+        neighbors.forEach(nPos => {
+            const neighbor = this.grid.unitGrid[nPos.y][nPos.x];
+            if (neighbor) {
+                traitService.executeHook("onAdjacencyLost", unit, neighbor, this);
+                traitService.executeHook("onAdjacencyLost", neighbor, unit, this);
+            }
+        });
     }
 
     run() {
@@ -60,8 +75,6 @@ class BattleSimulation {
 
     processTick() {
         this.currentTick++;
-        
-        // --- AAA Hook: Round Lifecycle (Every 100 ticks) ---
         if (this.currentTick % 100 === 0) {
             this.units.forEach(u => traitService.executeHook("onRoundStart", u, this));
         }
@@ -78,7 +91,6 @@ class BattleSimulation {
                 u.tick(1.0, this); 
                 const dotDamage = u.applyStatusDamage(this);
                 if (dotDamage > 0) {
-                    // AAA Hook: Sense DoT impact
                     traitService.executeHook("onPostHit", u, null, dotDamage, this);
                 }
             } 
@@ -88,16 +100,11 @@ class BattleSimulation {
 
         for (let actor of readyUnits) {
             if (actor.isDead) continue; 
-            
             traitService.executeHook("onTurnStart", actor, this);
-            
             this.ai.decideAction(actor);
-            
             traitService.executeHook("onTurnEnd", actor, this);
-            
             actor.modifyAP(-100.0, this);
             actor.applyRegen(this);
-            
             if (this.rules.checkWinCondition()) break;
         }
         
@@ -126,7 +133,6 @@ class BattleSimulation {
                         traitService.executeHook("onHealthRegen", unit, eff.power, this);
                         break;
                     case "DRAIN":
-                        // AAA Hook: Terrain damage must trigger takeDamage hooks
                         const impactMods = traitService.executeHook("onTakeDamage", unit, null, eff.power, this) || {};
                         const finalDmg = impactMods.finalDamage !== undefined ? impactMods.finalDamage : eff.power;
                         unit.takeDamage(finalDmg);
@@ -138,18 +144,14 @@ class BattleSimulation {
     }
 
     _applyAuras() {
+        // AAA: Stats only. Adjacency sensing is handled by physical events.
         for (const unit of this.units.filter(u => !u.isDead)) {
             const allies = this.units.filter(u => !u.isDead && u.teamId === unit.teamId && u.instanceId !== unit.instanceId);
-            
             for (const ally of allies) {
                 const dist = this.grid.getDistance(unit.gridPos, ally.gridPos);
-                
                 if (dist <= 1) {
                     unit.temporaryStats.defense = (unit.temporaryStats.defense || 0) + 5;
-                    // AAA Hook: Momentary proximity sensing
-                    traitService.executeHook("onAdjacencyGained", unit, ally, this);
                 }
-                
                 if (dist <= 2 && ally.stats.health_max > 150) {
                     unit.temporaryStats.crit_chance = (unit.temporaryStats.crit_chance || 0) + 0.1;
                 }
