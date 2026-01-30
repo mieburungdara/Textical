@@ -47,8 +47,24 @@ class GatheringService {
             include: { equipment: { include: { itemInstance: { include: { template: true } } } } }
         });
 
-        // Categorize based on Target Material ID range (Minerals: 2200s, Wood: 2400s)
+        // Categorize based on Target Material ID range
         const isWood = resource.itemId >= 2400 && resource.itemId < 2500;
+        const isPlant = resource.itemId >= 2800 && resource.itemId < 2900;
+        
+        if (isPlant) {
+            // Foraging (Plants) requires no special tool but scales with INT
+            const duration = Math.ceil(resource.gatherTimeSeconds / Math.max(0.5, heroData.int / 10));
+            const now = new Date();
+            const finishesAt = new Date(now.getTime() + (duration * 1000));
+
+            return await prisma.taskQueue.create({
+                data: {
+                    userId, heroId, type: "GATHERING", targetItemId: resource.itemId,
+                    status: "RUNNING", startedAt: now, finishesAt: finishesAt
+                }
+            });
+        }
+
         const requiredCategory = isWood ? "AXE" : "PICKAXE";
 
         const equippedTool = heroData.equipment.find(eq => eq.itemInstance.template.category === requiredCategory);
