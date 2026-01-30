@@ -73,9 +73,7 @@ class BattleInitializer extends BaseService {
                 name: p.profile.name,
                 bt_tree: "SimpleAI",
                 traits: p.profile.activeTraits,
-                skills: [
-                    { id: 1, name: "Shield Bash", range: 1, aoe_pattern: "SQUARE", aoe_size: 0, damage_multiplier: 0.5, mana_cost: 20, status_effect: { type: "STUN", duration: 2 } }
-                ]
+                abilities: p.profile.abilities
             }, 0, { x: p.grid.x, y: p.grid.y }, stats);
         });
 

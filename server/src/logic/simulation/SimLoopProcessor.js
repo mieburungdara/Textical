@@ -15,7 +15,12 @@ class SimLoopProcessor {
         while (!this.sim.isFinished && this.sim.currentTick < this.sim.MAX_TICKS) {
             this.sim.processTick();
         }
-        return { winner: this.sim.winnerTeam, logs: this.sim.logger.getLogs() };
+        return { 
+            winner: this.sim.winnerTeam, 
+            logs: this.sim.logger.getLogs(), 
+            rewards: this.sim.rewards,
+            initialUnits: this.sim.units
+        };
     }
 
     processTick() {

@@ -26,11 +26,23 @@ class ProfileCalculator extends BaseService {
 
         if (!hero) return null;
 
+        const heroSkills = await this.db.heroSkill.findMany({
+            where: { heroId, isActive: true },
+            include: { skill: true }
+        });
+
         const profile = {
             id: hero.id,
             name: hero.name,
             totalStats: {},
-            activeTraits: []
+            activeTraits: [],
+            abilities: heroSkills.map(hs => ({
+                id: hs.skill.id,
+                name: hs.skill.name,
+                category: hs.skill.category,
+                type: hs.skill.type,
+                metadata: JSON.parse(hs.skill.metadata)
+            }))
         };
 
         hero.traits.forEach(t => profile.activeTraits.push(t.trait.name));

@@ -22,6 +22,12 @@ class BattleUnit {
         
         this.skillCooldowns = {};
         this.activeEffects = []; // Now stores Status instances
+        
+        // AAA: Skill Integration
+        const allAbilities = data.abilities || [];
+        this.activeSkills = allAbilities.filter(a => a.category === "ACTIVE");
+        this.passiveSkills = allAbilities.filter(a => a.category === "PASSIVE");
+
         this.weaponTraits = [];
         this.traits = data.traits || [];
         this.temporaryStats = {}; 

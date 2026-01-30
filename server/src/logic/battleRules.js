@@ -3,6 +3,7 @@ const traitService = require('../services/traitService');
 const TacticalSensor = require('./rules/TacticalSensor');
 const SkillResolver = require('./rules/SkillResolver');
 const DeathResolver = require('./rules/DeathResolver');
+const skillExecutor = require('./rules/skillExecutor');
 
 /**
  * BattleRules (v4.0 - Component-Based Orchestrator)
@@ -138,7 +139,13 @@ class BattleRules {
     }
 
     performSkill(actor, skill, targetPos) {
-        this.skills.resolve(actor, skill, targetPos);
+        const target = this.sim.grid.unitGrid[targetPos.y]?.[targetPos.x];
+        
+        if (target) {
+            skillExecutor.execute(actor, target, skill, this.sim);
+        } else {
+            this.skills.resolve(actor, skill, targetPos);
+        }
     }
 
     resolveDeaths() {

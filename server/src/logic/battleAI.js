@@ -2,6 +2,7 @@ const _ = require('lodash');
 const traitService = require('../services/traitService');
 const btManager = require('./bt/BTManager');
 const AStarMovement = require('./movement/AStarMovement');
+const skillExecutor = require('./rules/skillExecutor');
 
 class BattleAI {
     constructor(sim) {
@@ -27,11 +28,29 @@ class BattleAI {
             const dist = this.sim.grid.getDistance(actor.gridPos, target.gridPos);
             const range = actor.stats.attack_range || 1;
 
-            if (dist <= range) {
-                this.sim.rules.performAttack(actor, target);
-            } else {
-                if (traitService.executeHook("onBeforeMove", actor, this.sim) !== false) {
-                    this.moveTowards(actor, target);
+            // --- AAA SKILL LOGIC ---
+            let skillUsed = false;
+            if (actor.activeSkills && actor.activeSkills.length > 0) {
+                // Simple AI: 30% chance to use a skill if range is valid
+                if (Math.random() < 0.3) {
+                    const skill = actor.activeSkills[0]; // For now use the first available
+                    const skillMeta = skill.metadata || {};
+                    const skillRange = skillMeta.range || range;
+
+                    if (dist <= skillRange) {
+                        skillExecutor.execute(actor, target, skill, this.sim);
+                        skillUsed = true;
+                    }
+                }
+            }
+
+            if (!skillUsed) {
+                if (dist <= range) {
+                    this.sim.rules.performAttack(actor, target);
+                } else {
+                    if (traitService.executeHook("onBeforeMove", actor, this.sim) !== false) {
+                        this.moveTowards(actor, target);
+                    }
                 }
             }
         }
