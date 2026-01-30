@@ -46,7 +46,19 @@ class GatheringService {
         if (isPlant || isFish) {
             let statValue = isPlant ? heroStats.attributes.int : heroStats.attributes.dex;
 
-            // Apply Fishing Rod Multiplier (Only if Fishing)
+            // Apply Tool Multipliers
+            if (isPlant) {
+                const equippedSickle = await prisma.heroEquipment.findFirst({
+                    where: { heroId, itemInstance: { template: { category: "HERBALISM_SICKLE" } } },
+                    include: { itemInstance: { include: { template: true } } }
+                });
+                if (equippedSickle) {
+                    const tier = equippedSickle.itemInstance.template.toolTier || 0;
+                    const multipliers = [1.1, 1.25, 1.5, 2.0, 3.0];
+                    statValue = Math.floor(statValue * (multipliers[tier] || 1.0));
+                }
+            }
+
             if (isFish) {
                 const equippedRod = hero.equipment?.find(eq => eq.itemInstance.template.category === "FISHING_ROD") 
                     || (await prisma.heroEquipment.findFirst({

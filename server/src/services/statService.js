@@ -78,6 +78,7 @@ class StatService {
             if (item.category === "PICKAXE" && context !== "MINING") isContextValid = false;
             if (item.category === "AXE" && context !== "LUMBERING") isContextValid = false;
             if (item.category === "FISHING_ROD" && context !== "FISHING") isContextValid = false;
+            if (item.category === "HERBALISM_SICKLE" && context !== "HERBALISM") isContextValid = false;
 
             if (isContextValid) {
                 item.stats.forEach(s => {
