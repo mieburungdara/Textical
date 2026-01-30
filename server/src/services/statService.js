@@ -6,11 +6,16 @@ const prisma = require('../db');
 
 class StatService {
     async calculateHeroStats(heroId, context = "GLOBAL") {
-        // Fetch hero with class template and equipment
+        const now = new Date();
+
+        // Fetch hero with class template, equipment and active buffs
         const heroData = await prisma.hero.findUnique({
             where: { id: heroId },
             include: { 
                 combatClass: true,
+                buffs: {
+                    where: { expiresAt: { gt: now } }
+                },
                 equipment: {
                     include: {
                         itemInstance: {
@@ -35,7 +40,7 @@ class StatService {
             vit: new Stat(heroData.vit || 10)
         };
 
-        // 2. Initialize Secondary Stats
+        // ... (Secondary stats remain same)
         const stats = {
             health_max: new Stat(heroData.hp_base || 100),
             mana_max: new Stat(heroData.mana_base || 20),
@@ -73,7 +78,6 @@ class StatService {
             const item = eq.itemInstance.template;
             
             // CONTEXT LOGIC:
-            // Tools (PICKAXE, AXE, FISHING_ROD) only work in their specific context.
             let isContextValid = true;
             if (item.category === "PICKAXE" && context !== "MINING") isContextValid = false;
             if (item.category === "AXE" && context !== "LUMBERING") isContextValid = false;
@@ -87,10 +91,16 @@ class StatService {
             }
         }
 
-        // 4. Apply Class Growth (AAA: Level-based gains)
+        // 4. Apply Temporary Buffs
+        for (const buff of heroData.buffs) {
+            const type = buff.isPercent ? StatModifier.Type.PERCENT_ADD : StatModifier.Type.FLAT;
+            applyMod(buff.statKey, buff.statValue, type, `Buff:${buff.name}`);
+        }
+
+        // 5. Apply Class Growth (AAA: Level-based gains)
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.level);
 
-        // 5. SCALING LOGIC (Primary to Secondary)
+        // 6. SCALING LOGIC (Primary to Secondary)
         const s = primary.str.getValue();
         const d = primary.dex.getValue();
         const i = primary.int.getValue();

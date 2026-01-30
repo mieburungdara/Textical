@@ -277,6 +277,20 @@ model Hero {
   taskQueue     TaskQueue[]
   traits        HeroTrait[]
   tavernEntry   TavernMercenary?
+  buffs         HeroBuff[]
+}
+
+model HeroBuff {
+  id            Int      @id @default(autoincrement())
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  itemId        Int?     // Originating item (optional)
+  name          String   // Display Name (e.g. "Satiated", "Dragon's Might")
+  statKey       String   // e.g. "str", "dex", "attack_damage"
+  statValue     Float
+  isPercent     Boolean  @default(false)
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
 }
 
 model ClassTemplate {
