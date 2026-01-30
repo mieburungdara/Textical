@@ -8,11 +8,15 @@ class StatService {
     async calculateHeroStats(heroId, context = "GLOBAL") {
         const now = new Date();
 
-        // Fetch hero with class template, equipment and active buffs
+        // Fetch hero with class template, equipment, active buffs, and skills
         const heroData = await prisma.hero.findUnique({
             where: { id: heroId },
             include: { 
                 combatClass: true,
+                skills: {
+                    where: { isActive: true },
+                    include: { skill: true }
+                },
                 buffs: {
                     where: { expiresAt: { gt: now } }
                 },
@@ -40,7 +44,6 @@ class StatService {
             vit: new Stat(heroData.vit || 10)
         };
 
-        // ... (Secondary stats remain same)
         const stats = {
             health_max: new Stat(heroData.hp_base || 100),
             mana_max: new Stat(heroData.mana_base || 20),
@@ -73,11 +76,9 @@ class StatService {
             }
         };
 
-        // 3. Apply Equipment Stats with Context Logic
+        // 2. Apply Equipment Stats
         for (const eq of heroData.equipment) {
             const item = eq.itemInstance.template;
-            
-            // CONTEXT LOGIC:
             let isContextValid = true;
             if (item.category === "PICKAXE" && context !== "MINING") isContextValid = false;
             if (item.category === "AXE" && context !== "LUMBERING") isContextValid = false;
@@ -91,18 +92,28 @@ class StatService {
             }
         }
 
-        // 4. Apply Temporary Buffs
+        // 3. Apply Temporary Buffs
         for (const buff of heroData.buffs) {
             const type = buff.isPercent ? StatModifier.Type.PERCENT_ADD : StatModifier.Type.FLAT;
             applyMod(buff.statKey, buff.statValue, type, `Buff:${buff.name}`);
         }
 
-        // 5. Apply Class Growth (Professional Expertise)
-        // AAA Dual-Level: Growth is based on Class Level, not Unit Level
+        // 4. AAA PASSIVE SKILLS INTEGRATION
+        for (const hs of heroData.skills) {
+            if (hs.skill.category === "PASSIVE") {
+                try {
+                    const meta = JSON.parse(hs.skill.metadata);
+                    if (meta.statKey && meta.statValue) {
+                        applyMod(meta.statKey, meta.statValue, StatModifier.Type.FLAT, `Skill:${hs.skill.name}`);
+                    }
+                } catch (e) { /* Invalid JSON */ }
+            }
+        }
+
+        // 5. Apply Class Growth
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.classLevel);
 
         // 6. SCALING LOGIC (Primary to Secondary)
-        // Primary stats are now physical (Unit Level influenced)
         const s = primary.str.getValue();
         const d = primary.dex.getValue();
         const i = primary.int.getValue();
@@ -118,7 +129,7 @@ class StatService {
         applyMod('health_max', v * 10, 0, "Attribute:VIT");
         applyMod('tenacity', v * 0.5, 0, "Attribute:VIT");
 
-        // 5. Finalize Stats
+        // 7. Finalize Stats
         const finalStats = Object.fromEntries(Object.entries(stats).map(([k, s]) => [k, s.getValue()]));
         finalStats.attributes = { str: s, dex: d, int: i, vit: v };
 

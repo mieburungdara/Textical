@@ -2,7 +2,7 @@ const prisma = require('../db');
 
 /**
  * AAA Progression Service (Dual-Level Architecture)
- * Handles Unit XP (Physical) and Class XP (Professional).
+ * Handles Unit XP (Physical), Class XP (Professional), and Skill Unlocks.
  */
 class ProgressionService {
     constructor() {
@@ -40,7 +40,7 @@ class ProgressionService {
 
     /**
      * Core Logic: Adds XP to both Unit and Active Class.
-     * Handles level-up bonuses and mastery syncing.
+     * Handles level-up bonuses, mastery syncing, and skill unlocks.
      */
     async addHeroExperience(heroId, amount) {
         return await prisma.$transaction(async (tx) => {
@@ -67,16 +67,14 @@ class ProgressionService {
                 unitLevel: newUnitLevel,
                 classXp: newClassXp,
                 classLevel: newClassLevel,
-                
-                // Keep legacy fields in sync for now
                 xp: newUnitXp,
                 level: newUnitLevel
             };
 
-            // If Unit levels up, grant physical attribute boost
+            // Grant physical attribute boost on Unit level-up
             if (unitLeveledUp) {
                 const levelsGained = newUnitLevel - hero.unitLevel;
-                const ATTR_PER_LEVEL = 2; // Flat 2 points to all per level for now
+                const ATTR_PER_LEVEL = 2;
                 updateData.str = { increment: levelsGained * ATTR_PER_LEVEL };
                 updateData.dex = { increment: levelsGained * ATTR_PER_LEVEL };
                 updateData.int = { increment: levelsGained * ATTR_PER_LEVEL };
@@ -95,11 +93,37 @@ class ProgressionService {
                 create: { heroId, classId: hero.classId, level: newClassLevel, xp: newClassXp }
             });
 
+            // 5. AAA SKILL UNLOCK LOGIC
+            const unlockedSkills = [];
+            if (classLeveledUp) {
+                const potentialSkills = await tx.classSkillTree.findMany({
+                    where: {
+                        classId: hero.classId,
+                        unlockLevel: { lte: newClassLevel }
+                    },
+                    include: { skill: true }
+                });
+
+                for (const ps of potentialSkills) {
+                    const existingUnlock = await tx.heroSkill.findUnique({
+                        where: { heroId_skillId: { heroId, skillId: ps.skillId } }
+                    });
+
+                    if (!existingUnlock) {
+                        await tx.heroSkill.create({
+                            data: { heroId, skillId: ps.skillId }
+                        });
+                        unlockedSkills.push(ps.skill.name);
+                    }
+                }
+            }
+
             return {
                 hero: updatedHero,
                 unitLeveledUp,
                 classLeveledUp,
-                xpGained: amount
+                xpGained: amount,
+                unlockedSkills
             };
         });
     }

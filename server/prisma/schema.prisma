@@ -288,6 +288,42 @@ model Hero {
   tavernEntry   TavernMercenary?
   buffs         HeroBuff[]
   mastery       HeroClassMastery[]
+  skills        HeroSkill[]
+}
+
+model SkillTemplate {
+  id            Int      @id
+  name          String
+  description   String
+  category      String   // ACTIVE, PASSIVE
+  type          String   // DAMAGE, HEAL, BUFF, DEBUFF
+  metadata      String   @default("{}") // JSON for power, duration, etc.
+  
+  classTrees    ClassSkillTree[]
+  heroSkills    HeroSkill[]
+}
+
+model ClassSkillTree {
+  id            Int      @id @default(autoincrement())
+  classId       Int
+  class         ClassTemplate @relation(fields: [classId], references: [id])
+  skillId       Int
+  skill         SkillTemplate @relation(fields: [skillId], references: [id])
+  unlockLevel   Int      @default(1)
+  
+  @@unique([classId, skillId])
+}
+
+model HeroSkill {
+  id            Int      @id @default(autoincrement())
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  skillId       Int
+  skill         SkillTemplate @relation(fields: [skillId], references: [id])
+  unlockedAt    DateTime @default(now())
+  isActive      Boolean  @default(true)
+
+  @@unique([heroId, skillId])
 }
 
 model HeroClassMastery {
@@ -343,6 +379,7 @@ model ClassTemplate {
   
   heroes          Hero[]
   mastery         HeroClassMastery[]
+  skills          ClassSkillTree[]
 }
 
 model JobTemplate {
