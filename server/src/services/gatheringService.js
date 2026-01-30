@@ -54,7 +54,20 @@ class GatheringService {
         
         if (isPlant || isFish) {
             // Herbalism (INT) or Fishing (DEX) requires no special tool but scales with specific stat
-            const statValue = isPlant ? heroData.int : heroData.dex;
+            let statValue = isPlant ? heroData.int : heroData.dex;
+
+            // Apply Fishing Rod Multiplier
+            if (isFish) {
+                const equippedRod = heroData.equipment.find(eq => eq.itemInstance.template.category === "FISHING_ROD");
+                if (equippedRod) {
+                    const tier = equippedRod.itemInstance.template.toolTier || 0;
+                    // Multipliers: T0:1.1, T1:1.25, T2:1.5, T3:2.0, T4:3.0
+                    const multipliers = [1.1, 1.25, 1.5, 2.0, 3.0];
+                    const mult = multipliers[tier] || 1.0;
+                    statValue = Math.floor(statValue * mult);
+                }
+            }
+
             const duration = Math.ceil(resource.gatherTimeSeconds / Math.max(0.5, statValue / 10));
             const now = new Date();
             const finishesAt = new Date(now.getTime() + (duration * 1000));
