@@ -4,11 +4,12 @@ const calculator = require('./gathering/DurationCalculator');
 const inventoryService = require('./inventoryService');
 const statService = require('./statService');
 const vitalityService = require('./vitalityService');
+const worldSpawner = require('./worldSpawnerService');
 
 /**
  * GatheringService
  * Thin orchestrator for resource harvesting.
- * Delegating logic to Validator and Calculator components.
+ * Delegating logic to Validator, Calculator, and WorldSpawner components.
  */
 class GatheringService extends BaseService {
     constructor() {
@@ -23,32 +24,34 @@ class GatheringService extends BaseService {
         });
 
         const hero = await this.db.hero.findUnique({ where: { id: heroId } });
-        const resource = await this.db.regionResource.findUnique({
-            where: { id: regionResourceId },
-            include: { item: true }
-        });
+        
+        // AAA: Resolve resource via WorldSpawner (supports dynamic injections)
+        const availableResources = await worldSpawner.getAvailableResources(user.currentRegion);
+        const resource = availableResources.find(r => r.id === regionResourceId || `event_${r.id}` === regionResourceId);
 
-        if (!user || !hero || !resource) throw new Error("Invalid harvest parameters.");
+        if (!user || !hero || !resource) throw new Error("Resource not available in this region.");
 
         // 1. Core Validations
         validator.validateOwnership(hero, userId);
-        validator.validateRegion(user, resource);
         validator.validateAvailability(user);
         
-        const hasSpace = await inventoryService.hasSpace(userId, resource.itemId);
+        const hasSpace = await inventoryService.hasSpace(userId, resource.templateId);
         if (!hasSpace) throw new Error("Inventory full.");
 
         // 2. Context Determination
-        const { context, isToolRequired } = this._getHarvestContext(resource.itemId);
+        const { context, isToolRequired } = this._getHarvestContext(resource.templateId);
 
         // 3. Fetch Contextual Stats
         const heroStats = await statService.calculateHeroStats(heroId, context);
         let duration = 0;
 
+        // Fetch full template for hardness/requirements
+        const template = await this.db.itemTemplate.findUnique({ where: { id: resource.templateId } });
+
         if (!isToolRequired) {
             duration = await this._handleManualHarvest(heroId, resource, heroStats, context);
         } else {
-            duration = await this._handleToolHarvest(heroId, resource, heroStats, context);
+            duration = await this._handleToolHarvest(heroId, resource, template, heroStats, context);
         }
 
         // 4. Finalize Task
@@ -58,7 +61,7 @@ class GatheringService extends BaseService {
 
         return await this.db.taskQueue.create({
             data: {
-                userId, heroId, type: "GATHERING", targetItemId: resource.itemId,
+                userId, heroId, type: "GATHERING", targetItemId: resource.templateId,
                 status: "RUNNING", startedAt: now, finishesAt: finishesAt
             }
         });
@@ -67,7 +70,6 @@ class GatheringService extends BaseService {
     async _handleManualHarvest(heroId, resource, heroStats, context) {
         let statValue = (context === "HERBALISM") ? heroStats.attributes.int : heroStats.attributes.dex;
         
-        // Apply specialized tool multipliers (Sickle/Rod)
         const toolCategory = (context === "HERBALISM") ? "HERBALISM_SICKLE" : "FISHING_ROD";
         const tool = await this.db.heroEquipment.findFirst({
             where: { heroId, itemInstance: { template: { category: toolCategory } } },
@@ -78,19 +80,19 @@ class GatheringService extends BaseService {
             statValue = Math.floor(statValue * calculator.getToolMultiplier(tool.itemInstance.template.toolTier || 0));
         }
 
-        return calculator.calculatePlantOrFishDuration(resource.gatherTimeSeconds, statValue);
+        return calculator.calculatePlantOrFishDuration(resource.gatherTime, statValue);
     }
 
-    async _handleToolHarvest(heroId, resource, heroStats, context) {
-        const minToolTier = resource.item.minToolTier || 0;
+    async _handleToolHarvest(heroId, resource, template, heroStats, context) {
+        const minToolTier = template.minToolTier || 0;
         const requiredCategory = (context === "LUMBERING") ? "AXE" : "PICKAXE";
 
-        validator.checkPhysicalRequirements(heroStats, resource.item.minStr || 0);
+        validator.checkPhysicalRequirements(heroStats, template.minStr || 0);
         await validator.checkToolRequirements(this.db, heroId, requiredCategory, minToolTier);
 
         return calculator.calculateMiningOrLumberingDuration(
-            resource.gatherTimeSeconds, 
-            resource.item.hardness || 1, 
+            resource.gatherTime, 
+            template.hardness || 1, 
             heroStats.attributes.str || 10
         );
     }
@@ -113,7 +115,6 @@ class GatheringService extends BaseService {
         });
         if (!task || task.status !== "RUNNING") return;
 
-        // --- AAA WORLD EVENT YIELD INTEGRATION ---
         let yieldQuantity = 1;
         const now = new Date();
         const activeEvents = await this.db.activeEvent.findMany({
@@ -122,12 +123,12 @@ class GatheringService extends BaseService {
         });
 
         const { context } = this._getHarvestContext(task.targetItemId);
-        const multKey = `${context.toLowerCase()}_yield_mult`;
+        const multKey = `${context.toLowerCase()}YieldMult`; // Normalized Column Name
 
         for (const ae of activeEvents) {
-            const meta = JSON.parse(ae.template.metadata);
-            if (meta[multKey]) {
-                yieldQuantity = Math.floor(yieldQuantity * meta[multKey]);
+            const t = ae.template;
+            if (t[multKey]) {
+                yieldQuantity = Math.floor(yieldQuantity * t[multKey]);
             }
         }
 

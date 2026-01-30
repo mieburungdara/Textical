@@ -2,6 +2,7 @@ const BaseService = require('../BaseService');
 const BattleSimulation = require('../../logic/battleSimulation');
 const formationService = require('../formationService');
 const vitalityService = require('../vitalityService');
+const worldSpawner = require('../worldSpawnerService');
 
 class BattleInitializer extends BaseService {
     constructor() {
@@ -25,6 +26,12 @@ class BattleInitializer extends BaseService {
         
         const preset = user.formationPresets[0];
         if (!preset) throw new Error("No formation presets found.");
+
+        // AAA: Resolve monster via WorldSpawner (supports dynamic phenomenal spawns)
+        const availableMonsters = await worldSpawner.getAvailableMonsters(user.currentRegion);
+        const isAvailable = availableMonsters.some(m => m.templateId === monsterTemplateId || `event_${m.id}` === monsterTemplateId);
+        
+        if (!isAvailable) throw new Error("Monster not currently available in this region.");
 
         const monsterTemplate = await this.db.monsterTemplate.findUnique({
             where: { id: monsterTemplateId },

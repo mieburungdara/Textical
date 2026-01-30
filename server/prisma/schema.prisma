@@ -55,6 +55,7 @@ model MonsterTemplate {
   loot         MonsterLootEntry[]
   regions      RegionMonster[]
   traits       MonsterTrait[]
+  eventAppearances EventMonster[]
 }
 
 model MonsterTrait {
@@ -114,6 +115,7 @@ model ItemTemplate {
   regionResources RegionResource[]
   taskTargets     TaskQueue[]
   shopAppearances NPCShopItem[]
+  eventAppearances EventResource[]
 }
 
 model RegionTemplate {
@@ -154,7 +156,28 @@ model WorldEventTemplate {
   statIntBonus      Int?
   dangerLevelBonus  Int?
 
-  activeEvents  ActiveEvent[]
+  activeEvents      ActiveEvent[]
+  eventResources    EventResource[]
+  eventMonsters     EventMonster[]
+}
+
+model EventResource {
+  id            Int      @id @default(autoincrement())
+  templateId    Int
+  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
+  itemId        Int
+  item          ItemTemplate @relation(fields: [itemId], references: [id])
+  spawnChance   Float    @default(1.0)
+  gatherTime    Int      @default(10)
+}
+
+model EventMonster {
+  id            Int      @id @default(autoincrement())
+  templateId    Int
+  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
+  monsterId     Int
+  monster       MonsterTemplate @relation(fields: [monsterId], references: [id])
+  spawnChance   Float    @default(1.0)
 }
 
 model ActiveEvent {
