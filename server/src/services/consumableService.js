@@ -15,7 +15,7 @@ class ConsumableService {
         const buffData = this._getBuffData(templateId);
         if (!buffData) throw new Error("This item has no effect.");
 
-        // 3. Apply Buff or Permanent Stat in Transaction
+        // 3. Apply Buff in Transaction
         return await prisma.$transaction(async (tx) => {
             // Decrement inventory
             if (inv.quantity === 1) {
@@ -24,16 +24,6 @@ class ConsumableService {
                 await tx.inventoryItem.update({
                     where: { id: inv.id },
                     data: { quantity: { decrement: 1 } }
-                });
-            }
-
-            // PERMANENT STAT LOGIC
-            if (buffData.isPermanent) {
-                const updateData = {};
-                updateData[buffData.statKey] = { increment: buffData.statValue };
-                return await tx.hero.update({
-                    where: { id: heroId },
-                    data: updateData
                 });
             }
 
@@ -73,12 +63,12 @@ class ConsumableService {
             4402: { statKey: "mana_regen", statValue: 5, durationSeconds: 1200 },
             4411: { statKey: "str", statValue: 20, durationSeconds: 1800 },
             
-            // PERMANENT STAT ELIXIRS
-            4421: { statKey: "str", statValue: 1, isPermanent: true },
-            4422: { statKey: "dex", statValue: 1, isPermanent: true },
-            4423: { statKey: "int", statValue: 1, isPermanent: true },
-            4424: { statKey: "vit", statValue: 1, isPermanent: true },
-            4425: { statKey: "str", statValue: 1, isPermanent: true } // Elixir of Gods (simplified to +1 str for audit)
+            // MYTHICAL ELIXIRS (Now Temporary Buffs)
+            4421: { statKey: "str", statValue: 50, durationSeconds: 3600 },
+            4422: { statKey: "dex", statValue: 50, durationSeconds: 3600 },
+            4423: { statKey: "int", statValue: 50, durationSeconds: 3600 },
+            4424: { statKey: "vit", statValue: 50, durationSeconds: 3600 },
+            4425: { statKey: "str", statValue: 25, durationSeconds: 3600, isPercent: true } // Elixir of Gods: +25% STR
         };
         return data[id];
     }

@@ -19,12 +19,12 @@ async function main() {
     { id: 4414, name: "Dragon-Scale Draught", category: "CONSUMABLE", rarity: "RARE", baseValue: 1500, description: "Draconic armor. Grants +20 VIT and +15% Physical Res for 30 mins." },
     { id: 4415, name: "Void-Step Mixture", category: "CONSUMABLE", rarity: "RARE", baseValue: 1800, description: "Phasing tonic. Grants +20 SPD and +15% Dodge for 30 mins." },
 
-    // TIER 5: Mythical / PERMANENT (IDs 4421-4425)
-    { id: 4421, name: "Elixir of Eternal Might", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +1 STR PERMANENTLY." },
-    { id: 4422, name: "Elixir of Timeless Grace", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +1 DEX PERMANENTLY." },
-    { id: 4423, name: "Elixir of Infinite Wisdom", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +1 INT PERMANENTLY." },
-    { id: 4424, name: "Elixir of Immortal Life", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +1 VIT PERMANENTLY." },
-    { id: 4425, name: "Elixir of the Gods", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 100000, description: "The ultimate transmutation. Grants +1 to ALL stats PERMANENTLY." }
+    // TIER 5: Mythical (IDs 4421-4425)
+    { id: 4421, name: "Elixir of Eternal Might", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +50 STR for 60 mins." },
+    { id: 4422, name: "Elixir of Timeless Grace", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +50 DEX for 60 mins." },
+    { id: 4423, name: "Elixir of Infinite Wisdom", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +50 INT for 60 mins." },
+    { id: 4424, name: "Elixir of Immortal Life", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 50000, description: "A divine brew. Grants +50 VIT for 60 mins." },
+    { id: 4425, name: "Elixir of the Gods", category: "CONSUMABLE", rarity: "LEGENDARY", baseValue: 100000, description: "The ultimate transmutation. Grants +25% STR for 60 mins." }
   ];
 
   for (const e of elixirs) {
