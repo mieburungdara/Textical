@@ -1,46 +1,83 @@
-# ⚔️ Textical: The Ultimate Tactical Idle RPG ⚔️
+# ⚔️ TEXTICAL: High-Fantasy Tactical RPG Engine ⚔️
 
-**Textical** adalah game Tactical Idle RPG yang mengusung arsitektur **AAA Authoritative Client-Server**. Di dunia ini, kemenangan tidak ditentukan oleh refleks tangan, melainkan oleh kecerdasan taktis, persiapan matang, dan sinergi antar pasukan yang Anda susun secara otomatis.
-
----
-
-## 🚀 Fitur Unggulan
-
-### 💀 Sistem Kematian & Hall of Fame (Permadeath)
-Hadapi konsekuensi nyata dalam setiap petualangan. Kematian adalah bagian dari sejarah pahlawan Anda.
-- **Permanent Death (Adventure Mode)**: Unit yang gugur saat menjelajahi Dungeon, Forest, atau melawan Boss akan dihapus secara permanen dari database aktif.
-- **Competitive Safety**: Dalam mode Ranking, Turnamen, atau PvP, pahlawan Anda aman dan tidak akan terkena efek Permadeath.
-- **Hall of Fame (Arsip Legendaris)**: Pahlawan yang gugur setelah mencapai **Level 100+** dan **Class Tier 3** akan diabadikan di Hall of Fame. Nama, pencapaian, dan jasa mereka akan tersimpan selamanya sebagai legenda.
-- **Optimasi Database**: Hero level rendah yang gugur langsung dihapus untuk menjaga performa server tetap ringan dan responsif.
-
-### 🧬 Sistem Dinasti & Breeding (Genetics System)
-Wariskan sifat-sifat terbaik untuk menciptakan pahlawan legendaris generasi berikutnya!
-- **Algoritma Pewarisan 70/30**: Keturunan memiliki peluang **70%** mewarisi sifat (Traits) Ayah dan **30%** dari Ibu.
-- **Mutasi Genetik**: Setiap kelahiran generasi baru mendapatkan **Bonus 5% pada seluruh statistik dasar**.
-- **Satu Kali Seumur Hidup**: Setiap pahlawan hanya bisa memiliki **satu keturunan**, menuntut pemilihan pasangan yang sangat strategis.
-
-### 🌟 20 Tahapan Perang (The Master Battle Life-Cycle)
-Setiap detik pertempuran diproses melalui 20 filter logika modular tingkat tinggi:
-1. Aura Pembuka | 2. Dinamika Detik | 3. Kesiapan Mental | 4. Inteligensi Target | 5. Persiapan Langkah
-6. Jejak Taktis | 7. Posisi Akhir | 8. Manajemen Energi | 9. Benturan Senjata | 10. Kalkulasi Akurat
-11. Perisai Terakhir | 12. Mitigasi Armor | 13. Efek Luka | 14. Resistansi Tubuh | 15. Haus Darah
-16. Energi Pembunuh | 17. Nafas Terakhir | 18. Ledakan Kematian | 19. Regenerasi Alami | 20. Arsip Perang
+**Textical** is a state-of-the-art, AAA-standard 2D Tactical RPG engine built with a focus on authoritative simulation, modular economy, and deep relational progression. It features a sophisticated client-server architecture where every calculation—from combat phases to resource gathering—is verified and processed on the server to ensure absolute integrity and tactical depth.
 
 ---
 
-### 🎭 Sistem Ras yang Mendalam (20+ Races)
-Pahlawan Anda memiliki identitas, nama otentik sesuai ras, dan kekuatan unik:
-- 🧛 **Vampire**: Menguras nyawa musuh (Lifesteal).
-- 💧 **Slime**: HP masif dan mampu membelah diri (Split) saat hancur.
-- 🤖 **Automaton**: Mitigasi damage flat (Steel Plate).
-- 🦴 **Skeleton**: Kebal racun dan memiliki kemampuan bangkit kembali (Rebirth).
+## 🏛️ Core Architecture & Design Philosophy
+
+### 1. Authoritative Simulation Model
+Every action in Textical is a server-side event. The client acts strictly as a high-fidelity visualizer, while the engine handles A* pathfinding, trait hooks, and combat resolution in a strictly controlled environment.
+
+### 2. The "Thin Service" Pattern
+The backend is structured into modular, decoupled layers:
+- **Orchestrators (Services)**: Lightweight managers that coordinate high-level flows (e.g., `GatheringService`, `NPCService`).
+- **Logic Components**: Specialized files containing pure formulas and rules (e.g., `XPFormula`, `DurationCalculator`).
+- **BaseService Foundation**: A unified parent class providing standardized database access, centralized logging, and secure transaction wrappers.
+
+### 3. Strict Relational Database (100% Normalized)
+The database operates on a pure relational schema using **Prisma ORM**. We have eliminated all JSON/Array fields in favor of explicit columns and join tables, enabling high-performance queries and robust data analytics.
 
 ---
 
-## 🔒 Teknologi & Keamanan
-- **Backend**: Node.js dengan **Prisma ORM** & **SQLite**.
-- **Security**: Authoritative Logic 100% di server untuk mencegah cheat & manipulasi stat.
-- **Modular Design**: Menggunakan pola *Observer/Hook* untuk penambahan fitur tanpa batas.
+## ⚔️ Tactical Combat System
+
+Textical features a grid-based, tick-driven combat simulation that rewards strategic positioning and hero composition.
+
+### 🎮 Battle Mechanics
+- **Action Points (AP) & Initiative**: Units gain AP based on their Speed. When a unit reaches 100 AP, they take a turn. Initiative determines the starting AP advantage.
+- **Directional Combat**: Attacking from the **SIDE** grants a 1.1x damage bonus, while **BACK** attacks grant a 1.5x bonus and a +50 Accuracy boost.
+- **Cover & Obstacles**: Units can utilize environmental cover to gain significant Defense bonuses (+15 DEF).
+- **Authoritative SkillExecutor**: A centralized engine that processes active skills using metadata-driven multipliers for damage, healing, and buffs.
+
+### 🤖 Intelligent Battle AI
+- **Behavior Tree Integration**: Units use complex JSON-based Behavior Trees (e.g., `SimpleAI`) for tactical decision-making.
+- **Fallback Logic**: In the absence of a tree, units use a smart fallback system that prioritizes active skills based on range and resource availability.
 
 ---
-**Textical: Dimana Strategi Bertemu dengan Keabadian.**
+
+## 📈 Progression & Mastery
+
+### 🧬 Dual-Level Architecture
+Textical decouples physical growth from professional expertise:
+- **Unit Level (1-100)**: Represents the hero's permanent physical foundation. Increasing Unit Level grants permanent base attributes (STR, DEX, INT, VIT).
+- **Class Level (1-20/Max)**: Represents professional mastery. Increasing Class Level unlocks skills and class-specific growth bonuses.
+- **Class Mastery Table**: When a hero promotes or switches jobs, their professional progress is archived, allowing them to retain their strength while exploring new disciplines.
+
+### 🛡️ Tiered Evolutions
+Heroes follow branching promotion paths (e.g., Warrior ➡️ Knight or Berserker). Promotions grant a permanent **+5 Promotion Bonus** to all attributes and reset the Class Level to 1 for a new mastery cycle.
+
+### 📜 Unique Skill Trees
+Every class features a dedicated tree of **Active** and **Passive** skills. Passives are dynamically integrated into the `StatService`, while Actives are executed by the `SkillExecutor` during combat.
+
+---
+
+## 💎 Economy & World Simulation
+
+### ⚒️ The 5-Pillar Resource Loop
+The world is rich with raw materials categorized into 5 pillars: **Minerals (STR)**, **Wood (STR)**, **Hides (Loot)**, **Herbs (INT)**, and **Fish (DEX)**.
+- **Tiered Gathering**: 5 tiers of resources requiring specialized tools (Pickaxes, Axes, Sickles, Rods) of appropriate tiers.
+- **2:1 Refining Pipeline**: All raw materials are processed through the `CraftingService` into refined goods (Bars, Planks, Leathers, Cloths, Extracts).
+
+### 🧪 Advanced Alchemy & Culinary Arts
+- **Alchemy**: Refine herbs into concentrated extracts to brew powerful temporary elixirs or rare **Permanent Stat Potions**.
+- **Culinary**: Cook monster meat and fish into dishes that grant strategic temporary buffs.
+
+### 👥 Dynamic NPC & World Population
+- **NPC Roles**: The world is inhabited by Job Changers, Quest Givers, Healers, and Gamblers.
+- **Wandering Merchants**: Rare traders like *Zev the Wandering* appear randomly in wilderness regions with temporary inventories.
+- **Multi-Stage Quests**: Narrative-driven questlines that evolve through sequential phases with unique regional objectives.
+
+### 🌌 World Events
+Temporary regional phenomena (e.g., **Meteor Showers**, **Orc Raids**) that dynamically alter resource yields (+2.0x Mining) and combat stats in real-time.
+
+---
+
+## 🛠️ Technical Stack
+- **Backend**: Node.js
+- **Database**: SQLite / PostgreSQL via Prisma ORM
+- **Simulation**: Custom Authoritative Engine (Tick-based)
+- **Communication**: High-fidelity DevLog pipeline via Telegram API
+
+---
+**Textical: Where Professional Architecture Meets Legendary Adventure.**
