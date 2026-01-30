@@ -2,35 +2,32 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("--- MAPPING LEATHER LOOT TO MONSTER CATEGORIES (v2) ---");
+  console.log("--- MAPPING LEATHER & MEAT LOOT TO MONSTERS ---");
 
   const lootMappings = [
     // BEAST (Cat 1): Wolf Pelt, Boar Skin, Bear Fur, Panther Hide, Gryphon Leather
+    // MEAT: Game Meat, Boar Shank, Wolf Haunch, Bear Tenderloin, Gryphon Breast
     { categoryId: 1, itemId: 2603, chance: 0.60 }, // Wolf Pelt
-    { categoryId: 1, itemId: 2602, chance: 0.50 }, // Boar Skin
-    { categoryId: 1, itemId: 2606, chance: 0.20 }, // Bear Fur
-    { categoryId: 1, itemId: 2612, chance: 0.05 }, // Shadow Panther
-    { categoryId: 1, itemId: 2614, chance: 0.03 }, // Gryphon
+    { categoryId: 1, itemId: 3703, chance: 0.50 }, // Wolf Haunch (MEAT)
+    { categoryId: 1, itemId: 3702, chance: 0.50 }, // Boar Shank (MEAT)
+    { categoryId: 1, itemId: 3706, chance: 0.20 }, // Bear Tenderloin (MEAT)
+    { categoryId: 1, itemId: 3714, chance: 0.05 }, // Gryphon Breast (MEAT)
 
-    // REPTILE (Cat 2): Serpent Scale, Crocodile Leather, Salamander Skin, Hydra Skin
+    // REPTILE (Cat 2): Serpent Scale, Crocodile Leather, Salamander Skin
+    // MEAT: Reptile Tail, Crocodile Tail, Salamander Tongue
     { categoryId: 2, itemId: 2604, chance: 0.60 }, // Serpent Scale
-    { categoryId: 2, itemId: 2607, chance: 0.30 }, // Crocodile Leather
-    { categoryId: 2, itemId: 2611, chance: 0.10 }, // Salamander Skin
-    { categoryId: 2, itemId: 2619, chance: 0.02 }, // Hydra Skin
+    { categoryId: 2, itemId: 3704, chance: 0.50 }, // Reptile Tail (MEAT)
+    { categoryId: 2, itemId: 3707, chance: 0.30 }, // Crocodile Tail (MEAT)
+    { categoryId: 2, itemId: 3711, chance: 0.10 }, // Salamander Tongue (MEAT)
 
-    // SLIME (Cat 3): Venomous Hide, Ethereal Membrane
-    { categoryId: 3, itemId: 2609, chance: 0.20 }, // Venomous Hide
-    { categoryId: 3, itemId: 2618, chance: 0.02 }, // Ethereal Membrane
-
-    // DRAGON (Cat 4): Dragon Scale, Phoenix Hide, Celestial Membrane, Wyvern Leather
+    // DRAGON (Cat 4): Dragon Scale, Wyvern Leather
+    // MEAT: Wyvern Wing-Meat, Dragon Heart-Steak
     { categoryId: 4, itemId: 2621, chance: 0.40 }, // Dragon Scale
-    { categoryId: 4, itemId: 2622, chance: 0.05 }, // Phoenix Hide
-    { categoryId: 4, itemId: 2625, chance: 0.01 }, // Celestial Hide
-    { categoryId: 4, itemId: 2616, chance: 0.15 }, // Wyvern Leather
+    { categoryId: 4, itemId: 3721, chance: 0.30 }, // Dragon Heart-Steak (MEAT)
+    { categoryId: 4, itemId: 3716, chance: 0.20 }, // Wyvern Wing-Meat (MEAT)
 
-    // INSECT (Cat 6): Bat Membrane (Cave Spiders often share drops), Iron-Shell Hide
-    { categoryId: 6, itemId: 2605, chance: 0.40 }, // Bat Membrane (Spider webbing substitute)
-    { categoryId: 6, itemId: 2617, chance: 0.05 }  // Iron-Shell
+    // ORC/GOBLIN (Cat 7/2): NO MEAT.
+    // We already have some leather mapped, we keep it but NO meat item IDs here.
   ];
 
   for (const mapping of lootMappings) {
@@ -39,9 +36,8 @@ async function main() {
     });
 
     for (const m of monsters) {
-        console.log(`   Assigning ${mapping.itemId} to ${m.name} (${mapping.chance * 100}%)...`);
+        console.log(`   Syncing ${mapping.itemId} to ${m.name}...`);
         
-        // Find existing loot record
         const existing = await prisma.monsterLootEntry.findFirst({
             where: { monsterId: m.id, itemId: mapping.itemId }
         });
@@ -59,7 +55,7 @@ async function main() {
     }
   }
 
-  console.log("✅ Leather Loot Mapping Complete.");
+  console.log("✅ Leather & Meat Loot Mapping Complete.");
 }
 
 main()

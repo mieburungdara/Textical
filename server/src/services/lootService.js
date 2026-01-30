@@ -1,26 +1,76 @@
-const itemRepository = require('../repositories/itemRepository');
+const prisma = require('../db');
 
 class LootService {
     /**
-     * Generates a list of items based on defeated monster IDs.
-     * @param {Array<string>} monsterIds 
+     * AAA High-Fidelity Loot Generation
+     * @param {number} monsterId - The ID of the defeated monster
+     * @param {number} heroId - The hero who dealt the killing blow (for tool checks)
      */
-    generateLoot(monsterIds) {
-        const loot = [];
-        
-        monsterIds.forEach(id => {
-            // Logic: Every kill has a 20% chance to drop a random stone
-            if (Math.random() < 0.2) {
-                // FIX: Use itemRepository
-                const possibleStones = itemRepository.getAllByTag("crafting");
-                if (possibleStones.length > 0) {
-                    const chosen = possibleStones[Math.floor(Math.random() * possibleStones.length)];
-                    loot.push(chosen);
-                }
-            }
+    async generateMonsterLoot(monsterId, heroId = null) {
+        const monster = await prisma.monsterTemplate.findUnique({
+            where: { id: monsterId },
+            include: { loot: true }
         });
-        
-        return loot;
+
+        if (!monster) return [];
+
+        // 1. Get Hero Equipment for Tool Bonuses
+        let skinnerKnife = null;
+        let butcherCleaver = null;
+
+        if (heroId) {
+            const equipment = await prisma.heroEquipment.findMany({
+                where: { heroId },
+                include: { itemInstance: { include: { template: true } } }
+            });
+
+            skinnerKnife = equipment.find(e => e.itemInstance.template.category === "SKINNER_KNIFE");
+            butcherCleaver = equipment.find(e => e.itemInstance.template.category === "BUTCHER_CLEAVER");
+        }
+
+        const lootResults = [];
+
+        // 2. Process Standard Loot Entries
+        for (const entry of monster.loot) {
+            const item = await prisma.itemTemplate.findUnique({ where: { id: entry.itemId } });
+            if (!item) continue;
+
+            // --- AAA TOOL LOGIC ---
+            let yieldMultiplier = 1.0;
+            let chanceMultiplier = 1.0;
+
+            // Skinner Knife Logic: Boosts Leather (Item ID 2600s)
+            if (skinnerKnife && item.id >= 2600 && item.id < 2700) {
+                const tier = skinnerKnife.itemInstance.template.toolTier || 0;
+                const multipliers = [1.1, 1.25, 1.5, 2.0, 3.0];
+                yieldMultiplier = multipliers[tier] || 1.0;
+                chanceMultiplier = 1.2; // 20% higher drop chance
+            }
+
+            // Butcher Cleaver Logic: Boosts Meat (Item ID 3700s)
+            if (butcherCleaver && item.id >= 3700 && item.id < 3800) {
+                const tier = butcherCleaver.itemInstance.template.toolTier || 0;
+                const multipliers = [1.1, 1.25, 1.5, 2.0, 3.0];
+                yieldMultiplier = multipliers[tier] || 1.0;
+                chanceMultiplier = 1.2;
+            }
+
+            // 3. Roll for drop
+            const finalChance = entry.chance * chanceMultiplier;
+            if (Math.random() < finalChance) {
+                lootResults.push({
+                    itemId: item.id,
+                    name: item.name,
+                    quantity: Math.max(1, Math.floor(yieldMultiplier)) 
+                });
+            }
+        }
+
+        // 4. AAA SPECIAL BUTCHERY: Manual Meat Harvest
+        // If monster is MEATABLE and hero has Cleaver, roll for meat even if not in standard loot table?
+        // Let's stick to the loot table for now, but ensure we add meat to the tables in the next step.
+
+        return lootResults;
     }
 }
 
