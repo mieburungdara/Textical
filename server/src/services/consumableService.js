@@ -15,7 +15,7 @@ class ConsumableService {
         const buffData = this._getBuffData(templateId);
         if (!buffData) throw new Error("This item has no effect.");
 
-        // 3. Apply Buff in Transaction
+        // 3. Apply Buff or Permanent Stat in Transaction
         return await prisma.$transaction(async (tx) => {
             // Decrement inventory
             if (inv.quantity === 1) {
@@ -27,7 +27,17 @@ class ConsumableService {
                 });
             }
 
-            // Create Buff
+            // PERMANENT STAT LOGIC
+            if (buffData.isPermanent) {
+                const updateData = {};
+                updateData[buffData.statKey] = { increment: buffData.statValue };
+                return await tx.hero.update({
+                    where: { id: heroId },
+                    data: updateData
+                });
+            }
+
+            // Create Temporary Buff
             const now = new Date();
             const expiresAt = new Date(now.getTime() + (buffData.durationSeconds * 1000));
 
@@ -47,6 +57,7 @@ class ConsumableService {
 
     _getBuffData(id) {
         const data = {
+            // ... (Previous dishes)
             4201: { statKey: "str", statValue: 2, durationSeconds: 600 },
             4202: { statKey: "int", statValue: 2, durationSeconds: 600 },
             4203: { statKey: "dex", statValue: 2, durationSeconds: 600 },
@@ -55,7 +66,19 @@ class ConsumableService {
             4206: { statKey: "str", statValue: 5, durationSeconds: 900 },
             4211: { statKey: "dex", statValue: 10, durationSeconds: 1200 },
             4221: { statKey: "str", statValue: 50, durationSeconds: 3600 },
-            4225: { statKey: "str", statValue: 25, durationSeconds: 3600 } // Ambrosia (multiple buffs handled differently in real AAA, but keeping simple)
+            4225: { statKey: "str", statValue: 25, durationSeconds: 3600 },
+
+            // ADVANCED ELIXIRS
+            4401: { statKey: "hp_regen", statValue: 5, durationSeconds: 1200 },
+            4402: { statKey: "mana_regen", statValue: 5, durationSeconds: 1200 },
+            4411: { statKey: "str", statValue: 20, durationSeconds: 1800 },
+            
+            // PERMANENT STAT ELIXIRS
+            4421: { statKey: "str", statValue: 1, isPermanent: true },
+            4422: { statKey: "dex", statValue: 1, isPermanent: true },
+            4423: { statKey: "int", statValue: 1, isPermanent: true },
+            4424: { statKey: "vit", statValue: 1, isPermanent: true },
+            4425: { statKey: "str", statValue: 1, isPermanent: true } // Elixir of Gods (simplified to +1 str for audit)
         };
         return data[id];
     }
