@@ -28,43 +28,36 @@ class GatheringService {
         const hasSpace = await inventoryService.hasSpace(userId, resource.itemId);
         if (!hasSpace) throw new Error("Inventory full.");
 
-        // --- AAA SPECIALIZED MINING LOGIC ---
-        // Calculate dynamic duration based on Hero STR and Item Hardness
-        const heroStats = await statService.calculateHeroStats(heroId);
-        const str = heroStats.attributes.str || 10;
-        const hardness = resource.item.hardness || 1;
-        const minStr = resource.item.minStr || 0;
-        const minToolTier = resource.item.minToolTier || 0;
-
-        // 1. Physical Requirement Check
-        if (str < minStr) {
-            throw new Error(`Hero is not strong enough to mine this material. (Required: ${minStr} STR, Have: ${str} STR)`);
-        }
-
-        // 2. Tool Tier Check
-        const heroData = await prisma.hero.findUnique({
-            where: { id: heroId },
-            include: { equipment: { include: { itemInstance: { include: { template: true } } } } }
-        });
-
-        // Categorize based on Target Material ID range
+        // --- AAA CONTEXTUAL GATHERING LOGIC ---
+        // 1. Determine Context & Type
         const isWood = resource.itemId >= 2400 && resource.itemId < 2500;
         const isPlant = resource.itemId >= 2800 && resource.itemId < 2900;
         const isFish = resource.itemId >= 3300 && resource.itemId < 3400;
         
-        if (isPlant || isFish) {
-            // Herbalism (INT) or Fishing (DEX) requires no special tool but scales with specific stat
-            let statValue = isPlant ? heroData.int : heroData.dex;
+        let context = "MINING";
+        if (isWood) context = "LUMBERING";
+        if (isPlant) context = "HERBALISM";
+        if (isFish) context = "FISHING";
 
-            // Apply Fishing Rod Multiplier
+        // 2. Fetch Contextual Stats (Automatically handles Tool Bonuses if valid)
+        const heroStats = await statService.calculateHeroStats(heroId, context);
+        
+        // 3. specialized logic for Plant/Fish (No Tool Required)
+        if (isPlant || isFish) {
+            let statValue = isPlant ? heroStats.attributes.int : heroStats.attributes.dex;
+
+            // Apply Fishing Rod Multiplier (Only if Fishing)
             if (isFish) {
-                const equippedRod = heroData.equipment.find(eq => eq.itemInstance.template.category === "FISHING_ROD");
+                const equippedRod = hero.equipment?.find(eq => eq.itemInstance.template.category === "FISHING_ROD") 
+                    || (await prisma.heroEquipment.findFirst({
+                        where: { heroId, itemInstance: { template: { category: "FISHING_ROD" } } },
+                        include: { itemInstance: { include: { template: true } } }
+                    }));
+
                 if (equippedRod) {
                     const tier = equippedRod.itemInstance.template.toolTier || 0;
-                    // Multipliers: T0:1.1, T1:1.25, T2:1.5, T3:2.0, T4:3.0
                     const multipliers = [1.1, 1.25, 1.5, 2.0, 3.0];
-                    const mult = multipliers[tier] || 1.0;
-                    statValue = Math.floor(statValue * mult);
+                    statValue = Math.floor(statValue * (multipliers[tier] || 1.0));
                 }
             }
 
@@ -80,9 +73,23 @@ class GatheringService {
             });
         }
 
-        const requiredCategory = isWood ? "AXE" : "PICKAXE";
+        // 4. specialized logic for Mining/Lumbering (Tool Tier Required)
+        const str = heroStats.attributes.str || 10;
+        const hardness = resource.item.hardness || 1;
+        const minStr = resource.item.minStr || 0;
+        const minToolTier = resource.item.minToolTier || 0;
 
-        const equippedTool = heroData.equipment.find(eq => eq.itemInstance.template.category === requiredCategory);
+        // Physical Requirement Check
+        if (str < minStr) {
+            throw new Error(`Hero is not strong enough to harvest this material. (Required: ${minStr} STR, Have: ${str} STR)`);
+        }
+
+        const requiredCategory = isWood ? "AXE" : "PICKAXE";
+        const equippedTool = await prisma.heroEquipment.findFirst({
+            where: { heroId, itemInstance: { template: { category: requiredCategory } } },
+            include: { itemInstance: { include: { template: true } } }
+        });
+
         const currentToolTier = equippedTool ? (equippedTool.itemInstance.template.toolTier || 0) : -1;
 
         if (currentToolTier < minToolTier) {
@@ -91,11 +98,9 @@ class GatheringService {
             throw new Error(`You need ${toolMsg} to harvest this material. (Current Tier: ${currentToolTier === -1 ? 'None' : currentToolTier})`);
         }
         
-        // 3. Duration Logic
+        // Duration Logic
         const strFactor = Math.max(0.5, str / 10);
         let duration = Math.ceil((resource.gatherTimeSeconds * hardness) / strFactor);
-        
-        // Cap duration to realistic limits
         duration = Math.max(5, Math.min(3600, duration)); 
 
         await vitalityService.consumeVitality(userId, this.BASE_GATHER_VITALITY_COST);

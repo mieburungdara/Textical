@@ -5,11 +5,24 @@ const statGrowthSystem = require('./stat/StatGrowthSystem');
 const prisma = require('../db');
 
 class StatService {
-    async calculateHeroStats(heroId) {
-        // Fetch hero with class template
+    async calculateHeroStats(heroId, context = "GLOBAL") {
+        // Fetch hero with class template and equipment
         const heroData = await prisma.hero.findUnique({
             where: { id: heroId },
-            include: { combatClass: true }
+            include: { 
+                combatClass: true,
+                equipment: {
+                    include: {
+                        itemInstance: {
+                            include: {
+                                template: {
+                                    include: { stats: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         if (!heroData) throw new Error("Hero not found");
@@ -46,15 +59,37 @@ class StatService {
         };
 
         const applyMod = (statKey, val, type, src) => {
-            if (val != null && stats[statKey]) {
-                stats[statKey].addModifier(new StatModifier(val, type, src));
+            if (val != null) {
+                if (stats[statKey]) {
+                    stats[statKey].addModifier(new StatModifier(val, type, src));
+                } else if (primary[statKey]) {
+                    primary[statKey].addModifier(new StatModifier(val, type, src));
+                }
             }
         };
 
-        // 3. Apply Class Growth (AAA: Level-based gains)
+        // 3. Apply Equipment Stats with Context Logic
+        for (const eq of heroData.equipment) {
+            const item = eq.itemInstance.template;
+            
+            // CONTEXT LOGIC:
+            // Tools (PICKAXE, AXE, FISHING_ROD) only work in their specific context.
+            let isContextValid = true;
+            if (item.category === "PICKAXE" && context !== "MINING") isContextValid = false;
+            if (item.category === "AXE" && context !== "LUMBERING") isContextValid = false;
+            if (item.category === "FISHING_ROD" && context !== "FISHING") isContextValid = false;
+
+            if (isContextValid) {
+                item.stats.forEach(s => {
+                    applyMod(s.statKey, s.statValue, StatModifier.Type.FLAT, `Equip:${item.name}`);
+                });
+            }
+        }
+
+        // 4. Apply Class Growth (AAA: Level-based gains)
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.level);
 
-        // 4. AAA SCALING LOGIC (Mapping Primary to Secondary)
+        // 5. SCALING LOGIC (Primary to Secondary)
         const s = primary.str.getValue();
         const d = primary.dex.getValue();
         const i = primary.int.getValue();
