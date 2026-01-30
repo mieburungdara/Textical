@@ -1,11 +1,17 @@
 const BaseService = require('../BaseService');
 const marketValidator = require('./MarketValidator');
+const transactionManager = require('../economy/TransactionManager');
+const marketFee = require('../economy/MarketFeeComponent');
 
+/**
+ * MarketTransactionService
+ * Orchestrates the complex exchange of items and gold between users.
+ * Refactored to use modular TransactionManager and MarketFee components.
+ */
 class MarketTransactionService extends BaseService {
     constructor() {
         super();
-        this.SALES_TAX_RATE = 0.05;   // 5% Transaction Fee
-        this.NPC_BUY_RATE = 0.10;     // 90% Penalty vs BaseValue
+        this.NPC_BUY_RATE = 0.10; // NPC buys at 10% of base value
     }
 
     async purchaseItem(buyerId, listingId) {
@@ -19,51 +25,40 @@ class MarketTransactionService extends BaseService {
         if (!listing) throw new Error("Listing not found or expired.");
         if (listing.sellerId === buyerId) throw new Error("You cannot buy your own item.");
 
-        const buyer = await this.db.user.findUnique({ where: { id: buyerId } });
         const totalPrice = listing.pricePerUnit * listing.itemInstance.quantity;
+        const sellerNetProfit = marketFee.calculateSellerNet(totalPrice);
 
-        if (buyer.gold < totalPrice) throw new Error("Insufficient Gold for purchase.");
+        return await this.runTransaction(async (tx) => {
+            // 1. Debit Buyer
+            await transactionManager.removeGold(tx, buyerId, totalPrice, "MARKET_PURCHASE", listingId, "MARKET");
 
-        const salesTax = Math.floor(totalPrice * this.SALES_TAX_RATE);
-        const sellerNetProfit = totalPrice - salesTax;
+            // 2. Credit Seller (Net of Tax)
+            await transactionManager.addGold(tx, listing.sellerId, sellerNetProfit, "MARKET_SALE", listingId, "MARKET");
 
-        // Ownership Transfer (Smart Merge)
-        const existingItem = await this.db.inventoryItem.findUnique({
-            where: { userId_templateId: { userId: buyerId, templateId: listing.templateId } }
+            // 3. Ownership Transfer (Strict Relational Merge)
+            const existingItem = await tx.inventoryItem.findUnique({
+                where: { userId_templateId: { userId: buyerId, templateId: listing.templateId } }
+            });
+
+            if (existingItem) {
+                await tx.inventoryItem.update({
+                    where: { id: existingItem.id },
+                    data: { quantity: { increment: listing.itemInstance.quantity } }
+                });
+                await tx.inventoryItem.delete({ where: { id: listing.itemInstanceId } });
+            } else {
+                await tx.inventoryItem.update({
+                    where: { id: listing.itemInstanceId },
+                    data: { userId: buyerId }
+                });
+            }
+
+            // 4. Cleanup Listing
+            await tx.marketListing.delete({ where: { id: listingId } });
+
+            this.log(`Purchase successful: Buyer ${buyerId} bought from ${listing.sellerId}`, "Market");
+            return { success: true, message: "Purchase complete." };
         });
-
-        const itemOps = [];
-        if (existingItem) {
-            itemOps.push(this.db.inventoryItem.update({
-                where: { id: existingItem.id },
-                data: { quantity: { increment: listing.itemInstance.quantity } }
-            }));
-            itemOps.push(this.db.inventoryItem.delete({
-                where: { id: listing.itemInstanceId }
-            }));
-        } else {
-            itemOps.push(this.db.inventoryItem.update({
-                where: { id: listing.itemInstanceId },
-                data: { userId: buyerId }
-            }));
-        }
-
-        return await this.db.$transaction([
-            this.db.user.update({ where: { id: buyerId }, data: { gold: buyer.gold - totalPrice } }),
-            this.db.user.update({ where: { id: listing.sellerId }, data: { gold: listing.seller.gold + sellerNetProfit } }),
-            ...itemOps,
-            this.db.marketListing.delete({ where: { id: listingId } }),
-            this.db.transactionLedger.create({
-                data: {
-                    userId: listing.sellerId,
-                    type: "MARKET_SALE",
-                    currencyTier: "GOLD",
-                    amountDelta: sellerNetProfit,
-                    newBalance: listing.seller.gold + sellerNetProfit,
-                    metadata: JSON.stringify({ taxBurned: salesTax, buyerId })
-                }
-            })
-        ]);
     }
 
     async npcSell(userId, itemInstanceId) {
@@ -75,28 +70,17 @@ class MarketTransactionService extends BaseService {
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found.");
-        if (item.marketListing) throw new Error("Cannot sell an item that is currently listed on the market.");
-        if (item.equippedIn) throw new Error("Cannot sell an item that is currently equipped.");
+        if (item.marketListing || item.equippedIn) throw new Error("Item is currently locked (Market/Equipped).");
 
-        const npcPricePerUnit = Math.floor(item.template.baseValue * this.NPC_BUY_RATE);
-        const totalPayout = npcPricePerUnit * item.quantity;
+        const totalPayout = Math.floor(item.template.baseValue * this.NPC_BUY_RATE) * item.quantity;
 
-        const user = await this.db.user.findUnique({ where: { id: userId } });
+        return await this.runTransaction(async (tx) => {
+            await transactionManager.addGold(tx, userId, totalPayout, "NPC_SELL", item.templateId, "ITEM");
+            await tx.inventoryItem.delete({ where: { id: itemInstanceId } });
 
-        return await this.db.$transaction([
-            this.db.user.update({ where: { id: userId }, data: { gold: user.gold + totalPayout } }),
-            this.db.inventoryItem.delete({ where: { id: itemInstanceId } }),
-            this.db.transactionLedger.create({
-                data: {
-                    userId,
-                    type: "NPC_SELL",
-                    currencyTier: "GOLD",
-                    amountDelta: totalPayout,
-                    newBalance: user.gold + totalPayout,
-                    metadata: JSON.stringify({ templateId: item.templateId, qty: item.quantity })
-                }
-            })
-        ]);
+            this.log(`NPC Sell successful: User ${userId} sold Item ${item.templateId}`, "Market");
+            return { success: true, payout: totalPayout };
+        });
     }
 }
 

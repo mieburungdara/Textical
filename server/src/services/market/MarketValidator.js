@@ -18,7 +18,7 @@ class MarketValidator extends BaseService {
             where: { id: user.currentRegion }
         });
 
-        if (!region || region.type !== "TOWN") {
+        if (!region || region.visualType !== "TOWN") {
             throw new Error(`Market actions are forbidden in ${region ? region.name : 'the wilderness'}. Return to a Town.`);
         }
         return user;
