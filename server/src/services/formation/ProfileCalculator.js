@@ -41,7 +41,13 @@ class ProfileCalculator extends BaseService {
                 name: hs.skill.name,
                 category: hs.skill.category,
                 type: hs.skill.type,
-                metadata: JSON.parse(hs.skill.metadata)
+                // Refactored Metadata
+                statKey: hs.skill.statKey,
+                statValue: hs.skill.statValue,
+                power: hs.skill.power,
+                duration: hs.skill.duration,
+                multiplier: hs.skill.multiplier,
+                manaCost: hs.skill.manaCost
             }))
         };
 

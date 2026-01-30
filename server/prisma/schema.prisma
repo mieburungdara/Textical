@@ -1,4 +1,4 @@
-// AAA Deep Master Relational Schema (Restoring Monsters)
+// AAA Deep Master Relational Schema (v5.0 - Strict Normalization)
 generator client {
   provider = "prisma-client-js"
 }
@@ -49,7 +49,7 @@ model MonsterTemplate {
   name         String
   hp_base      Int
   damage_base  Int
-  behaviorTree String   @default("SimpleAI") // Nama file JSON di folder bt/
+  behaviorTree String   @default("SimpleAI") 
   categoryId   Int
   category     MonsterCategory @relation(fields: [categoryId], references: [id])
   loot         MonsterLootEntry[]
@@ -97,12 +97,12 @@ model ItemTemplate {
   rarity          String   @default("COMMON")
   isTwoHanded     Boolean  @default(false)
   
-  // AAA Mineral Metadata
-  hardness        Int      @default(1) // Mining difficulty multiplier
-  minStr          Int      @default(0) // Minimum Strength required to mine
-  minToolTier     Int      @default(0) // Minimum Tool Tier (Pickaxe) required
-  toolTier        Int      @default(0) // If this is a tool, what is its tier?
-  elementalAffinity Int    @default(0) // Matches CombatRules.ELEMENTS
+  // Mining/Gathering Metadata (Normalized)
+  hardness        Int      @default(1)
+  minStr          Int      @default(0)
+  minToolTier     Int      @default(0)
+  toolTier        Int      @default(0)
+  elementalAffinity Int    @default(0)
   
   traits          ItemTrait[]
   equipSlots      ItemEquipSlot[]
@@ -123,7 +123,7 @@ model RegionTemplate {
   visualType      String   @default("TOWN")
   type            RegionType @relation(fields: [visualType], references: [id])
   dangerLevel     Int      @default(1)
-  metadata        String   @default("{}") 
+  
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]
@@ -134,13 +134,26 @@ model RegionTemplate {
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
   residents       User[]
+  incomingTeleportRoutes NPCTeleportRoute[]
 }
 
 model WorldEventTemplate {
   id            Int      @id
   name          String
   description   String
-  metadata      String   @default("{}") // JSON for modifiers (mining_yield, def_mult, etc)
+  
+  // Normalized Modifiers
+  combatAtkMult     Float?
+  combatDefMult     Float?
+  miningYieldMult   Float?
+  lumberingYieldMult Float?
+  herbalismYieldMult Float?
+  fishingYieldMult   Float?
+  expGainMult       Float?
+  lootChanceMult    Float?
+  statIntBonus      Int?
+  dangerLevelBonus  Int?
+
   activeEvents  ActiveEvent[]
 }
 
@@ -163,7 +176,6 @@ model RegionNPC {
   npcId         Int
   npc           NPCTemplate @relation(fields: [npcId], references: [id])
   
-  // Instance metadata (for dynamic spawns)
   spawnChance   Float    @default(1.0)
   isTemporary   Boolean  @default(false)
   expiresAt     DateTime?
@@ -174,13 +186,30 @@ model RegionNPC {
 model NPCTemplate {
   id            Int      @id
   name          String
-  title         String   // e.g. "Grandmaster Smith", "Wandering Trader"
+  title         String   
   description   String
-  type          String   // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, LORE_TELLER
-  metadata      String   @default("{}") // JSON for shop items, quest IDs, etc.
+  type          String   // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, GAMBLER, TELEPORTER
+  
+  // Normalized NPC Properties
+  isWanderer    Boolean  @default(false)
+  healCost      Int?
+  betMultiplier Float?
+  betWinChance  Float?
+  travelCost    Int?
   
   regions       RegionNPC[]
   shopItems     NPCShopItem[]
+  teleportRoutes NPCTeleportRoute[]
+}
+
+model NPCTeleportRoute {
+  id            Int      @id @default(autoincrement())
+  npcId         Int
+  npc           NPCTemplate @relation(fields: [npcId], references: [id])
+  targetRegionId Int
+  targetRegion  RegionTemplate @relation(fields: [targetRegionId], references: [id])
+  
+  @@unique([npcId, targetRegionId])
 }
 
 model NPCShopItem {
@@ -190,7 +219,7 @@ model NPCShopItem {
   itemId        Int
   item          ItemTemplate @relation(fields: [itemId], references: [id])
   priceGold     Int
-  stock         Int      @default(-1) // -1 for infinite
+  stock         Int      @default(-1)
 }
 
 model RegionMonster {
@@ -214,10 +243,10 @@ model TerrainEffect {
   regionTypeId  String
   regionType    RegionType @relation(fields: [regionTypeId], references: [id])
   effectType    String   // BURN, SLOW, HEAL, DRAIN, NO_MANA
-  chance        Float    @default(1.0) // 0.0 to 1.0
+  chance        Float    @default(1.0)
   power         Float    @default(0)
-  statKey       String?  // e.g. "speed"
-  statValue     Float?   // e.g. -0.3
+  statKey       String?  
+  statValue     Float?   
   tickInterval  Int      @default(1)
 }
 
@@ -323,14 +352,13 @@ model Hero {
   classLevel  Int      @default(1)
   classXp     Int      @default(0)
   
-  // Legacy fields (kept for migration safety, will be deprecated)
+  // Legacy fields (Deprecated)
   level       Int      @default(1)
   xp          Int      @default(0)
   
   hp_base     Int      @default(100)
   damage_base Int      @default(10)
   
-  // Primary Attributes
   str         Int      @default(10)
   dex         Int      @default(10)
   int         Int      @default(10)
@@ -357,7 +385,14 @@ model SkillTemplate {
   description   String
   category      String   // ACTIVE, PASSIVE
   type          String   // DAMAGE, HEAL, BUFF, DEBUFF
-  metadata      String   @default("{}") // JSON for power, duration, etc.
+  
+  // Normalized Effect Columns
+  statKey       String?  
+  statValue     Float?
+  power         Float?
+  duration      Int?     
+  multiplier    Float?   
+  manaCost      Int      @default(0)
   
   classTrees    ClassSkillTree[]
   heroSkills    HeroSkill[]
@@ -403,9 +438,9 @@ model HeroBuff {
   id            Int      @id @default(autoincrement())
   heroId        Int
   hero          Hero     @relation(fields: [heroId], references: [id])
-  itemId        Int?     // Originating item (optional)
-  name          String   // Display Name (e.g. "Satiated", "Dragon's Might")
-  statKey       String   // e.g. "str", "dex", "attack_damage"
+  itemId        Int?     
+  name          String   
+  statKey       String   
   statValue     Float
   isPercent     Boolean  @default(false)
   expiresAt     DateTime
@@ -416,26 +451,24 @@ model ClassTemplate {
   id              Int      @id
   name            String
   tier            Int      @default(1)
-  resourceType    String   @default("MANA") // MANA, RAGE, ENERGY
+  resourceType    String   @default("MANA") 
   
-  // AAA Metadata for Player Info
   focus           String   @default("General")
   identity        String   @default("A versatile starting point.")
-  description     String   @default("") // NEW: Long-form lore and details
+  description     String   @default("") 
   growthDesc      String   @default("Balanced growth across all stats.")
   mechanicDesc    String   @default("Uses standard Mana.")
-  leadsTo         String   @default("") // CSV of class names
   
-  // Growth per level
   hpGrowth        Float    @default(5)
   mpGrowth        Float    @default(2)
   atkGrowth       Float    @default(1)
   defGrowth       Float    @default(0.5)
   spdGrowth       Float    @default(0.1)
   
-  // Promotion logic
   promotionReqLevel Int    @default(20)
   parentClassId     Int?
+  parentClass       ClassTemplate? @relation("ClassEvolution", fields: [parentClassId], references: [id])
+  childClasses      ClassTemplate[] @relation("ClassEvolution")
   
   heroes          Hero[]
   mastery         HeroClassMastery[]
@@ -508,7 +541,7 @@ model InventoryItem {
   marketListing MarketListing?
   equippedIn    HeroEquipment?
 
-  @@unique([userId, templateId]) // NEW: Unique constraint for easier stacking
+  @@unique([userId, templateId]) 
 }
 
 model MarketListing {
@@ -549,7 +582,7 @@ model QuestObjective {
   id              Int      @id @default(autoincrement())
   stageId         Int
   stage           QuestStage @relation(fields: [stageId], references: [id])
-  type            String   // KILL, GATHER, TRAVEL, INTERACT
+  type            String   
   targetId        Int      
   amount          Int      @default(1)
   description     String
@@ -559,7 +592,7 @@ model QuestReward {
   id              Int      @id @default(autoincrement())
   stageId         Int
   stage           QuestStage @relation(fields: [stageId], references: [id])
-  type            String   // GOLD, EXP, ITEM
+  type            String   
   itemId          Int?
   amount          Int      @default(1)
 }
@@ -572,7 +605,7 @@ model UserQuest {
   quest         QuestTemplate @relation(fields: [questId], references: [id])
   currentStageId Int?
   currentStage   QuestStage? @relation("CurrentStageRelation", fields: [currentStageId], references: [id])
-  status        String   @default("ACTIVE") // ACTIVE, COMPLETED, FAILED
+  status        String   @default("ACTIVE") 
 }
 
 model Mail {
@@ -645,7 +678,8 @@ model TransactionLedger {
   currencyTier  String   
   amountDelta   Int      
   newBalance    Int      
-  metadata      String   @default("{}") 
+  sourceId      Int?     
+  sourceType    String?  
   createdAt     DateTime @default(now())
 }
 

@@ -6,7 +6,7 @@ const scalingComponent = require('./stat/ScalingComponent');
 /**
  * StatService
  * The thin orchestrator for hero stat calculation.
- * Uses inheritance (BaseService) and composition (ScalingComponent).
+ * Refactored for strictly relational data (no JSON parsing).
  */
 class StatService extends BaseService {
     async calculateHeroStats(heroId, context = "GLOBAL") {
@@ -40,7 +40,7 @@ class StatService extends BaseService {
             }
         };
 
-        // --- AAA WORLD EVENT INTEGRATION ---
+        // 2. AAA WORLD EVENT INTEGRATION (Strict Relational)
         if (heroData.user) {
             const activeEvents = await this.db.activeEvent.findMany({
                 where: { regionId: heroData.user.currentRegion, expiresAt: { gt: now } },
@@ -48,38 +48,33 @@ class StatService extends BaseService {
             });
 
             for (const ae of activeEvents) {
-                const eventMeta = JSON.parse(ae.template.metadata);
-                // Apply Stat Bonuses (e.g., stat_int_bonus)
-                Object.entries(eventMeta).forEach(([key, val]) => {
-                    if (key.startsWith("stat_")) {
-                        const statKey = key.replace("stat_", "").replace("_bonus", "");
-                        applyMod(statKey, val, 0, `Event:${ae.template.name}`);
-                    }
-                    // Apply Multipliers (e.g., combat_def_mult)
-                    if (key.endsWith("_mult")) {
-                        const statKey = key.replace("combat_", "").replace("_mult", "");
-                        if (stats[statKey]) applyMod(statKey, val - 1.0, 1, `Event:${ae.template.name}`);
-                    }
-                });
+                const t = ae.template;
+                applyMod('int', t.statIntBonus, 0, `Event:${t.name}`);
+                if (t.combatAtkMult) applyMod('attack_damage', t.combatAtkMult - 1.0, 1, `Event:${t.name}`);
+                if (t.combatDefMult) applyMod('defense', t.combatDefMult - 1.0, 1, `Event:${t.name}`);
             }
         }
 
-        // 2. Composition: Equipment
+        // 3. Composition: Equipment
         this._applyEquipment(heroData.equipment, context, applyMod);
 
-        // 3. Composition: Buffs
+        // 4. Composition: Buffs
         heroData.buffs.forEach(b => applyMod(b.statKey, b.statValue, b.isPercent ? 1 : 0, `Buff:${b.name}`));
 
-        // 4. Composition: Skills
-        this._applySkills(heroData.skills, applyMod);
+        // 5. Composition: Skills (Strict Relational)
+        heroData.skills.forEach(hs => {
+            if (hs.skill.category === "PASSIVE") {
+                applyMod(hs.skill.statKey, hs.skill.statValue, 0, `Skill:${hs.skill.name}`);
+            }
+        });
 
-        // 5. Composition: Class Growth
+        // 6. Composition: Class Growth
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.classLevel);
 
-        // 6. Composition: Attribute Scaling (Modular Logic)
+        // 7. Composition: Attribute Scaling
         scalingComponent.applyAttributeScaling(primary, stats, applyMod);
 
-        // 7. Finalize
+        // 8. Finalize
         const finalStats = Object.fromEntries(Object.entries(stats).map(([k, s]) => [k, s.getValue()]));
         finalStats.attributes = { 
             str: primary.str.getValue(), dex: primary.dex.getValue(), 
@@ -115,17 +110,6 @@ class StatService extends BaseService {
 
             if (valid) {
                 item.stats.forEach(s => applyMod(s.statKey, s.statValue, 0, `Equip:${item.name}`));
-            }
-        }
-    }
-
-    _applySkills(skills, applyMod) {
-        for (const hs of skills) {
-            if (hs.skill.category === "PASSIVE") {
-                try {
-                    const meta = JSON.parse(hs.skill.metadata);
-                    if (meta.statKey && meta.statValue) applyMod(meta.statKey, meta.statValue, 0, `Skill:${hs.skill.name}`);
-                } catch (e) {}
             }
         }
     }

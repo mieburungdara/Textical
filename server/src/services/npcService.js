@@ -6,6 +6,7 @@ const promotionService = require('./promotionService');
 /**
  * NPCService
  * Thin orchestrator for world inhabitants and interactions.
+ * Refactored for strictly relational data.
  */
 class NPCService extends BaseService {
     async getAvailableNPCs(regionId) {
@@ -15,7 +16,14 @@ class NPCService extends BaseService {
                 regionId,
                 OR: [{ isTemporary: false }, { expiresAt: { gt: now } }]
             },
-            include: { npc: { include: { shopItems: { include: { item: true } } } } }
+            include: { 
+                npc: { 
+                    include: { 
+                        shopItems: { include: { item: true } },
+                        teleportRoutes: true
+                    } 
+                } 
+            }
         });
 
         return regionNPCs.map(rn => ({
@@ -23,14 +31,16 @@ class NPCService extends BaseService {
             name: rn.npc.name, title: rn.npc.title,
             type: rn.npc.type, description: rn.npc.description,
             shop: rn.npc.shopItems,
-            metadata: JSON.parse(rn.npc.metadata)
+            teleportRoutes: rn.npc.teleportRoutes
         }));
     }
 
     async interactWithNPC(userId, heroId, npcId, action, params = {}) {
-        const npc = await this.db.nPCTemplate.findUnique({ where: { id: npcId } });
+        const npc = await this.db.nPCTemplate.findUnique({ 
+            where: { id: npcId },
+            include: { teleportRoutes: true }
+        });
         if (!npc) throw new Error("NPC not found.");
-        const meta = JSON.parse(npc.metadata);
 
         this.log(`Hero ${heroId} interacting with ${npc.name} (${action})`, "NPC");
 
@@ -40,31 +50,33 @@ class NPCService extends BaseService {
             case "PROMOTE":
                 return await promotionService.promoteHero(heroId, params.targetClassId);
             case "GAMBLE":
-                return await interactionHandler.handleGamble(this.db, userId, meta, params.betAmount);
+                return await interactionHandler.handleGamble(this.db, userId, npc, params.betAmount);
             case "TELEPORT":
-                return await this._handleTeleport(userId, meta, params.destinationId);
+                return await this._handleTeleport(userId, npc, params.destinationId);
             case "BUFF":
-                return await interactionHandler.handleBuff(this.db, heroId, userId, meta);
+                return await interactionHandler.handleBuff(this.db, heroId, userId, npc);
             case "HEAL":
-                return await interactionHandler.handleHeal(this.db, heroId, userId, meta);
+                return await interactionHandler.handleHeal(this.db, heroId, userId, npc);
             default:
                 throw new Error(`Action ${action} not supported.`);
         }
     }
 
-    async _handleTeleport(userId, meta, destId) {
-        if (!meta.destinationRegions.includes(destId)) throw new Error("Invalid destination.");
+    async _handleTeleport(userId, npc, destId) {
+        const validRoute = npc.teleportRoutes.find(r => r.targetRegionId === destId);
+        if (!validRoute) throw new Error("This NPC cannot teleport you there.");
         
         return await this.runTransaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
-            if (user.gold < meta.costPerTravel) throw new Error("Insufficient gold.");
+            const cost = npc.travelCost || 200;
+            if (user.gold < cost) throw new Error("Insufficient gold.");
 
             await tx.user.update({
                 where: { id: userId },
-                data: { gold: { decrement: meta.costPerTravel }, currentRegion: destId }
+                data: { gold: { decrement: cost }, currentRegion: destId }
             });
 
-            return { success: true, message: `Teleported to ${destId}.` };
+            return { success: true, message: `Teleported to Region ${destId}.` };
         });
     }
 }
