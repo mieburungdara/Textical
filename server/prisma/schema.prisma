@@ -113,6 +113,7 @@ model ItemTemplate {
   ingredients     RecipeIngredient[]
   regionResources RegionResource[]
   taskTargets     TaskQueue[]
+  shopAppearances NPCShopItem[]
 }
 
 model RegionTemplate {
@@ -127,10 +128,48 @@ model RegionTemplate {
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]
   monsters        RegionMonster[]
+  npcs            RegionNPC[]
   travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
   residents       User[]
+}
+
+model RegionNPC {
+  id            Int      @id @default(autoincrement())
+  regionId      Int
+  region        RegionTemplate @relation(fields: [regionId], references: [id])
+  npcId         Int
+  npc           NPCTemplate @relation(fields: [npcId], references: [id])
+  
+  // Instance metadata (for dynamic spawns)
+  spawnChance   Float    @default(1.0)
+  isTemporary   Boolean  @default(false)
+  expiresAt     DateTime?
+  
+  @@unique([regionId, npcId])
+}
+
+model NPCTemplate {
+  id            Int      @id
+  name          String
+  title         String   // e.g. "Grandmaster Smith", "Wandering Trader"
+  description   String
+  type          String   // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, LORE_TELLER
+  metadata      String   @default("{}") // JSON for shop items, quest IDs, etc.
+  
+  regions       RegionNPC[]
+  shopItems     NPCShopItem[]
+}
+
+model NPCShopItem {
+  id            Int      @id @default(autoincrement())
+  npcId         Int
+  npc           NPCTemplate @relation(fields: [npcId], references: [id])
+  itemId        Int
+  item          ItemTemplate @relation(fields: [itemId], references: [id])
+  priceGold     Int
+  stock         Int      @default(-1) // -1 for infinite
 }
 
 model RegionMonster {
