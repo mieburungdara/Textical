@@ -50,10 +50,12 @@ class GatheringService {
         // Categorize based on Target Material ID range
         const isWood = resource.itemId >= 2400 && resource.itemId < 2500;
         const isPlant = resource.itemId >= 2800 && resource.itemId < 2900;
+        const isFish = resource.itemId >= 3300 && resource.itemId < 3400;
         
-        if (isPlant) {
-            // Foraging (Plants) requires no special tool but scales with INT
-            const duration = Math.ceil(resource.gatherTimeSeconds / Math.max(0.5, heroData.int / 10));
+        if (isPlant || isFish) {
+            // Herbalism (INT) or Fishing (DEX) requires no special tool but scales with specific stat
+            const statValue = isPlant ? heroData.int : heroData.dex;
+            const duration = Math.ceil(resource.gatherTimeSeconds / Math.max(0.5, statValue / 10));
             const now = new Date();
             const finishesAt = new Date(now.getTime() + (duration * 1000));
 
