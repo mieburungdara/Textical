@@ -1,40 +1,48 @@
 const BaseService = require('../BaseService');
 
 /**
- * RewardDistributor
- * Calculates and awards quest completion payouts.
+ * AAA RewardDistributor (Multi-Stage Aware)
+ * Awards stage-specific prizes and handles phase transitions.
  */
 class RewardDistributor extends BaseService {
     async award(userId, userQuest) {
-        let totalGoldReward = 0;
-        for (const reward of userQuest.quest.rewards) {
-            if (reward.type === "GOLD") {
-                totalGoldReward += reward.amount;
-            }
-        }
+        const currentStage = userQuest.currentStage;
+        if (!currentStage) throw new Error("No active stage found.");
 
-        const user = await this.db.user.findUnique({ where: { id: userId } });
+        const nextStage = await this.db.questStage.findFirst({
+            where: { questId: userQuest.questId, order: currentStage.order + 1 }
+        });
 
-        return await this.db.$transaction([
-            this.db.userQuest.update({
-                where: { id: userQuest.id },
-                data: { status: "COMPLETED" }
-            }),
-            this.db.user.update({
-                where: { id: userId },
-                data: { gold: user.gold + totalGoldReward }
-            }),
-            this.db.transactionLedger.create({
-                data: {
-                    userId,
-                    type: "QUEST_REWARD",
-                    currencyTier: "GOLD",
-                    amountDelta: totalGoldReward,
-                    newBalance: user.gold + totalGoldReward,
-                    metadata: JSON.stringify({ questId: userQuest.questId })
+        return await this.runTransaction(async (tx) => {
+            // 1. Distribute Current Stage Rewards
+            for (const r of currentStage.rewards) {
+                if (r.type === "GOLD") {
+                    await tx.user.update({ where: { id: userId }, data: { gold: { increment: r.amount } } });
+                } else if (r.type === "ITEM" && r.itemId) {
+                    await tx.inventoryItem.upsert({
+                        where: { userId_templateId: { userId, templateId: r.itemId } },
+                        update: { quantity: { increment: r.amount } },
+                        create: { userId, templateId: r.itemId, quantity: r.amount }
+                    });
                 }
-            })
-        ]);
+                // EXP rewarded separately or ignored for now
+            }
+
+            // 2. Handle Transition or Completion
+            if (nextStage) {
+                await tx.userQuest.update({
+                    where: { id: userQuest.id },
+                    data: { currentStageId: nextStage.id }
+                });
+                return { success: true, finished: false, nextStage: nextStage.name };
+            } else {
+                await tx.userQuest.update({
+                    where: { id: userQuest.id },
+                    data: { status: "COMPLETED", currentStageId: null }
+                });
+                return { success: true, finished: true, message: "Quest Fully Completed!" };
+            }
+        });
     }
 }
 

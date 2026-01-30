@@ -506,16 +506,29 @@ model QuestTemplate {
   id              Int      @id
   name            String
   description     String
+  stages          QuestStage[]
+  userQuests      UserQuest[]
+}
+
+model QuestStage {
+  id              Int      @id @default(autoincrement())
+  questId         Int
+  quest           QuestTemplate @relation(fields: [questId], references: [id])
+  order           Int      @default(1)
+  name            String
+  description     String
   objectives      QuestObjective[]
   rewards         QuestReward[]
-  userQuests      UserQuest[]
+  userQuests      UserQuest[] @relation("CurrentStageRelation")
+  
+  @@unique([questId, order])
 }
 
 model QuestObjective {
   id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String   
+  stageId         Int
+  stage           QuestStage @relation(fields: [stageId], references: [id])
+  type            String   // KILL, GATHER, TRAVEL, INTERACT
   targetId        Int      
   amount          Int      @default(1)
   description     String
@@ -523,9 +536,10 @@ model QuestObjective {
 
 model QuestReward {
   id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  type            String   
+  stageId         Int
+  stage           QuestStage @relation(fields: [stageId], references: [id])
+  type            String   // GOLD, EXP, ITEM
+  itemId          Int?
   amount          Int      @default(1)
 }
 
@@ -535,7 +549,9 @@ model UserQuest {
   user          User     @relation(fields: [userId], references: [id])
   questId       Int
   quest         QuestTemplate @relation(fields: [questId], references: [id])
-  status        String   @default("ACTIVE")
+  currentStageId Int?
+  currentStage   QuestStage? @relation("CurrentStageRelation", fields: [currentStageId], references: [id])
+  status        String   @default("ACTIVE") // ACTIVE, COMPLETED, FAILED
 }
 
 model Mail {
