@@ -34,7 +34,7 @@ model User {
 
   heroes        Hero[]
   inventory     InventoryItem[]
-  listings      MarketListing[]
+  marketOrders  MarketOrder[]
   ledger        TransactionLedger[]
   activeQuests  UserQuest[]
   receivedMail  Mail[]   @relation("ReceiverRelation")
@@ -109,7 +109,7 @@ model ItemTemplate {
   equipSlots      ItemEquipSlot[]
   stats           ItemStat[]
   instances       InventoryItem[]
-  marketListings  MarketListing[]
+  marketOrders    MarketOrder[]
   recipeResult    RecipeTemplate[]
   ingredients     RecipeIngredient[]
   regionResources RegionResource[]
@@ -132,6 +132,7 @@ model RegionTemplate {
   monsters        RegionMonster[]
   npcs            RegionNPC[]
   activeEvents    ActiveEvent[]
+  marketOrders    MarketOrder[]
   travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
@@ -561,22 +562,33 @@ model InventoryItem {
   templateId  Int
   template    ItemTemplate @relation(fields: [templateId], references: [id])
   quantity    Int      @default(1)
-  marketListing MarketListing?
+  marketOrders MarketOrder[]
   equippedIn    HeroEquipment?
 
   @@unique([userId, templateId]) 
 }
 
-model MarketListing {
+model MarketOrder {
   id              Int      @id @default(autoincrement())
-  sellerId        Int
-  seller          User     @relation(fields: [sellerId], references: [id])
+  creatorId       Int
+  creator         User     @relation(fields: [creatorId], references: [id])
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
   templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  itemInstanceId  Int      @unique
-  itemInstance    InventoryItem @relation(fields: [itemInstanceId], references: [id])
+  
+  type            String   // BUY, SELL
   pricePerUnit    Int
+  initialQuantity Int
+  remainingQuantity Int
+  
+  // For SELL orders, we optionally link to the specific instance being sold
+  itemInstanceId  Int?     
+  itemInstance    InventoryItem? @relation(fields: [itemInstanceId], references: [id])
+  
+  status          String   @default("OPEN") // OPEN, FILLED, CANCELLED, EXPIRED
   expiresAt       DateTime
+  createdAt       DateTime @default(now())
 }
 
 model QuestTemplate {
