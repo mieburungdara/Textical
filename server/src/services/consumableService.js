@@ -11,11 +11,11 @@ class ConsumableService {
         });
         if (!inv || inv.quantity < 1) throw new Error("Insufficient quantity.");
 
-        // 2. Define Buff Logic (Simplified for 25 dishes)
+        // 2. Define Buff Logic
         const buffData = this._getBuffData(templateId);
         if (!buffData) throw new Error("This item has no effect.");
 
-        // 3. Apply Buff in Transaction
+        // 3. Apply Buff or Permanent Stat in Transaction
         return await prisma.$transaction(async (tx) => {
             // Decrement inventory
             if (inv.quantity === 1) {
@@ -24,6 +24,16 @@ class ConsumableService {
                 await tx.inventoryItem.update({
                     where: { id: inv.id },
                     data: { quantity: { decrement: 1 } }
+                });
+            }
+
+            // PERMANENT STAT LOGIC
+            if (buffData.isPermanent) {
+                const updateData = {};
+                updateData[buffData.statKey] = { increment: buffData.statValue };
+                return await tx.hero.update({
+                    where: { id: heroId },
+                    data: updateData
                 });
             }
 
@@ -47,28 +57,24 @@ class ConsumableService {
 
     _getBuffData(id) {
         const data = {
-            // ... (Previous dishes)
+            // DISHES
             4201: { statKey: "str", statValue: 2, durationSeconds: 600 },
             4202: { statKey: "int", statValue: 2, durationSeconds: 600 },
             4203: { statKey: "dex", statValue: 2, durationSeconds: 600 },
             4204: { statKey: "vit", statValue: 2, durationSeconds: 600 },
             4205: { statKey: "health_max", statValue: 50, durationSeconds: 600 },
-            4206: { statKey: "str", statValue: 5, durationSeconds: 900 },
-            4211: { statKey: "dex", statValue: 10, durationSeconds: 1200 },
-            4221: { statKey: "str", statValue: 50, durationSeconds: 3600 },
-            4225: { statKey: "str", statValue: 25, durationSeconds: 3600 },
-
-            // ADVANCED ELIXIRS
+            
+            // ELIXIRS
             4401: { statKey: "hp_regen", statValue: 5, durationSeconds: 1200 },
             4402: { statKey: "mana_regen", statValue: 5, durationSeconds: 1200 },
             4411: { statKey: "str", statValue: 20, durationSeconds: 1800 },
             
-            // MYTHICAL ELIXIRS (Now Temporary Buffs)
-            4421: { statKey: "str", statValue: 50, durationSeconds: 3600 },
-            4422: { statKey: "dex", statValue: 50, durationSeconds: 3600 },
-            4423: { statKey: "int", statValue: 50, durationSeconds: 3600 },
-            4424: { statKey: "vit", statValue: 50, durationSeconds: 3600 },
-            4425: { statKey: "str", statValue: 25, durationSeconds: 3600, isPercent: true } // Elixir of Gods: +25% STR
+            // PERMANENT STAT ELIXIRS
+            4421: { statKey: "str", statValue: 1, isPermanent: true },
+            4422: { statKey: "dex", statValue: 1, isPermanent: true },
+            4423: { statKey: "int", statValue: 1, isPermanent: true },
+            4424: { statKey: "vit", statValue: 1, isPermanent: true },
+            4425: { statKey: "str", statValue: 1, isPermanent: true } // Elixir of Gods
         };
         return data[id];
     }

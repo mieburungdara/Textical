@@ -37,6 +37,12 @@ async function runNPCAudit() {
     const itemToBuy = 4425; // Elixir of the Gods
     await prisma.user.update({ where: { id: userId }, data: { gold: 100000, maxInventorySlots: 100 } });
     
+    // Ensure stock
+    await prisma.nPCShopItem.updateMany({
+        where: { npcId: zevId, itemId: itemToBuy },
+        data: { stock: 5 }
+    });
+    
     const tradeRes = await npcService.interactWithNPC(userId, heroId, zevId, "PURCHASE", { itemId: itemToBuy });
     console.log(`   Trade Result: ${tradeRes.message}`);
 

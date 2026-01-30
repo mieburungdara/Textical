@@ -26,8 +26,9 @@ async function runCulinaryAudit() {
     });
 
     // 2. Check Baseline STR
-    const baseline = await statService.calculateHeroStats(heroId);
-    console.log(`   Baseline STR: ${baseline.attributes.str}`);
+    const baselineStats = await statService.calculateHeroStats(heroId);
+    const baseline = baselineStats.attributes.str;
+    console.log(`   Baseline STR: ${baseline}`);
 
     // 3. Consume Food
     console.log("[2/4] Consuming Roasted Boar Shank...");
@@ -38,11 +39,13 @@ async function runCulinaryAudit() {
 
     // 4. Check Buffed STR
     console.log("[3/4] Verifying stat buff application...");
-    const buffed = await statService.calculateHeroStats(heroId);
-    console.log(`   Buffed STR: ${buffed.attributes.str} (Expected: 12)`);
+    const buffedStats = await statService.calculateHeroStats(heroId);
+    const buffed = buffedStats.attributes.str;
+    const expected = baseline + 2;
+    console.log(`   Buffed STR: ${buffed} (Expected: ${expected})`);
 
     // 5. Cleanup & Result
-    if (inv.quantity === 4 && buffed.attributes.str === 12) {
+    if (inv.quantity === 4 && buffed === expected) {
         console.log("\n🌟 FINAL VERDICT: CULINARY BUFF SYSTEM PERFECT.");
     } else {
         console.log("\n❌ FINAL VERDICT: LOGIC FAILURE.");

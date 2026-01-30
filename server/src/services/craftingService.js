@@ -1,89 +1,79 @@
-const prisma = require('../db');
-
-const vitalityService = require('./vitalityService');
+const BaseService = require('./BaseService');
+const validator = require('./crafting/CraftingValidator');
 const inventoryService = require('./inventoryService');
+const vitalityService = require('./vitalityService');
 
-class CraftingService {
+/**
+ * CraftingService
+ * Thin orchestrator for material refining and equipment production.
+ */
+class CraftingService extends BaseService {
     constructor() {
-        this.BASE_CRAFTING_VITALITY_COST = 10;
+        super();
+        this.BASE_VITALITY_COST = 10;
     }
 
     async startCrafting(userId, recipeId) {
-        const user = await prisma.user.findUnique({
+        const user = await this.db.user.findUnique({
             where: { id: userId },
-            include: { 
-                taskQueue: { where: { status: "RUNNING" } },
-                recipes: { where: { recipeId: recipeId } }
-            }
+            include: { taskQueue: { where: { status: "RUNNING" } } }
         });
 
-        if (user.taskQueue.length > 0) throw new Error("You are too busy to start crafting right now.");
-
-        const region = await prisma.regionTemplate.findUnique({ where: { id: user.currentRegion } });
-        if (!region || region.visualType !== "TOWN") throw new Error("Town-only.");
-        
-        const recipe = await prisma.recipeTemplate.findUnique({
+        const region = await this.db.regionTemplate.findUnique({ where: { id: user.currentRegion } });
+        const recipe = await this.db.recipeTemplate.findUnique({
             where: { id: recipeId },
             include: { ingredients: { include: { item: true } } }
         });
 
-        // Unified Slot Check
+        if (!user || !recipe) throw new Error("Invalid crafting request.");
+
+        // 1. Validations
+        validator.validateAvailability(user);
+        validator.validateLocation(region);
+        
         const hasSpace = await inventoryService.hasSpace(userId, recipe.resultItemId);
         if (!hasSpace) throw new Error("Inventory full.");
 
-        for (const ingredient of recipe.ingredients) {
-            const inv = await prisma.inventoryItem.findFirst({
-                where: { 
-                    userId, 
-                    templateId: ingredient.itemId,
-                    marketListing: null, // NOT LISTED
-                    equippedIn: null     // NOT EQUIPPED
+        await validator.checkMaterials(this.db, userId, recipe.ingredients);
+
+        // 2. Resource Consumption
+        return await this.runTransaction(async (tx) => {
+            await vitalityService.consumeVitality(userId, this.BASE_VITALITY_COST);
+
+            for (const ing of recipe.ingredients) {
+                const inv = await tx.inventoryItem.findUnique({
+                    where: { userId_templateId: { userId, templateId: ing.itemId } }
+                });
+                
+                if (inv.quantity === ing.quantity) {
+                    await tx.inventoryItem.delete({ where: { id: inv.id } });
+                } else {
+                    await tx.inventoryItem.update({
+                        where: { userId_templateId: { userId, templateId: ing.itemId } },
+                        data: { quantity: { decrement: ing.quantity } }
+                    });
+                }
+            }
+
+            const now = new Date();
+            const finishesAt = new Date(now.getTime() + (recipe.craftTimeSeconds * 1000));
+
+            this.log(`Hero starting recipe ${recipe.name}`, "Crafting");
+            return await tx.taskQueue.create({
+                data: {
+                    userId, type: "CRAFTING", targetItemId: recipe.resultItemId,
+                    status: "RUNNING", startedAt: now, finishesAt: finishesAt
                 }
             });
-            if (!inv || inv.quantity < ingredient.quantity) throw new Error(`Missing materials: ${ingredient.item.name}. (Check if items are equipped or listed on market)`);
-        }
-
-        await vitalityService.consumeVitality(userId, this.BASE_CRAFTING_VITALITY_COST);
-        
-        for (const ing of recipe.ingredients) {
-            const inv = await prisma.inventoryItem.findUnique({
-                where: { userId_templateId: { userId, templateId: ing.itemId } }
-            });
-            
-            if (inv.quantity === ing.quantity) {
-                await prisma.inventoryItem.delete({
-                    where: { id: inv.id }
-                });
-            } else {
-                await prisma.inventoryItem.update({
-                    where: { userId_templateId: { userId, templateId: ing.itemId } },
-                    data: { quantity: { decrement: ing.quantity } }
-                });
-            }
-        }
-
-        const now = new Date();
-        const finishesAt = new Date(now.getTime() + (recipe.craftTimeSeconds * 1000));
-
-        return await prisma.taskQueue.create({
-            data: {
-                userId, type: "CRAFTING", targetItemId: recipe.resultItemId,
-                status: "RUNNING", startedAt: now, finishesAt: finishesAt
-            }
         });
     }
 
     async completeCrafting(userId, taskId) {
-        const task = await prisma.taskQueue.findUnique({ where: { id: taskId } });
+        const task = await this.db.taskQueue.findUnique({ where: { id: taskId } });
         if (!task || task.status !== "RUNNING") return;
 
-        // Unified Item Addition
         await inventoryService.addItem(userId, task.targetItemId, 1);
-
-        return await prisma.taskQueue.update({
-            where: { id: taskId },
-            data: { status: "COMPLETED" }
-        });
+        return await this.db.taskQueue.update({ where: { id: taskId }, data: { status: "COMPLETED" } });
     }
 }
 
