@@ -107,10 +107,31 @@ class GatheringService extends BaseService {
     }
 
     async completeGathering(userId, taskId) {
-        const task = await this.db.taskQueue.findUnique({ where: { id: taskId } });
+        const task = await this.db.taskQueue.findUnique({ 
+            where: { id: taskId },
+            include: { user: true }
+        });
         if (!task || task.status !== "RUNNING") return;
 
-        await inventoryService.addItem(userId, task.targetItemId, 1);
+        // --- AAA WORLD EVENT YIELD INTEGRATION ---
+        let yieldQuantity = 1;
+        const now = new Date();
+        const activeEvents = await this.db.activeEvent.findMany({
+            where: { regionId: task.user.currentRegion, expiresAt: { gt: now } },
+            include: { template: true }
+        });
+
+        const { context } = this._getHarvestContext(task.targetItemId);
+        const multKey = `${context.toLowerCase()}_yield_mult`;
+
+        for (const ae of activeEvents) {
+            const meta = JSON.parse(ae.template.metadata);
+            if (meta[multKey]) {
+                yieldQuantity = Math.floor(yieldQuantity * meta[multKey]);
+            }
+        }
+
+        await inventoryService.addItem(userId, task.targetItemId, Math.max(1, yieldQuantity));
         return await this.db.taskQueue.update({ where: { id: taskId }, data: { status: "COMPLETED" } });
     }
 }

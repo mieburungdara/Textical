@@ -15,6 +15,7 @@ class StatService extends BaseService {
         const heroData = await this.db.hero.findUnique({
             where: { id: heroId },
             include: { 
+                user: true,
                 combatClass: true,
                 skills: { where: { isActive: true }, include: { skill: true } },
                 buffs: { where: { expiresAt: { gt: now } } },
@@ -38,6 +39,30 @@ class StatService extends BaseService {
                 else if (primary[statKey]) primary[statKey].addModifier(new StatModifier(val, type, src));
             }
         };
+
+        // --- AAA WORLD EVENT INTEGRATION ---
+        if (heroData.user) {
+            const activeEvents = await this.db.activeEvent.findMany({
+                where: { regionId: heroData.user.currentRegion, expiresAt: { gt: now } },
+                include: { template: true }
+            });
+
+            for (const ae of activeEvents) {
+                const eventMeta = JSON.parse(ae.template.metadata);
+                // Apply Stat Bonuses (e.g., stat_int_bonus)
+                Object.entries(eventMeta).forEach(([key, val]) => {
+                    if (key.startsWith("stat_")) {
+                        const statKey = key.replace("stat_", "").replace("_bonus", "");
+                        applyMod(statKey, val, 0, `Event:${ae.template.name}`);
+                    }
+                    // Apply Multipliers (e.g., combat_def_mult)
+                    if (key.endsWith("_mult")) {
+                        const statKey = key.replace("combat_", "").replace("_mult", "");
+                        if (stats[statKey]) applyMod(statKey, val - 1.0, 1, `Event:${ae.template.name}`);
+                    }
+                });
+            }
+        }
 
         // 2. Composition: Equipment
         this._applyEquipment(heroData.equipment, context, applyMod);

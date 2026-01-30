@@ -129,10 +129,31 @@ model RegionTemplate {
   resources       RegionResource[]
   monsters        RegionMonster[]
   npcs            RegionNPC[]
+  activeEvents    ActiveEvent[]
   travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
   travelTargets   TaskQueue[] @relation("TaskTravelTarget")
   tavernMercenaries TavernMercenary[]
   residents       User[]
+}
+
+model WorldEventTemplate {
+  id            Int      @id
+  name          String
+  description   String
+  metadata      String   @default("{}") // JSON for modifiers (mining_yield, def_mult, etc)
+  activeEvents  ActiveEvent[]
+}
+
+model ActiveEvent {
+  id            Int      @id @default(autoincrement())
+  templateId    Int
+  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
+  regionId      Int
+  region        RegionTemplate @relation(fields: [regionId], references: [id])
+  startedAt     DateTime @default(now())
+  expiresAt     DateTime
+  
+  @@unique([regionId, templateId])
 }
 
 model RegionNPC {
