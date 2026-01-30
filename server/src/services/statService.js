@@ -97,10 +97,12 @@ class StatService {
             applyMod(buff.statKey, buff.statValue, type, `Buff:${buff.name}`);
         }
 
-        // 5. Apply Class Growth (AAA: Level-based gains)
-        statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.level);
+        // 5. Apply Class Growth (Professional Expertise)
+        // AAA Dual-Level: Growth is based on Class Level, not Unit Level
+        statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.classLevel);
 
         // 6. SCALING LOGIC (Primary to Secondary)
+        // Primary stats are now physical (Unit Level influenced)
         const s = primary.str.getValue();
         const d = primary.dex.getValue();
         const i = primary.int.getValue();

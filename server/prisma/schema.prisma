@@ -256,8 +256,17 @@ model Hero {
   userId      Int?     
   user        User?    @relation(fields: [userId], references: [id])
   name        String
+  
+  // AAA Dual-Level Architecture
+  unitLevel   Int      @default(1)
+  unitXp      Int      @default(0)
+  classLevel  Int      @default(1)
+  classXp     Int      @default(0)
+  
+  // Legacy fields (kept for migration safety, will be deprecated)
   level       Int      @default(1)
-  xp          Int      @default(0) // NEW: Track progression
+  xp          Int      @default(0)
+  
   hp_base     Int      @default(100)
   damage_base Int      @default(10)
   
@@ -278,6 +287,20 @@ model Hero {
   traits        HeroTrait[]
   tavernEntry   TavernMercenary?
   buffs         HeroBuff[]
+  mastery       HeroClassMastery[]
+}
+
+model HeroClassMastery {
+  id            Int      @id @default(autoincrement())
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  classId       Int
+  class         ClassTemplate @relation(fields: [classId], references: [id])
+  level         Int      @default(1)
+  xp            Int      @default(0)
+  isMastered    Boolean  @default(false)
+
+  @@unique([heroId, classId])
 }
 
 model HeroBuff {
@@ -319,6 +342,7 @@ model ClassTemplate {
   parentClassId     Int?
   
   heroes          Hero[]
+  mastery         HeroClassMastery[]
 }
 
 model JobTemplate {

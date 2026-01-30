@@ -27,22 +27,16 @@ class RewardProcessor extends BaseService {
             });
 
             for (const hero of heroes) {
-                const newXp = hero.xp + heroShare;
-                const newLevel = progressionService.checkLevelUp(hero.level, newXp);
-                const leveledUp = newLevel > hero.level;
-
-                await this.db.hero.update({
-                    where: { id: hero.id },
-                    data: { xp: newXp, level: newLevel }
-                });
+                const progression = await progressionService.addHeroExperience(hero.id, heroShare);
 
                 heroResults.push({
                     id: hero.id,
                     name: hero.name,
                     xpGained: heroShare,
-                    totalXp: newXp,
-                    currentLevel: newLevel,
-                    leveledUp
+                    totalXp: progression.hero.unitXp,
+                    unitLevel: progression.hero.unitLevel,
+                    classLevel: progression.hero.classLevel,
+                    leveledUp: progression.unitLeveledUp || progression.classLeveledUp
                 });
             }
 
