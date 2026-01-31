@@ -132,6 +132,9 @@ model RegionTemplate {
   type            RegionType @relation(fields: [visualType], references: [id])
   dangerLevel     Int      @default(1)
   
+  factionId       Int?
+  faction         Faction? @relation(fields: [factionId], references: [id])
+  
   territory       Territory?
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
@@ -754,6 +757,21 @@ model Guild {
   facilities      GuildFacility[]
   perks           GuildPerk[]
   territories     Territory[]
+  
+  factionId       Int?
+  faction         Faction? @relation(fields: [factionId], references: [id])
+}
+
+model FactionRelation {
+  id            Int      @id @default(autoincrement())
+  factionAId    Int
+  factionBId    Int
+  status        String   @default("NEUTRAL") // WAR, PEACE, NEUTRAL
+  
+  factionA      Faction  @relation("FactionARelation", fields: [factionAId], references: [id])
+  factionB      Faction  @relation("FactionBRelation", fields: [factionBId], references: [id])
+  
+  @@unique([factionAId, factionBId])
 }
 
 model Territory {
@@ -850,9 +868,14 @@ model Faction {
   description   String
   npcs          NPCTemplate[]
   quests        QuestTemplate[]
+  regions       RegionTemplate[]
   userReputations UserReputation[]
   ranks         FactionRank[]
   members       User[]
+  alignedGuilds Guild[]
+  
+  relationsA    FactionRelation[] @relation("FactionARelation")
+  relationsB    FactionRelation[] @relation("FactionBRelation")
 }
 
 model FactionRank {

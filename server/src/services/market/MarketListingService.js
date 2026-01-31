@@ -34,10 +34,13 @@ class MarketListingService extends BaseService {
             include: { guild: true }
         });
         const guildTaxRate = territory ? territory.guild.marketTaxRate : 0;
+        
+        // AAA: Faction Discount Check
+        const isFactionAlly = territory && user.factionId && user.factionId === territory.guild.factionId;
 
         const totalListingValue = pricePerUnit * item.quantity;
-        const upfrontFee = marketFee.calculateListingFee(totalListingValue, guildTaxRate);
-        const guildRevenue = marketFee.calculateGuildRevenue(totalListingValue, guildTaxRate);
+        const upfrontFee = marketFee.calculateListingFee(totalListingValue, guildTaxRate, isFactionAlly);
+        const guildRevenue = marketFee.calculateGuildRevenue(totalListingValue, guildTaxRate, isFactionAlly);
 
         return await this.runTransaction(async (tx) => {
             // 1. Deduct Total Listing Fee from Player

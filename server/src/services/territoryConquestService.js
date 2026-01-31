@@ -3,11 +3,34 @@ const BaseService = require('./BaseService');
 /**
  * TerritoryConquestService
  * Orchestrates regional ownership and siege outcomes.
+ * Enhanced with Faction-based siege support bonuses.
  */
 class TerritoryConquestService extends BaseService {
+    constructor() {
+        super();
+        this.BASE_SIEGE_VITALITY_COST = 50;
+        this.FACTION_SIEGE_BONUS_MULT = 0.80; // 20% Discount
+    }
+
+    /**
+     * Calculates the cost to siege a specific region.
+     */
+    async calculateSiegeCosts(guildId, regionId) {
+        const guild = await this.db.guild.findUnique({ where: { id: guildId } });
+        const region = await this.db.regionTemplate.findUnique({ where: { id: regionId } });
+
+        let cost = this.BASE_SIEGE_VITALITY_COST;
+
+        // AAA: Faction Siege Support - If guild faction matches region faction
+        if (guild.factionId && region.factionId && guild.factionId === region.factionId) {
+            cost = Math.floor(cost * this.FACTION_SIEGE_BONUS_MULT);
+        }
+
+        return { vitality: cost };
+    }
+
     /**
      * Assigns a region to a guild.
-     * Overwrites any existing ownership (Siege Success).
      */
     async captureTerritory(tx, guildId, regionId) {
         const region = await tx.regionTemplate.findUnique({
@@ -16,7 +39,6 @@ class TerritoryConquestService extends BaseService {
 
         if (!region) throw new Error("Region not found.");
 
-        // Upsert ownership
         return await tx.territory.upsert({
             where: { regionId },
             update: { guildId, capturedAt: new Date(), lastUpkeepAt: new Date() },
@@ -33,9 +55,6 @@ class TerritoryConquestService extends BaseService {
         });
     }
 
-    /**
-     * Helper to get the owning guild of a region.
-     */
     async getOwningGuild(regionId) {
         const territory = await this.db.territory.findUnique({
             where: { regionId },

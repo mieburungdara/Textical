@@ -4,13 +4,13 @@ const inventoryManager = require('../inventory/InventoryManager');
 
 /**
  * AAA OrderMatcher
- * Enhanced to support Regional Guild Taxation.
+ * Enhanced to support Faction-based tax discounts in territory.
  */
 class OrderMatcher {
     /**
-     * Helper to get guild context for a region.
+     * Helper to get guild and faction context for a region.
      */
-    async _getGuildTaxContext(tx, regionId) {
+    async _getTerritoryContext(tx, regionId) {
         const territory = await tx.territory.findUnique({
             where: { regionId },
             include: { guild: true }
@@ -19,8 +19,11 @@ class OrderMatcher {
     }
 
     async matchBuyOrder(tx, buyOrder) {
-        const guild = await this._getGuildTaxContext(tx, buyOrder.regionId);
+        const guild = await this._getTerritoryContext(tx, buyOrder.regionId);
         const guildTaxRate = guild ? guild.marketTaxRate : 0;
+        
+        // Faction Context: Buyer faction
+        const buyer = await tx.user.findUnique({ where: { id: buyOrder.creatorId } });
 
         const sellOrders = await tx.marketOrder.findMany({
             where: {
@@ -40,13 +43,16 @@ class OrderMatcher {
             const fulfillQty = Math.min(buyOrder.remainingQuantity, sell.remainingQuantity);
             const totalPrice = fulfillQty * sell.pricePerUnit;
             
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate);
-            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate);
+            // AAA: Faction Discount - Check if SELLER is ally of owning guild
+            const isFactionAlly = guild && sell.creator.factionId && sell.creator.factionId === guild.factionId;
 
-            // a. Update Seller (Add Gold)
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly);
+            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
+
+            // a. Update Seller
             await transactionManager.addGold(tx, sell.creatorId, sellerNet, "MARKET_ORDER_FILL", sell.id, "ORDER");
 
-            // b. Update Guild Treasury (if applicable)
+            // b. Update Guild
             if (guild && guildRevenue > 0) {
                 await tx.guild.update({
                     where: { id: guild.id },
@@ -54,7 +60,7 @@ class OrderMatcher {
                 });
             }
 
-            // c. Transfer Items to Buyer (AAA Multi-Stack Logic)
+            // c. Transfer Items to Buyer
             const itemOps = await inventoryManager.resolveStackingOps(tx, buyOrder.creatorId, buyOrder.templateId, fulfillQty);
             await Promise.all(itemOps);
 
@@ -92,8 +98,11 @@ class OrderMatcher {
     }
 
     async matchSellOrder(tx, sellOrder) {
-        const guild = await this._getGuildTaxContext(tx, sellOrder.regionId);
+        const guild = await this._getTerritoryContext(tx, sellOrder.regionId);
         const guildTaxRate = guild ? guild.marketTaxRate : 0;
+        
+        const seller = await tx.user.findUnique({ where: { id: sellOrder.creatorId } });
+        const isFactionAlly = guild && seller.factionId && seller.factionId === guild.factionId;
 
         const buyOrders = await tx.marketOrder.findMany({
             where: {
@@ -113,8 +122,8 @@ class OrderMatcher {
             const fulfillQty = Math.min(sellOrder.remainingQuantity, buy.remainingQuantity);
             const totalPrice = fulfillQty * buy.pricePerUnit;
             
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate);
-            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate);
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly);
+            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Seller gets Gold
             await transactionManager.addGold(tx, sellOrder.creatorId, sellerNet, "MARKET_ORDER_FILL", sellOrder.id, "ORDER");
@@ -127,7 +136,7 @@ class OrderMatcher {
                 });
             }
 
-            // c. Buyer gets Items (AAA Multi-Stack Logic)
+            // c. Buyer gets Items
             const itemOps = await inventoryManager.resolveStackingOps(tx, buy.creatorId, sellOrder.templateId, fulfillQty);
             await Promise.all(itemOps);
 

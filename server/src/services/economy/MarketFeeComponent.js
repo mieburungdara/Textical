@@ -1,43 +1,52 @@
 /**
  * AAA MarketFeeComponent
  * Centralized logic for calculating taxes, listing fees, and duty costs.
- * Enhanced to support Guild-based regional taxation.
+ * Enhanced to support Faction-based tax discounts.
  */
 class MarketFeeComponent {
     constructor() {
         this.BASE_LISTING_FEE_RATE = 0.05; // 5% Standard
         this.BASE_SALES_TAX_RATE = 0.10;   // 10% Imperial Tax
+        this.FACTION_DISCOUNT_MULT = 0.50; // 50% off guild-side taxes
     }
 
     /**
      * Calculates the non-refundable fee for listing an item.
-     * Optionally includes guild-mandated listing surcharge.
      */
-    calculateListingFee(price, guildMarketTaxRate = 0) {
-        const rate = this.BASE_LISTING_FEE_RATE + guildMarketTaxRate;
+    calculateListingFee(price, guildMarketTaxRate = 0, isFactionAlly = false) {
+        let gTax = guildMarketTaxRate;
+        if (isFactionAlly) gTax *= this.FACTION_DISCOUNT_MULT;
+
+        const rate = this.BASE_LISTING_FEE_RATE + gTax;
         return Math.max(1, Math.floor(price * rate));
     }
 
     /**
-     * Calculates total tax (Imperial + Guild).
+     * Calculates total tax (Imperial + Guild with optional discount).
      */
-    calculateTotalSalesTax(price, guildMarketTaxRate = 0) {
-        const rate = this.BASE_SALES_TAX_RATE + guildMarketTaxRate;
+    calculateTotalSalesTax(price, guildMarketTaxRate = 0, isFactionAlly = false) {
+        let gTax = guildMarketTaxRate;
+        if (isFactionAlly) gTax *= this.FACTION_DISCOUNT_MULT;
+
+        const rate = this.BASE_SALES_TAX_RATE + gTax;
         return Math.floor(price * rate);
     }
 
     /**
      * Calculates specific guild revenue from a sale.
      */
-    calculateGuildRevenue(price, guildMarketTaxRate = 0) {
-        return Math.floor(price * guildMarketTaxRate);
+    calculateGuildRevenue(price, guildMarketTaxRate = 0, isFactionAlly = false) {
+        let gTax = guildMarketTaxRate;
+        if (isFactionAlly) gTax *= this.FACTION_DISCOUNT_MULT;
+        
+        return Math.floor(price * gTax);
     }
 
     /**
      * Calculates final net profit for the seller.
      */
-    calculateSellerNet(price, guildMarketTaxRate = 0) {
-        const totalTax = this.calculateTotalSalesTax(price, guildMarketTaxRate);
+    calculateSellerNet(price, guildMarketTaxRate = 0, isFactionAlly = false) {
+        const totalTax = this.calculateTotalSalesTax(price, guildMarketTaxRate, isFactionAlly);
         return price - totalTax;
     }
 }
