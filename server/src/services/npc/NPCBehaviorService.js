@@ -1,8 +1,10 @@
 const BaseService = require('../BaseService');
+const influenceResolver = require('../../logic/faction/InfluenceResolver');
+const reinforcementSpawner = require('../../logic/npc/ReinforcementSpawner');
 
 /**
  * NPCBehaviorService
- * Orchestrates dynamic NPC presence and reactions.
+ * Orchestrates dynamic NPC presence, reactions, and reinforcements.
  */
 class NPCBehaviorService extends BaseService {
     /**
@@ -57,7 +59,7 @@ class NPCBehaviorService extends BaseService {
     }
 
     /**
-     * Finds all NPCs currently present in a region.
+     * Finds all NPCs currently present in a region, including reinforcements.
      */
     async getNPCsInRegion(regionId, hour = null) {
         const currentHour = (hour !== null) ? hour : new Date().getHours();
@@ -75,10 +77,8 @@ class NPCBehaviorService extends BaseService {
         const present = [];
         for (const npc of allPotentialNPCs) {
             const presence = await this.resolveNPCPresence(npc.id, currentHour);
-            
             if (!presence) continue;
 
-            // Check if NPC is in this region via any valid logic
             const isResolvedHere = presence.regionId === regionId;
             const isAtMappedBase = presence.status === "NORMAL" && npc.regions.some(r => r.regionId === regionId);
 
@@ -86,6 +86,28 @@ class NPCBehaviorService extends BaseService {
                 present.push({ ...npc, currentPresence: presence });
             }
         }
+
+        // --- AAA Reinforcement Logic ---
+        // 1. Check regional dominance and siege state
+        const influenceData = await this.db.regionalInfluence.findMany({
+            where: { regionId },
+            orderBy: { points: 'desc' }
+        });
+
+        const topInfluence = influenceData[0] ? influenceData[0].points : 0;
+        const dominantFactionId = influenceData[0] ? influenceData[0].factionId : null;
+
+        const activeWarEvents = await this.db.activeEvent.count({
+            where: { regionId, template: { name: { contains: "War" } } }
+        });
+
+        const isSiege = influenceResolver.isSiegeState(topInfluence, activeWarEvents > 0);
+
+        if (isSiege && dominantFactionId) {
+            const reinforcements = await reinforcementSpawner.resolveReinforcements(this.db, regionId, dominantFactionId, isSiege);
+            present.push(...reinforcements);
+        }
+
         return present;
     }
 }

@@ -151,6 +151,7 @@ model RegionTemplate {
   incomingTeleportRoutes NPCTeleportRoute[]
   npcSchedules    NPCSchedule[]
   npcEventReactions NPCEventReaction[]
+  influence       RegionalInfluence[]
 }
 
 model WorldEventTemplate {
@@ -876,6 +877,20 @@ model Faction {
   
   relationsA    FactionRelation[] @relation("FactionARelation")
   relationsB    FactionRelation[] @relation("FactionBRelation")
+  influence     RegionalInfluence[]
+}
+
+model RegionalInfluence {
+  id            Int      @id @default(autoincrement())
+  factionId     Int
+  faction       Faction  @relation(fields: [factionId], references: [id])
+  regionId      Int
+  region        RegionTemplate @relation(fields: [regionId], references: [id])
+  points        Int      @default(0)
+  
+  lastUpdated   DateTime @default(now())
+  
+  @@unique([factionId, regionId])
 }
 
 model FactionRank {

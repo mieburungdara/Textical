@@ -27,22 +27,26 @@ class NPCService extends BaseService {
         const results = [];
         for (const npc of npcs) {
             const presence = npc.currentPresence;
-            const fullState = await actionResolver.resolveFullState(npc, presence, userFactionId);
+            try {
+                const fullState = await actionResolver.resolveFullState(npc, presence, userFactionId);
 
-            results.push({
-                instanceId: `dyn_${npc.id}`,
-                templateId: npc.id,
-                name: npc.name,
-                title: npc.title,
-                type: npc.type,
-                description: fullState.dialogue,
-                interactionOptions: fullState.options,
-                presenceStatus: presence.status,
-                isHostile: fullState.isHostile,
-                triggerCombat: fullState.triggerCombat,
-                shop: npc.shopItems,
-                teleportRoutes: npc.teleportRoutes
-            });
+                results.push({
+                    instanceId: npc.instanceId || `dyn_${npc.id}`,
+                    templateId: npc.id,
+                    name: npc.name,
+                    title: npc.title,
+                    type: npc.type,
+                    description: fullState.dialogue,
+                    interactionOptions: fullState.options,
+                    presenceStatus: presence.status,
+                    isHostile: fullState.isHostile,
+                    triggerCombat: fullState.triggerCombat,
+                    shop: npc.shopItems || [],
+                    teleportRoutes: npc.teleportRoutes || []
+                });
+            } catch (e) {
+                this.handleError(e, `NPC Discovery [${npc.id || npc.instanceId}]`);
+            }
         }
         return results;
     }
