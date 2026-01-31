@@ -396,6 +396,17 @@ model Hero {
   jobId       Int?
   job         JobTemplate? @relation(fields: [jobId], references: [id])
   vitality    Int      @default(100)
+  
+  // Genetics & Lineage
+  generation    Int      @default(1)
+  hasOffspring  Boolean  @default(false)
+  fatherId      Int?
+  father        Hero?    @relation("FatherRelation", fields: [fatherId], references: [id])
+  motherId      Int?
+  mother        Hero?    @relation("MotherRelation", fields: [motherId], references: [id])
+  childrenOfFather Hero[] @relation("FatherRelation")
+  childrenOfMother Hero[] @relation("MotherRelation")
+
   equipment   HeroEquipment[]
   formationSlots FormationSlot[]
   taskQueue     TaskQueue[]
