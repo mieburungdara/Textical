@@ -1,23 +1,77 @@
 const BaseService = require('./BaseService');
-const questRefreshSystem = require('./quest/QuestRefreshSystem');
 const objectiveValidator = require('./quest/ObjectiveValidator');
 const rewardDistributor = require('./quest/RewardDistributor');
+const dialogueResolver = require('../logic/quest/DialogueResolver');
+const reputationService = require('./reputationService');
 
 /**
- * QuestService (Refactored)
- * Orchestrates multi-stage quest progression.
+ * QuestService (Narrative-Enhanced)
+ * Orchestrates multi-stage quest progression and branching dialogues.
  */
 class QuestService extends BaseService {
     
-    async acceptQuest(userId, questId) {
-        const quest = await this.db.questTemplate.findUnique({
+    /**
+     * Initiates a conversation with an NPC.
+     * Returns the root dialogue node.
+     */
+    async startDialogue(userId, npcId) {
+        const rootNode = await this.db.dialogueNode.findFirst({
+            where: { npcId, isRoot: true },
+            include: { choices: true }
+        });
+
+        if (!rootNode) throw new Error("This NPC has nothing to say.");
+        return rootNode;
+    }
+
+    /**
+     * Processes a player's choice in a dialogue branch.
+     * Handles side-effects like quest acceptance and reputation changes.
+     */
+    async processDialogueChoice(userId, choiceId) {
+        return await this.runTransaction(async (tx) => {
+            // 1. Resolve logical effects of the choice
+            const effects = await dialogueResolver.resolveChoice(tx, userId, choiceId);
+
+            // 2. Apply Reputation Changes
+            if (effects.reputationUpdate) {
+                await reputationService.addReputation(userId, effects.reputationUpdate.factionId, effects.reputationUpdate.amount, tx);
+            }
+
+            // 3. Auto-Accept Quest if offered
+            let questRecord = null;
+            if (effects.questToOffer) {
+                questRecord = await this.acceptQuest(userId, effects.questToOffer, tx);
+            }
+
+            // 4. Fetch Next Node
+            let nextNode = null;
+            if (effects.nextNodeId) {
+                nextNode = await tx.dialogueNode.findUnique({
+                    where: { id: effects.nextNodeId },
+                    include: { choices: true }
+                });
+            }
+
+            return { nextNode, questAccepted: !!questRecord, triggerCombat: effects.triggerCombat };
+        });
+    }
+
+    async acceptQuest(userId, questId, tx = null) {
+        const client = tx || this.db;
+
+        const quest = await client.questTemplate.findUnique({
             where: { id: questId },
             include: { stages: { orderBy: { order: 'asc' } } }
         });
 
         if (!quest || quest.stages.length === 0) throw new Error("Quest template invalid.");
 
-        return await this.db.userQuest.create({
+        // Check Reputation Requirement
+        const hasRep = await reputationService.checkReputationRequirement(userId, quest.factionId, quest.minReputation);
+        if (!hasRep) throw new Error("You lack the reputation required for this task.");
+
+        return await client.userQuest.create({
             data: {
                 userId,
                 questId,

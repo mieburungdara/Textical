@@ -43,6 +43,7 @@ model User {
   formationPresets FormationPreset[]
   taskQueue     TaskQueue[]
   recipes       UserRecipe[]
+  reputation    UserReputation[]
 }
 
 model MonsterTemplate {
@@ -224,9 +225,13 @@ model NPCTemplate {
   betWinChance  Float?
   travelCost    Int?
   
+  factionId     Int?
+  faction       Faction? @relation(fields: [factionId], references: [id])
+  
   regions       RegionNPC[]
   shopItems     NPCShopItem[]
   teleportRoutes NPCTeleportRoute[]
+  dialogueNodes DialogueNode[]
 }
 
 model NPCTeleportRoute {
@@ -633,6 +638,11 @@ model QuestTemplate {
   id              Int      @id
   name            String
   description     String
+  
+  minReputation   Int      @default(0)
+  factionId       Int?
+  faction         Faction? @relation(fields: [factionId], references: [id])
+  
   stages          QuestStage[]
   userQuests      UserQuest[]
 }
@@ -764,4 +774,47 @@ model PremiumTierTemplate {
   vitalityRegenMult Float @default(1.0)
   maxVitalityBonus Int @default(0)
   users           User[]
+}
+
+model Faction {
+  id            Int      @id
+  name          String
+  description   String
+  npcs          NPCTemplate[]
+  quests        QuestTemplate[]
+  userReputations UserReputation[]
+}
+
+model UserReputation {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  factionId     Int
+  faction       Faction  @relation(fields: [factionId], references: [id])
+  amount        Int      @default(0)
+  
+  @@unique([userId, factionId])
+}
+
+model DialogueNode {
+  id            Int      @id @default(autoincrement())
+  npcId         Int
+  npc           NPCTemplate @relation(fields: [npcId], references: [id])
+  text          String
+  isRoot        Boolean  @default(false)
+  choices       DialogueChoice[]
+}
+
+model DialogueChoice {
+  id            Int      @id @default(autoincrement())
+  nodeId        Int
+  node          DialogueNode @relation(fields: [nodeId], references: [id])
+  text          String
+  nextNodeId    Int?     // If null, ends dialogue
+  
+  // Choice Outcomes (Optional)
+  questId       Int?     // If set, offers/accepts quest
+  reputationAmount Int?
+  reputationFactionId Int?
+  triggerCombat Boolean @default(false)
 }
