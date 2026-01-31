@@ -742,12 +742,31 @@ model GuildTemplate {
   guilds          Guild[]
 }
 
+model GuildFacilityTemplate {
+  id              Int      @id
+  name            String
+  description     String
+  type            String   // STAT_BUFF, PRODUCTION, etc.
+  
+  // Normalized Effects
+  statKey         String?  // e.g., "ATK", "DEF", "EXP"
+  statValuePerLevel Float? 
+  
+  costBase        Int      @default(1000)
+  costMult        Float    @default(1.5)
+  
+  facilities      GuildFacility[]
+}
+
 model GuildFacility {
   id              Int      @id @default(autoincrement())
   guildId         Int
   guild           Guild    @relation(fields: [guildId], references: [id])
-  facilityKey     String
+  templateId      Int
+  template        GuildFacilityTemplate @relation(fields: [templateId], references: [id])
   level           Int      @default(1)
+  
+  @@unique([guildId, templateId])
 }
 
 model GuildPerk {

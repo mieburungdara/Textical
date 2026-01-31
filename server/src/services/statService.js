@@ -2,11 +2,13 @@ const BaseService = require('./BaseService');
 const { Stat, StatModifier } = require('../logic/statSystem');
 const statGrowthSystem = require('./stat/StatGrowthSystem');
 const scalingComponent = require('./stat/ScalingComponent');
+const facilityResolver = require('../logic/guild/FacilityEffectResolver');
 
 /**
  * StatService
  * The thin orchestrator for hero stat calculation.
  * Refactored for strictly relational data (no JSON parsing).
+ * Enhanced with Guild Facility Infrastructure support.
  */
 class StatService extends BaseService {
     async calculateHeroStats(heroId, context = "GLOBAL") {
@@ -15,7 +17,7 @@ class StatService extends BaseService {
         const heroData = await this.db.hero.findUnique({
             where: { id: heroId },
             include: { 
-                user: true,
+                user: { include: { guild: { include: { facilities: { include: { template: true } } } } } },
                 combatClass: true,
                 skills: { where: { isActive: true }, include: { skill: true } },
                 buffs: { where: { expiresAt: { gt: now } } },
@@ -55,26 +57,35 @@ class StatService extends BaseService {
             }
         }
 
-        // 3. Composition: Equipment
+        // 3. AAA GUILD FACILITY INTEGRATION (Strict Relational)
+        if (heroData.user && heroData.user.guild) {
+            const guildBuffs = facilityResolver.resolveTotalBuffs(heroData.user.guild.facilities);
+            for (const [statKey, val] of Object.entries(guildBuffs)) {
+                // Guild facilities currently apply PERCENTAGE bonuses (Type 1)
+                applyMod(statKey, val, 1, `GuildFacility`);
+            }
+        }
+
+        // 4. Composition: Equipment
         this._applyEquipment(heroData.equipment, context, applyMod);
 
-        // 4. Composition: Buffs
+        // 5. Composition: Buffs
         heroData.buffs.forEach(b => applyMod(b.statKey, b.statValue, b.isPercent ? 1 : 0, `Buff:${b.name}`));
 
-        // 5. Composition: Skills (Strict Relational)
+        // 6. Composition: Skills (Strict Relational)
         heroData.skills.forEach(hs => {
             if (hs.skill.category === "PASSIVE") {
                 applyMod(hs.skill.statKey, hs.skill.statValue, 0, `Skill:${hs.skill.name}`);
             }
         });
 
-        // 6. Composition: Class Growth
+        // 7. Composition: Class Growth
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.classLevel);
 
-        // 7. Composition: Attribute Scaling
+        // 8. Composition: Attribute Scaling
         scalingComponent.applyAttributeScaling(primary, stats, applyMod);
 
-        // 8. Finalize
+        // 9. Finalize
         const finalStats = Object.fromEntries(Object.entries(stats).map(([k, s]) => [k, s.getValue()]));
         finalStats.attributes = { 
             str: primary.str.getValue(), dex: primary.dex.getValue(), 
