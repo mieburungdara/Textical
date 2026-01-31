@@ -8,15 +8,20 @@ const actionResolver = require('../logic/npc/NPCActionResolver');
 /**
  * NPCService
  * Thin orchestrator for world inhabitants and interactions.
- * Enhanced with Advanced AI (Presence & Behavior Overrides).
+ * Enhanced with Advanced AI and Faction Reactivity.
  */
 class NPCService extends BaseService {
     /**
-     * Resolves and returns NPCs currently present in a region.
+     * Resolves and returns NPCs currently present in a region with faction context.
      */
-    async getAvailableNPCs(regionId) {
-        // In a real server, this would come from a Global Clock service
+    async getAvailableNPCs(regionId, userId = null) {
         const currentHour = new Date().getHours(); 
+        
+        let userFactionId = null;
+        if (userId) {
+            const user = await this.db.user.findUnique({ where: { id: userId } });
+            userFactionId = user ? user.factionId : null;
+        }
 
         const npcs = await behaviorService.getNPCsInRegion(regionId, currentHour);
 
@@ -28,9 +33,8 @@ class NPCService extends BaseService {
                 name: npc.name,
                 title: npc.title,
                 type: npc.type,
-                // Resolve dynamic dialogue via ActionResolver
-                description: actionResolver.resolveDialogue(npc, presence),
-                interactionOptions: actionResolver.resolveInteractionOptions(npc, presence),
+                description: actionResolver.resolveDialogue(npc, presence, userFactionId),
+                interactionOptions: actionResolver.resolveInteractionOptions(npc, presence, userFactionId),
                 presenceStatus: presence.status,
                 shop: npc.shopItems,
                 teleportRoutes: npc.teleportRoutes
@@ -40,6 +44,9 @@ class NPCService extends BaseService {
 
     async interactWithNPC(userId, heroId, npcId, action, params = {}) {
         const currentHour = new Date().getHours();
+        const user = await this.db.user.findUnique({ where: { id: userId } });
+        const userFactionId = user ? user.factionId : null;
+
         const npc = await this.db.nPCTemplate.findUnique({ 
             where: { id: npcId },
             include: { teleportRoutes: true }
@@ -47,15 +54,13 @@ class NPCService extends BaseService {
         if (!npc) throw new Error("NPC not found.");
 
         const presence = await behaviorService.resolveNPCPresence(npcId, currentHour);
-        const options = actionResolver.resolveInteractionOptions(npc, presence);
+        const options = actionResolver.resolveInteractionOptions(npc, presence, userFactionId);
 
         this.log(`Hero ${heroId} interacting with ${npc.name} (${action})`, "NPC");
 
-        // Validate if the requested action is available in current presence state
-        // For simple actions like PURCHASE, we check if TRADE is in options
         const mappedAction = (action === "PURCHASE") ? "TRADE" : action;
         if (!options.includes(mappedAction) && !["TELEPORT", "HEAL", "GAMBLE"].includes(action)) {
-            throw new Error(`This NPC is currently unable to perform ${action}.`);
+            throw new Error(`This NPC is currently unable to perform ${action} for your faction standing.`);
         }
 
         switch (action) {

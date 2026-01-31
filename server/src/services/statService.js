@@ -3,12 +3,12 @@ const { Stat, StatModifier } = require('../logic/statSystem');
 const statGrowthSystem = require('./stat/StatGrowthSystem');
 const scalingComponent = require('./stat/ScalingComponent');
 const facilityResolver = require('../logic/guild/FacilityEffectResolver');
+const factionService = require('./factionService');
 
 /**
  * StatService
  * The thin orchestrator for hero stat calculation.
- * Refactored for strictly relational data (no JSON parsing).
- * Enhanced with Guild Facility Infrastructure support.
+ * Enhanced with Guild Facility and Faction Perk support.
  */
 class StatService extends BaseService {
     async calculateHeroStats(heroId, context = "GLOBAL") {
@@ -42,7 +42,7 @@ class StatService extends BaseService {
             }
         };
 
-        // 2. AAA WORLD EVENT INTEGRATION (Strict Relational)
+        // 2. AAA WORLD EVENT INTEGRATION
         if (heroData.user) {
             const activeEvents = await this.db.activeEvent.findMany({
                 where: { regionId: heroData.user.currentRegion, expiresAt: { gt: now } },
@@ -57,35 +57,43 @@ class StatService extends BaseService {
             }
         }
 
-        // 3. AAA GUILD FACILITY INTEGRATION (Strict Relational)
+        // 3. AAA GUILD FACILITY INTEGRATION
         if (heroData.user && heroData.user.guild) {
             const guildBuffs = facilityResolver.resolveTotalBuffs(heroData.user.guild.facilities);
             for (const [statKey, val] of Object.entries(guildBuffs)) {
-                // Guild facilities currently apply PERCENTAGE bonuses (Type 1)
                 applyMod(statKey, val, 1, `GuildFacility`);
             }
         }
 
-        // 4. Composition: Equipment
+        // 4. AAA FACTION PERK INTEGRATION (New)
+        if (heroData.user && heroData.user.factionId) {
+            const factionPerks = await factionService.getActivePerks(heroData.user.id);
+            factionPerks.forEach(p => {
+                // Faction perks apply PERCENTAGE bonuses
+                applyMod(p.key, p.value, 1, `FactionRank`);
+            });
+        }
+
+        // 5. Composition: Equipment
         this._applyEquipment(heroData.equipment, context, applyMod);
 
-        // 5. Composition: Buffs
+        // 6. Composition: Buffs
         heroData.buffs.forEach(b => applyMod(b.statKey, b.statValue, b.isPercent ? 1 : 0, `Buff:${b.name}`));
 
-        // 6. Composition: Skills (Strict Relational)
+        // 7. Composition: Skills
         heroData.skills.forEach(hs => {
             if (hs.skill.category === "PASSIVE") {
                 applyMod(hs.skill.statKey, hs.skill.statValue, 0, `Skill:${hs.skill.name}`);
             }
         });
 
-        // 7. Composition: Class Growth
+        // 8. Composition: Class Growth
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, heroData.classLevel);
 
-        // 8. Composition: Attribute Scaling
+        // 9. Composition: Attribute Scaling
         scalingComponent.applyAttributeScaling(primary, stats, applyMod);
 
-        // 9. Finalize
+        // 10. Finalize
         const finalStats = Object.fromEntries(Object.entries(stats).map(([k, s]) => [k, s.getValue()]));
         finalStats.attributes = { 
             str: primary.str.getValue(), dex: primary.dex.getValue(), 
