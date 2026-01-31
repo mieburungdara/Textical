@@ -97,6 +97,7 @@ model ItemTemplate {
   baseValue       Int      @default(10)
   rarity          String   @default("COMMON")
   isTwoHanded     Boolean  @default(false)
+  maxStack        Int      @default(1)
   
   // Mining/Gathering Metadata (Normalized)
   hardness        Int      @default(1)
@@ -564,8 +565,6 @@ model InventoryItem {
   quantity    Int      @default(1)
   marketOrders MarketOrder[]
   equippedIn    HeroEquipment?
-
-  @@unique([userId, templateId]) 
 }
 
 model MarketOrder {
