@@ -1,53 +1,51 @@
+const factionWarService = require('../../services/faction/FactionWarService');
+
 /**
  * AAA NPCActionResolver
  * Pure logic for determining NPC dialogue and interaction overrides.
- * Enhanced with Faction alignment reactivity.
  */
 class NPCActionResolver {
     /**
-     * Resolves the final dialogue for an NPC based on their presence and player's faction.
+     * Resolves the final dialogue and state for an NPC.
      */
-    resolveDialogue(npc, presence, userFactionId = null) {
-        // 1. Event Override
-        if (presence.status === "EVENT_REACTION" && presence.overrideDialogueId) {
-            return `[EVENT: ${presence.eventName}] Greetings! My normal shop is closed during the festival, but I have special items!`;
+    async resolveFullState(npc, presence = null, userFactionId = null) {
+        const relation = await factionWarService.getRelation(userFactionId, npc.factionId);
+        const isAtWar = relation === "WAR";
+        
+        const pStatus = presence ? presence.status : "NORMAL";
+
+        const state = {
+            dialogue: npc.description,
+            options: [],
+            triggerCombat: false,
+            isHostile: isAtWar
+        };
+
+        // 1. Resolve Dialogue
+        if (isAtWar) {
+            state.dialogue = `[ENEMY DETECTED] Guards! Seize this intruder from the enemy faction immediately!`;
+            state.triggerCombat = ["GUARD", "SOLDIER", "CAPTAIN"].includes(npc.type) || (Math.random() < 0.2);
+        } else if (presence && presence.status === "EVENT_REACTION" && presence.overrideDialogueId) {
+            state.dialogue = `[EVENT: ${presence.eventName}] Greetings! My normal shop is closed during the festival, but I have special items!`;
+        } else if (npc.factionId && userFactionId === npc.factionId) {
+            state.dialogue = `Hail, fellow comrade! It is an honor to serve a member of our faction. How can I assist you today?`;
         }
 
-        // 2. Faction Reactivity
-        if (npc.factionId && userFactionId) {
-            if (npc.factionId === userFactionId) {
-                return `Hail, fellow comrade! It is an honor to serve a member of our faction. How can I assist you today?`;
-            } else {
-                return `I do not trust your kind. State your business quickly and move on.`;
-            }
+        // 2. Resolve Interaction Options
+        // Always available neutral services
+        if (npc.type === "TELEPORTER") state.options.push("TELEPORT");
+        if (npc.type === "HEALER") state.options.push("HEAL");
+
+        // Faction Gated services
+        if (!isAtWar) {
+            // Support multiple type naming conventions if any
+            if (npc.type === "TRADER" || npc.type === "MERCHANT") state.options.push("TRADE");
+            if (npc.type === "QUEST_GIVER") state.options.push("QUEST");
+            if (npc.type === "GAMBLER") state.options.push("GAMBLE");
+            if (npc.type === "JOB_CHANGER") state.options.push("PROMOTE");
         }
 
-        // 3. Schedule Override
-        if (presence.status === "SCHEDULED") {
-            return `I am currently off-duty at this location. Come see me at my shop during the day!`;
-        }
-
-        return npc.description; // Default
-    }
-
-    /**
-     * Determines available interaction types based on presence and faction standing.
-     */
-    resolveInteractionOptions(npc, presence, userFactionId = null) {
-        const options = [];
-
-        // Faction Gating: Enemies cannot trade or take quests
-        const isEnemy = npc.factionId && userFactionId && npc.factionId !== userFactionId;
-
-        if (presence.status === "NORMAL" || (presence.status === "EVENT_REACTION" && !presence.targetRegionId)) {
-            if (npc.type === "TRADER" && !isEnemy) options.push("TRADE");
-            if (npc.type === "QUEST_GIVER" && !isEnemy) options.push("QUEST");
-        }
-
-        if (npc.type === "TELEPORTER") options.push("TELEPORT");
-        if (npc.type === "HEALER") options.push("HEAL");
-
-        return options;
+        return state;
     }
 }
 
