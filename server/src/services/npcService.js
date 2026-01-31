@@ -2,47 +2,61 @@ const BaseService = require('./BaseService');
 const tradeHandler = require('./npc/TradeHandler');
 const interactionHandler = require('./npc/InteractionHandler');
 const promotionService = require('./promotionService');
+const behaviorService = require('./npc/NPCBehaviorService');
+const actionResolver = require('../logic/npc/NPCActionResolver');
 
 /**
  * NPCService
  * Thin orchestrator for world inhabitants and interactions.
- * Refactored for strictly relational data.
+ * Enhanced with Advanced AI (Presence & Behavior Overrides).
  */
 class NPCService extends BaseService {
+    /**
+     * Resolves and returns NPCs currently present in a region.
+     */
     async getAvailableNPCs(regionId) {
-        const now = new Date();
-        const regionNPCs = await this.db.regionNPC.findMany({
-            where: {
-                regionId,
-                OR: [{ isTemporary: false }, { expiresAt: { gt: now } }]
-            },
-            include: { 
-                npc: { 
-                    include: { 
-                        shopItems: { include: { item: true } },
-                        teleportRoutes: true
-                    } 
-                } 
-            }
-        });
+        // In a real server, this would come from a Global Clock service
+        const currentHour = new Date().getHours(); 
 
-        return regionNPCs.map(rn => ({
-            instanceId: rn.id, templateId: rn.npc.id,
-            name: rn.npc.name, title: rn.npc.title,
-            type: rn.npc.type, description: rn.npc.description,
-            shop: rn.npc.shopItems,
-            teleportRoutes: rn.npc.teleportRoutes
-        }));
+        const npcs = await behaviorService.getNPCsInRegion(regionId, currentHour);
+
+        return npcs.map(npc => {
+            const presence = npc.currentPresence;
+            return {
+                instanceId: `dyn_${npc.id}`,
+                templateId: npc.id,
+                name: npc.name,
+                title: npc.title,
+                type: npc.type,
+                // Resolve dynamic dialogue via ActionResolver
+                description: actionResolver.resolveDialogue(npc, presence),
+                interactionOptions: actionResolver.resolveInteractionOptions(npc, presence),
+                presenceStatus: presence.status,
+                shop: npc.shopItems,
+                teleportRoutes: npc.teleportRoutes
+            };
+        });
     }
 
     async interactWithNPC(userId, heroId, npcId, action, params = {}) {
+        const currentHour = new Date().getHours();
         const npc = await this.db.nPCTemplate.findUnique({ 
             where: { id: npcId },
             include: { teleportRoutes: true }
         });
         if (!npc) throw new Error("NPC not found.");
 
+        const presence = await behaviorService.resolveNPCPresence(npcId, currentHour);
+        const options = actionResolver.resolveInteractionOptions(npc, presence);
+
         this.log(`Hero ${heroId} interacting with ${npc.name} (${action})`, "NPC");
+
+        // Validate if the requested action is available in current presence state
+        // For simple actions like PURCHASE, we check if TRADE is in options
+        const mappedAction = (action === "PURCHASE") ? "TRADE" : action;
+        if (!options.includes(mappedAction) && !["TELEPORT", "HEAL", "GAMBLE"].includes(action)) {
+            throw new Error(`This NPC is currently unable to perform ${action}.`);
+        }
 
         switch (action) {
             case "PURCHASE":

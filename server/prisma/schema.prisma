@@ -143,6 +143,8 @@ model RegionTemplate {
   tavernMercenaries TavernMercenary[]
   residents       User[]
   incomingTeleportRoutes NPCTeleportRoute[]
+  npcSchedules    NPCSchedule[]
+  npcEventReactions NPCEventReaction[]
 }
 
 model WorldEventTemplate {
@@ -165,6 +167,7 @@ model WorldEventTemplate {
   activeEvents      ActiveEvent[]
   eventResources    EventResource[]
   eventMonsters     EventMonster[]
+  npcReactions      NPCEventReaction[]
 }
 
 model EventResource {
@@ -233,6 +236,31 @@ model NPCTemplate {
   shopItems     NPCShopItem[]
   teleportRoutes NPCTeleportRoute[]
   dialogueNodes DialogueNode[]
+  schedules     NPCSchedule[]
+  eventReactions NPCEventReaction[]
+}
+
+model NPCSchedule {
+  id              Int      @id @default(autoincrement())
+  npcId           Int
+  npc             NPCTemplate @relation(fields: [npcId], references: [id])
+  hourStart       Int      // 0-23
+  hourEnd         Int
+  targetRegionId  Int
+  targetRegion    RegionTemplate @relation(fields: [targetRegionId], references: [id])
+}
+
+model NPCEventReaction {
+  id              Int      @id @default(autoincrement())
+  npcId           Int
+  npc             NPCTemplate @relation(fields: [npcId], references: [id])
+  eventTemplateId Int
+  eventTemplate   WorldEventTemplate @relation(fields: [eventTemplateId], references: [id])
+  
+  actionType      String   // MOVE, CHANGE_DIALOGUE, CHANGE_SHOP
+  targetRegionId  Int?
+  targetRegion    RegionTemplate? @relation(fields: [targetRegionId], references: [id])
+  overrideDialogueId Int?
 }
 
 model NPCTeleportRoute {
