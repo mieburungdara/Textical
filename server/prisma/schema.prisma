@@ -111,6 +111,11 @@ model ItemTemplate {
   toolTier        Int      @default(0)
   elementalAffinity Int    @default(0)
   
+  // AAA Mastery Trading
+  masteryClassId  Int?
+  masteryXpAmount Int?
+  masteryClass    ClassTemplate? @relation("MasteryTomeRelation", fields: [masteryClassId], references: [id])
+  
   traits          ItemTrait[]
   equipSlots      ItemEquipSlot[]
   stats           ItemStat[]
@@ -152,6 +157,7 @@ model RegionTemplate {
   npcSchedules    NPCSchedule[]
   npcEventReactions NPCEventReaction[]
   influence       RegionalInfluence[]
+  heroSaleHistory HeroSaleHistory[]
 }
 
 model WorldEventTemplate {
@@ -578,6 +584,8 @@ model ClassTemplate {
   mastery         HeroClassMastery[]
   skills          ClassSkillTree[]
   heroBuyOrders   HeroOrder[]
+  masteryTomes    ItemTemplate[] @relation("MasteryTomeRelation")
+  heroSaleHistory HeroSaleHistory[]
 }
 
 model JobTemplate {
@@ -906,6 +914,17 @@ model FactionRank {
   expBonus        Float?   // Global EXP multiplier for faction members
   
   @@unique([factionId, minReputation])
+}
+
+model HeroSaleHistory {
+  id              Int      @id @default(autoincrement())
+  classId         Int
+  combatClass     ClassTemplate @relation(fields: [classId], references: [id])
+  unitLevel       Int
+  price           Int
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  soldAt          DateTime @default(now())
 }
 
 model UserReputation {

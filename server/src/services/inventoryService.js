@@ -25,21 +25,18 @@ class InventoryService {
     /**
      * Unified method to add items to inventory with stacking enforcement.
      */
-    async addItem(userId, templateId, quantity = 1) {
+    async addItem(userId, templateId, quantity = 1, tx = null) {
         if (quantity <= 0) return;
+        const client = tx || prisma;
 
         const hasSpace = await this.hasSpace(userId, templateId, quantity);
         if (!hasSpace) {
             throw new Error("Inventory full! No more slots available for this item stack.");
         }
 
-        // Execute stacking operations in a single transaction
-        return await prisma.$transaction(async (tx) => {
-            const ops = await manager.resolveStackingOps(tx, userId, templateId, quantity);
-            // We cannot just return 'ops' because they are Promises/Prisma objects. 
-            // We must await the results of the transaction.
-            return await Promise.all(ops);
-        });
+        // Execute stacking operations
+        const ops = await manager.resolveStackingOps(client, userId, templateId, quantity);
+        return await Promise.all(ops);
     }
 
     async removeItem(userId, itemInstanceId, quantity = 1) {
