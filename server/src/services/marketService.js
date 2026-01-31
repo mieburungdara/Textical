@@ -2,6 +2,7 @@ const BaseService = require('./BaseService');
 const marketValidator = require('./market/MarketValidator');
 const orderManager = require('./market/MarketOrderManager');
 const orderMatcher = require('./market/OrderMatcher');
+const listingService = require('./market/MarketListingService');
 
 /**
  * MarketService
@@ -10,16 +11,15 @@ const orderMatcher = require('./market/OrderMatcher');
  */
 class MarketService extends BaseService {
     /**
-     * Create a Sell Order and attempt immediate matching.
+     * Create a Sell Order via ListingService (handles taxes) and attempt immediate matching.
      */
     async createSellOrder(userId, itemInstanceId, quantity, pricePerUnit) {
-        const user = await marketValidator.verifyInTown(userId);
-        
+        // 1. Use ListingService to handle upfront taxes and order creation
+        const order = await listingService.listItem(userId, itemInstanceId, pricePerUnit);
+
+        // 2. Attempt immediate matching
         return await this.runTransaction(async (tx) => {
-            const order = await orderManager.createSellOrder(tx, userId, user.currentRegion, itemInstanceId, quantity, pricePerUnit);
             await orderMatcher.matchSellOrder(tx, order);
-            
-            this.log(`Sell Order created: User ${userId} listed ${quantity} units at ${pricePerUnit} in Region ${user.currentRegion}`, "Market");
             return order;
         });
     }

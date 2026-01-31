@@ -133,6 +133,35 @@ class GatheringService extends BaseService {
         }
 
         await inventoryService.addItem(userId, task.targetItemId, Math.max(1, yieldQuantity));
+
+        // --- AAA Guild Gathering Taxation ---
+        const territory = await this.db.territory.findUnique({
+            where: { regionId: task.user.currentRegion },
+            include: { guild: true }
+        });
+
+        if (territory && territory.guild.gatheringTaxRate > 0) {
+            const itemTemplate = await this.db.itemTemplate.findUnique({ where: { id: task.targetItemId } });
+            const totalValue = (itemTemplate ? itemTemplate.baseValue : 10) * yieldQuantity;
+            const guildFee = Math.floor(totalValue * territory.guild.gatheringTaxRate);
+
+            if (guildFee > 0) {
+                await this.runTransaction(async (tx) => {
+                    // Try to deduct gold from user (if they have it), otherwise guild just gets it (Subsidized)
+                    try {
+                        const transactionManager = require('./economy/TransactionManager');
+                        await transactionManager.removeGold(tx, userId, guildFee, "GATHERING_TAX", territory.id, "TERRITORY");
+                    } catch (e) {
+                        // User too poor? Guild still gets their tithe (Kingdom Subsidy logic)
+                    }
+                    await tx.guild.update({
+                        where: { id: territory.guildId },
+                        data: { treasury: { increment: guildFee } }
+                    });
+                });
+            }
+        }
+
         return await this.db.taskQueue.update({ where: { id: taskId }, data: { status: "COMPLETED" } });
     }
 }

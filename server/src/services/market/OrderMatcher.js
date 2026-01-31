@@ -1,16 +1,27 @@
 const transactionManager = require('../economy/TransactionManager');
 const marketFee = require('../economy/MarketFeeComponent');
+const inventoryManager = require('../inventory/InventoryManager');
 
 /**
  * AAA OrderMatcher
- * The heart of the "Stock Market" system. Matches demand with supply.
+ * Enhanced to support Regional Guild Taxation.
  */
 class OrderMatcher {
     /**
-     * Matches a new Buy Order against existing Sell Orders in the region.
+     * Helper to get guild context for a region.
      */
+    async _getGuildTaxContext(tx, regionId) {
+        const territory = await tx.territory.findUnique({
+            where: { regionId },
+            include: { guild: true }
+        });
+        return territory ? territory.guild : null;
+    }
+
     async matchBuyOrder(tx, buyOrder) {
-        // 1. Find cheapest SELL orders for this item in this region
+        const guild = await this._getGuildTaxContext(tx, buyOrder.regionId);
+        const guildTaxRate = guild ? guild.marketTaxRate : 0;
+
         const sellOrders = await tx.marketOrder.findMany({
             where: {
                 regionId: buyOrder.regionId,
@@ -19,7 +30,7 @@ class OrderMatcher {
                 status: "OPEN",
                 pricePerUnit: { lte: buyOrder.pricePerUnit }
             },
-            orderBy: { pricePerUnit: 'asc' }, // Cheapest first
+            orderBy: { pricePerUnit: 'asc' },
             include: { creator: true, itemInstance: true }
         });
 
@@ -28,19 +39,26 @@ class OrderMatcher {
 
             const fulfillQty = Math.min(buyOrder.remainingQuantity, sell.remainingQuantity);
             const totalPrice = fulfillQty * sell.pricePerUnit;
-            const sellerNet = marketFee.calculateSellerNet(totalPrice);
+            
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate);
+            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate);
 
             // a. Update Seller (Add Gold)
             await transactionManager.addGold(tx, sell.creatorId, sellerNet, "MARKET_ORDER_FILL", sell.id, "ORDER");
 
-            // b. Transfer Items to Buyer (Atomic Add)
-            await tx.inventoryItem.upsert({
-                where: { userId_templateId: { userId: buyOrder.creatorId, templateId: buyOrder.templateId } },
-                update: { quantity: { increment: fulfillQty } },
-                create: { userId: buyOrder.creatorId, templateId: buyOrder.templateId, quantity: fulfillQty }
-            });
+            // b. Update Guild Treasury (if applicable)
+            if (guild && guildRevenue > 0) {
+                await tx.guild.update({
+                    where: { id: guild.id },
+                    data: { treasury: { increment: guildRevenue } }
+                });
+            }
 
-            // c. Update Quantities
+            // c. Transfer Items to Buyer (AAA Multi-Stack Logic)
+            const itemOps = await inventoryManager.resolveStackingOps(tx, buyOrder.creatorId, buyOrder.templateId, fulfillQty);
+            await Promise.all(itemOps);
+
+            // d. Update Quantities
             buyOrder.remainingQuantity -= fulfillQty;
             sell.remainingQuantity -= fulfillQty;
 
@@ -52,7 +70,6 @@ class OrderMatcher {
                 }
             });
 
-            // d. Deduct from seller's locked instance
             if (sell.itemInstanceId) {
                 if (sell.itemInstance.quantity === fulfillQty) {
                     await tx.inventoryItem.delete({ where: { id: sell.itemInstanceId } });
@@ -65,7 +82,6 @@ class OrderMatcher {
             }
         }
 
-        // 2. Finalize Buy Order Status
         await tx.marketOrder.update({
             where: { id: buyOrder.id },
             data: { 
@@ -75,11 +91,10 @@ class OrderMatcher {
         });
     }
 
-    /**
-     * Matches a new Sell Order against existing Buy Orders.
-     * (Seller wants to sell instantly to highest bidders).
-     */
     async matchSellOrder(tx, sellOrder) {
+        const guild = await this._getGuildTaxContext(tx, sellOrder.regionId);
+        const guildTaxRate = guild ? guild.marketTaxRate : 0;
+
         const buyOrders = await tx.marketOrder.findMany({
             where: {
                 regionId: sellOrder.regionId,
@@ -88,7 +103,7 @@ class OrderMatcher {
                 status: "OPEN",
                 pricePerUnit: { gte: sellOrder.pricePerUnit }
             },
-            orderBy: { pricePerUnit: 'desc' }, // Highest first
+            orderBy: { pricePerUnit: 'desc' },
             include: { creator: true }
         });
 
@@ -97,19 +112,26 @@ class OrderMatcher {
 
             const fulfillQty = Math.min(sellOrder.remainingQuantity, buy.remainingQuantity);
             const totalPrice = fulfillQty * buy.pricePerUnit;
-            const sellerNet = marketFee.calculateSellerNet(totalPrice);
+            
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate);
+            const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate);
 
             // a. Seller gets Gold
             await transactionManager.addGold(tx, sellOrder.creatorId, sellerNet, "MARKET_ORDER_FILL", sellOrder.id, "ORDER");
 
-            // b. Buyer gets Items
-            await tx.inventoryItem.upsert({
-                where: { userId_templateId: { userId: buy.creatorId, templateId: buy.templateId } },
-                update: { quantity: { increment: fulfillQty } },
-                create: { userId: buy.creatorId, templateId: buy.templateId, quantity: fulfillQty }
-            });
+            // b. Guild gets Revenue
+            if (guild && guildRevenue > 0) {
+                await tx.guild.update({
+                    where: { id: guild.id },
+                    data: { treasury: { increment: guildRevenue } }
+                });
+            }
 
-            // c. Update Quantities
+            // c. Buyer gets Items (AAA Multi-Stack Logic)
+            const itemOps = await inventoryManager.resolveStackingOps(tx, buy.creatorId, sellOrder.templateId, fulfillQty);
+            await Promise.all(itemOps);
+
+            // d. Update Quantities
             sellOrder.remainingQuantity -= fulfillQty;
             buy.remainingQuantity -= fulfillQty;
 

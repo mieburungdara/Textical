@@ -6,7 +6,7 @@ const marketFee = require('../economy/MarketFeeComponent');
 /**
  * MarketListingService
  * Orchestrates the creation and management of market listings.
- * Refactored to use modular TransactionManager and MarketFee components.
+ * Enhanced to support Guild-based regional taxation.
  */
 class MarketListingService extends BaseService {
     constructor() {
@@ -17,54 +17,81 @@ class MarketListingService extends BaseService {
     async listItem(userId, itemInstanceId, pricePerUnit) {
         if (!pricePerUnit || pricePerUnit < 1) throw new Error("Price must be at least 1 Gold.");
         
-        await marketValidator.verifyInTown(userId);
+        const user = await marketValidator.verifyInTown(userId);
         
         const item = await this.db.inventoryItem.findUnique({
             where: { id: itemInstanceId },
-            include: { template: true, marketListing: true, equippedIn: true }
+            include: { template: true, marketOrders: true, equippedIn: true }
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found.");
-        if (item.marketListing || item.equippedIn) throw new Error("Item is locked.");
+        // Note: renamed from marketListing to marketOrders in previous refactor
+        if (item.marketOrders.length > 0 || item.equippedIn) throw new Error("Item is locked.");
         
+        // --- AAA Guild Taxation Context ---
+        const territory = await this.db.territory.findUnique({
+            where: { regionId: user.currentRegion },
+            include: { guild: true }
+        });
+        const guildTaxRate = territory ? territory.guild.marketTaxRate : 0;
+
         const totalListingValue = pricePerUnit * item.quantity;
-        const upfrontFee = marketFee.calculateListingFee(totalListingValue);
+        const upfrontFee = marketFee.calculateListingFee(totalListingValue, guildTaxRate);
+        const guildRevenue = marketFee.calculateGuildRevenue(totalListingValue, guildTaxRate);
 
         return await this.runTransaction(async (tx) => {
-            // 1. Deduct Listing Fee
+            // 1. Deduct Total Listing Fee from Player
             await transactionManager.removeGold(tx, userId, upfrontFee, "MARKET_LISTING_FEE", item.templateId, "ITEM");
 
-            // 2. Create Listing
-            const listing = await tx.marketListing.create({
+            // 2. Credit Guild Revenue (if applicable)
+            if (territory && guildRevenue > 0) {
+                await tx.guild.update({
+                    where: { id: territory.guildId },
+                    data: { treasury: { increment: guildRevenue } }
+                });
+            }
+
+            // 3. Create Order (Using MarketOrder model now)
+            const expiry = new Date();
+            expiry.setHours(expiry.getHours() + this.LISTING_EXPIRY_HOURS);
+
+            const order = await tx.marketOrder.create({
                 data: {
-                    sellerId: userId,
+                    creatorId: userId,
+                    regionId: user.currentRegion,
                     templateId: item.templateId,
                     itemInstanceId: item.id,
+                    type: "SELL",
                     pricePerUnit: pricePerUnit,
-                    expiresAt: new Date(Date.now() + (this.LISTING_EXPIRY_HOURS * 60 * 60 * 1000))
+                    initialQuantity: item.quantity,
+                    remainingQuantity: item.quantity,
+                    expiresAt: expiry
                 }
             });
 
-            this.log(`Listing created: User ${userId} listed ${item.templateId} for ${pricePerUnit}`, "Market");
-            return listing;
+            this.log(`Sell Order created: User ${userId} listed ${item.templateId} for ${pricePerUnit} in Region ${user.currentRegion}`, "Market");
+            return order;
         });
     }
 
     async getActiveListings(userId) {
-        return await this.db.marketListing.findMany({
-            where: { expiresAt: { gt: new Date() } },
+        return await this.db.marketOrder.findMany({
+            where: { status: "OPEN", expiresAt: { gt: new Date() } },
             include: { itemTemplate: true, itemInstance: true }
         });
     }
 
     async archiveExpiredListings() {
-        const expired = await this.db.marketListing.findMany({
-            where: { expiresAt: { lte: new Date() } }
+        const expired = await this.db.marketOrder.findMany({
+            where: { expiresAt: { lte: new Date() }, status: "OPEN" }
         });
 
-        for (const listing of expired) {
-            await this.db.marketListing.delete({ where: { id: listing.id } });
-            this.log(`Archived expired listing ID: ${listing.id}`, "Market");
+        for (const order of expired) {
+            await this.db.marketOrder.update({ 
+                where: { id: order.id },
+                data: { status: "EXPIRED" }
+            });
+            this.log(`Archived expired order ID: ${order.id}`, "Market");
         }
     }
 }

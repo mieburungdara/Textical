@@ -129,6 +129,7 @@ model RegionTemplate {
   type            RegionType @relation(fields: [visualType], references: [id])
   dangerLevel     Int      @default(1)
   
+  territory       Territory?
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
   resources       RegionResource[]
@@ -712,10 +713,27 @@ model Guild {
   name            String   @unique
   templateId      Int
   template        GuildTemplate @relation(fields: [templateId], references: [id])
-  vaultGold       Int      @default(0)
+  vaultGold       Int      @default(0) // Legacy
+  treasury        Int      @default(0)
+  
+  marketTaxRate   Float    @default(0.0) // Additional tax for guild (0.0 to 0.5)
+  gatheringTaxRate Float   @default(0.0) // Additional tax for guild
+  
   members         User[]
   facilities      GuildFacility[]
   perks           GuildPerk[]
+  territories     Territory[]
+}
+
+model Territory {
+  id              Int      @id @default(autoincrement())
+  regionId        Int      @unique
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  guildId         Int
+  guild           Guild    @relation(fields: [guildId], references: [id])
+  
+  capturedAt      DateTime @default(now())
+  lastUpkeepAt    DateTime @default(now())
 }
 
 model GuildTemplate {
