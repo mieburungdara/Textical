@@ -1,107 +1,90 @@
-const prisma = new (require('@prisma/client').PrismaClient)();
-const mailService = require('./mailService');
-const economyService = require('./economyService');
-const math = require('mathjs');
+const BaseService = require('./BaseService');
+const marketValidator = require('./market/MarketValidator');
+const orderManager = require('./market/HeroOrderManager');
+const transactionManager = require('./economy/TransactionManager');
+const marketFee = require('./economy/MarketFeeComponent');
 
-class HeroAuctionService {
+/**
+ * HeroAuctionService
+ * Orchestrates the localized marketplace for Heroes.
+ */
+class HeroAuctionService extends BaseService {
     /**
-     * Places a bid on a hero.
-     * Implements Escrow, Anti-Sniping, and Min-Increment logic.
+     * Lists a hero for sale in the current town.
      */
-    async placeBid(userId, listingId, bidAmountInCopper) {
-        return await prisma.$transaction(async (tx) => {
-            const listing = await tx.heroAuctionListing.findUnique({
-                where: { id: listingId },
-                include: { bids: { orderBy: { amount: 'desc' }, take: 1 } }
-            });
-
-            if (!listing || listing.isFinished || listing.expiresAt < new Date()) {
-                throw new Error("Auction is no longer active.");
-            }
-
-            // 1. Min Increment Logic (5%)
-            const minBid = listing.currentBid > 0 
-                ? math.add(listing.currentBid, math.floor(math.multiply(listing.currentBid, 0.05)))
-                : listing.startingPrice;
-
-            if (bidAmountInCopper < minBid) {
-                throw new Error(`Minimum bid required: ${minBid} Copper.`);
-            }
-
-            // 2. Escrow: Lock Bidder's Funds
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            const userTotal = economyService.getTotalValueInCopper(user);
-            if (math.smaller(userTotal, bidAmountInCopper)) throw new Error("Insufficient funds for this bid.");
-
-            // Deduct funds (simplified breakdown for demo, usually we'd convert user wealth)
-            await tx.user.update({
-                where: { id: userId },
-                data: { copper: { decrement: bidAmountInCopper } } 
-            });
-
-            // 3. Refund Previous Bidder (Escrow Return)
-            if (listing.bids.length > 0) {
-                const prevBid = listing.bids[0];
-                await tx.user.update({
-                    where: { id: prevBid.bidderId },
-                    data: { copper: { increment: prevBid.amount } }
-                });
-                
-                await mailService.sendSystemMail(prevBid.bidderId, "Outbid Notification", `You have been outbid on listing #${listingId}. Your ${prevBid.amount} Copper has been returned.`);
-            }
-
-            // 4. Anti-Sniping (Soft Close)
-            let newExpiry = listing.expiresAt;
-            const timeRemaining = math.subtract(listing.expiresAt.getTime(), Date.now());
-            if (timeRemaining < 60000) { // Less than 60 seconds
-                newExpiry = new Date(Date.now() + 60000); // Reset to 60s
-                console.log(`[AUCTION] Anti-sniping triggered for #${listingId}. Time extended.`);
-            }
-
-            // 5. Update Listing
-            const bid = await tx.heroBid.create({
-                data: { listingId, bidderId: userId, amount: bidAmountInCopper }
-            });
-
-            await tx.heroAuctionListing.update({
-                where: { id: listingId },
-                data: { currentBid: bidAmountInCopper, expiresAt: newExpiry }
-            });
-
-            return bid;
+    async listHero(userId, heroId, price) {
+        const user = await marketValidator.verifyInTown(userId);
+        return await this.runTransaction(async (tx) => {
+            const order = await orderManager.createHeroSellOrder(tx, userId, user.currentRegion, heroId, price);
+            this.log(`Hero listed: User ${userId} listed Hero ${heroId} for ${price} in Region ${user.currentRegion}`, "Market");
+            return order;
         });
     }
 
     /**
-     * Finalizes an auction, transfers hero, and pays the seller (minus tax).
+     * Creates a request to buy any hero meeting criteria.
      */
-    async finalizeAuction(listingId) {
-        const listing = await prisma.heroAuctionListing.findUnique({
-            where: { id: listingId },
-            include: { bids: { orderBy: { amount: 'desc' }, take: 1 } }
+    async createBuyOrder(userId, targetClassId, minLevel, price) {
+        const user = await marketValidator.verifyInTown(userId);
+        return await this.runTransaction(async (tx) => {
+            const order = await orderManager.createHeroBuyOrder(tx, userId, user.currentRegion, targetClassId, minLevel, price);
+            this.log(`Hero Buy Order created: User ${userId} requested Class ${targetClassId} at ${price}`, "Market");
+            return order;
         });
+    }
 
-        if (!listing || listing.isFinished) return;
+    /**
+     * Instantly purchase a specific listed hero.
+     */
+    async purchaseHero(buyerId, orderId) {
+        await marketValidator.verifyInTown(buyerId);
 
-        if (listing.bids.length === 0) {
-            // No bids: Return hero to seller
-            await prisma.hero.update({ where: { id: listing.heroId }, data: { userId: listing.sellerId } });
-        } else {
-            const winningBid = listing.bids[0];
-            const tax = math.floor(math.multiply(winningBid.amount, 0.15)); // 15% Tax
-            const payout = math.subtract(winningBid.amount, tax);
+        return await this.runTransaction(async (tx) => {
+            const order = await tx.heroOrder.findUnique({
+                where: { id: orderId },
+                include: { hero: true }
+            });
 
-            // Transfer Hero
-            await prisma.hero.update({ where: { id: listing.heroId }, data: { userId: winningBid.bidderId } });
+            if (!order || order.type !== "SELL" || order.status !== "OPEN") throw new Error("Hero listing not found.");
+            if (order.creatorId === buyerId) throw new Error("You cannot buy your own hero.");
 
-            // Pay Seller
-            await prisma.user.update({ where: { id: listing.sellerId }, data: { copper: { increment: payout } } });
+            const totalPrice = order.price;
+            const sellerNet = marketFee.calculateSellerNet(totalPrice);
 
-            await mailService.sendSystemMail(listing.sellerId, "Hero Sold!", `Your hero was sold for ${winningBid.amount} Copper. After 15% tax, you received ${payout}.`);
-            await mailService.sendSystemMail(winningBid.bidderId, "Auction Won!", `Congratulations! You won the auction for your new hero.`);
-        }
+            // 1. Debit Buyer
+            await transactionManager.removeGold(tx, buyerId, totalPrice, "HERO_MARKET_BUY", orderId, "HERO_ORDER");
 
-        await prisma.heroAuctionListing.update({ where: { id: listingId }, data: { isFinished: true } });
+            // 2. Credit Seller
+            await transactionManager.addGold(tx, order.creatorId, sellerNet, "HERO_MARKET_SALE", orderId, "HERO_ORDER");
+
+            // 3. Transfer Ownership
+            await tx.hero.update({
+                where: { id: order.heroId },
+                data: { userId: buyerId }
+            });
+
+            // 4. Close Order
+            await tx.heroOrder.update({
+                where: { id: orderId },
+                data: { status: "FILLED" }
+            });
+
+            this.log(`Hero Purchased: User ${buyerId} bought Hero ${order.heroId} from ${order.creatorId}`, "Market");
+            return { success: true };
+        });
+    }
+
+    async getRegionalHeroOrders(userId, type = "SELL") {
+        const user = await this.db.user.findUnique({ where: { id: userId } });
+        return await this.db.heroOrder.findMany({
+            where: { 
+                regionId: user.currentRegion, 
+                type,
+                status: "OPEN",
+                expiresAt: { gt: new Date() }
+            },
+            include: { hero: { include: { combatClass: true } }, targetClass: true, creator: true }
+        });
     }
 }
 

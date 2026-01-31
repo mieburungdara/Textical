@@ -10,6 +10,14 @@ class FormationService {
     async updateFormation(userId, presetId, slots) {
         formationValidator.validatePositions(slots);
         await formationValidator.verifyOwnership(userId, slots.map(s => s.heroId));
+
+        // AAA: Market Protection - Check if any hero is currently listed for sale
+        const heroIds = slots.map(s => s.heroId);
+        const listedHeroes = await prisma.heroOrder.count({
+            where: { heroId: { in: heroIds }, status: "OPEN" }
+        });
+        if (listedHeroes > 0) throw new Error("Cannot add a hero to formation while they are listed in the market.");
+
         return await formationPersistence.fullUpdate(userId, presetId, slots);
     }
 
