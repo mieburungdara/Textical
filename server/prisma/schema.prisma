@@ -748,6 +748,10 @@ model QuestTemplate {
   factionId       Int?
   faction         Faction? @relation(fields: [factionId], references: [id])
   
+  // AAA: Dynamic Questing
+  isDynamic       Boolean  @default(false)
+  expiresAt       DateTime?
+  
   stages          QuestStage[]
   userQuests      UserQuest[]
 }

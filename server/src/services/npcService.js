@@ -33,7 +33,7 @@ class NPCService extends BaseService {
         for (const npc of npcs) {
             const presence = npc.currentPresence;
             try {
-                const fullState = await actionResolver.resolveFullState(npc, presence, userFactionId);
+                const fullState = await actionResolver.resolveFullState(this.db, npc, presence, userFactionId);
 
                 results.push({
                     instanceId: npc.instanceId || `dyn_${npc.id}`,
@@ -71,7 +71,7 @@ class NPCService extends BaseService {
         if (!npc) throw new Error("NPC not found.");
 
         const presence = await behaviorService.resolveNPCPresence(npcId, hour);
-        const fullState = await actionResolver.resolveFullState(npc, presence, userFactionId);
+        const fullState = await actionResolver.resolveFullState(this.db, npc, presence, userFactionId);
 
         if (fullState.triggerCombat) {
             return { type: "COMBAT_TRIGGERED", message: "The NPC has engaged you in battle!" };

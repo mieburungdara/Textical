@@ -8,7 +8,7 @@ class NPCActionResolver {
     /**
      * Resolves the final dialogue and state for an NPC.
      */
-    async resolveFullState(npc, presence = null, userFactionId = null, reputation = 0) {
+    async resolveFullState(tx, npc, presence = null, userFactionId = null, reputation = 0) {
         const relation = await factionWarService.getRelation(userFactionId, npc.factionId);
         const isAtWar = relation === "WAR";
         const isTraitor = reputation < -1000;
@@ -19,8 +19,26 @@ class NPCActionResolver {
             dialogue: npc.description,
             options: [],
             triggerCombat: false,
-            isHostile: isAtWar || isTraitor
+            isHostile: isAtWar || isTraitor,
+            dynamicQuests: [] // AAA: Dynamic Merchant Quests
         };
+
+        // --- AAA: Check for Dynamic Quests (Shortages) ---
+        // For simplicity, we assume dynamic quests are named with a pattern or flag.
+        if (["TRADER", "MERCHANT"].includes(npc.type)) {
+            const now = new Date();
+            const activeDynamic = await tx.questTemplate.findMany({
+                where: { 
+                    isDynamic: true, 
+                    expiresAt: { gt: now },
+                    description: { contains: npc.name } // Logic check: NPC name embedded in desc
+                }
+            });
+            if (activeDynamic.length > 0) {
+                state.options.push("DYNAMIC_QUEST");
+                state.dynamicQuests = activeDynamic.map(q => ({ id: q.id, name: q.name }));
+            }
+        }
 
         // 1. Resolve Dialogue
         if (isTraitor) {
