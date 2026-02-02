@@ -120,11 +120,84 @@ let replayData = null;
 let currentTickIdx = 0;
 let isPlaying = false;
 let playbackTimer = null;
+let effects = [];
 
 const canvas = document.getElementById('battle-canvas');
 const ctx = canvas.getContext('2d');
 const GRID_SIZE = 50;
 const TILE_SIZE = 600 / GRID_SIZE;
+
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x * TILE_SIZE + (TILE_SIZE / 2);
+        this.y = y * TILE_SIZE;
+        this.text = text;
+        this.color = color;
+        this.life = 1.0; // 1.0 down to 0
+        this.velocity = 0.5 + Math.random() * 0.5;
+    }
+    update() {
+        this.y -= this.velocity;
+        this.life -= 0.02;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.font = 'bold 14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class HitFlash {
+    constructor(unitId, x, y) {
+        this.unitId = unitId;
+        this.x = x * TILE_SIZE;
+        this.y = y * TILE_SIZE;
+        this.life = 0.2; // Quick flash
+    }
+    update() { this.life -= 0.05; }
+    draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillRect(this.x, this.y, TILE_SIZE, TILE_SIZE);
+    }
+}
+
+class Projectile {
+    constructor(sx, sy, tx, ty, color) {
+        this.sx = sx * TILE_SIZE + (TILE_SIZE / 2);
+        this.sy = sy * TILE_SIZE + (TILE_SIZE / 2);
+        this.tx = tx * TILE_SIZE + (TILE_SIZE / 2);
+        this.ty = ty * TILE_SIZE + (TILE_SIZE / 2);
+        this.color = color;
+        this.progress = 0; // 0 to 1
+        this.life = 1.0;
+    }
+    update() {
+        this.progress += 0.1;
+        if (this.progress >= 1.0) this.life = 0;
+    }
+    draw(ctx) {
+        const x = this.sx + (this.tx - this.sx) * this.progress;
+        const y = this.sy + (this.ty - this.sy) * this.progress;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        
+        // Trail
+        ctx.beginPath();
+        ctx.moveTo(this.sx, this.sy);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = 0.3;
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+    }
+}
 
 async function loadReplay() {
     const battleId = document.getElementById('viz-battle-id').value;
@@ -139,7 +212,7 @@ async function loadReplay() {
             currentTickIdx = 0;
             document.getElementById('viz-range').max = replayData.length - 1;
             document.getElementById('viz-range').value = 0;
-            renderCurrentTick();
+            requestAnimationFrame(mainLoop); // Start smooth loop
             updateLog();
         } else {
             alert("Error: " + result.message);
@@ -147,6 +220,11 @@ async function loadReplay() {
     } catch (e) {
         alert("Failed to fetch replay.");
     }
+}
+
+function mainLoop() {
+    renderCurrentTick();
+    if (replayData) requestAnimationFrame(mainLoop);
 }
 
 function renderCurrentTick() {
@@ -159,6 +237,7 @@ function renderCurrentTick() {
     
     // Draw Grid
     ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
     for (let i = 0; i <= GRID_SIZE; i++) {
         ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, 600); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(600, i * TILE_SIZE); ctx.stroke();
@@ -166,15 +245,23 @@ function renderCurrentTick() {
 
     // Draw Units
     tick.units.forEach(u => {
+        // Shadow/Base
         ctx.fillStyle = u.team === 0 ? '#4caf50' : '#f44336';
-        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        ctx.fillRect(u.pos.x * TILE_SIZE + 2, u.pos.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
         
         // HP Bar
-        const hpPercent = u.hp / u.maxHp;
+        const hpPercent = Math.max(0, u.hp / u.maxHp);
         ctx.fillStyle = '#333';
-        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 4, TILE_SIZE, 3);
-        ctx.fillStyle = '#4caf50';
-        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 4, TILE_SIZE * hpPercent, 3);
+        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 6, TILE_SIZE, 4);
+        ctx.fillStyle = hpPercent > 0.5 ? '#4caf50' : (hpPercent > 0.25 ? '#ffeb3b' : '#f44336');
+        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 6, TILE_SIZE * hpPercent, 4);
+    });
+
+    // Update and Draw FX
+    effects = effects.filter(fx => fx.life > 0);
+    effects.forEach(fx => {
+        fx.update();
+        fx.draw(ctx);
     });
 
     document.getElementById('viz-tick').innerText = `Tick: ${tick.tick} / ${replayData[replayData.length-1].tick}`;
@@ -187,6 +274,34 @@ function updateLog() {
     
     if (tick.events.length > 0) {
         logEl.innerHTML = tick.events.map(e => `<div>[${e.type}] ${e.msg}</div>`).join('') + "<hr>" + logEl.innerHTML;
+        
+        // AAA: Trigger FX from events
+        tick.events.forEach(e => {
+            if (e.type === "ATTACK" || e.type === "SKILL") {
+                const attacker = tick.units.find(u => u.id === e.attackerId);
+                const target = tick.units.find(u => u.id === e.targetId);
+
+                if (attacker && target) {
+                    const dist = Math.sqrt(Math.pow(target.pos.x - attacker.pos.x, 2) + Math.pow(target.pos.y - attacker.pos.y, 2));
+                    if (dist > 1.5) {
+                        effects.push(new Projectile(attacker.pos.x, attacker.pos.y, target.pos.x, target.pos.y, "#fff176"));
+                    }
+                }
+
+                if (e.damage) {
+                    if (target) {
+                        effects.push(new FloatingText(target.pos.x, target.pos.y, `-${e.damage}`, "#ff5252"));
+                        effects.push(new HitFlash(target.id, target.pos.x, target.pos.y));
+                    }
+                }
+            }
+            if (e.type === "HEAL") {
+                const target = tick.units.find(u => u.id === e.targetId);
+                if (target) {
+                    effects.push(new FloatingText(target.pos.x, target.pos.y, `+${e.amount}`, "#69f0ae"));
+                }
+            }
+        });
     }
 }
 
