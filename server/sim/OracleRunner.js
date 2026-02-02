@@ -4,6 +4,7 @@ const gatheringService = require('../src/services/gatheringService');
 const craftingService = require('../src/services/craftingService');
 const marketService = require('../src/services/marketService');
 const salvageService = require('../src/services/crafting/SalvageService');
+const repairService = require('../src/services/economy/RepairService');
 
 /**
  * OracleRunner
@@ -23,7 +24,7 @@ class OracleRunner {
         for (const bot of this.bots) {
             const user = await prisma.user.findUnique({
                 where: { id: bot.userId },
-                include: { inventory: { include: { template: true } }, taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
+                include: { inventory: { include: { template: true, equippedIn: true } }, taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
             });
 
             if (user.taskQueue.length > 0) {
@@ -59,6 +60,13 @@ class OracleRunner {
                     const gear = user.inventory.find(i => i.template.category !== "MATERIAL");
                     if (gear) {
                         await salvageService.salvageItem(user.id, gear.id);
+                    }
+                    break;
+                case "REPAIR":
+                    // Find first damaged equipped item
+                    const broken = user.inventory.find(i => i.equippedIn && i.currentDurability < i.maxDurability);
+                    if (broken) {
+                        await repairService.repairItem(user.id, broken.id);
                     }
                     break;
                 case "SELL":

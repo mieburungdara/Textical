@@ -14,6 +14,10 @@ class BehaviorBrain {
         // 0. AAA: Item Sink Pressure - Salvage if full
         if (ctx.inventoryCount >= 16) return "SALVAGE"; 
 
+        // 1. AAA: Maintenance Pressure - Repair if broken
+        const needsRepair = ctx.items.some(i => i.equippedIn && (i.currentDurability / i.maxDurability) < 0.3);
+        if (needsRepair) return "REPAIR";
+
         switch (ctx.archetype) {
             case "GATHERER":
                 if (ctx.inventoryCount >= 15) return "SELL";
