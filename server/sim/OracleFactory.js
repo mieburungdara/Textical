@@ -41,8 +41,37 @@ class BotFactory {
                     name: `${username}_Pahlawan`,
                     unitLevel: 1,
                     isMain: true,
-                    classId: 1001 // Recruit
+                    classId: 1001, // Recruit
+                    str: 20, // AAA: Boost for immediate gathering
+                    vit: 20,
+                    dex: 20,
+                    int: 20
                 }
+            });
+
+            // AAA: Ensure Formation exists for Bot
+            const preset = await prisma.formationPreset.upsert({
+                where: { id: 1000 + i },
+                update: { userId: user.id },
+                create: {
+                    id: 1000 + i,
+                    userId: user.id,
+                    name: "Default"
+                }
+            });
+
+            await prisma.formationSlot.upsert({
+                where: { presetId_heroId: { presetId: preset.id, heroId: hero.id } },
+                update: { gridX: 2, gridY: 2 },
+                create: { presetId: preset.id, heroId: hero.id, gridX: 2, gridY: 2 }
+            });
+
+            // AAA: Provide Basic Tools
+            await prisma.inventoryItem.create({
+                data: { userId: user.id, templateId: 2301, quantity: 1 } // Wooden Pickaxe
+            });
+            await prisma.inventoryItem.create({
+                data: { userId: user.id, templateId: 2501, quantity: 1 } // Flint Axe
             });
 
             bots.push({ userId: user.id, archetype });
@@ -73,6 +102,7 @@ class BotFactory {
         const botUserIds = botUsers.map(u => u.id);
 
         if (botUserIds.length > 0) {
+            await prisma.formationPreset.deleteMany({ where: { userId: { in: botUserIds } } });
             await prisma.inventoryItem.deleteMany({ where: { userId: { in: botUserIds } } });
             await prisma.marketOrder.deleteMany({ where: { creatorId: { in: botUserIds } } });
             await prisma.taskQueue.deleteMany({ where: { userId: { in: botUserIds } } });

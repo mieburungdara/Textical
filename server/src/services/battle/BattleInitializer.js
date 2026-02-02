@@ -48,11 +48,11 @@ class BattleInitializer extends BaseService {
         // 3. Setup Simulation
         const regionTemplate = await this.db.regionTemplate.findUnique({
             where: { id: user.currentRegion },
-            include: { type: { include: { effects: true } } }
+            include: { regionType: { include: { effects: true } } }
         });
         
         const regionType = regionTemplate ? regionTemplate.visualType : "FOREST";
-        const terrainEffects = regionTemplate && regionTemplate.type ? regionTemplate.type.effects : [];
+        const terrainEffects = regionTemplate && regionTemplate.regionType ? regionTemplate.regionType.effects : [];
         
         const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
         sim.terrainEffects = terrainEffects;

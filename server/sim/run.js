@@ -8,7 +8,7 @@ async function launchOracle() {
     console.log("   Simulasi Masa Depan Eldoria");
     console.log("==================================================\n");
 
-    const BOT_COUNT = 100;
+    const BOT_COUNT = 50;
     const SIM_HOURS = 100;
 
     // 1. Initialize Population
@@ -21,13 +21,25 @@ async function launchOracle() {
     console.log("🗺️  Establishing regional trade routes...");
     await prisma.regionTemplate.upsert({
         where: { id: 2 },
-        update: { specialization: "BLACKSMITH_HUB", regionalTaxRate: 0.15 },
-        create: { id: 2, name: "Master Forge Hub", description: "B", visualType: "TOWN", specialization: "BLACKSMITH_HUB" }
+        update: { specialization: "BLACKSMITH_HUB", regionalTaxRate: 0.15, zoneType: "BLUE" },
+        create: { id: 2, name: "Master Forge Hub", description: "B", visualType: "TOWN", specialization: "BLACKSMITH_HUB", zoneType: "BLUE" }
     });
+    // Add a RED ZONE for elite bots
+    await prisma.regionTemplate.upsert({
+        where: { id: 3 },
+        update: { specialization: null, regionalTaxRate: 0.25, zoneType: "RED" },
+        create: { id: 3, name: "The Badlands", description: "C", visualType: "FOREST", zoneType: "RED" }
+    });
+
     await prisma.regionConnection.upsert({
         where: { originRegionId_targetRegionId: { originRegionId: 1, targetRegionId: 2 } },
         update: {},
         create: { originRegionId: 1, targetRegionId: 2 }
+    });
+    await prisma.regionConnection.upsert({
+        where: { originRegionId_targetRegionId: { originRegionId: 2, targetRegionId: 3 } },
+        update: {},
+        create: { originRegionId: 2, targetRegionId: 3 }
     });
 
     const startRegions = await prisma.user.groupBy({
@@ -43,7 +55,7 @@ async function launchOracle() {
 
     // 3. Collect Predictive Data
     console.log("\n--------------------------------------------------");
-    console.log("📊 ORACLE ANALYSIS REPORT");
+    console.log("📊 ORACLE ANALYSIS REPORT (50 PROFESSIONAL BOTS)");
     console.log("--------------------------------------------------\n");
 
     const stats = await prisma.user.aggregate({ _sum: { silver: true } });
@@ -57,14 +69,17 @@ async function launchOracle() {
         _count: true
     });
 
-    const migrationCount = endRegions.find(r => r.currentRegion === 2)?._count || 0;
+    const redZoneCount = endRegions.find(r => r.currentRegion === 3)?._count || 0;
+    const avgLevel = await prisma.hero.aggregate({ _avg: { unitLevel: true }, where: { id: { gte: 1000 } } });
+    const maxLevel = await prisma.hero.aggregate({ _max: { unitLevel: true }, where: { id: { gte: 1000 } } });
 
     console.log(`🌍 Current World Metric Predictions:`);
     console.log(`   - Silver Velocity: ${stats._sum.silver} units in circulation.`);
     console.log(`   - Resource Throughput: ${extractions._sum.volume24h || 0} units extracted.`);
     console.log(`   - Inventory Pressure: ${items} items stored.`);
     console.log(`   - Market Activity: ${activeListings} active trade orders.`);
-    console.log(`   - Regional Migration: ${migrationCount} bots moved to Master Forge Hub.`);
+    console.log(`   - Regional Migration: ${redZoneCount} elites reached the RED ZONE.`);
+    console.log(`   - Population Growth: Avg Lv ${Math.round(avgLevel._avg.unitLevel)}, Max Lv ${maxLevel._max.unitLevel}.`);
 
     // 4. Recommendation Logic
     console.log("\n💡 ORACLE RECOMMENDATIONS:");
