@@ -23,9 +23,12 @@ class DeathResolver {
             
             this.sim.rules._broadcastAllyEvent("onAllyDeath", u);
 
-            if (u.teamId === 1) this.sim.killedMonsterIds.push(u.data.id);
-            this.sim.rewards.gold += 15;
-            this.sim.rewards.exp += (u.data.exp_reward || 10);
+            if (u.teamId === 1) {
+                this.sim.killedMonsterIds.push(u.data.id);
+                this.sim.rewards.gold += 15;
+                this.sim.rewards.exp += (u.data.exp_reward || 10);
+            }
+            
             this.sim.logger.addEvent("DEATH", `${u.data.name} died`, { target_id: u.instanceId });
         });
     }

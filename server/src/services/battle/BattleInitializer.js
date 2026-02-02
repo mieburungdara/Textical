@@ -78,6 +78,7 @@ class BattleInitializer extends BaseService {
             sim.addUnit({
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 db_id: p.profile.id, // Keep track of DB ID for persistence
+                isMain: p.profile.isMain, // AAA: Unit Utama Identification
                 name: p.profile.name,
                 bt_tree: "SimpleAI",
                 traits: p.profile.activeTraits,

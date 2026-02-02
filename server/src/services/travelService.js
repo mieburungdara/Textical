@@ -1,5 +1,6 @@
 const prisma = require('../db');
 const vitalityService = require('./vitalityService');
+const koManager = require('./vitality/KOManager');
 
 class TravelService {
     constructor() {
@@ -9,6 +10,13 @@ class TravelService {
     async startTravel(userIdRaw, targetRegionIdRaw) {
         const userId = parseInt(userIdRaw);
         const targetRegionId = parseInt(targetRegionIdRaw);
+
+        // AAA: KO and Recovery Checks
+        const isKO = await koManager.isKnockedOut(userId);
+        if (isKO) throw new Error("You are unconscious and cannot travel.");
+
+        const isInRecovery = await koManager.isInRecovery(userId);
+        if (isInRecovery) throw new Error("You must wait for your recovery window to end before moving (1 minute peace required).");
 
         const user = await prisma.user.findUnique({
             where: { id: userId },

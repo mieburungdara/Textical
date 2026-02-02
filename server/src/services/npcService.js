@@ -5,6 +5,7 @@ const promotionService = require('./promotionService');
 const behaviorService = require('./npc/NPCBehaviorService');
 const actionResolver = require('../logic/npc/NPCActionResolver');
 const factionWarService = require('./faction/FactionWarService');
+const koManager = require('./vitality/KOManager');
 
 /**
  * NPCService
@@ -18,6 +19,10 @@ class NPCService extends BaseService {
     async getAvailableNPCs(regionId, userId = null, hour = null) {
         let userFactionId = null;
         if (userId) {
+            // AAA: KO Check
+            const isKO = await koManager.isKnockedOut(userId);
+            if (isKO) return []; // Unconscious players see no NPCs
+
             const user = await this.db.user.findUnique({ where: { id: userId } });
             userFactionId = user ? user.factionId : null;
         }
@@ -52,6 +57,10 @@ class NPCService extends BaseService {
     }
 
     async interactWithNPC(userId, heroId, npcId, action, params = {}, hour = null) {
+        // AAA: KO Check
+        const isKO = await koManager.isKnockedOut(userId);
+        if (isKO) throw new Error("You are unconscious.");
+
         const user = await this.db.user.findUnique({ where: { id: userId } });
         const userFactionId = user ? user.factionId : null;
 

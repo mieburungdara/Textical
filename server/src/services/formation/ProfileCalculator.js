@@ -34,6 +34,7 @@ class ProfileCalculator extends BaseService {
         const profile = {
             id: hero.id,
             name: hero.name,
+            isMain: hero.isMain, // AAA: Unit Utama Identification
             totalStats: {},
             activeTraits: [],
             equippedItems: [], // AAA: Tracking for Durability
