@@ -163,6 +163,7 @@ model RegionTemplate {
   zoneType        String   @default("GREEN") // GREEN, BLUE, RED
   regionalTaxRate Float    @default(0.10)
   weatherOverride String?  // Optional regional weather override
+  specialization  String?  // e.g., "BLACKSMITH_HUB", "ALCHEMIST_GARDEN", "CARPENTRY_MILL"
   
   regionTypeId    String?
   regionType      RegionType? @relation(fields: [regionTypeId], references: [id])

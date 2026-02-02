@@ -26,7 +26,10 @@ class CraftingService extends BaseService {
         const region = await this.db.regionTemplate.findUnique({ where: { id: user.currentRegion } });
         const recipe = await this.db.recipeTemplate.findUnique({
             where: { id: recipeId },
-            include: { ingredients: { include: { item: true }, orderBy: { quantity: 'desc' } } } // Primary usually has highest quantity
+            include: { 
+                ingredients: { include: { item: true }, orderBy: { quantity: 'desc' } },
+                resultItem: true
+            } 
         });
 
         if (!user || !recipe) throw new Error("Invalid crafting request.");
@@ -50,13 +53,19 @@ class CraftingService extends BaseService {
 
         // --- AAA: Regional Station Buffs ---
         let speedMult = 1.0;
+        
+        // 1. Resource Abundance Buff
         if (recipe.ingredients.length > 0) {
             const primaryIngredientId = recipe.ingredients[0].itemId;
             const stats = await this.db.regionalExtractionStats.findUnique({
                 where: { regionId_templateId: { regionId: user.currentRegion, templateId: primaryIngredientId } }
             });
-            speedMult = stationBuffResolver.resolveSpeedMultiplier(stats ? stats.volume24h : 0);
+            speedMult *= stationBuffResolver.resolveResourceBuff(stats ? stats.volume24h : 0);
         }
+
+        // 2. Specialized Station Buff
+        const workshopBuffs = stationBuffResolver.resolveStationBuffs(region.specialization, recipe.resultItem.category);
+        speedMult *= workshopBuffs.speedMult;
 
         // 2. Resource Consumption
         return await this.runTransaction(async (tx) => {
@@ -126,18 +135,27 @@ class CraftingService extends BaseService {
         // Find primary ingredient volume
         const recipe = await this.db.recipeTemplate.findFirst({
             where: { resultItemId: task.targetItemId },
-            include: { ingredients: { orderBy: { quantity: 'desc' } } }
+            include: { 
+                ingredients: { orderBy: { quantity: 'desc' } },
+                resultItem: true
+            }
         });
 
         let regionalVolume = 0;
+        let workshopBuffs = { qualityLuck: 0 };
+
         if (recipe && recipe.ingredients.length > 0) {
             const stats = await this.db.regionalExtractionStats.findUnique({
                 where: { regionId_templateId: { regionId: task.user.currentRegion, templateId: recipe.ingredients[0].itemId } }
             });
             regionalVolume = stats ? stats.volume24h : 0;
+
+            // Fetch regional specialization for luck
+            const region = await this.db.regionTemplate.findUnique({ where: { id: task.user.currentRegion } });
+            workshopBuffs = stationBuffResolver.resolveStationBuffs(region.specialization, recipe.resultItem.category);
         }
 
-        const qualityResult = qualityResolver.resolve(heroLevel, regionalVolume);
+        const qualityResult = qualityResolver.resolve(heroLevel, regionalVolume, workshopBuffs.qualityLuck);
         quality = qualityResult.quality;
         powerScale = qualityResult.powerScale;
 
