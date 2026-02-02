@@ -4,6 +4,7 @@ const inventoryService = require('../inventoryService');
 const koManager = require('../vitality/KOManager');
 const lootService = require('../logistics/LootService');
 const bountyService = require('../social/BountyService');
+const siegeService = require('../guild/SiegeService');
 
 class RewardProcessor extends BaseService {
     async process(userId, battleResult, monsterTemplate, partyCount) {
@@ -12,7 +13,7 @@ class RewardProcessor extends BaseService {
 
         const user = await this.db.user.findUnique({
             where: { id: userId },
-            include: { region: true }
+            include: { region: { include: { territory: true } } }
         });
         const zoneType = user.region.zoneType;
 
@@ -42,7 +43,70 @@ class RewardProcessor extends BaseService {
 
         // --- 2. PROCESS BATTLE OUTCOME ---
         if (battleResult.winner === 0) { 
-            // ... (rest of victory logic)
+            // VICTORY LOGIC
+            const totalExp = battleResult.rewards.exp || 0;
+            const heroShare = Math.floor(totalExp / partyCount);
+
+            // AAA: Siege Integration
+            if (battleResult.victimUserId && user.region.territory && user.region.territory.siegeStatus === "UNDER_SIEGE" && user.guildId) {
+                await this.runTransaction(async (tx) => {
+                    await siegeService.applyBattleResult(tx, user.guildId, user.region.territory.id);
+                });
+            }
+
+            // Fetch survivors (those not deleted by permadeath)
+            const heroes = await this.db.hero.findMany({
+                where: { formationSlots: { some: { preset: { userId } } } }
+            });
+
+            for (const hero of heroes) {
+                // If hero died in RED, they were either deleted or stripped. 
+                // If they were stripped (isMain), they still get XP? 
+                // Spec says: "Victory Irrelevance: Jika Unit Utama mati tapi timnya menang, Unit Utama tetap kehilangan equipment dan tetap terkena penalti XP."
+                
+                const simUnit = battleResult.initialUnits.find(u => u.data.db_id === hero.id);
+                
+                if (simUnit && simUnit.isDead && zoneType === "RED" && hero.isMain) {
+                    // Penalty already applied in _executePermadeath
+                    // Main unit does NOT get XP if dead, even if team wins.
+                    continue; 
+                }
+
+                const progression = await progressionService.addHeroExperience(hero.id, heroShare);
+
+                // Persist Durability Loss
+                if (simUnit && simUnit.durabilityLoss) {
+                    for (const [instanceId, loss] of Object.entries(simUnit.durabilityLoss)) {
+                        if (loss > 0) {
+                            await this.db.inventoryItem.update({
+                                where: { id: parseInt(instanceId) },
+                                data: { currentDurability: { decrement: loss } }
+                            });
+                        }
+                    }
+                }
+
+                heroResults.push({
+                    id: hero.id,
+                    name: hero.name,
+                    xpGained: heroShare,
+                    totalXp: progression.hero.unitXp,
+                    unitLevel: progression.hero.unitLevel,
+                    classLevel: progression.hero.classLevel,
+                    leveledUp: progression.unitLeveledUp || progression.classLeveledUp
+                });
+            }
+
+            // Process Loot
+            for (const entry of monsterTemplate.loot) {
+                if (Math.random() < entry.chance) {
+                    try {
+                        await inventoryService.addItem(userId, entry.itemId, 1);
+                        lootEarned.push({ templateId: entry.itemId, quantity: 1 });
+                    } catch (e) { /* Inventory full */ }
+                }
+            }
+
             // Process Gold
             if (battleResult.rewards.gold > 0) {
                 const transactionManager = require('../economy/TransactionManager');

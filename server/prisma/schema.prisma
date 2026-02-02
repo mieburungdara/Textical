@@ -849,6 +849,7 @@ model Guild {
   facilities      GuildFacility[]
   perks           GuildPerk[]
   territories     Territory[]
+  siegesAsAttacker Siege[] @relation("AttackerRelation")
   
   factionId       Int?
   faction         Faction? @relation(fields: [factionId], references: [id])
@@ -873,8 +874,15 @@ model Territory {
   guildId         Int
   guild           Guild    @relation(fields: [guildId], references: [id])
   
+  // AAA: Fortification and Siege Status
+  fortification     Int      @default(1000)
+  maxFortification  Int      @default(1000)
+  siegeStatus       String   @default("PEACE") // PEACE, UNDER_SIEGE
+  
   capturedAt      DateTime @default(now())
   lastUpkeepAt    DateTime @default(now())
+  
+  activeSieges    Siege[]
 }
 
 model GuildTemplate {
@@ -920,15 +928,25 @@ model GuildPerk {
 
 model Siege {
   id              Int      @id @default(autoincrement())
-  regionId        Int
+  territoryId     Int
+  territory       Territory @relation(fields: [territoryId], references: [id])
+  
   attackerGuildId Int
-  status          String   @default("PENDING")
+  attackerGuild   Guild @relation("AttackerRelation", fields: [attackerGuildId], references: [id])
+  
+  status          String   @default("ACTIVE") // ACTIVE, WON, REPELLED
+  startedAt       DateTime @default(now())
+  endsAt          DateTime
+  
+  logs            SiegeLog[]
 }
 
 model SiegeLog {
   id              Int      @id @default(autoincrement())
   siegeId         Int
+  siege           Siege    @relation(fields: [siegeId], references: [id])
   event           String
+  createdAt       DateTime @default(now())
 }
 
 model TransactionLedger {
