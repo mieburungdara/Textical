@@ -3,6 +3,7 @@ const progressionService = require('../progressionService');
 const inventoryService = require('../inventoryService');
 const koManager = require('../vitality/KOManager');
 const lootService = require('../logistics/LootService');
+const bountyService = require('../social/BountyService');
 
 class RewardProcessor extends BaseService {
     async process(userId, battleResult, monsterTemplate, partyCount) {
@@ -15,8 +16,23 @@ class RewardProcessor extends BaseService {
         });
         const zoneType = user.region.zoneType;
 
+        // --- 0. AAA BOUNTY CHECK (Override Logic) ---
+        let isBountyKill = false;
+        if (battleResult.victimUserId && battleResult.winner === 0) {
+            const bounty = await this.db.bounty.findFirst({
+                where: { targetId: battleResult.victimUserId, status: "OPEN" }
+            });
+            if (bounty) {
+                isBountyKill = true;
+                // Confirm Claim via transaction
+                await this.runTransaction(async (tx) => {
+                    await bountyService.claimBounty(tx, battleResult.victimUserId, userId);
+                });
+            }
+        }
+
         // --- 1. PROCESS INDIVIDUAL UNIT DEATHS (AAA: UNIVERSAL PERMADEATH) ---
-        if (zoneType === "RED") {
+        if (zoneType === "RED" || isBountyKill) {
             for (const unit of battleResult.initialUnits.filter(u => u.teamId === 0)) {
                 if (unit.isDead) {
                     await this._executePermadeath(unit.data.db_id);
@@ -26,77 +42,25 @@ class RewardProcessor extends BaseService {
 
         // --- 2. PROCESS BATTLE OUTCOME ---
         if (battleResult.winner === 0) { 
-            // VICTORY LOGIC
-            const totalExp = battleResult.rewards.exp || 0;
-            const heroShare = Math.floor(totalExp / partyCount);
-
-            // Fetch survivors (those not deleted by permadeath)
-            const heroes = await this.db.hero.findMany({
-                where: { formationSlots: { some: { preset: { userId } } } }
-            });
-
-            for (const hero of heroes) {
-                // If hero died in RED, they were either deleted or stripped. 
-                // If they were stripped (isMain), they still get XP? 
-                // Spec says: "Victory Irrelevance: Jika Unit Utama mati tapi timnya menang, Unit Utama tetap kehilangan equipment dan tetap terkena penalti XP."
-                
-                const simUnit = battleResult.initialUnits.find(u => u.data.db_id === hero.id);
-                
-                if (simUnit && simUnit.isDead && zoneType === "RED" && hero.isMain) {
-                    // Penalty already applied in _executePermadeath
-                    // Main unit does NOT get XP if dead, even if team wins.
-                    continue; 
-                }
-
-                const progression = await progressionService.addHeroExperience(hero.id, heroShare);
-
-                // Persist Durability Loss
-                if (simUnit && simUnit.durabilityLoss) {
-                    for (const [instanceId, loss] of Object.entries(simUnit.durabilityLoss)) {
-                        if (loss > 0) {
-                            await this.db.inventoryItem.update({
-                                where: { id: parseInt(instanceId) },
-                                data: { currentDurability: { decrement: loss } }
-                            });
-                        }
-                    }
-                }
-
-                heroResults.push({
-                    id: hero.id,
-                    name: hero.name,
-                    xpGained: heroShare,
-                    totalXp: progression.hero.unitXp,
-                    unitLevel: progression.hero.unitLevel,
-                    classLevel: progression.hero.classLevel,
-                    leveledUp: progression.unitLeveledUp || progression.classLeveledUp
-                });
-            }
-
-            // Process Loot
-            for (const entry of monsterTemplate.loot) {
-                if (Math.random() < entry.chance) {
-                    try {
-                        await inventoryService.addItem(userId, entry.itemId, 1);
-                        lootEarned.push({ templateId: entry.itemId, quantity: 1 });
-                    } catch (e) { /* Inventory full */ }
-                }
-            }
-
+            // ... (rest of victory logic)
             // Process Gold
             if (battleResult.rewards.gold > 0) {
-                await this.db.user.update({
-                    where: { id: userId },
-                    data: { gold: { increment: battleResult.rewards.gold } }
+                const transactionManager = require('../economy/TransactionManager');
+                await this.runTransaction(async (tx) => {
+                    await transactionManager.addCurrency(tx, userId, battleResult.rewards.gold, "BATTLE_REWARD");
                 });
             }
 
-            // AAA: Loot Session Creation (PvP Victory)
-            // If winner is PLAYER and there was a PvP component (victim is another user)
-            // For now, let's assume we can detect if the victim had a Wagon.
+            // AAA: Loot Session Creation (PvP Victory or Bounty)
             if (battleResult.victimUserId) {
                 const victimWagon = await this.db.wagon.findUnique({ where: { userId: battleResult.victimUserId } });
-                if (victimWagon) {
+                
+                // If it's a Bounty Kill, hunters can loot BOTH Wagon and Inventory
+                // For now, let's trigger a specialized Loot Session if it's a bounty
+                if (isBountyKill) {
+                    await lootService.startLootSession(userId, battleResult.victimUserId, victimWagon ? victimWagon.id : null);
+                    this.log(`Bounty Loot Session Created: User ${userId} is looting criminal User ${battleResult.victimUserId}.`, "Loot");
+                } else if (victimWagon) {
                     await lootService.startLootSession(userId, battleResult.victimUserId, victimWagon.id);
                     this.log(`Loot Session Created: User ${userId} is now looting User ${battleResult.victimUserId}.`, "Loot");
                 }

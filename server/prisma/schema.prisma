@@ -63,6 +63,10 @@ model User {
   
   lootSessionsAsLooter LootSession[] @relation("LooterRelation")
   lootSessionsAsVictim LootSession[] @relation("VictimRelation")
+
+  // AAA: Bounty Board
+  bountiesAsTarget Bounty[] @relation("TargetRelation")
+  bountiesAsHunter Bounty[] @relation("HunterRelation")
 }
 
 model MonsterTemplate {
@@ -183,6 +187,7 @@ model RegionTemplate {
   itemSaleHistory ItemSaleHistory[]
   npcStocks       ShopStock[]
   extractionStats RegionalExtractionStats[]
+  bounties        Bounty[]
 }
 
 model WorldEventTemplate {
@@ -1101,8 +1106,25 @@ model RegionalExtractionStats {
   templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
   
-  volume24h       Int      @default(0)
-  lastUpdated     DateTime @default(now())
+    volume24h       Int      @default(0)
+    lastUpdated     DateTime @default(now())
   
-  @@unique([regionId, templateId])
-}
+    @@unique([regionId, templateId])
+  }
+  
+  model Bounty {
+    id              Int      @id @default(autoincrement())
+    targetId        Int
+    target          User     @relation("TargetRelation", fields: [targetId], references: [id])
+    hunterId        Int?
+    hunter          User?    @relation("HunterRelation", fields: [hunterId], references: [id])
+    
+    rewardSilver    BigInt   @default(0)
+    status          String   @default("OPEN") // OPEN, CLAIMED, EXPIRED
+    
+    regionId        Int
+    region          RegionTemplate @relation(fields: [regionId], references: [id])
+    
+    createdAt       DateTime @default(now())
+    claimedAt       DateTime?
+  }
