@@ -45,6 +45,23 @@
 - **Respawn**: Pemain otomatis respawn di **kota terakhir yang dikunjungi**.
 
 ## 4. World-Level Rules
+
 - **Logout Policy**: Jika pemain logout/force close di luar Green Zone, karakter tetap eksis di dunia dan tetap dapat diserang oleh monster atau pemain lain.
+
 - **Loot Interruption**: Jika pihak ketiga menyerang pemenang yang sedang menjarah, UI jarahan tertutup paksa dan seluruh isi jarahan (gerobak/tas korban) **langsung hancur/lenyap**.
+
 - **Reputation**: Menyerang karavan pemain lain mengakibatkan penalti reputasi faksi di zona manapun.
+
+
+
+## 🚨 Catatan Konflik & Koreksi (Hasil Audit Kode)
+
+*Ditemukan oleh Thinking Agent untuk diperbaiki oleh Scripting Agent:*
+
+
+
+1. **Bug Permadeath Global di `RewardService.js`**: Kode saat ini di `RewardService.js` menghapus hero secara permanen pada mode "ADVENTURE" tanpa mengecek tipe zona. **KOREKSI**: Suntikkan pengecekan `region.zoneType`. Penghapusan hero (delete) HANYA boleh terjadi jika zona adalah `RED`. Untuk `BLUE`, ubah logika menjadi aktivasi status `isKnockedOut`.
+
+2. **Ketiadaan Field `isMain` di Database**: `schema.prisma` v5.0 belum memiliki field `isMain` pada model `Hero`. **KOREKSI**: Tambahkan `isMain Boolean @default(false)` melalui migrasi database agar sistem "Naked Immortality" dapat membedakan Unit Utama.
+
+3. **Logic Redundancy di `DeathResolver.js`**: Handler saat ini memberikan hadiah emas flat untuk setiap kematian. **KOREKSI**: Logika pemberian reward harus dipindahkan atau divalidasi ulang agar tidak bertabrakan dengan penalti XP 10% dan penghancuran gerobak di Red Zone.

@@ -29,3 +29,10 @@
 ## 4. Technical Requirements
 - Field `currentDurability` & `maxDurability` pada model `InventoryItem`.
 - Flag visual `isBroken` di UI jika `currentDurability == 0`.
+
+## 🚨 Catatan Konflik & Koreksi (Hasil Audit Kode)
+*Ditemukan oleh Thinking Agent untuk diperbaiki oleh Scripting Agent:*
+
+1. **Regresi Skema Database**: Pada `schema.prisma` v5.0, field `currentDurability` pada model `InventoryItem` menghilang (kemungkinan terhapus saat pembersihan). **KOREKSI**: Agent pengembang wajib melakukan migrasi ulang untuk menambahkan `currentDurability` dan `maxDurability` (Int) ke dalam model `InventoryItem`.
+2. **Stat Bleeding di `StatService.js`**: Saat ini, fungsi `_applyEquipment` di `StatService.js` langsung menjumlahkan stat dari item tanpa mengecek kondisi. **KOREKSI**: Tambahkan logika `if (item.currentDurability > 0)` sebelum modifier diterapkan, agar item rusak benar-benar memberikan 0 stat sesuai spesifikasi.
+3. **Sinkronisasi di `RepairService.js`**: Kode saat ini menggunakan `mathjs` namun perlu dipastikan merujuk ke field skema yang baru.

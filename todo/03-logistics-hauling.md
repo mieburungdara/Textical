@@ -56,3 +56,9 @@
 - **Automatic Transfer**: Saat karakter berhasil memasuki region kota tujuan, status `isHauling` dicabut secara otomatis.
 - **Item Storage**: Semua barang yang tersisa di dalam inventory gerobak akan otomatis dipindahkan ke dalam **Bank Kota (Local Bank)** di kota tujuan tersebut.
 - **Cleanup**: Entitas gerobak dihapus dari sistem setelah proses pemindahan barang selesai.
+
+## 🚨 Catatan Konflik & Koreksi (Hasil Audit Kode)
+*Ditemukan oleh Thinking Agent untuk diperbaiki oleh Scripting Agent:*
+
+1. **Inkonsistensi Pergerakan di `TravelService.js`**: Sistem saat ini baru memperbarui lokasi pemain SETELAH timer perjalanan selesai. **KOREKSI**: Untuk mode Hauling, lokasi `currentRegion` harus diupdate di awal (saat berpindah node rute), agar pemain terdeteksi berada "di dalam" region tersebut selama timer 60 detik untuk keperluan pengecekan Ambush.
+2. **Kapasitas Tas di `InventoryService.js`**: Pengecekan `hasSpace` saat ini hanya melihat `user.maxInventorySlots`. **KOREKSI**: Perluasan fungsi agar dapat memvalidasi kapasitas berdasarkan Tier Gerobak (5, 10, 15, 20 slot) saat pemain melakukan proses *loading* barang ke gerobak.

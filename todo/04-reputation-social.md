@@ -53,3 +53,9 @@ Cara bagi pemain untuk memulihkan reputasi yang hancur.
 - **Denda Gold (Imperial Fine)**: Membayar denda dalam jumlah yang sangat besar (misal: 10x biaya sewa gerobak Heavy) ke kas faksi.
 - **Monster Extermination**: Membunuh monster dalam jumlah ribuan di wilayah faksi tersebut memberikan +1 Reputasi per 10 monster yang dibasmi.
 - **City Access**: Selama status Traitor belum hilang, pemain tetap dilarang masuk ke kota utama untuk melakukan penebusan dosa (harus melalui NPC di pos perbatasan luar kota).
+
+## 🚨 Catatan Konflik & Koreksi (Hasil Audit Kode)
+*Ditemukan oleh Thinking Agent untuk diperbaiki oleh Scripting Agent:*
+
+1. **Hostilitas NPC di `NPCActionResolver.js`**: Kode saat ini hanya mendeteksi musuh berdasarkan status `WAR` faksi. **KOREKSI**: Tambahkan pengecekan reputasi individu. Jika `reputation.amount < -1000`, maka NPC bertipe `GUARD` harus otomatis memicu `COMBAT_TRIGGERED` meskipun faksi tidak sedang berperang.
+2. **Sinkronisasi `UserReputation`**: Pastikan repositori reputasi mendukung pengambilan data faksi secara *real-time* saat inisiasi dialog.
