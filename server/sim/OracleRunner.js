@@ -1,14 +1,14 @@
-const prisma = require('../../db');
-const brain = require('../../logic/sim/BehaviorBrain');
-const gatheringService = require('../../services/gatheringService');
-const craftingService = require('../../services/craftingService');
-const marketService = require('../../services/marketService');
+const prisma = require('../src/db');
+const brain = require('./OracleBrain');
+const gatheringService = require('../src/services/gatheringService');
+const craftingService = require('../src/services/craftingService');
+const marketService = require('../src/services/marketService');
 
 /**
- * SimRunner
- * Orchestrates the massive 100-player loop.
+ * OracleRunner
+ * Orchestrates the massive 100-player loop for world simulation.
  */
-class SimRunner {
+class OracleRunner {
     constructor(bots) {
         this.bots = bots; // Array of { userId, archetype }
     }
@@ -79,4 +79,4 @@ class SimRunner {
     }
 }
 
-module.exports = SimRunner;
+module.exports = OracleRunner;
