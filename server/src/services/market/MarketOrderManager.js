@@ -37,13 +37,13 @@ class MarketOrderManager {
     }
 
     /**
-     * Creates a Buy Order (Escrowing gold to request an item).
+     * Creates a Buy Order (Escrowing currency to request an item).
      */
     async createBuyOrder(tx, userId, regionId, templateId, quantity, pricePerUnit) {
         const totalEscrow = quantity * pricePerUnit;
 
-        // 1. Escrow Gold (Debit User)
-        await transactionManager.removeGold(tx, userId, totalEscrow, "MARKET_ESCROW", templateId, "BUY_ORDER");
+        // 1. Escrow Currency (Debit User)
+        await transactionManager.removeCurrency(tx, userId, totalEscrow, "MARKET_ESCROW", templateId, "BUY_ORDER");
 
         // 2. Create Order
         const expiry = new Date();

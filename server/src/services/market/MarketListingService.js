@@ -65,7 +65,7 @@ class MarketListingService extends BaseService {
 
         return await this.runTransaction(async (tx) => {
             // 1. Deduct Total Listing Fee from Player
-            await transactionManager.removeGold(tx, userId, upfrontFee, "MARKET_LISTING_FEE", item.templateId, "ITEM");
+            await transactionManager.removeCurrency(tx, userId, upfrontFee, "MARKET_LISTING_FEE", item.templateId, "ITEM");
 
             // 2. Credit Guild Revenue (if applicable)
             if (territory && guildRevenue > 0) {

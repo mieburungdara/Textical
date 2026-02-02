@@ -13,6 +13,10 @@ class TradeHandler {
 
             if (!shopItem) throw new Error("Item not available.");
 
+            const resolver = require('../../logic/economy/CurrencyResolver');
+            const totalWealth = resolver.getTotalCopper(user);
+            if (totalWealth < shopItem.priceGold) throw new Error("Insufficient funds across all currency tiers.");
+
             // AAA: Check Localized Dynamic Stock
             const localStock = await tx.shopStock.findFirst({
                 where: { npcId, regionId: user.currentRegion, templateId: itemId }
@@ -22,12 +26,8 @@ class TradeHandler {
                 throw new Error("This item is currently out of stock in this region.");
             }
 
-            if (user.gold < shopItem.priceGold) throw new Error("Insufficient gold.");
-
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: { decrement: shopItem.priceGold } }
-            });
+            const transactionManager = require('../economy/TransactionManager');
+            await transactionManager.removeCurrency(tx, userId, shopItem.priceGold, "NPC_PURCHASE", npcId, "NPC");
 
             // Add to Inventory
             const inventoryService = require('../inventoryService');

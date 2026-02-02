@@ -53,7 +53,7 @@ class OrderMatcher {
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Update Seller
-            await transactionManager.addGold(tx, sell.creatorId, sellerNet, "MARKET_ORDER_FILL", sell.id, "ORDER");
+            await transactionManager.addCurrency(tx, sell.creatorId, sellerNet, "MARKET_ORDER_FILL", sell.id, "ORDER");
 
             // b. Update Guild
             if (guild && guildRevenue > 0) {
@@ -139,7 +139,7 @@ class OrderMatcher {
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Seller gets Gold
-            await transactionManager.addGold(tx, sellOrder.creatorId, sellerNet, "MARKET_ORDER_FILL", sellOrder.id, "ORDER");
+            await transactionManager.addCurrency(tx, sellOrder.creatorId, sellerNet, "MARKET_ORDER_FILL", sellOrder.id, "ORDER");
 
             // b. Guild gets Revenue
             if (guild && guildRevenue > 0) {
