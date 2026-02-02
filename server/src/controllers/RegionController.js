@@ -2,6 +2,18 @@ const BaseController = require('./BaseController');
 const prisma = require('../db');
 
 class RegionController extends BaseController {
+    async getGlobalInfluence(req, res) {
+        await this.execute(res, async () => {
+            const regions = await prisma.regionTemplate.findMany({
+                include: {
+                    influence: { include: { faction: true } },
+                    activeEvents: { include: { template: true } }
+                }
+            });
+            this.sendSuccess(res, regions);
+        });
+    }
+
     async getAllRegions(req, res) {
         await this.execute(res, async () => {
             const regions = await prisma.regionTemplate.findMany({

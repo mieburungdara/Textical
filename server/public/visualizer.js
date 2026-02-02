@@ -222,6 +222,100 @@ document.getElementById('viz-range').oninput = (e) => {
     updateLog();
 };
 
+// --- WAR MAP LOGIC ---
+const warCanvas = document.getElementById('war-canvas');
+const warCtx = warCanvas ? warCanvas.getContext('2d') : null;
+
+async function loadWarMap() {
+    try {
+        const response = await fetch('/api/regions/influence');
+        const result = await response.json();
+        if (result.success) {
+            renderWarMap(result.data);
+        }
+    } catch (e) {
+        console.error("Failed to fetch war map data:", e);
+    }
+}
+
+function renderWarMap(regions) {
+    if (!warCtx) return;
+    
+    // Clear
+    warCtx.fillStyle = '#000';
+    warCtx.fillRect(0, 0, 1000, 600);
+
+    const nodes = [];
+    const centerX = 500;
+    const centerY = 300;
+    const radius = 200;
+
+    // Simple Circular Layout for regions
+    regions.forEach((r, i) => {
+        const angle = (i / regions.length) * Math.PI * 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        nodes.push({ ...r, x, y });
+    });
+
+    // Draw Nodes
+    nodes.forEach(node => {
+        // 1. Draw Region Circle
+        warCtx.beginPath();
+        warCtx.arc(node.x, node.y, 40, 0, Math.PI * 2);
+        warCtx.fillStyle = '#1a1a1a';
+        warCtx.fill();
+        warCtx.strokeStyle = '#444';
+        warCtx.lineWidth = 2;
+        warCtx.stroke();
+
+        // 2. Draw Influence Bars (Split Ring)
+        let startAngle = -Math.PI / 2;
+        const totalPoints = node.influence.reduce((acc, curr) => acc + curr.points, 0) || 1; // Avoid 0
+        
+        node.influence.forEach(inf => {
+            const ratio = inf.points / totalPoints;
+            const slice = ratio * Math.PI * 2;
+            
+            warCtx.beginPath();
+            warCtx.arc(node.x, node.y, 42, startAngle, startAngle + slice);
+            // Color mapping: 1 = Empire (Green), 2 = Rebels (Red)
+            warCtx.strokeStyle = inf.factionId === 1 ? '#4caf50' : (inf.factionId === 2 ? '#f44336' : '#ffeb3b');
+            warCtx.lineWidth = 6;
+            warCtx.stroke();
+            
+            startAngle += slice;
+        });
+
+        // 3. Draw Label
+        warCtx.fillStyle = '#fff';
+        warCtx.font = 'bold 11px Inter';
+        warCtx.textAlign = 'center';
+        warCtx.fillText(node.name, node.x, node.y + 5);
+        
+        // 4. Draw Skirmish Icon if active
+        const hasSkirmish = node.activeEvents.some(ae => ae.template.name.includes("Frontline"));
+        if (hasSkirmish) {
+            warCtx.font = '24px serif';
+            warCtx.fillText('⚔️', node.x, node.y - 15);
+            
+            // Pulsing effect (simple red glow)
+            warCtx.beginPath();
+            warCtx.arc(node.x, node.y, 45, 0, Math.PI * 2);
+            warCtx.strokeStyle = 'rgba(244, 67, 54, 0.5)';
+            warCtx.lineWidth = 2;
+            warCtx.stroke();
+        }
+    });
+}
+
+// Update showPage to auto-load map
+const originalShowPage = showPage;
+showPage = (pageId) => {
+    originalShowPage(pageId);
+    if (pageId === 'war-map') loadWarMap();
+}
+
 // --- GLOBAL ---
 function closeModal() {
     monsterModal.classList.add('hidden');

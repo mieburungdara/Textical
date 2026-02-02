@@ -29,6 +29,7 @@ router.get('/user/:id/task', (req, res) => userController.getActiveTask(req, res
 
 // --- REGIONS ---
 router.get('/regions', (req, res) => regionController.getAllRegions(req, res));
+router.get('/regions/influence', (req, res) => regionController.getGlobalInfluence(req, res));
 router.get('/region/:id', (req, res) => regionController.getRegionDetails(req, res));
 
 // --- ACTIONS ---
