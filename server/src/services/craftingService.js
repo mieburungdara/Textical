@@ -3,11 +3,12 @@ const validator = require('./crafting/CraftingValidator');
 const inventoryService = require('./inventoryService');
 const vitalityService = require('./vitalityService');
 const affixResolver = require('../logic/crafting/AffixResolver');
+const stationBuffResolver = require('../logic/crafting/StationBuffResolver');
 
 /**
  * CraftingService
  * Thin orchestrator for material refining and equipment production.
- * Enhanced with Magical Affixes (Catalysts).
+ * Enhanced with Magical Affixes and Regional Station Buffs.
  */
 class CraftingService extends BaseService {
     constructor() {
@@ -24,7 +25,7 @@ class CraftingService extends BaseService {
         const region = await this.db.regionTemplate.findUnique({ where: { id: user.currentRegion } });
         const recipe = await this.db.recipeTemplate.findUnique({
             where: { id: recipeId },
-            include: { ingredients: { include: { item: true } } }
+            include: { ingredients: { include: { item: true }, orderBy: { quantity: 'desc' } } } // Primary usually has highest quantity
         });
 
         if (!user || !recipe) throw new Error("Invalid crafting request.");
@@ -46,6 +47,16 @@ class CraftingService extends BaseService {
             if (!hasAffix) throw new Error("Affix material not found in inventory.");
         }
 
+        // --- AAA: Regional Station Buffs ---
+        let speedMult = 1.0;
+        if (recipe.ingredients.length > 0) {
+            const primaryIngredientId = recipe.ingredients[0].itemId;
+            const stats = await this.db.regionalExtractionStats.findUnique({
+                where: { regionId_templateId: { regionId: user.currentRegion, templateId: primaryIngredientId } }
+            });
+            speedMult = stationBuffResolver.resolveSpeedMultiplier(stats ? stats.volume24h : 0);
+        }
+
         // 2. Resource Consumption
         return await this.runTransaction(async (tx) => {
             await vitalityService.consumeVitality(userId, this.BASE_VITALITY_COST);
@@ -61,9 +72,10 @@ class CraftingService extends BaseService {
             }
 
             const now = new Date();
-            const finishesAt = new Date(now.getTime() + (recipe.craftTimeSeconds * 1000));
+            const duration = Math.floor(recipe.craftTimeSeconds * speedMult);
+            const finishesAt = new Date(now.getTime() + (duration * 1000));
 
-            this.log(`Hero starting recipe ${recipe.name}${affixMaterialId ? ' with affix' : ''}`, "Crafting");
+            this.log(`Hero starting recipe ${recipe.name}${affixMaterialId ? ' with affix' : ''}. Regional Speed: ${((1 - speedMult) * 100).toFixed(0)}% boost.`, "Crafting");
             return await tx.taskQueue.create({
                 data: {
                     userId, type: "CRAFTING", targetItemId: recipe.resultItemId,

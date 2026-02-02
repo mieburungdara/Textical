@@ -18,7 +18,7 @@ class CraftingValidator {
                 where: { 
                     userId, 
                     templateId: ing.itemId,
-                    marketListing: null,
+                    marketOrders: { none: {} },
                     equippedIn: null 
                 }
             });
