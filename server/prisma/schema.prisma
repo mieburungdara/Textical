@@ -13,12 +13,9 @@ model User {
   username      String   @unique
   password      String
   
-  // AAA: Tiered Multi-Currency (1000:1 Conversion)
-  copper        Int      @default(0)
+  // AAA: Dual-Currency System (1,000,000 Silver = 1 Gold)
   silver        Int      @default(0)
   gold          Int      @default(0)
-  platinum      Int      @default(0)
-  diamond       Int      @default(0)
 
   vitality      Int      @default(100)
   maxVitality   Int      @default(100)
@@ -929,8 +926,8 @@ model TransactionLedger {
   user          User     @relation(fields: [userId], references: [id])
   type          String   
   currencyTier  String   // Legacy or Category
-  copperDelta   BigInt   @default(0) // Total change in base copper units
-  copperBalance BigInt   @default(0) // Total balance in base copper units after change
+  silverDelta   BigInt   @default(0) // Total change in base silver units
+  silverBalance BigInt   @default(0) // Total balance in base silver units after change
   sourceId      Int?     
   sourceType    String?  
   createdAt     DateTime @default(now())

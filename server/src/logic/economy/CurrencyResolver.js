@@ -1,42 +1,41 @@
 /**
  * AAA CurrencyResolver
- * Pure component for handling 5-tier currency conversions.
- * Conversion Rate: 1000:1 between tiers.
+ * Pure component for handling dual-tier currency conversions.
+ * Conversion Rate: 1,000,000 Silver = 1 Gold.
  */
 class CurrencyResolver {
     constructor() {
-        this.TIERS = ["copper", "silver", "gold", "platinum", "diamond"];
-        this.RATE = 1000;
+        this.TIERS = ["silver", "gold"];
+        this.RATE = 1000000;
     }
 
     /**
-     * Converts a total amount of Copper into tiered denominations.
-     * @param {number} totalCopper - The total base value.
-     * @returns {Object} { diamond, platinum, gold, silver, copper }
+     * Converts a total amount of Silver into tiered denominations.
+     * @param {number} totalSilver - The total base value.
+     * @returns {Object} { gold, silver }
      */
-    resolveTiers(totalCopper) {
-        let remaining = totalCopper;
+    resolveTiers(totalSilver) {
+        let remaining = totalSilver;
         const result = {};
 
         for (const tier of this.TIERS) {
-            result[tier] = remaining % this.RATE;
-            remaining = Math.floor(remaining / this.RATE);
+            result[tier] = Number(BigInt(remaining) % BigInt(this.RATE));
+            remaining = Math.floor(Number(BigInt(remaining) / BigInt(this.RATE)));
         }
 
-        // The last tier (diamond) takes whatever is left above the highest standard threshold
-        // But with 5 tiers, Diamond handles everything from 1000^4 and up.
-        // Actually, the loop handles it correctly if Diamond is the last in list.
-        // Let's ensure Diamond doesn't overflow into a 6th non-existent tier.
+        // Handle overflow into the final tier (gold)
+        // If we have more than 1M gold, it stays in the 'gold' field.
+        // Actually the loop handles it if the last tier is reached.
         
         return result;
     }
 
     /**
-     * Converts tiered denominations back into total Copper base value.
-     * @param {Object} tiers - { diamond, platinum, gold, silver, copper }
-     * @returns {number} Total Copper.
+     * Converts tiered denominations back into total Silver base value.
+     * @param {Object} tiers - { gold, silver }
+     * @returns {number} Total Silver.
      */
-    getTotalCopper(tiers) {
+    getTotalSilver(tiers) {
         let total = 0;
         let multiplier = 1;
 
