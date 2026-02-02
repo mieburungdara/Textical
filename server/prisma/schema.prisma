@@ -137,6 +137,7 @@ model ItemTemplate {
   shopAppearances NPCShopItem[]
   eventAppearances EventResource[]
   wagonItems      WagonItem[]
+  saleHistory     ItemSaleHistory[]
 }
 
 model RegionTemplate {
@@ -169,6 +170,7 @@ model RegionTemplate {
   npcEventReactions NPCEventReaction[]
   influence       RegionalInfluence[]
   heroSaleHistory HeroSaleHistory[]
+  itemSaleHistory ItemSaleHistory[]
 }
 
 model WorldEventTemplate {
@@ -937,6 +939,17 @@ model HeroSaleHistory {
   combatClass     ClassTemplate @relation(fields: [classId], references: [id])
   unitLevel       Int
   price           Int
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  soldAt          DateTime @default(now())
+}
+
+model ItemSaleHistory {
+  id              Int      @id @default(autoincrement())
+  templateId      Int
+  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
+  pricePerUnit    Int
+  quantity        Int
   regionId        Int
   region          RegionTemplate @relation(fields: [regionId], references: [id])
   soldAt          DateTime @default(now())

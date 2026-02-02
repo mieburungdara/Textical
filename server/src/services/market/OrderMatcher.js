@@ -64,6 +64,16 @@ class OrderMatcher {
             const itemOps = await inventoryManager.resolveStackingOps(tx, buyOrder.creatorId, buyOrder.templateId, fulfillQty);
             await Promise.all(itemOps);
 
+            // AAA: Log Sale History for Analytics
+            await tx.itemSaleHistory.create({
+                data: {
+                    templateId: buyOrder.templateId,
+                    pricePerUnit: sell.pricePerUnit,
+                    quantity: fulfillQty,
+                    regionId: buyOrder.regionId
+                }
+            });
+
             // d. Update Quantities
             buyOrder.remainingQuantity -= fulfillQty;
             sell.remainingQuantity -= fulfillQty;
@@ -139,6 +149,16 @@ class OrderMatcher {
             // c. Buyer gets Items
             const itemOps = await inventoryManager.resolveStackingOps(tx, buy.creatorId, sellOrder.templateId, fulfillQty);
             await Promise.all(itemOps);
+
+            // AAA: Log Sale History for Analytics
+            await tx.itemSaleHistory.create({
+                data: {
+                    templateId: sellOrder.templateId,
+                    pricePerUnit: buy.pricePerUnit,
+                    quantity: fulfillQty,
+                    regionId: sellOrder.regionId
+                }
+            });
 
             // d. Update Quantities
             sellOrder.remainingQuantity -= fulfillQty;

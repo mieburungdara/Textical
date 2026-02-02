@@ -54,6 +54,7 @@ router.post('/tavern/recruit', (req, res) => tavernController.recruit(req, res))
 
 // --- MARKET ---
 router.get('/market/listings', (req, res) => marketController.getListings(req, res));
+router.get('/market/price-index/:templateId', (req, res) => marketController.getPriceIndex(req, res));
 router.post('/market/list', (req, res) => marketController.listMarketItem(req, res));
 router.post('/market/buy', (req, res) => marketController.buyMarketItem(req, res));
 router.post('/market/sell-npc', (req, res) => marketController.sellToNPC(req, res));

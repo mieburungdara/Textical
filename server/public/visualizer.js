@@ -309,11 +309,76 @@ function renderWarMap(regions) {
     });
 }
 
-// Update showPage to auto-load map
+// --- ECONOMY LOGIC ---
+let priceChart = null;
+
+async function loadPriceTrends() {
+    const templateId = document.getElementById('eco-item-select').value;
+    const regionId = document.getElementById('eco-region-select').value;
+    
+    let url = `/api/market/price-index/${templateId}`;
+    if (regionId) url += `?regionId=${regionId}`;
+
+    try {
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.success) {
+            renderPriceChart(result.data);
+        }
+    } catch (e) {
+        console.error("Failed to fetch price trends:", e);
+    }
+}
+
+function renderPriceChart(data) {
+    const ctx = document.getElementById('price-chart').getContext('2d');
+    
+    if (priceChart) priceChart.destroy();
+
+    const labels = data.map(d => new Date(d.timestamp).toLocaleTimeString());
+    const prices = data.map(d => d.price);
+
+    priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price per Unit',
+                data: prices,
+                borderColor: '#4caf50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: '#222' },
+                    ticks: { color: '#888' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// Update showPage to handle economy
 const originalShowPage = showPage;
 showPage = (pageId) => {
     originalShowPage(pageId);
     if (pageId === 'war-map') loadWarMap();
+    if (pageId === 'economy') loadPriceTrends();
 }
 
 // --- GLOBAL ---
