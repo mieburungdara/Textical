@@ -2,16 +2,34 @@ const BaseService = require('../BaseService');
 const marketValidator = require('./MarketValidator');
 const transactionManager = require('../economy/TransactionManager');
 const marketFee = require('../economy/MarketFeeComponent');
+const priceResolver = require('../../logic/economy/CommodityPriceResolver');
 
 /**
  * MarketListingService
  * Orchestrates the creation and management of market listings.
- * Enhanced to support Guild-based regional taxation.
+ * Enhanced with Guild-based regional taxation and Dynamic Commodity Pricing.
  */
 class MarketListingService extends BaseService {
     constructor() {
         super();
         this.LISTING_EXPIRY_HOURS = 24;
+    }
+
+    /**
+     * Resolves the dynamic regional base value for an item.
+     */
+    async _getRegionalBaseValue(tx, regionId, itemTemplate) {
+        // Dynamic pricing only applies to Raw Materials
+        if (itemTemplate.category !== "MATERIAL") return itemTemplate.baseValue;
+
+        const stats = await tx.regionalExtractionStats.findUnique({
+            where: { regionId_templateId: { regionId, templateId: itemTemplate.id } }
+        });
+
+        const volume = stats ? stats.volume24h : 0;
+        const multiplier = priceResolver.resolveMultiplier(volume);
+        
+        return Math.floor(itemTemplate.baseValue * multiplier);
     }
 
     async listItem(userId, itemInstanceId, pricePerUnit) {
@@ -25,7 +43,6 @@ class MarketListingService extends BaseService {
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found.");
-        // Note: renamed from marketListing to marketOrders in previous refactor
         if (item.marketOrders.length > 0 || item.equippedIn) throw new Error("Item is locked.");
         
         // --- AAA Guild Taxation Context ---
@@ -38,7 +55,11 @@ class MarketListingService extends BaseService {
         // AAA: Faction Discount Check
         const isFactionAlly = territory && user.factionId && user.factionId === territory.guild.factionId;
 
-        const totalListingValue = pricePerUnit * item.quantity;
+        // --- AAA Dynamic Commodity Pricing ---
+        const dynamicBaseValue = await this._getRegionalBaseValue(this.db, user.currentRegion, item.template);
+        const effectivePriceForFee = Math.max(pricePerUnit, dynamicBaseValue);
+
+        const totalListingValue = effectivePriceForFee * item.quantity;
         const upfrontFee = marketFee.calculateListingFee(totalListingValue, guildTaxRate, isFactionAlly);
         const guildRevenue = marketFee.calculateGuildRevenue(totalListingValue, guildTaxRate, isFactionAlly);
 

@@ -5,11 +5,12 @@ const inventoryService = require('./inventoryService');
 const statService = require('./statService');
 const vitalityService = require('./vitalityService');
 const worldSpawner = require('./worldSpawnerService');
+const extractionTracker = require('./economy/ExtractionTrackerService');
 
 /**
  * GatheringService
  * Thin orchestrator for resource harvesting.
- * Delegating logic to Validator, Calculator, and WorldSpawner components.
+ * Enhanced with Dynamic Commodity Extraction Tracking.
  */
 class GatheringService extends BaseService {
     constructor() {
@@ -132,7 +133,11 @@ class GatheringService extends BaseService {
             }
         }
 
-        await inventoryService.addItem(userId, task.targetItemId, Math.max(1, yieldQuantity));
+        const finalYield = Math.max(1, yieldQuantity);
+        await inventoryService.addItem(userId, task.targetItemId, finalYield);
+
+        // AAA: Record Extraction Volume for Dynamic Commodity Pricing
+        await extractionTracker.recordExtraction(task.user.currentRegion, task.targetItemId, finalYield);
 
         // --- AAA Guild Gathering Taxation ---
         const territory = await this.db.territory.findUnique({

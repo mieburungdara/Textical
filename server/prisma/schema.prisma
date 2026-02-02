@@ -142,6 +142,7 @@ model ItemTemplate {
   wagonItems      WagonItem[]
   saleHistory     ItemSaleHistory[]
   shopStocks      ShopStock[]
+  extractionStats RegionalExtractionStats[]
 }
 
 model RegionTemplate {
@@ -177,6 +178,7 @@ model RegionTemplate {
   heroSaleHistory HeroSaleHistory[]
   itemSaleHistory ItemSaleHistory[]
   npcStocks       ShopStock[]
+  extractionStats RegionalExtractionStats[]
 }
 
 model WorldEventTemplate {
@@ -1081,4 +1083,17 @@ model LootSession {
   wagon       Wagon?   @relation(fields: [wagonId], references: [id])
   expiresAt   DateTime
   isActive    Boolean  @default(true)
+}
+
+model RegionalExtractionStats {
+  id              Int      @id @default(autoincrement())
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId      Int
+  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
+  
+  volume24h       Int      @default(0)
+  lastUpdated     DateTime @default(now())
+  
+  @@unique([regionId, templateId])
 }
