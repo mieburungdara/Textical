@@ -4,11 +4,12 @@ const inventoryService = require('./inventoryService');
 const vitalityService = require('./vitalityService');
 const affixResolver = require('../logic/crafting/AffixResolver');
 const stationBuffResolver = require('../logic/crafting/StationBuffResolver');
+const qualityResolver = require('../logic/crafting/QualityResolver');
 
 /**
  * CraftingService
  * Thin orchestrator for material refining and equipment production.
- * Enhanced with Magical Affixes and Regional Station Buffs.
+ * Enhanced with Magical Affixes, Regional Station Buffs, and Item Quality Tiers.
  */
 class CraftingService extends BaseService {
     constructor() {
@@ -19,7 +20,7 @@ class CraftingService extends BaseService {
     async startCrafting(userId, recipeId, affixMaterialId = null) {
         const user = await this.db.user.findUnique({
             where: { id: userId },
-            include: { taskQueue: { where: { status: "RUNNING" } } }
+            include: { taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
         });
 
         const region = await this.db.regionTemplate.findUnique({ where: { id: user.currentRegion } });
@@ -80,7 +81,8 @@ class CraftingService extends BaseService {
                 data: {
                     userId, type: "CRAFTING", targetItemId: recipe.resultItemId,
                     status: "RUNNING", startedAt: now, finishesAt: finishesAt,
-                    affixMaterialId: affixMaterialId
+                    affixMaterialId: affixMaterialId,
+                    heroId: user.heroes[0] ? user.heroes[0].id : null // Store crafter ID if possible
                 }
             });
         });
@@ -102,16 +104,49 @@ class CraftingService extends BaseService {
     }
 
     async completeCrafting(userId, taskId) {
-        const task = await this.db.taskQueue.findUnique({ where: { id: taskId } });
+        const task = await this.db.taskQueue.findUnique({ 
+            where: { id: taskId },
+            include: { user: { include: { heroes: { where: { isMain: true } } } }, targetItem: { include: { ingredients: { orderBy: { quantity: 'desc' } } } } }
+        });
         if (!task || task.status !== "RUNNING") return;
 
+        // 1. Resolve Affix Trait
         let traitId = null;
         if (task.affixMaterialId) {
             traitId = affixResolver.resolveTraitId(task.affixMaterialId);
         }
 
+        // 2. Resolve Quality (AAA Integration)
+        let quality = "COMMON";
+        let powerScale = 1.0;
+
+        const mainHero = task.user.heroes[0];
+        const heroLevel = mainHero ? mainHero.unitLevel : 1;
+
+        // Find primary ingredient volume
+        const recipe = await this.db.recipeTemplate.findFirst({
+            where: { resultItemId: task.targetItemId },
+            include: { ingredients: { orderBy: { quantity: 'desc' } } }
+        });
+
+        let regionalVolume = 0;
+        if (recipe && recipe.ingredients.length > 0) {
+            const stats = await this.db.regionalExtractionStats.findUnique({
+                where: { regionId_templateId: { regionId: task.user.currentRegion, templateId: recipe.ingredients[0].itemId } }
+            });
+            regionalVolume = stats ? stats.volume24h : 0;
+        }
+
+        const qualityResult = qualityResolver.resolve(heroLevel, regionalVolume);
+        quality = qualityResult.quality;
+        powerScale = qualityResult.powerScale;
+
         return await this.runTransaction(async (tx) => {
-            await inventoryService.addItem(userId, task.targetItemId, 1, tx, traitId);
+            await inventoryService.addItem(userId, task.targetItemId, 1, tx, { 
+                traitId, 
+                quality, 
+                powerScale 
+            });
             
             return await tx.taskQueue.update({ 
                 where: { id: taskId }, 

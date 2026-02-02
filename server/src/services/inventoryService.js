@@ -39,30 +39,37 @@ class InventoryService {
     /**
      * Unified method to add items to inventory.
      * Supports optional traitId for instance-based traits (affixes).
+     * Enhanced with quality and powerScale support.
      */
-    async addItem(userId, templateId, quantity = 1, tx = null, traitId = null) {
+    async addItem(userId, templateId, quantity = 1, tx = null, options = {}) {
         if (quantity <= 0) return;
         const client = tx || prisma;
+        const { traitId = null, quality = "COMMON", powerScale = 1.0 } = options;
 
         const hasSpace = await this.hasSpace(userId, templateId, quantity);
         if (!hasSpace) {
             throw new Error("Inventory full! No more slots available.");
         }
 
-        if (traitId) {
-            // AAA: Specialized Instance with Trait - Bypasses Stacking
+        if (traitId || quality !== "COMMON" || powerScale !== 1.0) {
+            // AAA: Specialized Instance with Quality/Traits - Bypasses Stacking
             const items = [];
             for (let i = 0; i < quantity; i++) {
-                const item = await client.inventoryItem.create({
-                    data: {
-                        userId,
-                        templateId,
-                        quantity: 1, // Instance-based trait items usually don't stack
-                        instanceTraits: {
-                            create: { traitId: traitId }
-                        }
-                    }
-                });
+                const data = {
+                    userId,
+                    templateId,
+                    quantity: 1, 
+                    quality,
+                    powerScale
+                };
+
+                if (traitId) {
+                    data.instanceTraits = {
+                        create: { traitId: traitId }
+                    };
+                }
+
+                const item = await client.inventoryItem.create({ data });
                 items.push(item);
             }
             return items;

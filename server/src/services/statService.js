@@ -147,10 +147,12 @@ class StatService extends BaseService {
             if (item.category === "HERBALISM_SICKLE" && context !== "HERBALISM") valid = false;
 
             if (valid) {
-                // 1. Base Template Stats
-                item.stats.forEach(s => applyMod(s.statKey, s.statValue, 0, `Equip:${item.name}`));
+                const scale = instance.powerScale || 1.0;
 
-                // 2. AAA: Template-Based Traits
+                // 1. Base Template Stats (Scaled by Quality)
+                item.stats.forEach(s => applyMod(s.statKey, s.statValue * scale, 0, `Equip:${item.name} (${instance.quality})`));
+
+                // 2. AAA: Template-Based Traits (Not scaled by instance quality usually)
                 item.traits.forEach(it => {
                     it.trait.stats.forEach(ts => {
                         applyMod(ts.statKey, ts.statValue, 0, `Trait:${it.trait.name}`);

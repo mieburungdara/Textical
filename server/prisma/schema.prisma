@@ -710,6 +710,11 @@ model InventoryItem {
   currentDurability Int  @default(100)
   maxDurability     Int  @default(100)
   isTrash           Boolean @default(false)
+  
+  // AAA: Quality Tiers
+  quality           String @default("COMMON") // COMMON, RARE, MASTERWORK, LEGENDARY
+  powerScale        Float  @default(1.0)
+  
   marketOrders MarketOrder[]
   equippedIn    HeroEquipment?
   instanceTraits ItemInstanceTrait[]
