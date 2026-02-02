@@ -10,16 +10,19 @@ class OrderMatcher {
     /**
      * Helper to get guild and faction context for a region.
      */
-    async _getTerritoryContext(tx, regionId) {
-        const territory = await tx.territory.findUnique({
-            where: { regionId },
-            include: { guild: true }
+    async _getRegionContext(tx, regionId) {
+        const region = await tx.regionTemplate.findUnique({
+            where: { id: regionId },
+            include: { territory: { include: { guild: true } } }
         });
-        return territory ? territory.guild : null;
+        return {
+            guild: region.territory ? region.territory.guild : null,
+            regionalTaxRate: region.regionalTaxRate
+        };
     }
 
     async matchBuyOrder(tx, buyOrder) {
-        const guild = await this._getTerritoryContext(tx, buyOrder.regionId);
+        const { guild, regionalTaxRate } = await this._getRegionContext(tx, buyOrder.regionId);
         const guildTaxRate = guild ? guild.marketTaxRate : 0;
         
         // Faction Context: Buyer faction
@@ -46,7 +49,7 @@ class OrderMatcher {
             // AAA: Faction Discount - Check if SELLER is ally of owning guild
             const isFactionAlly = guild && sell.creator.factionId && sell.creator.factionId === guild.factionId;
 
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly);
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate);
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Update Seller
@@ -108,7 +111,7 @@ class OrderMatcher {
     }
 
     async matchSellOrder(tx, sellOrder) {
-        const guild = await this._getTerritoryContext(tx, sellOrder.regionId);
+        const { guild, regionalTaxRate } = await this._getRegionContext(tx, sellOrder.regionId);
         const guildTaxRate = guild ? guild.marketTaxRate : 0;
         
         const seller = await tx.user.findUnique({ where: { id: sellOrder.creatorId } });
@@ -132,7 +135,7 @@ class OrderMatcher {
             const fulfillQty = Math.min(sellOrder.remainingQuantity, buy.remainingQuantity);
             const totalPrice = fulfillQty * buy.pricePerUnit;
             
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly);
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate);
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Seller gets Gold

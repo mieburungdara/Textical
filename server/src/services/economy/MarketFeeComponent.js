@@ -22,13 +22,14 @@ class MarketFeeComponent {
     }
 
     /**
-     * Calculates total tax (Imperial + Guild with optional discount).
+     * Calculates total tax (Regional + Guild with optional discount).
      */
-    calculateTotalSalesTax(price, guildMarketTaxRate = 0, isFactionAlly = false) {
+    calculateTotalSalesTax(price, guildMarketTaxRate = 0, isFactionAlly = false, regionalSalesTaxRate = null) {
         let gTax = guildMarketTaxRate;
         if (isFactionAlly) gTax *= this.FACTION_DISCOUNT_MULT;
 
-        const rate = this.BASE_SALES_TAX_RATE + gTax;
+        const baseRate = (regionalSalesTaxRate !== null) ? regionalSalesTaxRate : this.BASE_SALES_TAX_RATE;
+        const rate = baseRate + gTax;
         return Math.floor(price * rate);
     }
 
@@ -45,8 +46,8 @@ class MarketFeeComponent {
     /**
      * Calculates final net profit for the seller.
      */
-    calculateSellerNet(price, guildMarketTaxRate = 0, isFactionAlly = false) {
-        const totalTax = this.calculateTotalSalesTax(price, guildMarketTaxRate, isFactionAlly);
+    calculateSellerNet(price, guildMarketTaxRate = 0, isFactionAlly = false, regionalSalesTaxRate = null) {
+        const totalTax = this.calculateTotalSalesTax(price, guildMarketTaxRate, isFactionAlly, regionalSalesTaxRate);
         return price - totalTax;
     }
 }

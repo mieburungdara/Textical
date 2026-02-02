@@ -150,6 +150,7 @@ model RegionTemplate {
   description     String
   visualType      String   @default("TOWN")
   zoneType        String   @default("GREEN") // GREEN, BLUE, RED
+  regionalTaxRate Float    @default(0.10)    // AAA: Dynamic Taxation
   type            RegionType @relation(fields: [visualType], references: [id])
   dangerLevel     Int      @default(1)
   
