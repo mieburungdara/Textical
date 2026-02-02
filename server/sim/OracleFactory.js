@@ -74,6 +74,16 @@ class BotFactory {
                 data: { userId: user.id, templateId: 2501, quantity: 1 } // Flint Axe
             });
 
+            // AAA: Teach Tool Recipes
+            const basicRecipes = [5001, 5002, 5101, 5102]; // Wooden/Iron Pickaxe, Flint/Iron Axe
+            for (const rid of basicRecipes) {
+                await prisma.userRecipe.upsert({
+                    where: { userId_recipeId: { userId: user.id, recipeId: rid } },
+                    update: {},
+                    create: { userId: user.id, recipeId: rid }
+                });
+            }
+
             bots.push({ userId: user.id, archetype });
         }
 
@@ -102,6 +112,13 @@ class BotFactory {
         const botUserIds = botUsers.map(u => u.id);
 
         if (botUserIds.length > 0) {
+            await prisma.userRecipe.deleteMany({ where: { userId: { in: botUserIds } } });
+            await prisma.userReputation.deleteMany({ where: { userId: { in: botUserIds } } });
+            await prisma.bounty.deleteMany({ where: { targetId: { in: botUserIds } } });
+            await prisma.bounty.deleteMany({ where: { hunterId: { in: botUserIds } } });
+            await prisma.lootSession.deleteMany({ where: { looterId: { in: botUserIds } } });
+            await prisma.lootSession.deleteMany({ where: { victimId: { in: botUserIds } } });
+            await prisma.wagon.deleteMany({ where: { userId: { in: botUserIds } } });
             await prisma.formationPreset.deleteMany({ where: { userId: { in: botUserIds } } });
             await prisma.inventoryItem.deleteMany({ where: { userId: { in: botUserIds } } });
             await prisma.marketOrder.deleteMany({ where: { creatorId: { in: botUserIds } } });

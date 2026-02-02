@@ -26,11 +26,24 @@ class OracleProgressionResolver {
         }
 
         // 3. Equipment Check
-        const hasWeapon = ctx.items.some(i => i.equippedIn && i.template.category === "EQUIPMENT");
+        const hasWeapon = ctx.items.some(i => i.equippedIn && (i.template.category === "EQUIPMENT" || i.template.category === "WEAPON"));
         if (!hasWeapon) {
             // Do we have materials to craft one? (Simplified: check for Iron)
             const hasIron = ctx.items.some(i => i.template.name.includes("Iron") && i.quantity >= 3);
             return hasIron ? "CRAFT_GEAR" : "GATHER_MATS";
+        }
+
+        // AAA: Tool Progression Check
+        const pickaxe = ctx.items.find(i => i.equippedIn && i.template.category === "PICKAXE");
+        const axe = ctx.items.find(i => i.equippedIn && i.template.category === "AXE");
+        
+        const needsPickaxeUpgrade = !pickaxe || pickaxe.template.toolTier < 1;
+        const needsAxeUpgrade = !axe || axe.template.toolTier < 1;
+
+        if (needsPickaxeUpgrade || needsAxeUpgrade) {
+            const hasOre = ctx.items.some(i => i.template.name === "Iron Ore" && i.quantity >= 3);
+            const hasWood = ctx.items.some(i => i.template.name === "Oak Wood" && i.quantity >= 2);
+            return (hasOre && hasWood) ? "CRAFT_TOOL" : "GATHER_TOOL_MATS";
         }
 
         // 4. Level Progression
@@ -51,8 +64,10 @@ class OracleProgressionResolver {
             case "EARN_SILVER":
                 return region.visualType === "TOWN" ? "HAUL" : "SELL";
             case "CRAFT_GEAR":
+            case "CRAFT_TOOL":
                 return "CRAFT";
             case "GATHER_MATS":
+            case "GATHER_TOOL_MATS":
                 return "GATHER";
             case "GRIND_XP":
                 // If in red zone, we do combat. If in green, we gather (safe XP).

@@ -1,4 +1,5 @@
 const travelResolver = require('./OracleTravelResolver');
+const progressionResolver = require('./OracleProgressionResolver');
 
 /**
  * AAA OracleBrain (Professional Version)
@@ -15,33 +16,21 @@ class OracleBrain {
         // 0. Vitality & Maintenance (Highest Priority)
         if (ctx.vitality < 15) return "IDLE"; 
         
-        // Repair equipment if any equipped item is nearly broken (<20%)
-        const needsRepair = ctx.items.some(i => i.equippedIn && (i.currentDurability / i.maxDurability) < 0.2);
-        if (needsRepair && ctx.silver > 500) return "REPAIR";
+        // 1. Resolve High-Level Goal
+        const goal = progressionResolver.resolveGoal(ctx);
+        const actionType = progressionResolver.resolveActionForGoal(goal, ctx.currentRegion);
 
-        // Inventory Management
-        if (ctx.inventoryCount >= 18) return "SALVAGE"; 
-
-        // 1. Regional Awareness (Migration)
-        if (ctx.neighbors && ctx.neighbors.length > 0) {
-            const decision = this._evaluateMigration(ctx);
-            if (decision) return decision;
+        // 2. Override with Regional Awareness (Migration)
+        // Only migrate if we aren't in the middle of a specific crafting/gathering loop
+        if (goal === "IDLE" || goal === "GRIND_XP" || goal === "EARN_SILVER") {
+            if (ctx.neighbors && ctx.neighbors.length > 0) {
+                const migration = this._evaluateMigration(ctx);
+                if (migration) return migration;
+            }
         }
 
-        // 2. Progression-Based State Machine
-        
-        // STAGE 1: NOVICE (Level 1-10)
-        if (ctx.unitLevel < 10) {
-            return this._noviceBehavior(ctx);
-        }
-
-        // STAGE 2: ADVENTURER (Level 10-30)
-        if (ctx.unitLevel < 30) {
-            return this._adventurerBehavior(ctx);
-        }
-
-        // STAGE 3: ELITE (Level 30+)
-        return this._eliteBehavior(ctx);
+        // 3. Return combined decision object
+        return { type: actionType, goal: goal };
     }
 
     _noviceBehavior(ctx) {

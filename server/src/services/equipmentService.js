@@ -10,11 +10,14 @@ class EquipmentService {
         // 1. Validation
         const item = await prisma.inventoryItem.findUnique({
             where: { id: itemInstanceId },
-            include: { template: { include: { equipSlots: true } }, marketListing: true }
+            include: { 
+                template: { include: { equipSlots: true } },
+                marketOrders: { where: { status: "OPEN" } }
+            }
         });
 
         if (!item || item.userId !== userId) throw new Error("Item not found in inventory.");
-        if (item.marketListing) throw new Error("Cannot equip an item that is listed on the market.");
+        if (item.marketOrders.length > 0) throw new Error("Cannot equip an item that is listed on the market.");
 
         const hero = await prisma.hero.findUnique({
             where: { id: heroId }

@@ -69,6 +69,15 @@ class OracleRunner {
 
             const decision = brain.decideAction(ctx);
             await this._executeAction(user, decision);
+
+            // AAA: Fast Completion - After acting, check if we started a task and finish it
+            const updatedUser = await prisma.user.findUnique({
+                where: { id: user.id },
+                include: { taskQueue: { where: { status: "RUNNING" } } }
+            });
+            if (updatedUser && updatedUser.taskQueue.length > 0) {
+                await this._autoCompleteTask(updatedUser);
+            }
         }
     }
 
@@ -97,14 +106,18 @@ class OracleRunner {
 
                     if (slotKey) {
                         await equipmentService.equipItem(user.id, hero.id, bestItem.id, slotKey);
+                        console.log(`   🛡️ [Bot ${user.username}] Equipped ${bestItem.template.name} in ${slotKey}.`);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error(`   ⚠️ [Bot ${user.username}] Failed to equip ${bestItem.template.name}: ${e.message}`);
+                }
             }
         }
     }
 
     async _executeAction(user, action) {
         const type = (typeof action === 'string') ? action : action.type;
+        const decision = action; // Define decision from action for scoping
         try {
             switch (type) {
                 case "TRAVEL":
@@ -126,7 +139,7 @@ class OracleRunner {
                     });
                     
                     // AAA: Smart Filtering - Pick only what we can harvest
-                    const validTargets = availableResources.filter(r => {
+                    let validTargets = availableResources.filter(r => {
                         const { context } = gatheringService._getHarvestContext(r.itemId);
                         const requiredCategory = (context === "LUMBERING") ? "AXE" : "PICKAXE";
                         const tool = user.inventory.find(i => i.equippedIn && i.template.category === requiredCategory);
@@ -136,6 +149,12 @@ class OracleRunner {
                     });
 
                     if (validTargets.length > 0) {
+                        // AAA: Prioritization - If we have a specific material goal, focus on it
+                        if (decision.goal === "GATHER_TOOL_MATS") {
+                            const prioritized = validTargets.filter(r => r.item.name === "Iron Ore" || r.item.name === "Oak Wood");
+                            if (prioritized.length > 0) validTargets = prioritized;
+                        }
+
                         const target = validTargets[Math.floor(Math.random() * validTargets.length)];
                         await gatheringService.startGathering(user.id, user.heroes[0].id, target.id);
                     }
@@ -195,21 +214,31 @@ class OracleRunner {
                     break;
 
                 case "CRAFT":
-                    // AAA: Smart Recipe Selection
-                    const allRecipes = await prisma.recipeTemplate.findMany({
-                        include: { ingredients: true }
+                    // AAA: Smart Recipe Selection (Learned Only + Best Possible)
+                    const learnedRecipes = await prisma.userRecipe.findMany({
+                        where: { userId: user.id },
+                        include: { recipe: { include: { ingredients: true, resultItem: true } } }
                     });
                     
-                    const craftable = allRecipes.find(r => {
+                    // Filter recipes we have materials for
+                    const craftable = learnedRecipes.filter(ur => {
+                        const r = ur.recipe;
                         return r.ingredients.every(ing => {
                             const inv = user.inventory.find(i => i.templateId === ing.itemId);
                             return inv && inv.quantity >= ing.quantity;
                         });
                     });
 
-                    if (craftable) {
-                        await craftingService.startCrafting(user.id, craftable.id);
-                        console.log(`   🛠️ [Bot ${user.username}] Started crafting ${craftable.name}.`);
+                    // Pick the best craftable (prioritize Iron over Wooden)
+                    // Logic: Sort by resultItem.toolTier descending
+                    const bestRecipe = craftable.sort((a, b) => 
+                        (b.recipe.resultItem.toolTier || 0) - (a.recipe.resultItem.toolTier || 0)
+                    )[0];
+
+                    if (bestRecipe) {
+                        const r = bestRecipe.recipe;
+                        await craftingService.startCrafting(user.id, r.id);
+                        console.log(`   🛠️ [Bot ${user.username}] Started crafting ${r.name}.`);
                     } else {
                         // Fallback to gather if nothing to craft
                         await this._executeAction(user, "GATHER");
