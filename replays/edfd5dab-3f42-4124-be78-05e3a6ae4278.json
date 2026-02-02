@@ -1,0 +1,338 @@
+[
+  {
+    "tick": 0,
+    "events": [
+      {
+        "type": "ENGINE",
+        "msg": "Tactical Engine Engaged. Region: TOWN",
+        "data": {},
+        "timestamp": 1770010547995
+      }
+    ],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 0,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 1,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 8,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 2,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 16,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 3,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 24,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 4,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 32,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 5,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 40,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 6,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 48,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 7,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 56,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 8,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 64,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 9,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 72,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 10,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 80,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 11,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 88,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 12,
+    "events": [],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 96,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  },
+  {
+    "tick": 13,
+    "events": [
+      {
+        "type": "ENGINE",
+        "msg": "[AI_TRACE] Green Slime failed to find ENEMIES",
+        "data": {},
+        "timestamp": 1770010548004
+      }
+    ],
+    "units": [
+      {
+        "id": "monster_6001_rc9pz",
+        "name": "Green Slime",
+        "team": 1,
+        "pos": {
+          "x": 25,
+          "y": 5
+        },
+        "hp": 50,
+        "maxHp": 50,
+        "mp": 100,
+        "maxMp": 100,
+        "ap": 4,
+        "effects": [],
+        "traits": [],
+        "targetId": null
+      }
+    ]
+  }
+]

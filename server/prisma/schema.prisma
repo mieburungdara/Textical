@@ -56,6 +56,9 @@ model User {
   recoveryUntil DateTime?
   lastVisitedCityId Int?
   activeWagon   Wagon?
+  
+  lootSessionsAsLooter LootSession[] @relation("LooterRelation")
+  lootSessionsAsVictim LootSession[] @relation("VictimRelation")
 }
 
 model MonsterTemplate {
@@ -1049,6 +1052,7 @@ model Wagon {
   feePaid         Int      @default(0)
   
   items           WagonItem[]
+  lootSessions    LootSession[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -1060,4 +1064,16 @@ model WagonItem {
   templateId      Int
   template        ItemTemplate @relation(fields: [templateId], references: [id])
   quantity        Int      @default(1)
+}
+
+model LootSession {
+  id          Int      @id @default(autoincrement())
+  looterId    Int
+  looter      User     @relation("LooterRelation", fields: [looterId], references: [id])
+  victimId    Int      
+  victim      User     @relation("VictimRelation", fields: [victimId], references: [id])
+  wagonId     Int?     
+  wagon       Wagon?   @relation(fields: [wagonId], references: [id])
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
 }

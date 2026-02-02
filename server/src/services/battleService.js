@@ -1,12 +1,18 @@
 const battleInitializer = require('./battle/BattleInitializer');
 const rewardProcessor = require('./battle/RewardProcessor');
 const replayService = require('./battle/ReplayService');
+const lootService = require('./logistics/LootService');
 
 /**
  * BattleService (v2.0 - Modular Orchestrator)
  */
 class BattleService {
     async startBattle(userId, monsterTemplateId) {
+        // 0. AAA: Loot Interruption Logic
+        // If user is currently looting, and they enter a NEW battle (attacked or attacking),
+        // their current loot session is interrupted and the cargo is destroyed.
+        await lootService.interruptSession(userId);
+
         // 1. Setup and Initialize
         const { sim, monsterTemplate } = await battleInitializer.setupSimulation(userId, monsterTemplateId);
         
@@ -19,7 +25,7 @@ class BattleService {
         // 4. Process Rewards
         const { lootEarned, heroResults } = await rewardProcessor.process(
             userId, 
-            battleResult, 
+            { ...battleResult, victimUserId: monsterTemplate.userId || null }, // In case of PvP, monsterTemplate might hold user context
             monsterTemplate, 
             sim.units.filter(u => u.teamId === 0).length
         );

@@ -2,6 +2,7 @@ const BaseService = require('../BaseService');
 const progressionService = require('../progressionService');
 const inventoryService = require('../inventoryService');
 const koManager = require('../vitality/KOManager');
+const lootService = require('../logistics/LootService');
 
 class RewardProcessor extends BaseService {
     async process(userId, battleResult, monsterTemplate, partyCount) {
@@ -88,6 +89,17 @@ class RewardProcessor extends BaseService {
                     where: { id: userId },
                     data: { gold: { increment: battleResult.rewards.gold } }
                 });
+            }
+
+            // AAA: Loot Session Creation (PvP Victory)
+            // If winner is PLAYER and there was a PvP component (victim is another user)
+            // For now, let's assume we can detect if the victim had a Wagon.
+            if (battleResult.victimUserId) {
+                const victimWagon = await this.db.wagon.findUnique({ where: { userId: battleResult.victimUserId } });
+                if (victimWagon) {
+                    await lootService.startLootSession(userId, battleResult.victimUserId, victimWagon.id);
+                    this.log(`Loot Session Created: User ${userId} is now looting User ${battleResult.victimUserId}.`, "Loot");
+                }
             }
         } else {
             // DEFEAT LOGIC (Entire Team Wiped or Fled)
