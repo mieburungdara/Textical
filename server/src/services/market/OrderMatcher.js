@@ -49,7 +49,10 @@ class OrderMatcher {
             // AAA: Faction Discount - Check if SELLER is ally of owning guild
             const isFactionAlly = guild && sell.creator.factionId && sell.creator.factionId === guild.factionId;
 
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate);
+            // AAA: Volume Incentive Context
+            const sellerVolume = await tx.itemSaleHistory.count({ where: { sellerId: sell.creatorId } });
+
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate, sellerVolume);
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Update Seller
@@ -67,9 +70,10 @@ class OrderMatcher {
             const itemOps = await inventoryManager.resolveStackingOps(tx, buyOrder.creatorId, buyOrder.templateId, fulfillQty);
             await Promise.all(itemOps);
 
-            // AAA: Log Sale History for Analytics
+            // AAA: Log Sale History for Analytics & Incentives
             await tx.itemSaleHistory.create({
                 data: {
+                    sellerId: sell.creatorId,
                     templateId: buyOrder.templateId,
                     pricePerUnit: sell.pricePerUnit,
                     quantity: fulfillQty,
@@ -135,7 +139,10 @@ class OrderMatcher {
             const fulfillQty = Math.min(sellOrder.remainingQuantity, buy.remainingQuantity);
             const totalPrice = fulfillQty * buy.pricePerUnit;
             
-            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate);
+            // AAA: Volume Incentive Context
+            const sellerVolume = await tx.itemSaleHistory.count({ where: { sellerId: sellOrder.creatorId } });
+
+            const sellerNet = marketFee.calculateSellerNet(totalPrice, guildTaxRate, isFactionAlly, regionalTaxRate, sellerVolume);
             const guildRevenue = marketFee.calculateGuildRevenue(totalPrice, guildTaxRate, isFactionAlly);
 
             // a. Seller gets Gold
@@ -156,6 +163,7 @@ class OrderMatcher {
             // AAA: Log Sale History for Analytics
             await tx.itemSaleHistory.create({
                 data: {
+                    sellerId: sellOrder.creatorId,
                     templateId: sellOrder.templateId,
                     pricePerUnit: buy.pricePerUnit,
                     quantity: fulfillQty,

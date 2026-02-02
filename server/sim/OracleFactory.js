@@ -18,7 +18,7 @@ class BotFactory {
 
         for (let i = 1; i <= count; i++) {
             const username = `Bot_${i.toString().padStart(3, '0')}`;
-            const archetype = this.ARCHETYPES[i % this.ARCHETYPES.length];
+            const archetype = this.ARCHETYPES[Math.floor(Math.random() * this.ARCHETYPES.length)];
 
             const user = await prisma.user.upsert({
                 where: { username },

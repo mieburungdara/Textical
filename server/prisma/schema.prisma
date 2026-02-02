@@ -67,6 +67,8 @@ model User {
   // AAA: Bounty Board
   bountiesAsTarget Bounty[] @relation("TargetRelation")
   bountiesAsHunter Bounty[] @relation("HunterRelation")
+  
+  salesHistory  ItemSaleHistory[] @relation("SellerHistoryRelation")
 }
 
 model MonsterTemplate {
@@ -1030,6 +1032,8 @@ model HeroSaleHistory {
 
 model ItemSaleHistory {
   id              Int      @id @default(autoincrement())
+  sellerId        Int?     
+  seller          User?    @relation("SellerHistoryRelation", fields: [sellerId], references: [id])
   templateId      Int
   itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
   pricePerUnit    Int

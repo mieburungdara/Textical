@@ -9,7 +9,7 @@ async function launchOracle() {
     console.log("==================================================\n");
 
     const BOT_COUNT = 100;
-    const SIM_HOURS = 24;
+    const SIM_HOURS = 100;
 
     // 1. Initialize Population
     await factory.cleanupBots();

@@ -20,7 +20,8 @@ class BehaviorBrain {
 
         switch (ctx.archetype) {
             case "GATHERER":
-                if (ctx.inventoryCount >= 15) return "SELL";
+                // AAA: Incentive - Sell more often (50% capacity)
+                if (ctx.inventoryCount >= 10) return "SELL"; 
                 return "GATHER";
 
             case "CRAFTER":

@@ -50,7 +50,12 @@ class OracleRunner {
         try {
             switch (action) {
                 case "GATHER":
-                    await gatheringService.startGathering(user.id, user.heroes[0].id, 1); // Region 1 resource
+                    // AAA: Dynamic resource selection for simulation accuracy
+                    const resources = await prisma.regionResource.findMany({ where: { regionId: user.currentRegion } });
+                    if (resources.length > 0) {
+                        const target = resources[Math.floor(Math.random() * resources.length)];
+                        await gatheringService.startGathering(user.id, user.heroes[0].id, target.id);
+                    }
                     break;
                 case "CRAFT":
                     await craftingService.startCrafting(user.id, 1); // Recipe 1
@@ -81,7 +86,7 @@ class OracleRunner {
                     break;
             }
         } catch (e) {
-            // Silently fail if requirements not met during sim
+            console.error(`   ❌ [Bot ${user.username}] Action ${action} Failed: ${e.message}`);
         }
     }
 
