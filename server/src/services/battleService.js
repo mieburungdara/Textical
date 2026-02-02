@@ -1,5 +1,6 @@
 const battleInitializer = require('./battle/BattleInitializer');
 const rewardProcessor = require('./battle/RewardProcessor');
+const replayService = require('./battle/ReplayService');
 
 /**
  * BattleService (v2.0 - Modular Orchestrator)
@@ -12,7 +13,10 @@ class BattleService {
         // 2. Run Simulation
         const battleResult = sim.run();
 
-        // 3. Process Rewards
+        // 3. Save Replay (AAA Integration)
+        await replayService.saveReplay(sim.battleId, battleResult.logs);
+
+        // 4. Process Rewards
         const { lootEarned, heroResults } = await rewardProcessor.process(
             userId, 
             battleResult, 
@@ -21,8 +25,9 @@ class BattleService {
         );
 
         return {
+            battleId: sim.battleId, // Return ID so client can fetch replay
             result: battleResult.winner === 0 ? "VICTORY" : "DEFEAT",
-            replay: battleResult.logs,
+            // replay: battleResult.logs, // Optional: Don't send full log if too big, client fetches via ID
             loot: lootEarned,
             rewards: battleResult.rewards,
             heroProgress: heroResults,

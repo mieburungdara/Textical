@@ -1,8 +1,18 @@
 const BaseController = require('./BaseController');
 const battleService = require('../services/battleService');
 const formationService = require('../services/formationService');
+const replayService = require('../services/battle/ReplayService');
 
 class BattleController extends BaseController {
+    async getReplay(req, res) {
+        await this.execute(res, async () => {
+            const { battleId } = req.params;
+            const replay = await replayService.getReplay(battleId);
+            if (!replay) throw new Error("Replay not found");
+            this.sendSuccess(res, replay);
+        });
+    }
+
     async startBattle(req, res) {
         await this.execute(res, async () => {
             const { userId, monsterId } = req.body;

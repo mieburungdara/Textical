@@ -63,6 +63,7 @@
         <div class="sidebar-brand">🛡️ ADMIN PANEL</div>
         <div class="nav-link active" onclick="showPage('monsters')">👾 Monsters Database</div>
         <div class="nav-link" onclick="showPage('regions')">🗺️ World Regions</div>
+        <div class="nav-link" onclick="showPage('visualizer')">📺 Battle Visualizer</div>
         <div class="nav-link" onclick="showPage('races')">🧬 Race Bonuses</div>
         <div class="nav-link" onclick="showPage('sync')">⚙️ System Sync</div>
         
@@ -96,6 +97,42 @@
                 <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Connections</th><th>Actions</th></tr></thead>
                 <tbody id="region-list"></tbody>
             </table>
+        </section>
+
+        <!-- PAGE: VISUALIZER -->
+        <section id="page-visualizer" class="page hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2>Tactical Battle Visualizer</h2>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="viz-battle-id" placeholder="Battle ID" style="margin-bottom:0; width:300px;">
+                    <button class="btn-primary" onclick="loadReplay()">LOAD REPLAY</button>
+                </div>
+            </div>
+            
+            <div style="background:#111; border:1px solid #333; border-radius:12px; padding:20px; display:flex; gap:20px;">
+                <div id="grid-container" style="background:#000; width:600px; height:600px; position:relative; overflow:hidden; border:2px solid #444;">
+                    <canvas id="battle-canvas" width="600" height="600"></canvas>
+                </div>
+                
+                <div style="flex:1; display:flex; flex-direction:column;">
+                    <div style="background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:15px; flex:1; overflow-y:auto;">
+                        <h4 style="margin-top:0; color:#4caf50;">BATTLE LOG</h4>
+                        <div id="viz-log" style="font-family:monospace; font-size:12px; color:#aaa; line-height:1.6;">Ready to load...</div>
+                    </div>
+                    
+                    <div style="background:#1a1a1a; padding:15px; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span id="viz-tick">Tick: 0 / 0</span>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="playbackStep(-1)" style="background:#333; color:white;">⏮</button>
+                                <button id="btn-play" onclick="togglePlayback()" style="background:#4caf50; color:white;">PLAY</button>
+                                <button onclick="playbackStep(1)" style="background:#333; color:white;">⏭</button>
+                            </div>
+                        </div>
+                        <input type="range" id="viz-range" min="0" max="0" value="0" style="margin-top:15px;">
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- PAGE: RACES -->

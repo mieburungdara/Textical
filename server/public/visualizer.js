@@ -115,6 +115,113 @@ document.getElementById('btn-save-all-races').onclick = () => {
     socket.send(JSON.stringify({ type: "admin_save_all_races", data }));
 };
 
+// --- VISUALIZER LOGIC ---
+let replayData = null;
+let currentTickIdx = 0;
+let isPlaying = false;
+let playbackTimer = null;
+
+const canvas = document.getElementById('battle-canvas');
+const ctx = canvas.getContext('2d');
+const GRID_SIZE = 50;
+const TILE_SIZE = 600 / GRID_SIZE;
+
+async function loadReplay() {
+    const battleId = document.getElementById('viz-battle-id').value;
+    if (!battleId) return alert("Please enter a Battle ID.");
+
+    try {
+        const response = await fetch(`/api/battle/replay/${battleId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            replayData = result.data;
+            currentTickIdx = 0;
+            document.getElementById('viz-range').max = replayData.length - 1;
+            document.getElementById('viz-range').value = 0;
+            renderCurrentTick();
+            updateLog();
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch (e) {
+        alert("Failed to fetch replay.");
+    }
+}
+
+function renderCurrentTick() {
+    if (!replayData) return;
+    const tick = replayData[currentTickIdx];
+    
+    // Clear
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 600, 600);
+    
+    // Draw Grid
+    ctx.strokeStyle = '#222';
+    for (let i = 0; i <= GRID_SIZE; i++) {
+        ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, 600); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(600, i * TILE_SIZE); ctx.stroke();
+    }
+
+    // Draw Units
+    tick.units.forEach(u => {
+        ctx.fillStyle = u.team === 0 ? '#4caf50' : '#f44336';
+        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        
+        // HP Bar
+        const hpPercent = u.hp / u.maxHp;
+        ctx.fillStyle = '#333';
+        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 4, TILE_SIZE, 3);
+        ctx.fillStyle = '#4caf50';
+        ctx.fillRect(u.pos.x * TILE_SIZE, u.pos.y * TILE_SIZE - 4, TILE_SIZE * hpPercent, 3);
+    });
+
+    document.getElementById('viz-tick').innerText = `Tick: ${tick.tick} / ${replayData[replayData.length-1].tick}`;
+}
+
+function updateLog() {
+    if (!replayData) return;
+    const logEl = document.getElementById('viz-log');
+    const tick = replayData[currentTickIdx];
+    
+    if (tick.events.length > 0) {
+        logEl.innerHTML = tick.events.map(e => `<div>[${e.type}] ${e.msg}</div>`).join('') + "<hr>" + logEl.innerHTML;
+    }
+}
+
+function playbackStep(dir) {
+    currentTickIdx = Math.max(0, Math.min(replayData.length - 1, currentTickIdx + dir));
+    document.getElementById('viz-range').value = currentTickIdx;
+    renderCurrentTick();
+    updateLog();
+}
+
+function togglePlayback() {
+    isPlaying = !isPlaying;
+    const btn = document.getElementById('btn-play');
+    btn.innerText = isPlaying ? "PAUSE" : "PLAY";
+    btn.style.background = isPlaying ? "#f44336" : "#4caf50";
+
+    if (isPlaying) {
+        playbackTimer = setInterval(() => {
+            if (currentTickIdx >= replayData.length - 1) {
+                togglePlayback();
+                return;
+            }
+            playbackStep(1);
+        }, 100);
+    } else {
+        clearInterval(playbackTimer);
+    }
+}
+
+document.getElementById('viz-range').oninput = (e) => {
+    currentTickIdx = parseInt(e.target.value);
+    renderCurrentTick();
+    updateLog();
+};
+
 // --- GLOBAL ---
 function closeModal() {
     monsterModal.classList.add('hidden');

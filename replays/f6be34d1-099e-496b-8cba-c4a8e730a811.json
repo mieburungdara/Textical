@@ -1,0 +1,20 @@
+[
+  {
+    "tick": 0,
+    "events": [
+      {
+        "type": "INIT",
+        "msg": "Battle Started"
+      }
+    ]
+  },
+  {
+    "tick": 1,
+    "events": [
+      {
+        "type": "MOVE",
+        "msg": "Unit moved"
+      }
+    ]
+  }
+]

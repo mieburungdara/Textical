@@ -63,6 +63,7 @@ router.post('/quests/complete', (req, res) => questController.completeQuest(req,
 
 // --- BATTLE ---
 router.post('/battle/start', (req, res) => battleController.startBattle(req, res));
+router.get('/battle/replay/:battleId', (req, res) => battleController.getReplay(req, res));
 
 // --- HERO PROFILE ---
 router.get('/hero/:id/profile', (req, res) => userController.getHeroProfile(req, res));
