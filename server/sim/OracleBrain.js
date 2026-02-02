@@ -11,6 +11,9 @@ class BehaviorBrain {
     decideAction(ctx) {
         if (ctx.vitality < 10) return "IDLE"; // Need rest
 
+        // 0. AAA: Item Sink Pressure - Salvage if full
+        if (ctx.inventoryCount >= 16) return "SALVAGE"; 
+
         switch (ctx.archetype) {
             case "GATHERER":
                 if (ctx.inventoryCount >= 15) return "SELL";

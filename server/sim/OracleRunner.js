@@ -3,6 +3,7 @@ const brain = require('./OracleBrain');
 const gatheringService = require('../src/services/gatheringService');
 const craftingService = require('../src/services/craftingService');
 const marketService = require('../src/services/marketService');
+const salvageService = require('../src/services/crafting/SalvageService');
 
 /**
  * OracleRunner
@@ -22,7 +23,7 @@ class OracleRunner {
         for (const bot of this.bots) {
             const user = await prisma.user.findUnique({
                 where: { id: bot.userId },
-                include: { inventory: true, taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
+                include: { inventory: { include: { template: true } }, taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
             });
 
             if (user.taskQueue.length > 0) {
@@ -52,6 +53,13 @@ class OracleRunner {
                     break;
                 case "CRAFT":
                     await craftingService.startCrafting(user.id, 1); // Recipe 1
+                    break;
+                case "SALVAGE":
+                    // Find first gear item
+                    const gear = user.inventory.find(i => i.template.category !== "MATERIAL");
+                    if (gear) {
+                        await salvageService.salvageItem(user.id, gear.id);
+                    }
                     break;
                 case "SELL":
                     // List first item in inventory
