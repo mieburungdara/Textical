@@ -41,8 +41,8 @@ class BattleSimulation {
         this.loop = new SimLoopProcessor(this);
     }
 
-    addUnit(data, teamId, pos, stats) {
-        return this.unitManager.addUnit(data, teamId, pos, stats);
+    async addUnit(data, teamId, pos, stats) {
+        return await this.unitManager.addUnit(data, teamId, pos, stats);
     }
 
     notifyAdjacencyGained(unit) {

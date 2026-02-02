@@ -58,7 +58,7 @@ class BattleInitializer extends BaseService {
         sim.terrainEffects = terrainEffects;
 
         // Add Heroes
-        party.forEach(p => {
+        for (const p of party) {
             const stats = {
                 health_max: p.profile.totalStats.HP || 100,
                 mana_max: p.profile.totalStats.MP || 50,
@@ -75,7 +75,7 @@ class BattleInitializer extends BaseService {
                 block_power: 0.5
             };
             
-            sim.addUnit({
+            await sim.addUnit({
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 db_id: p.profile.id, // Keep track of DB ID for persistence
                 isMain: p.profile.isMain, // AAA: Unit Utama Identification
@@ -85,7 +85,7 @@ class BattleInitializer extends BaseService {
                 abilities: p.profile.abilities,
                 equippedItems: p.profile.equippedItems // AAA: Durability Support
             }, 0, { x: p.grid.x, y: p.grid.y }, stats);
-        });
+        }
 
         // Add Monsters
         const monsterStats = {
@@ -104,7 +104,7 @@ class BattleInitializer extends BaseService {
             block_power: 0.3
         };
 
-        sim.addUnit({
+        await sim.addUnit({
             instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).substr(2, 5)}`,
             id: monsterTemplate.id,
             name: monsterTemplate.name,

@@ -159,13 +159,14 @@ model RegionTemplate {
   description     String
   visualType      String   @default("TOWN")
   zoneType        String   @default("GREEN") // GREEN, BLUE, RED
-  regionalTaxRate Float    @default(0.10)    // AAA: Dynamic Taxation
-  type            RegionType @relation(fields: [visualType], references: [id])
-  dangerLevel     Int      @default(1)
+  regionalTaxRate Float    @default(0.10)
+  weatherOverride String?  // Optional regional weather override
   
+  regionTypeId    String?
+  regionType      RegionType? @relation(fields: [regionTypeId], references: [id])
   factionId       Int?
-  faction         Faction? @relation(fields: [factionId], references: [id])
-  
+  faction         Faction?    @relation(fields: [factionId], references: [id])
+
   territory       Territory?
   connections     RegionConnection[] @relation("OriginRegion")
   connectedFrom   RegionConnection[] @relation("TargetRegion")
@@ -1125,6 +1126,13 @@ model RegionalExtractionStats {
     regionId        Int
     region          RegionTemplate @relation(fields: [regionId], references: [id])
     
-    createdAt       DateTime @default(now())
-    claimedAt       DateTime?
-  }
+      createdAt       DateTime @default(now())
+      claimedAt       DateTime?
+    }
+    
+    model WorldState {
+      id              Int      @id @default(1)
+      currentHour     Int      @default(12) // 0-23
+      weatherType     String   @default("CLEAR") // CLEAR, RAIN, STORM, HEATWAVE
+      lastTick        DateTime @default(now())
+    }

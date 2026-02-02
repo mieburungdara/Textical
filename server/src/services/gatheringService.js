@@ -5,12 +5,14 @@ const inventoryService = require('./inventoryService');
 const statService = require('./statService');
 const vitalityService = require('./vitalityService');
 const worldSpawner = require('./worldSpawnerService');
+const worldCycle = require('./world/WorldCycleService');
+const envResolver = require('../logic/world/EnvironmentalResolver');
 const extractionTracker = require('./economy/ExtractionTrackerService');
 
 /**
  * GatheringService
  * Thin orchestrator for resource harvesting.
- * Enhanced with Dynamic Commodity Extraction Tracking.
+ * Enhanced with Dynamic Commodity Extraction and Environmental Modifiers.
  */
 class GatheringService extends BaseService {
     constructor() {
@@ -131,6 +133,17 @@ class GatheringService extends BaseService {
             if (t[multKey]) {
                 yieldQuantity = Math.floor(yieldQuantity * t[multKey]);
             }
+        }
+
+        // --- AAA: Environmental Modifiers ---
+        const worldState = await worldCycle.getWorldState();
+        const envMods = envResolver.resolveModifiers(worldState.currentHour, worldState.weatherType);
+        
+        // Apply Global Yield or Contextual Yield (e.g. Fishing)
+        if (context === "FISHING") {
+            yieldQuantity = Math.floor(yieldQuantity * envMods.gathering.fishingYieldMult);
+        } else {
+            yieldQuantity = Math.floor(yieldQuantity * envMods.gathering.yieldMult);
         }
 
         const finalYield = Math.max(1, yieldQuantity);
