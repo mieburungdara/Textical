@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const chatHandler = require('../handlers/chatSocketHandler');
 
 class SocketService {
     constructor() {
@@ -17,6 +18,11 @@ class SocketService {
             socket.on("authenticate", (rawUserId) => {
                 const userId = parseInt(rawUserId); // BUG FIX: Force integer key
                 this.userSockets.set(userId, socket.id);
+                socket.userId = userId; // Store on socket for easy access
+                
+                // Register Chat Handlers
+                chatHandler.register(this.io, socket, userId);
+
                 console.log(`[SOCKET] User ${userId} authenticated on socket ${socket.id}`);
                 socket.emit("authenticated", { userId }); // Confirm auth
             });

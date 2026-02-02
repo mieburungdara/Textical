@@ -69,6 +69,7 @@ model User {
   bountiesAsHunter Bounty[] @relation("HunterRelation")
   
   salesHistory  ItemSaleHistory[] @relation("SellerHistoryRelation")
+  chatMessages  ChatMessage[]
 }
 
 model MonsterTemplate {
@@ -1160,4 +1161,15 @@ model RegionalExtractionStats {
       currentHour     Int      @default(12) // 0-23
       weatherType     String   @default("CLEAR") // CLEAR, RAIN, STORM, HEATWAVE
       lastTick        DateTime @default(now())
+    }
+
+    model ChatMessage {
+      id          Int      @id @default(autoincrement())
+      channelType String   @default("GLOBAL") // GLOBAL, GUILD, PRIVATE
+      channelId   Int?
+      userId      Int
+      user        User     @relation(fields: [userId], references: [id])
+      message     String
+      timestamp   DateTime @default(now())
+      isDeleted   Boolean  @default(false)
     }

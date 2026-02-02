@@ -13,12 +13,14 @@ const questController = require('../controllers/QuestController');
 const battleController = require('../controllers/BattleController');
 const regionController = require('../controllers/RegionController');
 const equipmentController = require('../controllers/EquipmentController');
+const chatRoutes = require('./chatRoutes');
 
 // --- ASSETS (SYNC SYSTEM) ---
 router.get('/assets/manifest', (req, res) => assetController.getManifest(req, res));
 router.get('/assets/raw/:category/:id', (req, res) => assetController.getRawAsset(req, res));
 
 // --- USER ---
+router.use('/chat', chatRoutes);
 router.post('/auth/login', (req, res) => userController.login(req, res));
 router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
 router.get('/user/:id/heroes', (req, res) => userController.getHeroes(req, res));

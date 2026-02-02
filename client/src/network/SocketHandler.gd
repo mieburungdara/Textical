@@ -7,6 +7,9 @@ signal task_failed(data)
 signal connected
 signal authenticated
 signal disconnected
+signal chat_message(data)
+signal chat_typing(data)
+signal chat_error(data)
 
 var socket: WebSocketPeer = WebSocketPeer.new()
 var is_socket_connected = false
@@ -67,6 +70,9 @@ func _on_data(raw_data: String):
                 "task_completed": task_completed.emit(data)
                 "task_started": task_started.emit(data)
                 "task_failed": task_failed.emit(data)
+                "chat:message": chat_message.emit(data)
+                "chat:typing": chat_typing.emit(data)
+                "chat:error": chat_error.emit(data)
                 "authenticated": 
                     is_authenticated = true
                     authenticated.emit()
@@ -86,3 +92,11 @@ func _send_auth(user_id: int):
     socket.send_text(msg)
     _pending_user_id = -1
     print("[SOCKET] Auth Request Sent for User: ", user_id)
+
+func chat_send(data: Dictionary):
+    var msg = '42["chat:send", %s]' % JSON.stringify(data)
+    socket.send_text(msg)
+
+func chat_join_guild(guild_id: int):
+    var msg = '42["chat:join_guild", %d]' % guild_id
+    socket.send_text(msg)
