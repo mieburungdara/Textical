@@ -120,7 +120,12 @@ class StatService extends BaseService {
 
     _applyEquipment(equipment, context, applyMod) {
         for (const eq of equipment) {
-            const item = eq.itemInstance.template;
+            const instance = eq.itemInstance;
+            const item = instance.template;
+            
+            // AAA: Durability Filter - Broken items give 0 stats
+            if (instance.currentDurability <= 0) continue;
+
             let valid = true;
             if (item.category === "PICKAXE" && context !== "MINING") valid = false;
             if (item.category === "AXE" && context !== "LUMBERING") valid = false;

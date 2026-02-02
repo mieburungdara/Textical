@@ -28,10 +28,20 @@ class BattleUnit {
         this.activeSkills = allAbilities.filter(a => a.category === "ACTIVE");
         this.passiveSkills = allAbilities.filter(a => a.category === "PASSIVE");
 
+        this.equippedItems = data.equippedItems || [];
+        this.durabilityLoss = {}; // instanceId -> amount
+
         this.weaponTraits = [];
         this.traits = data.traits || [];
         this.temporaryStats = {}; 
         this.isStealthed = false; // NEW: Stealth support
+    }
+
+    recordDurabilityLoss(slotKey, amount = 1) {
+        const item = this.equippedItems.find(i => i.slot === slotKey);
+        if (item) {
+            this.durabilityLoss[item.instanceId] = (this.durabilityLoss[item.instanceId] || 0) + amount;
+        }
     }
 
     reveal(sim) {

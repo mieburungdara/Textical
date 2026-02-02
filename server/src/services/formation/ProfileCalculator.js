@@ -36,6 +36,7 @@ class ProfileCalculator extends BaseService {
             name: hero.name,
             totalStats: {},
             activeTraits: [],
+            equippedItems: [], // AAA: Tracking for Durability
             abilities: heroSkills.map(hs => ({
                 id: hs.skill.id,
                 name: hs.skill.name,
@@ -54,7 +55,15 @@ class ProfileCalculator extends BaseService {
         hero.traits.forEach(t => profile.activeTraits.push(t.trait.name));
 
         for (const eq of hero.equipment) {
-            const item = eq.itemInstance.template;
+            const instance = eq.itemInstance;
+            const item = instance.template;
+
+            profile.equippedItems.push({
+                instanceId: instance.id,
+                slot: eq.slotKey,
+                category: item.category
+            });
+
             item.stats.forEach(s => {
                 profile.totalStats[s.statKey] = (profile.totalStats[s.statKey] || 0) + s.statValue;
             });

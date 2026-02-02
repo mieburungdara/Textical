@@ -26,8 +26,23 @@ class RewardProcessor extends BaseService {
                 where: { formationSlots: { some: { preset: { userId } } } }
             });
 
+            // 1. Process XP and Levels
             for (const hero of heroes) {
+                // ... XP Logic already there ...
                 const progression = await progressionService.addHeroExperience(hero.id, heroShare);
+
+                // 2. AAA: Persist Durability Loss
+                const simUnit = battleResult.initialUnits.find(u => u.data.db_id === hero.id);
+                if (simUnit && simUnit.durabilityLoss) {
+                    for (const [instanceId, loss] of Object.entries(simUnit.durabilityLoss)) {
+                        if (loss > 0) {
+                            await this.db.inventoryItem.update({
+                                where: { id: parseInt(instanceId) },
+                                data: { currentDurability: { decrement: loss } }
+                            });
+                        }
+                    }
+                }
 
                 heroResults.push({
                     id: hero.id,

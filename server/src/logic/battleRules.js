@@ -42,6 +42,9 @@ class BattleRules {
 
         if (atkMods.cancelAction || defMods.cancelAction) return;
 
+        // AAA: Weapon Durability Loss (1 point per attack)
+        attacker.recordDurabilityLoss("MAIN_HAND");
+
         // 3. Accuracy & Dodge
         const dodgeChance = (defender.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
         const accuracy = (attacker.getStat("accuracy") || 100) + (atkMods.bonusAcc || 0) + directionalAccBonus;
@@ -68,6 +71,13 @@ class BattleRules {
         const finalDamage = Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus);
 
         defender.takeDamage(finalDamage, this.sim); // ADDED this.sim
+        
+        // AAA: Armor Durability Loss (1 point per hit)
+        defender.recordDurabilityLoss("CHEST");
+        defender.recordDurabilityLoss("LEGS");
+        defender.recordDurabilityLoss("HEAD");
+        defender.recordDurabilityLoss("ACCESSORY");
+
         this._broadcastAllyEvent("onAllyDamage", defender, finalDamage);
         this.sim.unitDeeds[attacker.instanceId] = (this.sim.unitDeeds[attacker.instanceId] || 0) + finalDamage;
 
@@ -139,6 +149,9 @@ class BattleRules {
     }
 
     performSkill(actor, skill, targetPos) {
+        // AAA: Weapon Durability Loss (1 point per skill use)
+        actor.recordDurabilityLoss("MAIN_HAND");
+
         const target = this.sim.grid.unitGrid[targetPos.y]?.[targetPos.x];
         
         if (target) {
