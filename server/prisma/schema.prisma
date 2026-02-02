@@ -381,6 +381,16 @@ model TraitTemplate {
   items           ItemTrait[]
   heroes          HeroTrait[]
   monsters        MonsterTrait[]
+  instanceItems   ItemInstanceTrait[]
+  stats           TraitStat[]
+}
+
+model TraitStat {
+  id              Int      @id @default(autoincrement())
+  traitId         Int
+  trait           TraitTemplate @relation(fields: [traitId], references: [id])
+  statKey         String
+  statValue       Float
 }
 
 model ItemEquipSlot {
@@ -625,6 +635,9 @@ model TaskQueue {
   status          String   @default("PENDING")
   startedAt       DateTime?
   finishesAt      DateTime?
+  
+  // AAA: Advanced Crafting
+  affixMaterialId Int?
 }
 
 model FormationPreset {
@@ -670,6 +683,15 @@ model InventoryItem {
   isTrash           Boolean @default(false)
   marketOrders MarketOrder[]
   equippedIn    HeroEquipment?
+  instanceTraits ItemInstanceTrait[]
+}
+
+model ItemInstanceTrait {
+  id              Int      @id @default(autoincrement())
+  itemInstanceId  Int
+  itemInstance    InventoryItem @relation(fields: [itemInstanceId], references: [id])
+  traitId         Int
+  trait           TraitTemplate @relation(fields: [traitId], references: [id])
 }
 
 model MarketOrder {

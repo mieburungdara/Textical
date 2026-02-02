@@ -38,14 +38,34 @@ class InventoryService {
 
     /**
      * Unified method to add items to inventory.
+     * Supports optional traitId for instance-based traits (affixes).
      */
-    async addItem(userId, templateId, quantity = 1, tx = null) {
+    async addItem(userId, templateId, quantity = 1, tx = null, traitId = null) {
         if (quantity <= 0) return;
         const client = tx || prisma;
 
         const hasSpace = await this.hasSpace(userId, templateId, quantity);
         if (!hasSpace) {
             throw new Error("Inventory full! No more slots available.");
+        }
+
+        if (traitId) {
+            // AAA: Specialized Instance with Trait - Bypasses Stacking
+            const items = [];
+            for (let i = 0; i < quantity; i++) {
+                const item = await client.inventoryItem.create({
+                    data: {
+                        userId,
+                        templateId,
+                        quantity: 1, // Instance-based trait items usually don't stack
+                        instanceTraits: {
+                            create: { traitId: traitId }
+                        }
+                    }
+                });
+                items.push(item);
+            }
+            return items;
         }
 
         const ops = await manager.resolveStackingOps(client, userId, templateId, quantity);

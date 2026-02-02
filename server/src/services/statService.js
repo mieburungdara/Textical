@@ -21,7 +21,21 @@ class StatService extends BaseService {
                 combatClass: true,
                 skills: { where: { isActive: true }, include: { skill: true } },
                 buffs: { where: { expiresAt: { gt: now } } },
-                equipment: { include: { itemInstance: { include: { template: { include: { stats: true } } } } } }
+                equipment: { 
+                    include: { 
+                        itemInstance: { 
+                            include: { 
+                                template: { 
+                                    include: { 
+                                        stats: true,
+                                        traits: { include: { trait: { include: { stats: true } } } }
+                                    } 
+                                },
+                                instanceTraits: { include: { trait: { include: { stats: true } } } }
+                            } 
+                        } 
+                    } 
+                }
             }
         });
 
@@ -133,7 +147,22 @@ class StatService extends BaseService {
             if (item.category === "HERBALISM_SICKLE" && context !== "HERBALISM") valid = false;
 
             if (valid) {
+                // 1. Base Template Stats
                 item.stats.forEach(s => applyMod(s.statKey, s.statValue, 0, `Equip:${item.name}`));
+
+                // 2. AAA: Template-Based Traits
+                item.traits.forEach(it => {
+                    it.trait.stats.forEach(ts => {
+                        applyMod(ts.statKey, ts.statValue, 0, `Trait:${it.trait.name}`);
+                    });
+                });
+
+                // 3. AAA: Instance-Based Traits (Magical Affixes)
+                instance.instanceTraits.forEach(it => {
+                    it.trait.stats.forEach(ts => {
+                        applyMod(ts.statKey, ts.statValue, 0, `Affix:${it.trait.name}`);
+                    });
+                });
             }
         }
     }
