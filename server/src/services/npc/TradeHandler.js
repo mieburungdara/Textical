@@ -4,14 +4,24 @@
 class TradeHandler {
     async handlePurchase(prisma, userId, npcId, itemId) {
         return await prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({ where: { id: userId } });
+            if (!user) throw new Error("User not found.");
+
             const shopItem = await tx.nPCShopItem.findFirst({
                 where: { npcId, itemId }
             });
 
             if (!shopItem) throw new Error("Item not available.");
-            if (shopItem.stock === 0) throw new Error("Out of stock.");
 
-            const user = await tx.user.findUnique({ where: { id: userId } });
+            // AAA: Check Localized Dynamic Stock
+            const localStock = await tx.shopStock.findFirst({
+                where: { npcId, regionId: user.currentRegion, templateId: itemId }
+            });
+
+            if (!localStock || localStock.quantity <= 0) {
+                throw new Error("This item is currently out of stock in this region.");
+            }
+
             if (user.gold < shopItem.priceGold) throw new Error("Insufficient gold.");
 
             await tx.user.update({
@@ -19,17 +29,17 @@ class TradeHandler {
                 data: { gold: { decrement: shopItem.priceGold } }
             });
 
-            await tx.inventoryItem.upsert({
-                where: { userId_templateId: { userId, templateId: itemId } },
-                update: { quantity: { increment: 1 } },
-                create: { userId, templateId: itemId, quantity: 1 }
+            // Add to Inventory
+            const inventoryService = require('../inventoryService');
+            await inventoryService.addItem(userId, itemId, 1, tx);
+
+            // Deduct Dynamic Stock
+            await tx.shopStock.update({
+                where: { id: localStock.id },
+                data: { quantity: { decrement: 1 } }
             });
 
-            if (shopItem.stock > 0) {
-                await tx.nPCShopItem.update({ where: { id: shopItem.id }, data: { stock: { decrement: 1 } } });
-            }
-
-            return { success: true, message: `Purchased for ${shopItem.priceGold} gold.` };
+            return { success: true, message: `Purchased ${localStock.itemTemplate ? '' : ''} for ${shopItem.priceGold} gold.` };
         });
     }
 }

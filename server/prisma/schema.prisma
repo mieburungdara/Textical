@@ -138,6 +138,7 @@ model ItemTemplate {
   eventAppearances EventResource[]
   wagonItems      WagonItem[]
   saleHistory     ItemSaleHistory[]
+  shopStocks      ShopStock[]
 }
 
 model RegionTemplate {
@@ -171,6 +172,7 @@ model RegionTemplate {
   influence       RegionalInfluence[]
   heroSaleHistory HeroSaleHistory[]
   itemSaleHistory ItemSaleHistory[]
+  npcStocks       ShopStock[]
 }
 
 model WorldEventTemplate {
@@ -264,6 +266,23 @@ model NPCTemplate {
   dialogueNodes DialogueNode[]
   schedules     NPCSchedule[]
   eventReactions NPCEventReaction[]
+  currentStock  ShopStock[]
+}
+
+model ShopStock {
+  id              Int      @id @default(autoincrement())
+  npcId           Int
+  npc             NPCTemplate @relation(fields: [npcId], references: [id])
+  regionId        Int
+  region          RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId      Int
+  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
+  
+  quantity        Int      @default(0)
+  maxQuantity     Int      @default(50)
+  nextRestock     DateTime
+  
+  @@unique([npcId, regionId, templateId])
 }
 
 model NPCSchedule {
