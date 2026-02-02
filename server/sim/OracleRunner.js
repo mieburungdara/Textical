@@ -24,7 +24,20 @@ class OracleRunner {
         for (const bot of this.bots) {
             const user = await prisma.user.findUnique({
                 where: { id: bot.userId },
-                include: { inventory: { include: { template: true, equippedIn: true } }, taskQueue: { where: { status: "RUNNING" } }, heroes: { where: { isMain: true } } }
+                include: { 
+                    inventory: { include: { template: true, equippedIn: true } }, 
+                    taskQueue: { where: { status: "RUNNING" } }, 
+                    heroes: { where: { isMain: true } },
+                    region: {
+                        include: { 
+                            connections: { 
+                                select: {
+                                    target: true 
+                                }
+                            } 
+                        }
+                    }
+                }
             });
 
             if (user.taskQueue.length > 0) {
@@ -38,17 +51,33 @@ class OracleRunner {
                 vitality: user.vitality,
                 silver: user.silver,
                 inventoryCount: user.inventory.length,
-                items: user.inventory
+                items: user.inventory,
+                currentRegion: user.region,
+                neighbors: user.region.connections.map(c => c.target)
             };
 
-            const action = brain.decideAction(ctx);
-            await this._executeAction(user, action);
+            const decision = brain.decideAction(ctx);
+            await this._executeAction(user, decision);
         }
     }
 
     async _executeAction(user, action) {
         try {
-            switch (action) {
+            // Handle object-based actions (like TRAVEL)
+            const type = (typeof action === 'string') ? action : action.type;
+
+            switch (type) {
+                case "TRAVEL":
+                    const targetId = action.targetRegionId;
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { 
+                            currentRegion: targetId,
+                            vitality: { decrement: 5 } // Travel cost
+                        }
+                    });
+                    console.log(`   ✈️ [Bot ${user.username}] Migrated to Region ${targetId}.`);
+                    break;
                 case "GATHER":
                     // AAA: Dynamic resource selection for simulation accuracy
                     const resources = await prisma.regionResource.findMany({ where: { regionId: user.currentRegion } });

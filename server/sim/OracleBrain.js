@@ -1,12 +1,12 @@
+const travelResolver = require('./OracleTravelResolver');
+
 /**
- * AAA BehaviorBrain
- * Pure logic component to decide bot actions based on status and archetype.
+ * AAA OracleBrain
+ * Pure logic component for bot decision making.
  */
-class BehaviorBrain {
+class OracleBrain {
     /**
-     * Decides the next action for a bot.
-     * @param {Object} botContext - { archetype, vitality, silver, inventoryCount, items }
-     * @returns {string} Action key: GATHER, CRAFT, SELL, HUNT, IDLE
+     * Context: { archetype, vitality, silver, inventoryCount, items, currentRegion, neighbors }
      */
     decideAction(ctx) {
         if (ctx.vitality < 10) return "IDLE"; // Need rest
@@ -17,6 +17,27 @@ class BehaviorBrain {
         // 1. AAA: Maintenance Pressure - Repair if broken
         const needsRepair = ctx.items.some(i => i.equippedIn && (i.currentDurability / i.maxDurability) < 0.3);
         if (needsRepair) return "REPAIR";
+
+        // 2. AAA: Regional Migration Pressure
+        if (ctx.neighbors && ctx.neighbors.length > 0) {
+            const currentScore = travelResolver.scoreRegion(ctx.currentRegion, ctx.archetype);
+            
+            // Find best neighbor
+            let bestNeighbor = null;
+            let bestScore = -1;
+
+            for (const n of ctx.neighbors) {
+                const s = travelResolver.scoreRegion(n, ctx.archetype);
+                if (s > bestScore) {
+                    bestScore = s;
+                    bestNeighbor = n;
+                }
+            }
+
+            if (bestNeighbor && travelResolver.shouldMigrate(currentScore, bestScore)) {
+                return { type: "TRAVEL", targetRegionId: bestNeighbor.id };
+            }
+        }
 
         switch (ctx.archetype) {
             case "GATHERER":
@@ -44,4 +65,4 @@ class BehaviorBrain {
     }
 }
 
-module.exports = new BehaviorBrain();
+module.exports = new OracleBrain();

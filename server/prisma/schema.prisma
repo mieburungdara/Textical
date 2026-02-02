@@ -392,6 +392,8 @@ model RegionConnection {
   targetRegionId  Int
   target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
   travelTimeSeconds Int    @default(15)
+
+  @@unique([originRegionId, targetRegionId])
 }
 
 model RegionResource {

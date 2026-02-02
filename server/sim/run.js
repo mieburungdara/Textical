@@ -17,6 +17,25 @@ async function launchOracle() {
 
     const runner = new OracleRunner(bots);
 
+    // 1.5 Setup Regional Network for Migration
+    console.log("🗺️  Establishing regional trade routes...");
+    await prisma.regionTemplate.upsert({
+        where: { id: 2 },
+        update: { specialization: "BLACKSMITH_HUB", regionalTaxRate: 0.15 },
+        create: { id: 2, name: "Master Forge Hub", description: "B", visualType: "TOWN", specialization: "BLACKSMITH_HUB" }
+    });
+    await prisma.regionConnection.upsert({
+        where: { originRegionId_targetRegionId: { originRegionId: 1, targetRegionId: 2 } },
+        update: {},
+        create: { originRegionId: 1, targetRegionId: 2 }
+    });
+
+    const startRegions = await prisma.user.groupBy({
+        by: ['currentRegion'],
+        where: { id: { in: bots.map(b => b.userId) } },
+        _count: true
+    });
+
     // 2. Execute Time Progression
     for (let h = 1; h <= SIM_HOURS; h++) {
         await runner.runHour(h);
@@ -31,12 +50,21 @@ async function launchOracle() {
     const items = await prisma.inventoryItem.count();
     const activeListings = await prisma.marketOrder.count({ where: { status: "OPEN" } });
     const extractions = await prisma.regionalExtractionStats.aggregate({ _sum: { volume24h: true } });
+    
+    const endRegions = await prisma.user.groupBy({
+        by: ['currentRegion'],
+        where: { id: { in: bots.map(b => b.userId) } },
+        _count: true
+    });
+
+    const migrationCount = endRegions.find(r => r.currentRegion === 2)?._count || 0;
 
     console.log(`🌍 Current World Metric Predictions:`);
     console.log(`   - Silver Velocity: ${stats._sum.silver} units in circulation.`);
     console.log(`   - Resource Throughput: ${extractions._sum.volume24h || 0} units extracted.`);
     console.log(`   - Inventory Pressure: ${items} items stored.`);
     console.log(`   - Market Activity: ${activeListings} active trade orders.`);
+    console.log(`   - Regional Migration: ${migrationCount} bots moved to Master Forge Hub.`);
 
     // 4. Recommendation Logic
     console.log("\n💡 ORACLE RECOMMENDATIONS:");
