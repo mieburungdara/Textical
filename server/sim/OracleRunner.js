@@ -61,10 +61,10 @@ class OracleRunner {
                     await craftingService.startCrafting(user.id, 1); // Recipe 1
                     break;
                 case "SALVAGE":
-                    // Find first gear item
-                    const gear = user.inventory.find(i => i.template.category !== "MATERIAL");
-                    if (gear) {
-                        await salvageService.salvageItem(user.id, gear.id);
+                    // AAA: Bulk Salvage for simulation efficiency
+                    const gearItems = user.inventory.filter(i => i.template.category !== "MATERIAL" && !i.equippedIn);
+                    if (gearItems.length > 0) {
+                        await salvageService.bulkSalvage(user.id, gearItems.map(g => g.id));
                     }
                     break;
                 case "REPAIR":
