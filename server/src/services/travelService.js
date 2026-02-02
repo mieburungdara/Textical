@@ -7,7 +7,7 @@ class TravelService {
         this.BASE_TRAVEL_VITALITY_COST = 5;
     }
 
-    async startTravel(userIdRaw, targetRegionIdRaw) {
+    async startTravel(userIdRaw, targetRegionIdRaw, mode = "NORMAL") {
         const userId = parseInt(userIdRaw);
         const targetRegionId = parseInt(targetRegionIdRaw);
 
@@ -51,6 +51,50 @@ class TravelService {
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
         const now = new Date();
+        
+        // AAA: Hauling Logic (Map-Stay)
+        if (mode === "HAULING") {
+            // In Hauling, we move to the next region instantly, but we are "Loading" into it.
+            // The "Travel" task actually represents the "Stay" period in the target region.
+            // Wait... standard hauling means we are AT Region A, moving TO Region B.
+            // The 60s timer happens IN Region A (or B?).
+            // Spec: "Pemain wajib menetap di setiap region selama 60 detik sebelum otomatis berpindah ke region berikutnya."
+            // Meaning: If I am at A, going to B. I wait 60s at A? Or do I move to B and wait 60s there?
+            // "Mekanisne Perjalanan... Karakter bergerak secara otomatis antar region... Pemain wajib menetap di setiap region selama 60 detik"
+            // This implies the 60s timer is the "Travel Duration" effectively, but the player IS logically present in the region for ambushes.
+            // Implementation: We update currentRegion to targetRegionId IMMEDIATELY (so they can be ambushed there), but lock them with a task.
+            
+            const stayDuration = 60; // 60 seconds strict
+            const finishesAt = new Date(now.getTime() + (stayDuration * 1000));
+
+            const operations = [
+                prisma.user.update({
+                    where: { id: userId },
+                    data: { 
+                        vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
+                        isInTavern: false,
+                        tavernEntryAt: null,
+                        currentRegion: targetRegionId // Update location IMMEDIATELY
+                    }
+                }),
+                prisma.taskQueue.create({
+                    data: {
+                        userId: userId,
+                        type: "HAULING_STAY",
+                        originRegionId: user.currentRegion,
+                        targetRegionId: targetRegionId,
+                        status: "RUNNING",
+                        startedAt: now,
+                        finishesAt: finishesAt
+                    },
+                    include: { targetRegion: true } 
+                })
+            ];
+
+            const result = await prisma.$transaction(operations);
+            return { ...result[1], targetRegionType: result[1].targetRegion.visualType, message: "Hauling move initiated. Stand ground for 60s." };
+        }
+
         const duration = connection.travelTimeSeconds || 15; 
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 

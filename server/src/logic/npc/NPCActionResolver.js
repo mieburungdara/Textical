@@ -8,9 +8,10 @@ class NPCActionResolver {
     /**
      * Resolves the final dialogue and state for an NPC.
      */
-    async resolveFullState(npc, presence = null, userFactionId = null) {
+    async resolveFullState(npc, presence = null, userFactionId = null, reputation = 0) {
         const relation = await factionWarService.getRelation(userFactionId, npc.factionId);
         const isAtWar = relation === "WAR";
+        const isTraitor = reputation < -1000;
         
         const pStatus = presence ? presence.status : "NORMAL";
 
@@ -18,11 +19,14 @@ class NPCActionResolver {
             dialogue: npc.description,
             options: [],
             triggerCombat: false,
-            isHostile: isAtWar
+            isHostile: isAtWar || isTraitor
         };
 
         // 1. Resolve Dialogue
-        if (isAtWar) {
+        if (isTraitor) {
+            state.dialogue = `[TRAITOR DETECTED] Stop right there, criminal! You are wanted dead or alive!`;
+            state.triggerCombat = ["GUARD", "SOLDIER", "CAPTAIN"].includes(npc.type);
+        } else if (isAtWar) {
             state.dialogue = `[ENEMY DETECTED] Guards! Seize this intruder from the enemy faction immediately!`;
             state.triggerCombat = ["GUARD", "SOLDIER", "CAPTAIN"].includes(npc.type) || (Math.random() < 0.2);
         } else if (presence && presence.status === "EVENT_REACTION" && presence.overrideDialogueId) {
@@ -36,8 +40,8 @@ class NPCActionResolver {
         if (npc.type === "TELEPORTER") state.options.push("TELEPORT");
         if (npc.type === "HEALER") state.options.push("HEAL");
 
-        // Faction Gated services
-        if (!isAtWar) {
+        // Faction/Reputation Gated services
+        if (!isAtWar && !isTraitor) {
             // Support multiple type naming conventions if any
             if (npc.type === "TRADER" || npc.type === "MERCHANT") state.options.push("TRADE");
             if (npc.type === "QUEST_GIVER") state.options.push("QUEST");
