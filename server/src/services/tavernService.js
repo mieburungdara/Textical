@@ -42,7 +42,7 @@ class TavernService {
 
     async _spawnRandomMercenary() {
         // 1. Pick a random Town
-        const towns = await prisma.regionTemplate.findMany({ where: { type: "TOWN" } });
+        const towns = await prisma.regionTemplate.findMany({ where: { zoneType: "TOWN" } });
         if (towns.length === 0) return;
         const region = towns[Math.floor(Math.random() * towns.length)];
 

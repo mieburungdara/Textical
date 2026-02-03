@@ -17,6 +17,9 @@ class BattleUnit {
         this.gridPos = pos;
         this.facing = "SOUTH"; // Directional combat support
         
+        // Initialize temporary stats before calling getStat
+        this.temporaryStats = {}; 
+        
         this.currentHealth = this.getStat("health_max") || stats.health_max;
         
         // Dynamic Resource Initialization
@@ -89,7 +92,7 @@ class BattleUnit {
      */
     getStat(key) {
         // Check temporary stats first (overrides)
-        if (this.temporaryStats[key] !== undefined) {
+        if (this.temporaryStats && this.temporaryStats[key] !== undefined) {
             return Math.max(0, this.temporaryStats[key]);
         }
         

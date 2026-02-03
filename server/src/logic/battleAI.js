@@ -13,6 +13,9 @@ class BattleAI {
 
     decideAction(actor) {
         if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
+        if (!actor.temporaryStats) {
+            actor.temporaryStats = {};
+        }
         actor.temporaryStats.speed_mod = 0;
 
         const treeName = actor.data.bt_tree || null; 
@@ -74,6 +77,14 @@ class BattleAI {
         });
 
         if (targets.length === 0) return null;
+
+        // Check target priority
+        if (actor.data.target_priority === 2) {
+            // Prioritize lowest HP
+            return _.minBy(targets, (t) => t.currentHealth);
+        }
+
+        // Default: Closest enemy
         return _.minBy(targets, (t) => this.sim.grid.getDistance(actor.gridPos, t.gridPos));
     }
 

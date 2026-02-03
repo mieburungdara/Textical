@@ -113,8 +113,28 @@ class BattleGrid {
                     if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
                 }
             }
+        } else if (pattern === "CROSS") {
+            // Cross pattern: only up, down, left, right
+            const directions = [
+                {x: 0, y: -size}, // Up
+                {x: 0, y: size},  // Down
+                {x: -size, y: 0}, // Left
+                {x: size, y: 0}   // Right
+            ];
+            directions.forEach(d => {
+                const p = { x: center.x + d.x, y: center.y + d.y };
+                if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+            });
         }
         return tiles;
+    }
+
+    // Async version of findPath for tests
+    async findPathAsync(start, target) {
+        return new Promise((resolve) => {
+            const path = this.findPath(start, target);
+            resolve(path);
+        });
     }
 }
 

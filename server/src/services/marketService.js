@@ -11,6 +11,41 @@ const listingService = require('./market/MarketListingService');
  */
 class MarketService extends BaseService {
     /**
+     * Archive expired listings.
+     */
+    async archiveExpiredListings() {
+        return await listingService.archiveExpiredListings();
+    }
+
+    /**
+     * Get active listings.
+     */
+    async getActiveListings(userId) {
+        return await listingService.getActiveListings(userId);
+    }
+
+    /**
+     * List item for sale.
+     */
+    async listItem(userId, itemId, price) {
+        return await listingService.listItem(userId, itemId, price);
+    }
+
+    /**
+     * Purchase item from market.
+     */
+    async purchaseItem(userId, listingId) {
+        // TODO: Implement purchase logic
+    }
+
+    /**
+     * Sell item to NPC.
+     */
+    async npcSell(userId, itemId) {
+        // TODO: Implement NPC sell logic
+    }
+
+    /**
      * Create a Sell Order via ListingService (handles taxes) and attempt immediate matching.
      */
     async createSellOrder(userId, itemInstanceId, quantity, pricePerUnit) {

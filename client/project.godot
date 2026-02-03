@@ -19,6 +19,8 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 ServerConnector="*res://src/autoload/server_connector.gd"
 GameState="*res://src/autoload/game_state.gd"
 DataManager="*res://src/autoload/data_manager.gd"
+SocketHandler="*res://src/network/SocketHandler.gd"
+GuildHandler="*res://src/network/GuildHandler.gd"
 DebugOverlay="*res://src/ui/DebugOverlay.tscn"
 
 [display]

@@ -555,10 +555,130 @@ async function main() {
   }
   console.log(`  ✅ Seeded ${setBonusConditions.length} set bonus conditions`);
 
-  console.log("\n=== UNIT STAT SYSTEM SEED COMPLETE ===");
+  // ============================================
+  // 7. GUILD TEMPLATES
+  // ============================================
+  console.log("\nSeeding Guild Templates...");
+
+  const guildTemplates = [
+    {
+      id: 1,
+      name: "Adventurer's Circle",
+      description: "A small guild for casual adventurers.",
+      creationReqs: JSON.stringify({ gold_cost: 100, min_heroes: 0 }),
+      maxMembers: 20,
+      baseTreasury: 0
+    },
+    {
+      id: 2,
+      name: "Hero's Order",
+      description: "A medium-sized guild for dedicated players.",
+      creationReqs: JSON.stringify({ gold_cost: 500, min_heroes: 2 }),
+      maxMembers: 50,
+      baseTreasury: 0
+    },
+    {
+      id: 3,
+      name: "Legion of the Elite",
+      description: "An elite guild for the strongest players.",
+      creationReqs: JSON.stringify({ gold_cost: 2000, min_heroes: 5 }),
+      maxMembers: 100,
+      baseTreasury: 0
+    }
+  ];
+
+  for (const template of guildTemplates) {
+    await prisma.guildTemplate.upsert({
+      where: { id: template.id },
+      update: template,
+      create: template
+    });
+  }
+  console.log(`  ✅ Seeded ${guildTemplates.length} guild templates`);
+
+  // ============================================
+  // 8. GUILD FACILITY TEMPLATES
+  // ============================================
+  console.log("\nSeeding Guild Facility Templates...");
+
+  const facilityTemplates = [
+    {
+      id: 1,
+      name: "Guild Hall",
+      description: "The main meeting place for guild members.",
+      type: "HEADQUARTERS",
+      statKey: "GUILD_HP_BONUS",
+      statValuePerLevel: 5,
+      costBase: 100,
+      costMult: 2.0
+    },
+    {
+      id: 2,
+      name: "Training Grounds",
+      description: "Increases XP gain for all members.",
+      type: "TRAINING",
+      statKey: "XP_GAIN_MULT",
+      statValuePerLevel: 0.05,
+      costBase: 200,
+      costMult: 2.5
+    },
+    {
+      id: 3,
+      name: "Treasury",
+      description: "Generates passive gold income.",
+      type: "ECONOMY",
+      statKey: "GOLD_INCOME",
+      statValuePerLevel: 10,
+      costBase: 500,
+      costMult: 3.0
+    },
+    {
+      id: 4,
+      name: "Workshop",
+      description: "Provides crafting bonuses.",
+      type: "PRODUCTION",
+      statKey: "CRAFTING_SPEED",
+      statValuePerLevel: 0.1,
+      costBase: 300,
+      costMult: 2.0
+    },
+    {
+      id: 5,
+      name: "Archery Range",
+      description: "Increases ranged attack power.",
+      type: "COMBAT",
+      statKey: "ATK_RANGED",
+      statValuePerLevel: 2,
+      costBase: 250,
+      costMult: 2.0
+    },
+    {
+      id: 6,
+      name: "Smithy",
+      description: "Increases melee attack power.",
+      type: "COMBAT",
+      statKey: "ATK_MELEE",
+      statValuePerLevel: 2,
+      costBase: 250,
+      costMult: 2.0
+    }
+  ];
+
+  for (const template of facilityTemplates) {
+    await prisma.guildFacilityTemplate.upsert({
+      where: { id: template.id },
+      update: template,
+      create: template
+    });
+  }
+  console.log(`  ✅ Seeded ${facilityTemplates.length} facility templates`);
+
+  console.log("\n=== GUILD SYSTEM SEED COMPLETE ===");
   console.log("\nSummary:");
   console.log(`  - Elemental Types: 6 (FIRE, WATER, EARTH, WIND, LIGHT, DARK)`);
   console.log(`  - Stat Allocation Templates: ${statTemplates.length}`);
+  console.log(`  - Guild Templates: ${guildTemplates.length}`);
+  console.log(`  - Guild Facility Templates: ${facilityTemplates.length}`);
   console.log(`  - Equipment Set Templates: ${equipmentSets.length}`);
   console.log(`  - Set Pieces: ${setPieces.length}`);
   console.log(`  - Set Bonuses: ${setBonuses.length}`);

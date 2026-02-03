@@ -12,7 +12,21 @@ class UserRepository {
     async findByUsername(username) {
         return await prisma.user.findUnique({
             where: { username },
-            include: { heroes: true, inventory: true }
+            include: { heroes: true, inventory: true, guild: true }
+        });
+    }
+
+    async findById(id) {
+        return await prisma.user.findUnique({
+            where: { id },
+            include: { heroes: true }
+        });
+    }
+
+    async update(id, data) {
+        return await prisma.user.update({
+            where: { id },
+            data
         });
     }
 
@@ -22,6 +36,13 @@ class UserRepository {
 
     async updateLocation(userId, regionId) {
         return await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId } });
+    }
+
+    async removeFromGuild(guildId) {
+        return await prisma.user.updateMany({
+            where: { guildId },
+            data: { guildId: null, guildRole: null }
+        });
     }
 }
 

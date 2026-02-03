@@ -18,7 +18,8 @@ const ROUTES = {
 	"Inventory": "res://src/ui/InventoryScreen.tscn",
 	"Formation": "res://src/ui/FormationScreen.tscn",
 	"Hero": "res://src/ui/HeroProfileScreen.tscn",
-	"Atlas": "res://src/ui/WorldAtlas.tscn"
+	"Atlas": "res://src/ui/WorldAtlas.tscn",
+	"Guild": "res://src/ui/GuildScreen.tscn"
 }
 
 var _style_active: StyleBoxFlat

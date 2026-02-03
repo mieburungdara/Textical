@@ -35,6 +35,7 @@ model User {
   
   guildId       Int?
   guild         Guild?   @relation(fields: [guildId], references: [id])
+  guildRole     String?  // MASTER, OFFICER, MEMBER, RECRUIT
 
   heroes        Hero[]
   inventory     InventoryItem[]
@@ -70,6 +71,12 @@ model User {
   
   salesHistory  ItemSaleHistory[] @relation("SellerHistoryRelation")
   chatMessages  ChatMessage[]
+  
+  // Guild System Relations
+  invitedUsers   GuildInvite[] @relation("InvitedUserRelation")
+  createdInvites GuildInvite[] @relation("InviterRelation")
+  guildHistory   GuildHistory[]
+  targetUserHistory GuildHistory[] @relation("TargetUserRelation")
 }
 
 model MonsterTemplate {
@@ -906,6 +913,48 @@ model Guild {
   
   factionId       Int?
   faction         Faction? @relation(fields: [factionId], references: [id])
+  
+  // Guild System Relations
+  invites         GuildInvite[]
+  history         GuildHistory[]
+}
+
+// ============================================
+// GUILD SYSTEM MODELS
+// ============================================
+
+model GuildInvite {
+  id              Int      @id @default(autoincrement())
+  guildId         Int
+  guild           Guild    @relation(fields: [guildId], references: [id])
+  invitedUserId   Int?
+  invitedUser     User?    @relation("InvitedUserRelation", fields: [invitedUserId], references: [id])
+  invitedBy       Int
+  inviter         User     @relation("InviterRelation", fields: [invitedBy], references: [id])
+  inviteCode      String   @unique
+  status          String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([guildId])
+  @@index([inviteCode])
+}
+
+model GuildHistory {
+  id              Int      @id @default(autoincrement())
+  guildId         Int
+  guild           Guild    @relation(fields: [guildId], references: [id])
+  eventType       String   // MEMBER_JOINED, MEMBER_LEFT, KICKED, PROMOTED, DEMOTED, TRANSFERRED, FACILITY_BUILT, UPGRADED, TREASURY_DEPOSIT, TREASURY_WITHDRAW
+  userId          Int?
+  user            User?    @relation(fields: [userId], references: [id])
+  targetUserId    Int?
+  targetUser      User?    @relation("TargetUserRelation", fields: [targetUserId], references: [id])
+  description     String
+  metadata        String   @default("{}") // JSON for additional data
+  createdAt       DateTime @default(now())
+
+  @@index([guildId])
+  @@index([createdAt])
 }
 
 model FactionRelation {
@@ -941,6 +990,10 @@ model Territory {
 model GuildTemplate {
   id              Int      @id
   name            String
+  description     String   @default("")
+  creationReqs    String   @default("{}")  // JSON string with requirements
+  maxMembers      Int      @default(20)
+  baseTreasury    Int      @default(0)
   guilds          Guild[]
 }
 
