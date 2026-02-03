@@ -10,6 +10,13 @@ signal task_completed(data)
 signal task_started(data)
 signal task_failed(data)
 
+# === STAT SIGNALS ===
+signal stats_updated(unit_id, stats_data)
+signal stat_changed(unit_id, stat_name, old_value, new_value)
+signal stat_cap_reached(unit_id, stat_name, current_value, cap_value)
+signal elemental_affinity_updated(unit_id, affinities)
+signal set_bonus_updated(unit_id, bonuses)
+
 var base_url = "http://localhost:3000/api"
 
 var auth
@@ -19,6 +26,7 @@ var market
 var quest
 var inventory
 var battle
+var stat
 var socket
 
 func _ready():
@@ -29,9 +37,10 @@ func _ready():
 	quest = QuestHandler.new()
 	inventory = InventoryHandler.new()
 	battle = BattleHandler.new()
+	stat = StatHandler.new()
 	socket = SocketHandler.new()
 	
-	var handlers = [auth, world, tavern, market, quest, inventory, battle, socket]
+	var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, socket]
 	for h in handlers:
 		add_child(h)
 		if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
@@ -41,6 +50,13 @@ func _ready():
 	socket.task_completed.connect(func(d): task_completed.emit(d))
 	socket.task_started.connect(func(d): task_started.emit(d))
 	socket.task_failed.connect(func(d): task_failed.emit(d))
+	
+	# Socket Stat Routing
+	socket.stat_updated.connect(func(u, s): stats_updated.emit(u, s))
+	socket.stat_changed.connect(func(u, n, o, v): stat_changed.emit(u, n, o, v))
+	socket.stat_cap_reached.connect(func(u, n, c, cap): stat_cap_reached.emit(u, n, c, cap))
+	socket.elemental_affinity_updated.connect(func(u, a): elemental_affinity_updated.emit(u, a))
+	socket.set_bonus_updated.connect(func(u, b): set_bonus_updated.emit(u, b))
 	
 	auth.login_success.connect(_on_login_success)
 	auth.login_failed.connect(func(e): emit_signal("login_failed", e))
@@ -92,6 +108,35 @@ func sell_to_npc(u, i): market.sell_to_npc(u, i)
 # --- QUESTS (QUEST HANDLER) ---
 func fetch_quests(id): quest.fetch_quests(id)
 func complete_quest(u, q): quest.complete_quest(u, q)
+
+# --- STAT (STAT HANDLER) ---
+func fetch_unit_stats(unit_id: int): stat.fetch_unit_stats(unit_id)
+func fetch_stat(unit_id: int, stat_name: String): stat.fetch_stat(unit_id, stat_name)
+func request_stat_comparison(unit_id: int, equipment_preview: Array = []): stat.request_stat_comparison(unit_id, equipment_preview)
+func request_stat_allocation(unit_id: int, stat_points: Dictionary): stat.request_stat_allocation(unit_id, stat_points)
+func preview_stat_allocation(unit_id: int, stat_points: Dictionary): stat.preview_stat_allocation(unit_id, stat_points)
+func fetch_elemental_affinities(unit_id: int): stat.fetch_elemental_affinities(unit_id)
+func fetch_set_bonuses(unit_id: int): stat.fetch_set_bonuses(unit_id)
+func fetch_stat_caps(unit_id: int): stat.fetch_stat_caps(unit_id)
+func fetch_growth_curve(unit_id: int, stat_name: String): stat.fetch_growth_curve(unit_id, stat_name)
+func fetch_available_stat_points(unit_id: int): stat.fetch_available_stat_points(unit_id)
+func subscribe_to_stat_updates(unit_id: int): stat.subscribe_to_stat_updates(unit_id)
+func unsubscribe_from_stat_updates(unit_id: int): stat.unsubscribe_from_stat_updates(unit_id)
+func start_stat_sync(): stat.start_stat_sync()
+func stop_stat_sync(): stat.stop_stat_sync()
+
+# --- SOCKET STAT METHODS ---
+func socket_send_stat_change(unit_id: int, stat_name: String, change_amount: float):
+	socket.send_stat_change_request(unit_id, stat_name, change_amount)
+
+func socket_send_stat_allocation(unit_id: int, allocations: Dictionary):
+	socket.send_stat_allocation_request(unit_id, allocations)
+
+func socket_subscribe_unit_stats(unit_id: int):
+	socket.subscribe_to_unit_stats(unit_id)
+
+func socket_unsubscribe_unit_stats(unit_id: int):
+	socket.unsubscribe_from_unit_stats(unit_id)
 
 # --- UTILITY (For Sync System) ---
 func _send_get(path): world._request(path, HTTPClient.METHOD_GET)

@@ -14,6 +14,7 @@ const battleController = require('../controllers/BattleController');
 const regionController = require('../controllers/RegionController');
 const equipmentController = require('../controllers/EquipmentController');
 const chatRoutes = require('./chatRoutes');
+const statRoutes = require('./statRoutes');
 
 // --- ASSETS (SYNC SYSTEM) ---
 router.get('/assets/manifest', (req, res) => assetController.getManifest(req, res));
@@ -71,5 +72,8 @@ router.get('/battle/replay/:battleId', (req, res) => battleController.getReplay(
 
 // --- HERO PROFILE ---
 router.get('/hero/:id/profile', (req, res) => userController.getHeroProfile(req, res));
+
+// --- STATS ---
+router.use('/stats', statRoutes);
 
 module.exports = router;

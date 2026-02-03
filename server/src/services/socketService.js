@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const chatHandler = require('../handlers/chatSocketHandler');
+const statHandler = require('../handlers/statHandler');
 
 class SocketService {
     constructor() {
@@ -27,7 +28,17 @@ class SocketService {
                 socket.emit("authenticated", { userId }); // Confirm auth
             });
 
+            // Register Stat Handlers for all connections
+            socket.on("stat:request", (request) => statHandler.handleStatRequest(socket, request));
+            socket.on("stat:allocate", (request) => statHandler.handleStatAllocate(socket, request));
+            socket.on("stat:compare", (request) => statHandler.handleStatCompare(socket, request));
+            socket.on("stat:subscribe", (request) => statHandler.handleSubscribe(socket, request));
+            socket.on("stat:unsubscribe", (request) => statHandler.handleUnsubscribe(socket, request));
+
             socket.on("disconnect", () => {
+                // Cleanup stat handler subscriptions
+                statHandler.removeClient(socket);
+                
                 // Cleanup mapping
                 for (let [userId, socketId] of this.userSockets.entries()) {
                     if (socketId === socket.id) {

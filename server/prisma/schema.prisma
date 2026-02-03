@@ -498,10 +498,49 @@ model Hero {
   hp_base     Int      @default(100)
   damage_base Int      @default(10)
   
+  // Primary Attributes
   str         Int      @default(10)
   dex         Int      @default(10)
   int         Int      @default(10)
   vit         Int      @default(10)
+  luk         Int      @default(5)
+  
+  // Elemental Damage Bases
+  fire_damage     Int      @default(0)
+  water_damage    Int      @default(0)
+  earth_damage    Int      @default(0)
+  wind_damage     Int      @default(0)
+  light_damage    Int      @default(0)
+  dark_damage     Int      @default(0)
+  
+  // New Secondary Stat Bases
+  defense_base    Int      @default(0)
+  speed_base      Int      @default(5)
+  range_base      Int      @default(1)
+  
+  // Combat Stat Bases
+  dodge_chance    Float    @default(0.05)
+  crit_chance     Float    @default(0.05)
+  crit_damage     Float    @default(1.5)
+  block_chance    Float    @default(0)
+  parry_chance    Float    @default(0)
+  
+  // Regen Bases
+  hp_regen        Float    @default(0)
+  mana_regen      Float    @default(2)
+  
+  // New Derived Stat Bases
+  accuracy_base   Int      @default(100)
+  armor_penetration Int    @default(0)
+  skill_power_base Int     @default(10)
+  tenacity_base   Float    @default(0)
+  block_power_base Float   @default(0.5)
+  initiative_base Int      @default(0)
+  lifesteal_base  Float    @default(0)
+  spell_vamp      Float    @default(0)
+  cooldown_reduction Float @default(0)
+  move_speed      Float    @default(100)
+  attack_speed    Float    @default(1.0)
   
   classId     Int      
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
@@ -520,15 +559,22 @@ model Hero {
   childrenOfFather Hero[] @relation("FatherRelation")
   childrenOfMother Hero[] @relation("MotherRelation")
 
-  equipment   HeroEquipment[]
-  formationSlots FormationSlot[]
-  taskQueue     TaskQueue[]
-  traits        HeroTrait[]
-  tavernEntry   TavernMercenary?
-  buffs         HeroBuff[]
-  mastery       HeroClassMastery[]
-  skills        HeroSkill[]
-  heroOrders    HeroOrder[]
+  // Unit Stat System Relations
+  equipment       HeroEquipment[]
+  formationSlots  FormationSlot[]
+  taskQueue       TaskQueue[]
+  traits          HeroTrait[]
+  tavernEntry     TavernMercenary?
+  buffs           HeroBuff[]
+  mastery         HeroClassMastery[]
+  skills          HeroSkill[]
+  heroOrders      HeroOrder[]
+  
+  // Unit Stat System Relations
+  elementalAffinities HeroElementalAffinity[]
+  equipmentSets   HeroEquipmentSet[]
+  statAllocation  HeroStatAllocation?
+  statHistory     HeroStatHistory[]
 }
 
 model HeroOrder {
@@ -1173,4 +1219,130 @@ model RegionalExtractionStats {
       message     String
       timestamp   DateTime @default(now())
       isDeleted   Boolean  @default(false)
+    }
+
+    // ============================================
+    // UNIT STAT SYSTEM - PHASE 1: DATABASE SCHEMA
+    // ============================================
+
+    // NOTE: Using String instead of Enum for SQLite compatibility
+    // Elemental Types: FIRE, WATER, EARTH, WIND, LIGHT, DARK
+
+    // Elemental Affinity for Heroes
+    model HeroElementalAffinity {
+      id              Int      @id @default(autoincrement())
+      heroId          Int
+      hero            Hero     @relation(fields: [heroId], references: [id])
+      elementType     String   // FIRE, WATER, EARTH, WIND, LIGHT, DARK
+      resistance      Float    @default(0)
+      bonusDamage     Float    @default(0)
+
+      @@unique([heroId, elementType])
+    }
+
+    // Equipment Set Template
+    model EquipmentSetTemplate {
+      id              Int      @id @default(autoincrement())
+      name            String   @unique
+      description     String
+      setPieces       EquipmentSetPiece[]
+      setBonuses     EquipmentSetBonus[]
+    }
+
+    // Equipment Set Piece
+    model EquipmentSetPiece {
+      id              Int      @id @default(autoincrement())
+      setId           Int
+      set             EquipmentSetTemplate @relation(fields: [setId], references: [id])
+      pieceOrder      Int      // 1=Helmet, 2=Armor, 3=Gloves, 4=Boots, 5=Weapon
+      itemTemplateId  Int
+
+      @@unique([setId, pieceOrder])
+    }
+
+    // Equipment Set Bonus
+    model EquipmentSetBonus {
+      id              Int      @id @default(autoincrement())
+      setId           Int
+      set             EquipmentSetTemplate @relation(fields: [setId], references: [id])
+      requiredPieces  Int
+      description     String
+      bonusStats      String   @default("{}")
+      bonusSkillId    Int?
+
+      @@unique([setId, requiredPieces])
+    }
+
+    // Set Bonus Condition
+    model SetBonusCondition {
+      id              Int      @id @default(autoincrement())
+      bonusId         Int
+      conditionType   String   // e.g., "ELEMENT", "STAT_THRESHOLD", "CLASS"
+      conditionValue  String
+    }
+
+    // Hero Equipment Set
+    model HeroEquipmentSet {
+      id              Int      @id @default(autoincrement())
+      heroId          Int
+      hero            Hero     @relation(fields: [heroId], references: [id])
+      setId           Int
+      equippedPieces  Int      @default(0)
+      activeBonusId   Int?
+
+      @@unique([heroId, setId])
+    }
+
+    // Stat Allocation Template
+    model StatAllocationTemplate {
+      id              Int      @id @default(autoincrement())
+      classId         Int      @unique
+      strGrowthCurve  String   @default("linear")
+      dexGrowthCurve  String   @default("linear")
+      intGrowthCurve String   @default("linear")
+      vitGrowthCurve String   @default("linear")
+      lukGrowthCurve String   @default("linear")
+      strGrowthFactor Float   @default(1.0)
+      dexGrowthFactor Float   @default(1.0)
+      intGrowthFactor Float   @default(1.0)
+      vitGrowthFactor Float   @default(1.0)
+      lukGrowthFactor Float   @default(1.0)
+      basePointsPerLevel Int   @default(5)
+      maxStatCap     Int      @default(255)
+      recommendedStr  Int      @default(10)
+      recommendedDex  Int      @default(10)
+      recommendedInt  Int      @default(10)
+      recommendedVit  Int      @default(10)
+      recommendedLuk  Int      @default(5)
+    }
+
+    // Hero Stat Allocation
+    model HeroStatAllocation {
+      id              Int      @id @default(autoincrement())
+      heroId          Int      @unique
+      hero            Hero     @relation(fields: [heroId], references: [id])
+      availablePoints Int      @default(0)
+      strAllocated    Int      @default(0)
+      dexAllocated    Int      @default(0)
+      intAllocated    Int      @default(0)
+      vitAllocated    Int      @default(0)
+      lukAllocated    Int      @default(0)
+      statCaps        String   @default("{}")
+      totalSpent      Int      @default(0)
+      lastResetAt     DateTime?
+    }
+
+    // Hero Stat History
+    model HeroStatHistory {
+      id              Int      @id @default(autoincrement())
+      heroId          Int
+      hero            Hero     @relation(fields: [heroId], references: [id])
+      recordedAt      DateTime @default(now())
+      primaryStats    String   @default("{}")
+      secondaryStats  String   @default("{}")
+      level           Int
+      equippedItems   String   @default("[]")
+      activeBuffs     String   @default("[]")
+
+      @@index([heroId, recordedAt])
     }

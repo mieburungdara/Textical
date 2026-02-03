@@ -6,8 +6,9 @@ const DeathResolver = require('./rules/DeathResolver');
 const skillExecutor = require('./rules/skillExecutor');
 
 /**
- * BattleRules (v4.0 - Component-Based Orchestrator)
+ * BattleRules (v4.1 - Enhanced Combat System)
  * Delegates combat phases to specialized sub-systems.
+ * Integrated with EnhancedStats for accuracy, dodge, crit, and block mechanics.
  */
 class BattleRules {
     constructor(sim) {
@@ -18,6 +19,90 @@ class BattleRules {
         this.death = new DeathResolver(sim);
     }
 
+    /**
+     * Calculate hit chance considering accuracy vs dodge
+     */
+    calculateHitChance(attacker, defender, directionalBonus = 0) {
+        const accuracy = attacker.getStat("accuracy") || 100;
+        const dodgeChance = defender.getStat("dodge_rate") || 0;
+        
+        // Stealth penalty - if defender is stealthed, attacker has reduced hit chance
+        let stealthPenalty = 0;
+        if (defender.isStealthed) {
+            const stealthLevel = defender.getStat("stealth_level") || 50;
+            stealthPenalty = Math.min(30, stealthLevel / 2);
+        }
+        
+        // Calculate final hit chance
+        const baseHitChance = accuracy - dodgeChance + directionalBonus - stealthPenalty;
+        
+        // Apply trait hooks
+        const atkMods = traitService.executeHook("onCalculateHitChance", attacker, defender) || {};
+        const defMods = traitService.executeHook("onCalculateDodgeChance", defender, attacker) || {};
+        
+        const finalHitChance = (baseHitChance + (atkMods.hitChanceMod || 0) - (defMods.dodgeChanceMod || 0));
+        
+        return Math.max(5, Math.min(100, finalHitChance));
+    }
+
+    /**
+     * Calculate critical hit chance and damage
+     */
+    calculateCriticalHit(attacker, defender, directionalBonus = 0) {
+        const critChance = attacker.getStat("crit_chance") || 0.05;
+        const critDamage = attacker.getStat("crit_damage") || 1.5;
+        
+        // Directional crit bonus
+        const critChanceBonus = directionalBonus > 0 ? (directionalBonus / 400) : 0; // Back attack gives crit bonus
+        
+        // Apply trait hooks
+        const mod = traitService.executeHook("onCalculateCrit", attacker, defender) || {};
+        
+        const finalCritChance = Math.min(1.0, critChance + critChanceBonus + (mod.critChanceMod || 0));
+        const finalCritDamage = critDamage + (mod.critDamageMod || 0);
+        
+        return {
+            chance: finalCritChance,
+            damageMult: finalCritDamage,
+            isCritical: Math.random() < finalCritChance
+        };
+    }
+
+    /**
+     * Calculate block/parry result
+     */
+    calculateBlockParry(defender, attacker, bypassBlock = false) {
+        if (bypassBlock) {
+            return { blocked: false, parried: false };
+        }
+        
+        const blockChance = defender.getStat("block_chance") || 0;
+        const parryChance = defender.getStat("parry_chance") || 0;
+        const blockPower = defender.getStat("block_power") || 0.5;
+        
+        // Apply trait hooks
+        const mod = traitService.executeHook("onCalculateBlock", defender, attacker) || {};
+        
+        const finalBlockChance = Math.min(0.75, blockChance + (mod.blockChanceMod || 0));
+        const finalParryChance = Math.min(0.50, parryChance + (mod.parryChanceMod || 0));
+        
+        const rolled = Math.random();
+        let result = { blocked: false, parried: false, damageMult: 1.0 };
+        
+        // Priority: Parry > Block
+        if (rolled < finalParryChance) {
+            result.parried = true;
+            result.damageMult = 0.25; // Parry reduces damage significantly
+            traitService.executeHook("onParry", defender, attacker, this.sim);
+        } else if (rolled < finalBlockChance + finalParryChance) {
+            result.blocked = true;
+            result.damageMult = 1.0 - (blockPower + (mod.blockPowerMod || 0));
+            traitService.executeHook("onBlock", defender, attacker, this.sim);
+        }
+        
+        return result;
+    }
+
     performAttack(attacker, defender) {
         if (traitService.executeHook("onPreAction", attacker, this.sim) === false) return;
         attacker.reveal(this.sim);
@@ -26,9 +111,32 @@ class BattleRules {
         const relPos = this.sensor.getRelativePosition(attacker, defender); 
         const hasCover = this.sensor.checkCover(attacker, defender);
         
-        let directionalDmgMult = (relPos === "BACK") ? 1.5 : (relPos === "SIDE" ? 1.1 : 1.0);
-        let directionalAccBonus = (relPos === "BACK") ? 50 : 0;
-        let bypassBlock = (relPos !== "FRONT");
+        // Directional bonuses
+        let directionalDmgMult = 1.0;
+        let directionalAccBonus = 0;
+        let directionalCritBonus = 0;
+        let bypassBlock = false;
+        
+        switch (relPos) {
+            case "BACK":
+                directionalDmgMult = 1.5;
+                directionalAccBonus = 20;
+                directionalCritBonus = 0.25; // +25% crit chance from back
+                bypassBlock = true;
+                break;
+            case "SIDE":
+                directionalDmgMult = 1.1;
+                directionalAccBonus = 5;
+                directionalCritBonus = 0.10;
+                break;
+            case "FRONT":
+            default:
+                directionalDmgMult = 1.0;
+                directionalAccBonus = 0;
+                directionalCritBonus = 0;
+                bypassBlock = false;
+        }
+        
         let coverDefBonus = hasCover ? 15 : 0;
 
         // Auto-face toward attacker
@@ -42,37 +150,57 @@ class BattleRules {
 
         if (atkMods.cancelAction || defMods.cancelAction) return;
 
-        // AAA: Weapon Durability Loss (1 point per attack)
+        // Weapon Durability Loss
         attacker.recordDurabilityLoss("MAIN_HAND");
 
-        // 3. Accuracy & Dodge
-        const dodgeChance = (defender.stats.dodge_rate || 0) + (defMods.bonusDodge || 0);
-        const accuracy = (attacker.getStat("accuracy") || 100) + (atkMods.bonusAcc || 0) + directionalAccBonus;
-        if (Math.random() * 100 > (accuracy - dodgeChance)) {
+        // 3. Accuracy & Dodge Calculation
+        const hitChance = this.calculateHitChance(attacker, defender, directionalAccBonus);
+        const roll = Math.random() * 100;
+        
+        if (roll > hitChance) {
             traitService.executeHook("onDodge", defender, attacker, this.sim);
-            this.sim.logger.addEvent("MISS", `${defender.data.name} dodged!`, { target_id: defender.instanceId });
+            this.sim.logger.addEvent("MISS", `${defender.data.name} dodged!`, { 
+                target_id: defender.instanceId,
+                hit_chance: hitChance,
+                roll: roll.toFixed(2)
+            });
             return;
         }
 
-        // 4. Block Logic
-        const isBlocked = !bypassBlock && Math.random() < (defender.getStat("block_chance") || 0);
-        if (isBlocked) traitService.executeHook("onBlock", defender, attacker, this.sim);
+        // 4. Block/Parry Logic
+        const blockResult = this.calculateBlockParry(defender, attacker, bypassBlock);
+        
+        if (blockResult.parried) {
+            this.sim.logger.addEvent("PARRY", `${defender.data.name} parried!`, { 
+                actor_id: defender.instanceId,
+                target_id: attacker.instanceId
+            });
+            return; // Parry ends the attack
+        }
 
-        // 5. Damage Calculation
+        // 5. Critical Hit Calculation
+        const critResult = this.calculateCriticalHit(attacker, defender, directionalCritBonus);
+
+        // 6. Damage Calculation
         const aTerrain = this.sim.grid.terrainGrid[attacker.gridPos.y][attacker.gridPos.x];
         const dTerrain = this.sim.grid.terrainGrid[defender.gridPos.y][defender.gridPos.x];
-        const finalDmgMult = (atkMods.dmgMult || 1.0) * directionalDmgMult * (isBlocked ? 0.5 : 1.0);
+        const finalDmgMult = (atkMods.dmgMult || 1.0) * directionalDmgMult * 
+                           blockResult.damageMult * (critResult.isCritical ? critResult.damageMult : 1.0);
         
         let result = CombatRules.calculateDamage(attacker, defender, finalDmgMult, 0, aTerrain, dTerrain);
-        if (result.isCrit) traitService.executeHook("onCrit", attacker, defender, result.damage, this.sim);
+        
+        if (critResult.isCritical) {
+            result.isCrit = true;
+            traitService.executeHook("onCrit", attacker, defender, result.damage, this.sim);
+        }
 
-        // 6. Mitigation & Hit Hooks
+        // 7. Mitigation & Hit Hooks
         const impactMods = traitService.executeHook("onTakeDamage", defender, attacker, result.damage, this.sim) || {};
         const finalDamage = Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus);
 
-        defender.takeDamage(finalDamage, this.sim); // ADDED this.sim
+        defender.takeDamage(finalDamage, this.sim);
         
-        // AAA: Armor Durability Loss (1 point per hit)
+        // Armor Durability Loss
         defender.recordDurabilityLoss("CHEST");
         defender.recordDurabilityLoss("LEGS");
         defender.recordDurabilityLoss("HEAD");
@@ -85,11 +213,18 @@ class BattleRules {
         traitService.executeHook("onPostAttack", attacker, defender, finalDamage, this.sim);
         traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
 
-        // 7. Knockback / Impact
+        // 8. Knockback / Impact
         this._handleKnockback(attacker, defender);
 
+        // Log with combat details
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
-            actor_id: attacker.instanceId, target_id: defender.instanceId, damage: finalDamage, rel_pos: relPos
+            actor_id: attacker.instanceId,
+            target_id: defender.instanceId,
+            damage: finalDamage,
+            rel_pos: relPos,
+            is_crit: critResult.isCritical,
+            is_blocked: blockResult.blocked,
+            hit_chance: hitChance
         });
 
         if (defender.currentHealth <= 0) {
