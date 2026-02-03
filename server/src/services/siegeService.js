@@ -1,7 +1,7 @@
 const siegeRepository = require('../repositories/siegeRepository');
 const battleService = require('./battleService');
 const heroRepository = require('../repositories/heroRepository');
-const prisma = new (require('@prisma/client').PrismaClient)();
+const prisma = require('../db');
 
 class SiegeService {
     /**

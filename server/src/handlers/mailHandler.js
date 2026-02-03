@@ -1,6 +1,6 @@
 const mailService = require('../services/mailService');
 const userRepository = require('../repositories/userRepository');
-const prisma = new (require('@prisma/client').PrismaClient)();
+const prisma = require('../db');
 
 class MailHandler {
     async handleFetchInbox(ws, request) {

@@ -1,6 +1,6 @@
 const userRepository = require('../repositories/userRepository');
 const craftingService = require('../services/craftingService');
-const prisma = new (require('@prisma/client').PrismaClient)();
+const prisma = require('../db');
 
 class BuildingHandler {
     /**

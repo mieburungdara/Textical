@@ -1,4 +1,4 @@
-const prisma = new (require('@prisma/client').PrismaClient)();
+const prisma = require('../db');
 
 class TerritoryService {
     /**

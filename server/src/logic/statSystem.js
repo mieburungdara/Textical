@@ -1,4 +1,4 @@
-const math = require('mathjs');
+
 
 class StatModifier {
     static Type = {
@@ -31,17 +31,16 @@ class Stat {
 
         this.modifiers.forEach(mod => {
             if (mod.type === StatModifier.Type.FLAT) {
-                finalValue = math.add(finalValue, mod.value);
+                finalValue += mod.value;
             } else if (mod.type === StatModifier.Type.PERCENT_ADD) {
-                sumPercentAdd = math.add(sumPercentAdd, mod.value);
+                sumPercentAdd += mod.value;
             } else if (mod.type === StatModifier.Type.PERCENT_MULT) {
-                sumPercentMult = math.multiply(sumPercentMult, mod.value);
+                sumPercentMult *= mod.value;
             }
         });
 
         // formula: (base + flat) * (1 + sum_percent_add) * (product_percent_mult)
-        finalValue = math.multiply(finalValue, math.add(1, sumPercentAdd));
-        finalValue = math.multiply(finalValue, sumPercentMult);
+        finalValue = (finalValue * (1 + sumPercentAdd)) * sumPercentMult;
 
         return finalValue;
     }
