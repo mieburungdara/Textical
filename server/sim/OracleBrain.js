@@ -18,7 +18,7 @@ class OracleBrain {
         
         // 1. Resolve High-Level Goal
         const goal = progressionResolver.resolveGoal(ctx);
-        const actionType = progressionResolver.resolveActionForGoal(goal, ctx.currentRegion);
+        const actionType = progressionResolver.resolveActionForGoal(goal, ctx.currentRegion, ctx);
 
         // 2. Override with Regional Awareness (Migration)
         // Only migrate if we aren't in the middle of a specific crafting/gathering loop

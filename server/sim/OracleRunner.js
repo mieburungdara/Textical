@@ -85,16 +85,25 @@ class OracleRunner {
         if (!hero) return;
         const equipmentService = require('../src/services/equipmentService');
         
-        // Find best unequipped gear for each category
-        const gearCategories = ["PICKAXE", "AXE", "MAIN_HAND", "OFF_HAND", "BODY", "HEAD"];
+        // AAA: Primary Categories for Auto-Progression
+        const gearCategories = ["PICKAXE", "AXE", "WEAPON", "EQUIPMENT", "ARMOR"];
         
         for (const cat of gearCategories) {
-            // Check if already equipped
-            const isEquipped = user.inventory.some(i => i.equippedIn && i.template.category === cat);
-            if (isEquipped) continue;
+            // Find current best equipped in this category
+            const currentlyEquipped = user.inventory.find(i => i.equippedIn && (i.template.category === cat || (cat === "WEAPON" && i.template.category === "EQUIPMENT")));
+            
+            // Find all potential candidates (including current)
+            const candidates = user.inventory.filter(i => (i.template.category === cat || (cat === "WEAPON" && i.template.category === "EQUIPMENT")));
+            if (candidates.length === 0) continue;
 
-            const bestItem = user.inventory.find(i => i.template.category === cat && !i.equippedIn);
-            if (bestItem) {
+            // Sort by toolTier (for tools) or powerScale/Value (for gear)
+            const bestItem = candidates.sort((a, b) => {
+                if (a.template.toolTier !== b.template.toolTier) return b.template.toolTier - a.template.toolTier;
+                return b.template.baseValue - a.template.baseValue;
+            })[0];
+
+            // If best is not equipped, equip it!
+            if (bestItem && (!currentlyEquipped || bestItem.id !== currentlyEquipped.id)) {
                 try {
                     // AAA: Map category to slot or use first valid slot from template
                     let slotKey = null;
@@ -106,10 +115,10 @@ class OracleRunner {
 
                     if (slotKey) {
                         await equipmentService.equipItem(user.id, hero.id, bestItem.id, slotKey);
-                        console.log(`   🛡️ [Bot ${user.username}] Equipped ${bestItem.template.name} in ${slotKey}.`);
+                        console.log(`   🛡️ [Bot ${user.username}] Upgraded to ${bestItem.template.name} in ${slotKey}.`);
                     }
                 } catch (e) {
-                    console.error(`   ⚠️ [Bot ${user.username}] Failed to equip ${bestItem.template.name}: ${e.message}`);
+                    // console.error(`   ⚠️ [Bot ${user.username}] Failed to equip ${bestItem.template.name}: ${e.message}`);
                 }
             }
         }
@@ -152,6 +161,14 @@ class OracleRunner {
                         // AAA: Prioritization - If we have a specific material goal, focus on it
                         if (decision.goal === "GATHER_TOOL_MATS") {
                             const prioritized = validTargets.filter(r => r.item.name === "Iron Ore" || r.item.name === "Oak Wood");
+                            if (prioritized.length > 0) validTargets = prioritized;
+                        } else if (decision.goal === "GATHER_GEAR_MATS") {
+                            const prioritized = validTargets.filter(r => 
+                                r.item.name === "Iron Ore" || 
+                                r.item.name === "Oak Wood" || 
+                                r.item.name === "Boar Skin" || 
+                                r.item.name === "Ragged Hide"
+                            );
                             if (prioritized.length > 0) validTargets = prioritized;
                         }
 
@@ -214,14 +231,14 @@ class OracleRunner {
                     break;
 
                 case "CRAFT":
-                    // AAA: Smart Recipe Selection (Learned Only + Best Possible)
+                    // AAA: Smart Recipe Selection (Learned Only + Goal Oriented)
                     const learnedRecipes = await prisma.userRecipe.findMany({
                         where: { userId: user.id },
                         include: { recipe: { include: { ingredients: true, resultItem: true } } }
                     });
                     
                     // Filter recipes we have materials for
-                    const craftable = learnedRecipes.filter(ur => {
+                    let craftable = learnedRecipes.filter(ur => {
                         const r = ur.recipe;
                         return r.ingredients.every(ing => {
                             const inv = user.inventory.find(i => i.templateId === ing.itemId);
@@ -229,11 +246,48 @@ class OracleRunner {
                         });
                     });
 
-                    // Pick the best craftable (prioritize Iron over Wooden)
-                    // Logic: Sort by resultItem.toolTier descending
-                    const bestRecipe = craftable.sort((a, b) => 
-                        (b.recipe.resultItem.toolTier || 0) - (a.recipe.resultItem.toolTier || 0)
-                    )[0];
+                    // AAA: Goal Alignment - If we are gathering for a TOOL, don't craft GEAR (and vice versa)
+                    if (decision.goal === "CRAFT_TOOL" || decision.goal === "GATHER_TOOL_MATS") {
+                        craftable = craftable.filter(ur => ur.recipe.resultItem.category === "PICKAXE" || ur.recipe.resultItem.category === "AXE");
+                    } else if (decision.goal === "CRAFT_GEAR" || decision.goal === "GATHER_GEAR_MATS") {
+                        craftable = craftable.filter(ur => ur.recipe.resultItem.category !== "PICKAXE" && ur.recipe.resultItem.category !== "AXE");
+                    }
+
+                    // AAA: Redundancy Check - Don't craft what we already have at T1+
+                    craftable = craftable.filter(ur => {
+                        const alreadyOwned = user.inventory.some(i => i.equippedIn && i.templateId === ur.recipe.resultItemId && (i.template.toolTier || 0) >= (ur.recipe.resultItem.toolTier || 0));
+                        return !alreadyOwned;
+                    });
+
+                    // Pick the best craftable
+                    // Priority: Missing T1 Tool > Missing T1 Gear > Intermediate Materials > Higher Tier
+                    const bestRecipe = craftable.sort((a, b) => {
+                        const tierA = a.recipe.resultItem.toolTier || 0;
+                        const tierB = b.recipe.resultItem.toolTier || 0;
+                        
+                        if (tierA !== tierB) return tierB - tierA;
+
+                        // If same tier, check if we ALREADY have this item equipped
+                        const hasA = user.inventory.some(i => i.equippedIn && i.templateId === a.recipe.resultItemId);
+                        const hasB = user.inventory.some(i => i.equippedIn && i.templateId === b.recipe.resultItemId);
+
+                        if (hasA !== hasB) return hasA ? 1 : -1; // Prioritize the one we DON'T have
+
+                        // AAA: Mode-Based Priority
+                        // If we are in CRAFT_GEAR goal, prioritize NON-materials (the actual gear)
+                        if (decision.goal === "CRAFT_GEAR") {
+                            const isGearA = a.recipe.resultItem.category !== "MATERIAL";
+                            const isGearB = b.recipe.resultItem.category !== "MATERIAL";
+                            if (isGearA !== isGearB) return isGearA ? -1 : 1;
+                        }
+
+                        // AAA: Material Priority - If it's a material needed for gear, give it a boost
+                        const isMatA = a.recipe.resultItem.category === "MATERIAL";
+                        const isMatB = b.recipe.resultItem.category === "MATERIAL";
+                        if (isMatA !== isMatB) return isMatA ? -1 : 1;
+
+                        return b.recipe.resultItem.baseValue - a.recipe.resultItem.baseValue;
+                    })[0];
 
                     if (bestRecipe) {
                         const r = bestRecipe.recipe;

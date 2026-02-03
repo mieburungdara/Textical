@@ -66,16 +66,28 @@ class BotFactory {
                 create: { presetId: preset.id, heroId: hero.id, gridX: 2, gridY: 2 }
             });
 
-            // AAA: Provide Basic Tools
+            // AAA: Provide T1 Tools (Jumpstart for Gear Sim)
             await prisma.inventoryItem.create({
-                data: { userId: user.id, templateId: 2301, quantity: 1 } // Wooden Pickaxe
+                data: { userId: user.id, templateId: 2302, quantity: 1 } // Iron Pickaxe
             });
             await prisma.inventoryItem.create({
-                data: { userId: user.id, templateId: 2501, quantity: 1 } // Flint Axe
+                data: { userId: user.id, templateId: 2502, quantity: 1 } // Iron Axe
             });
 
-            // AAA: Teach Tool Recipes
-            const basicRecipes = [5001, 5002, 5101, 5102]; // Wooden/Iron Pickaxe, Flint/Iron Axe
+            // AAA: Jumpstart Materials
+            await prisma.inventoryItem.create({
+                data: { userId: user.id, templateId: 2703, quantity: 10 } // Iron Bar
+            });
+            await prisma.inventoryItem.create({
+                data: { userId: user.id, templateId: 3102, quantity: 5 } // Boar Leather
+            });
+
+            // AAA: Teach Tool & Gear Recipes
+            const basicRecipes = [
+                5001, 5002, 5101, 5102, // Tools
+                5403, 5602,             // Iron Bar, Boar Leather
+                8001, 8301, 5201        // Sword, Plate, Boots
+            ];
             for (const rid of basicRecipes) {
                 await prisma.userRecipe.upsert({
                     where: { userId_recipeId: { userId: user.id, recipeId: rid } },

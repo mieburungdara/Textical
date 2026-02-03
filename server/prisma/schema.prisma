@@ -162,6 +162,7 @@ model RegionTemplate {
   description     String
   visualType      String   @default("TOWN")
   zoneType        String   @default("GREEN") // GREEN, BLUE, RED
+  zoneLevel       Int      @default(1)
   regionalTaxRate Float    @default(0.10)
   weatherOverride String?  // Optional regional weather override
   specialization  String?  // e.g., "BLACKSMITH_HUB", "ALCHEMIST_GARDEN", "CARPENTRY_MILL"
