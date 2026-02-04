@@ -31,9 +31,10 @@ func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}
 func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, response_code, _headers, body):
     var response_text = body.get_string_from_utf8()
     
-    # DEFENSIVE PARSING
-    var json = JSON.parse_string(response_text)
-    if json == null:
+    # DEFENSIVE PARSING - Use JSON.new() and parse() to avoid throwing errors
+    var json_parser = JSON.new()
+    var parse_result = json_parser.parse(response_text)
+    if parse_result != OK:
         var error_msg = "Invalid JSON response from server. Check if server is running or route exists."
         print("[NETWORK_ERROR] Endpoint: ", endpoint)
         print("[NETWORK_ERROR] Response Code: ", response_code)
@@ -41,6 +42,8 @@ func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, re
         emit_signal("error_occurred", endpoint, error_msg)
         http_node.queue_free()
         return
+    
+    var json = json_parser.data
     
     if response_code >= 400:
         var msg = json.get("error", "Server Error") if json is Dictionary else "Unknown Error"

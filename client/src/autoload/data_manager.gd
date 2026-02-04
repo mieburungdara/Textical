@@ -38,15 +38,21 @@ func start_sync():
     if ServerConnector:
         ServerConnector._send_get("/assets/manifest")
 
-func _on_manifest_received(endpoint, manifest):
+func _on_manifest_received(endpoint, manifest_response):
     if !endpoint.contains("/assets/manifest"): return
     
     # Disconnect after receiving manifest
     if ServerConnector and ServerConnector.request_completed.is_connected(_on_manifest_received):
         ServerConnector.request_completed.disconnect(_on_manifest_received)
     
+    if !manifest_response is Dictionary:
+        print("[SYNC] Error: Manifest response is not a dictionary.")
+        sync_finished.emit()
+        return
+    
+    var manifest = manifest_response.get("data")
     if !manifest is Dictionary:
-        print("[SYNC] Error: Manifest is not a dictionary.")
+        print("[SYNC] Error: Manifest 'data' key is not a dictionary.")
         sync_finished.emit()
         return
     
