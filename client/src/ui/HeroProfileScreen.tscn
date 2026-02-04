@@ -57,23 +57,30 @@ theme_override_constants/margin_top = 15
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 15
 
-[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="MarginContainer"]
 layout_mode = 2
-split_offset = 420
 
-[node name="LeftPanel" type="PanelContainer" parent="MarginContainer/HSplitContainer"]
+[node name="TopPanel" type="PanelContainer" parent="MarginContainer/VSplitContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="HeroGridContainer" parent="MarginContainer/HSplitContainer/LeftPanel"]
+[node name="HeroGridContainer" parent="MarginContainer/VSplitContainer/TopPanel" instance=ExtResource("5_grid")]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.8
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.7
 
-[node name="RightPanel" type="PanelContainer" parent="MarginContainer/HSplitContainer"]
+[node name="BottomPanel" type="PanelContainer" parent="MarginContainer/VSplitContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="HeroProfilePanel" parent="MarginContainer/HSplitContainer/RightPanel"]
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VSplitContainer/BottomPanel"]
 layout_mode = 2
-size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeroProfilePanel" parent="MarginContainer/VSplitContainer/BottomPanel/CenterContainer" instance=ExtResource("6_profile")]
+layout_mode = 2
+size_flags_vertical = 3
