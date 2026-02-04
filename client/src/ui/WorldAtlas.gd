@@ -28,7 +28,29 @@ func _ready():
     travel_system.hide()
 
 func _on_request_completed(endpoint, data):
-    if endpoint.contains("/regions"): _populate_pins(data, ui_panel.display_region)
+    print("[WorldAtlas] _on_request_completed called")
+    print("[WorldAtlas] endpoint:", endpoint)
+    print("[WorldAtlas] data type:", typeof(data))
+    print("[WorldAtlas] data:", data)
+    
+    if endpoint.contains("/regions"): 
+        if data is Array:
+            print("[WorldAtlas] Regions data is Array with", data.size(), "items")
+            _populate_pins(data, ui_panel.display_region)
+        elif data is Dictionary and data.has("regions"):
+            print("[WorldAtlas] Regions data is Dictionary, extracting 'regions' key")
+            _populate_pins(data.regions, ui_panel.display_region)
+        elif data is Dictionary and data.has("data"):
+            print("[WorldAtlas] Regions data is Dictionary, extracting 'data' key")
+            var regions_data = data.get("data")
+            if regions_data is Array:
+                print("[WorldAtlas] Found", regions_data.size(), "regions")
+                _populate_pins(regions_data, ui_panel.display_region)
+            else:
+                print("[WorldAtlas] ERROR: 'data' key is not Array:", typeof(regions_data))
+        else:
+            print("[WorldAtlas] ERROR: Unknown data format for regions")
+            push_error("[WorldAtlas] Unknown regions data format: " + str(data))
     elif endpoint.contains("/action/travel"): 
         player_marker.hide()
         travel_system.start_cinematic(data)

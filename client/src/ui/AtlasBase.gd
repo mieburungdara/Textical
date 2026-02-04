@@ -1,12 +1,12 @@
 extends Control
 class_name AtlasBase
 
-@onready var pins_layer = $MapLayer/Pins
-@onready var landmarks_layer = $MapLayer/Landmarks
-@onready var player_marker = $MapLayer/PlayerMarker
-@onready var connections_layer = $MapLayer/Connections
-@onready var debug_grid = $MapLayer/DebugGrid
-@onready var cam = $Camera2D
+@onready var pins_layer = $MapLayer/Pins if has_node("MapLayer/Pins") else null
+@onready var landmarks_layer = $MapLayer/Landmarks if has_node("MapLayer/Landmarks") else null
+@onready var player_marker = $MapLayer/PlayerMarker if has_node("MapLayer/PlayerMarker") else null
+@onready var connections_layer = $MapLayer/Connections if has_node("MapLayer/Connections") else null
+@onready var debug_grid = $MapLayer/DebugGrid if has_node("MapLayer/DebugGrid") else null
+@onready var cam = $Camera2D if has_node("Camera2D") else null
 
 var SHOW_DEBUG_GRID = true
 var _active_connections = [] # Store paths to draw
@@ -40,41 +40,49 @@ func _draw_connections():
 
 func _draw_debug_grid():
     if not SHOW_DEBUG_GRID: return
-    var size = 5000
+    var grid_size = 5000
     var step = 200
     var color = Color(0, 0, 0, 0.1)
     
-    for i in range(0, size + step, step):
+    for i in range(0, grid_size + step, step):
         # Lines
-        debug_grid.draw_line(Vector2(i, 0), Vector2(i, size), color, 1.0)
-        debug_grid.draw_line(Vector2(0, i), Vector2(size, i), color, 1.0)
+        debug_grid.draw_line(Vector2(i, 0), Vector2(i, grid_size), color, 1.0)
+        debug_grid.draw_line(Vector2(0, i), Vector2(grid_size, i), color, 1.0)
         
         # Major Labels every 1000
         if i % 1000 == 0:
-            for j in range(0, size + step, 1000):
+            for j in range(0, grid_size + step, 1000):
                 var label = "[%d,%d]" % [i, j]
                 debug_grid.draw_string(ThemeDB.fallback_font, Vector2(i + 5, j + 25), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.4))
 
 func _populate_pins(regions, click_callback: Callable):
+    if pins_layer == null:
+        print("AtlasBase: pins_layer is null, skipping _populate_pins")
+        return
     for child in pins_layer.get_children(): child.queue_free()
     
     _active_connections.clear()
     
     for r in regions:
+        # Skip if r is not a Dictionary or doesn't have 'id'
+        if not r is Dictionary or not r.has("id"):
+            continue
         var origin_id = int(r.id)
         var origin_pos = GameState.REGION_POSITIONS.get(origin_id, Vector2.ZERO)
         
         # Prepare connections for the draw signal
-        if r.has("connections"):
-            for conn in r.connections:
-                var target_id = int(conn.targetRegionId)
-                var target_pos = GameState.REGION_POSITIONS.get(target_id, Vector2.ZERO)
-                if origin_pos != Vector2.ZERO and target_pos != Vector2.ZERO:
-                    _active_connections.append({"from": origin_pos, "to": target_pos})
+        var connections = r.get("connections")
+        if connections is Array:
+            for conn in connections:
+                if conn is Dictionary:
+                    var target_id = int(conn.get("targetRegionId", 0))
+                    var target_pos = GameState.REGION_POSITIONS.get(target_id, Vector2.ZERO)
+                    if origin_pos != Vector2.ZERO and target_pos != Vector2.ZERO:
+                        _active_connections.append({"from": origin_pos, "to": target_pos})
 
         # Draw Pin
         var btn = Button.new()
-        btn.text = r.name
+        btn.text = str(r.get("name", "Unknown"))
         btn.position = origin_pos - Vector2(100, 30)
         btn.custom_minimum_size = Vector2(200, 60)
         btn.pressed.connect(click_callback.bind(r))

@@ -3,8 +3,11 @@ const CombatRules = require('../src/logic/combatRules');
 describe('CombatRules Logic Tests', () => {
     
     // Mock getStat method for test objects
-    const createMockCharacter = (stats) => {
+    const createMockCharacter = (stats, name = "Test Character") => {
         return {
+            data: {
+                name: name
+            },
             getStat: (statName) => {
                 return stats[statName] || 0;
             }
@@ -46,11 +49,11 @@ describe('CombatRules Logic Tests', () => {
             defense: 0,
             dodge_rate: 0,
             block_chance: 0,
-            block_power: 0.5
+            block_power: 0.5,
+            elemental_type: 3 // Nature
         });
         
-        const result = CombatRules.calculateDamage(attacker, defender, 1.5, 1); // Fire element with 1.5x multiplier
-        
+        const result = CombatRules.calculateDamage(attacker, defender, 1.0, 1); // Fire element
         expect(result.damage).toBe(150);
     });
 

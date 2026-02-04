@@ -41,7 +41,158 @@ const FLAVOR_LANDMARKS = [
 ]
 
 func _ready():
-    ServerConnector.task_completed.connect(_on_global_task_completed)
+    if ServerConnector and ServerConnector.has_signal("task_completed"):
+        ServerConnector.task_completed.connect(_on_global_task_completed)
+    
+    # Add sample heroes for testing HeroProfileScreen
+    _setup_sample_heroes()
+
+func _setup_sample_heroes():
+    var sample_heroes = [
+        {
+            "id": 1,
+            "name": "Aldric the Brave",
+            "level": 15,
+            "rarity": "LEGENDARY",
+            "combatClass": {"name": "Paladin"},
+            "totalStats": {
+                "hp": 2500,
+                "mp": 450,
+                "ap": 120,
+                "attack": 380,
+                "defense": 520,
+                "magic_attack": 180,
+                "magic_defense": 350,
+                "speed": 85
+            },
+            "elementalAffinities": [{"fire": 10, "water": -5, "earth": 15, "wind": 0, "light": 25, "dark": -10}],
+            "equipment": {
+                "head": {"name": "Helm of Valor", "rarity": "RARE"},
+                "body": {"name": "Divine Plate", "rarity": "EPIC"},
+                "weapon": {"name": "Excalibur", "rarity": "LEGENDARY"},
+                "offhand": {"name": "Shield of Faith", "rarity": "RARE"},
+                "accessory": {"name": "Ring of Protection", "rarity": "RARE"}
+            },
+            "skills": ["Holy Strike", "Divine Shield", "Judgment"],
+            "passives": ["Bash", "Armored"],
+            "setBonuses": [{"name": "Divine Grace", "bonus": "+20% Defense"}]
+        },
+        {
+            "id": 2,
+            "name": "Lyra Moonwhisper",
+            "level": 12,
+            "rarity": "EPIC",
+            "combatClass": {"name": "Mage"},
+            "totalStats": {
+                "hp": 1200,
+                "mp": 980,
+                "ap": 80,
+                "attack": 150,
+                "defense": 180,
+                "magic_attack": 650,
+                "magic_defense": 480,
+                "speed": 120
+            },
+            "elementalAffinities": [{"fire": -10, "water": 30, "earth": 5, "wind": 20, "light": 15, "dark": -5}],
+            "equipment": {
+                "head": {"name": "Mystic Hood", "rarity": "RARE"},
+                "body": {"name": "Arcane Robes", "rarity": "EPIC"},
+                "weapon": {"name": "Staff of Wisdom", "rarity": "EPIC"},
+                "offhand": {"name": "Spell Tome", "rarity": "RARE"},
+                "accessory": {"name": "Amulet of Mana", "rarity": "RARE"}
+            },
+            "skills": ["Fireball", "Ice Spike", "Thunder"],
+            "passives": ["Mana Boost", "Focus"],
+            "setBonuses": [{"name": "Arcane Mastery", "bonus": "+15% Magic Attack"}]
+        },
+        {
+            "id": 3,
+            "name": "Garret Shadowstep",
+            "level": 18,
+            "rarity": "RARE",
+            "combatClass": {"name": "Rogue"},
+            "totalStats": {
+                "hp": 1800,
+                "mp": 380,
+                "ap": 150,
+                "attack": 420,
+                "defense": 280,
+                "magic_attack": 120,
+                "magic_defense": 200,
+                "speed": 200
+            },
+            "elementalAffinities": [{"fire": 5, "water": 0, "earth": -5, "wind": 15, "light": -15, "dark": 30}],
+            "equipment": {
+                "head": {"name": "Shadow Hood", "rarity": "RARE"},
+                "body": {"name": "Leather Armor", "rarity": "COMMON"},
+                "weapon": {"name": "Dagger of Venom", "rarity": "RARE"},
+                "offhand": {"name": "Poison Vial", "rarity": "COMMON"},
+                "accessory": {"name": "Cloak of Shadows", "rarity": "RARE"}
+            },
+            "skills": ["Backstab", "Shadow Walk", "Assassinate"],
+            "passives": ["Critical Strike", "Evasion"],
+            "setBonuses": []
+        },
+        {
+            "id": 4,
+            "name": "Thorin Ironforge",
+            "level": 10,
+            "rarity": "COMMON",
+            "combatClass": {"name": "Warrior"},
+            "totalStats": {
+                "hp": 2200,
+                "mp": 200,
+                "ap": 100,
+                "attack": 350,
+                "defense": 400,
+                "magic_attack": 50,
+                "magic_defense": 150,
+                "speed": 70
+            },
+            "elementalAffinities": [{"fire": 10, "water": -5, "earth": 20, "wind": 0, "light": 5, "dark": -5}],
+            "equipment": {
+                "head": {"name": "Iron Helm", "rarity": "COMMON"},
+                "body": {"name": "Chainmail", "rarity": "COMMON"},
+                "weapon": {"name": "Iron Sword", "rarity": "COMMON"},
+                "offhand": {"name": "Wooden Shield", "rarity": "COMMON"},
+                "accessory": {"name": "Basic Badge", "rarity": "COMMON"}
+            },
+            "skills": ["Slash", "Block", "Charge"],
+            "passives": ["Endurance", "Toughness"],
+            "setBonuses": []
+        },
+        {
+            "id": 5,
+            "name": "Seraphina Lightbringer",
+            "level": 20,
+            "rarity": "MYTHIC",
+            "combatClass": {"name": "Cleric"},
+            "totalStats": {
+                "hp": 2800,
+                "mp": 800,
+                "ap": 140,
+                "attack": 280,
+                "defense": 450,
+                "magic_attack": 550,
+                "magic_defense": 600,
+                "speed": 95
+            },
+            "elementalAffinities": [{"fire": 5, "water": 10, "earth": 5, "wind": 5, "light": 50, "dark": -30}],
+            "equipment": {
+                "head": {"name": "Divine Crown", "rarity": "MYTHIC"},
+                "body": {"name": "Celestial Robes", "rarity": "MYTHIC"},
+                "weapon": {"name": "Scepter of Dawn", "rarity": "MYTHIC"},
+                "offhand": {"name": "Holy Grail", "rarity": "LEGENDARY"},
+                "accessory": {"name": "Angel Wings", "rarity": "MYTHIC"}
+            },
+            "skills": ["Divine Light", "Healing Grace", "Resurrection", "Smite"],
+            "passives": ["Divine Blessing", "Spirit Ward", "Miracle Worker"],
+            "setBonuses": [{"name": "Divine Trinity", "bonus": "+30% All Stats"}, {"name": "Celestial Fury", "bonus": "+25% Light Damage"}]
+        }
+    ]
+    
+    current_heroes = sample_heroes
+    print("[STATE] Sample heroes loaded: ", current_heroes.size(), " heroes")
 
 func _on_global_task_completed(data):
     if data.type == "TRAVEL":

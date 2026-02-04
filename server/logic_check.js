@@ -34,7 +34,7 @@ async function runLogicAudit() {
         // Reset user to Town
         await prisma.user.update({ where: { id: user.id }, data: { currentRegion: 1 } });
         const result = await travelService.startTravel(user.id, 2); // To Woods
-        const travelTask = result[1]; // Get the Task object from transaction array
+        if (!result || result.length < 2 || !result[1]) {\n            throw new Error("Invalid travel service response: missing task object");\n        }\n        const travelTask = result[1]; // Get the Task object from transaction array
         if (travelTask.status !== "RUNNING") throw new Error("Travel failed to start.");
         console.log(`✅ Travel started. Finishes at: ${travelTask.finishesAt}`);
 

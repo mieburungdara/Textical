@@ -87,7 +87,7 @@ func _create_unit_visual(u_data) -> Node2D:
     
     return node
 
-async function _run_replay():
+func _run_replay():
     is_replaying = true
     for log_entry in battle_data.replay:
         if not is_inside_tree(): return

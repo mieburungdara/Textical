@@ -13,7 +13,7 @@
     },
     "logic-switch": {
       "id": "logic-switch",
-      "name": "Switch",
+      "name": "Sequence",
       "title": "Targeting & Action",
       "children": [
         "find-target",

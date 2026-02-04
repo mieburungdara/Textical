@@ -43,21 +43,27 @@ func refresh():
 func _on_request_completed(endpoint, data):
     if !is_inside_tree(): return
     if endpoint.contains("/formation") and not endpoint.contains("move"):
+        if data == null or not data is Dictionary or not data.has("id"):
+            print("FormationScreen: Invalid formation data received")
+            return
         current_preset_id = int(data.id)
         grid_slots = {}
-        for slot in data.slots:
-            grid_slots["%d,%d" % [int(slot.gridX), int(slot.gridY)]] = int(slot.heroId)
+        for slot in data.get("slots", []):
+            grid_slots["%d,%d" % [int(slot.get("gridX", 0)), int(slot.get("gridY", 0))]] = int(slot.get("heroId", 0))
         formation_loaded = true
         _check_initial_sync()
     elif endpoint.contains("/heroes"):
         hero_data_map = {}
-        for h in data: 
-            var hid = int(h.id)
-            hero_data_map[hid] = h
+        if data and data is Array:
+            for h in data: 
+                if h and h is Dictionary and h.has("id"):
+                    var hid = int(h.id)
+                    hero_data_map[hid] = h
         heroes_loaded = true
         _check_initial_sync()
     elif endpoint.contains("formation/move"):
-        inspector_name.text = "STRATEGY SYNCED"
+        if inspector_name:
+            inspector_name.text = "STRATEGY SYNCED"
         inspector_details.text = "[color=green]Unit position updated at command center.[/color]"
 
 func _check_initial_sync():

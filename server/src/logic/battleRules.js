@@ -187,7 +187,8 @@ class BattleRules {
         const finalDmgMult = (atkMods.dmgMult || 1.0) * directionalDmgMult * 
                            blockResult.damageMult * (critResult.isCritical ? critResult.damageMult : 1.0);
         
-        let result = CombatRules.calculateDamage(attacker, defender, finalDmgMult, 0, aTerrain, dTerrain);
+        // Use consistent damage calculation with elemental support and debugging
+        let result = CombatRules.calculateDamage(attacker, defender, finalDmgMult, 0, this.sim);
         
         if (critResult.isCritical) {
             result.isCrit = true;
@@ -312,4 +313,4 @@ class BattleRules {
     }
 }
 
-module.exports = BattleRules;
+module.exports = BattleRules;module.exports = BattleRules;

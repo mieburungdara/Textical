@@ -125,6 +125,142 @@ class BattleGrid {
                 const p = { x: center.x + d.x, y: center.y + d.y };
                 if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
             });
+        } else if (pattern === "LINE") {
+            // Line pattern: horizontal or vertical line through center
+            const directions = [
+                {x: 1, y: 0}, {x: -1, y: 0}, // Horizontal
+                {x: 0, y: 1}, {x: 0, y: -1}  // Vertical
+            ];
+            directions.forEach(d => {
+                for (let i = 1; i <= size; i++) {
+                    const p = { x: center.x + (d.x * i), y: center.y + (d.y * i) };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+            });
+        } else if (pattern === "RING") {
+            // Ring pattern: hollow circle around center
+            for (let x = -size; x <= size; x++) {
+                for (let y = -size; y <= size; y++) {
+                    const dist = Math.max(Math.abs(x), Math.abs(y));
+                    if (dist === size && dist > 0) {
+                        const p = { x: center.x + x, y: center.y + y };
+                        if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                    }
+                }
+            }
+        } else if (pattern === "DIAMOND") {
+            // Diamond pattern: Manhattan distance
+            for (let x = -size; x <= size; x++) {
+                for (let y = -size; y <= size; y++) {
+                    const dist = Math.abs(x) + Math.abs(y);
+                    if (dist <= size && dist > 0) {
+                        const p = { x: center.x + x, y: center.y + y };
+                        if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                    }
+                }
+            }
+        } else if (pattern === "SECTOR") {
+            // Sector pattern: 90-degree cone (front-facing)
+            const frontDirs = [
+                {x: 0, y: -1}, {x: 1, y: -1}, {x: -1, y: -1}, // Front cone
+                {x: 1, y: 0}, {x: -1, y: 0}  // Sides
+            ];
+            frontDirs.forEach(d => {
+                for (let i = 1; i <= size; i++) {
+                    const p = { x: center.x + (d.x * i), y: center.y + (d.y * i) };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+            });
+        } else if (pattern === "SPIRAL") {
+            // Spiral pattern: outward spiral from center
+            let x = 0, y = 0;
+            let dir = 0;
+            const dirs = [{x:1,y:0}, {x:0,y:1}, {x:-1,y:0}, {x:0,y:-1}];
+            let stepsInDir = 1;
+            let stepsTaken = 0;
+            let maxSteps = size * size * 4;
+            let step = 0;
+            
+            while (step < maxSteps) {
+                for (let i = 0; i < stepsInDir && step < maxSteps; i++) {
+                    x += dirs[dir].x;
+                    y += dirs[dir].y;
+                    if (x !== 0 || y !== 0) {
+                        const p = { x: center.x + x, y: center.y + y };
+                        if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                    }
+                    step++;
+                }
+                dir = (dir + 1) % 4;
+                stepsTaken++;
+                if (stepsTaken % 2 === 0) stepsInDir++;
+            }
+        } else if (pattern === "DOUBLE_LINE") {
+            // Double Line pattern: two parallel lines
+            const offsets = [-size, size];
+            offsets.forEach(offset => {
+                // Horizontal line
+                for (let i = -size; i <= size; i++) {
+                    const p = { x: center.x + i, y: center.y + offset };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+                // Vertical line (cross shape)
+                for (let i = -size; i <= size; i++) {
+                    const p = { x: center.x + offset, y: center.y + i };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+            });
+        } else if (pattern === "X_SHAPE") {
+            // X Shape pattern: diagonal cross
+            const diagonals = [
+                {dx: 1, dy: 1}, {dx: -1, dy: 1},
+                {dx: 1, dy: -1}, {dx: -1, dy: -1}
+            ];
+            diagonals.forEach(d => {
+                for (let i = 1; i <= size; i++) {
+                    const p = { x: center.x + (d.dx * i), y: center.y + (d.dy * i) };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+            });
+        } else if (pattern === "CHECKERBOARD") {
+            // Checkerboard pattern: alternating tiles in a square
+            for (let x = -size; x <= size; x++) {
+                for (let y = -size; y <= size; y++) {
+                    if ((Math.abs(x) + Math.abs(y)) % 2 === 0 && (x !== 0 || y !== 0)) {
+                        const p = { x: center.x + x, y: center.y + y };
+                        if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                    }
+                }
+            }
+        } else if (pattern === "WAVE") {
+            // Wave pattern: arc shape expanding outward
+            const waveDirs = [
+                {x: 0, y: -1}, {x: 1, y: -1}, {x: -1, y: -1}, // Front row
+                {x: 2, y: -1}, {x: -2, y: -1}, // Second row sides
+                {x: 0, y: -2}, {x: 1, y: -2}, {x: -1, y: -2} // Third row
+            ];
+            waveDirs.forEach(d => {
+                const p = { x: center.x + d.x, y: center.y + d.y };
+                if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+            });
+        } else if (pattern === "RANDOM_SPREAD") {
+            // Random spread pattern: random tiles within radius
+            const attempts = size * 12;
+            const seen = new Set();
+            let count = 0;
+            while (count < attempts && tiles.length < size * 8 + 1) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 1 + Math.random() * size;
+                const rx = Math.round(Math.cos(angle) * radius);
+                const ry = Math.round(Math.sin(angle) * radius);
+                const key = `${rx},${ry}`;
+                if (!seen.has(key) && (rx !== 0 || ry !== 0)) {
+                    seen.add(key);
+                    const p = { x: center.x + rx, y: center.y + ry };
+                    if (p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height) tiles.push(p);
+                }
+                count++;
+            }
         }
         return tiles;
     }

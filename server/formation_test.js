@@ -29,7 +29,7 @@ async function test() {
     console.log("2. Testing Dual-Wield Trait Aggregation...");
     
     // Clear old equipment first to avoid unique constraint errors
-    await prisma.heroEquipment.deleteMany({ where: { heroId: hero.id } });
+    const existingEquipment = await prisma.heroEquipment.findMany({ where: { heroId: hero.id } });\n    if (existingEquipment.length > 0) {\n        const existingEquipment = await prisma.heroEquipment.findMany({ where: { heroId: hero.id } });\n    if (existingEquipment.length > 0) {\n        await prisma.heroEquipment.deleteMany({ where: { heroId: hero.id } });\n    }\n    }
 
     const swordTemplate = await prisma.itemTemplate.findFirst({ where: { name: "Sword" } });
     const mainHandItem = await prisma.inventoryItem.create({ data: { userId: user.id, templateId: swordTemplate.id } });

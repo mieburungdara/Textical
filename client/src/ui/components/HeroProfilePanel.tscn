@@ -1,0 +1,114 @@
+[gd_scene load_steps=5 format=3 uid="uid://hero_profile_panel"]
+
+[ext_resource type="Script" path="res://src/ui/components/HeroProfilePanel.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.08, 0.06, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.35, 0.3, 0.8)
+content_margin_left = 15.0
+content_margin_top = 15.0
+content_margin_right = 15.0
+content_margin_bottom = 15.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_name"]
+font_size = 28
+font_color = Color(1, 0.95, 0.85, 1.0)
+shadow_size = 6
+shadow_color = Color(0, 0, 0, 0.6)
+
+[sub_resource type="LabelSettings" id="LabelSettings_class"]
+font_size = 16
+font_color = Color(0.8, 0.75, 0.7, 1.0)
+
+[node name="HeroProfilePanel" type="PanelContainer"]
+custom_minimum_size = Vector2(500, 0)
+offset_right = 500.0
+offset_bottom = 600.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_script")
+
+[node name="HeaderSection" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="AvatarFrame" type="ColorRect" parent="HeaderSection"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+color = Color(0.2, 0.15, 0.12, 1.0)
+
+[node name="AvatarInitial" type="Label" parent="HeaderSection/AvatarFrame"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -30.0
+offset_right = 30.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "H"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoSection" type="VBoxContainer" parent="HeaderSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="HeaderSection/InfoSection"]
+layout_mode = 2
+text = "Hero Name"
+label_settings = SubResource("LabelSettings_name")
+
+[node name="LevelLabel" type="Label" parent="HeaderSection/InfoSection"]
+layout_mode = 2
+text = "Level 1"
+label_settings = SubResource("LabelSettings_class")
+
+[node name="ClassLabel" type="Label" parent="HeaderSection/InfoSection"]
+layout_mode = 2
+text = "Warrior"
+label_settings = SubResource("LabelSettings_class")
+
+[node name="RarityLabel" type="Label" parent="HeaderSection/InfoSection"]
+layout_mode = 2
+text = "COMMON"
+horizontal_alignment = 1
+
+[node name="StatsSummary" type="HBoxContainer" parent="HeaderSection"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 15
+
+[node name="TabContainer" type="TabContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+tab_align = 0
+
+[node name="StatsTab" type="VBoxContainer" parent="TabContainer"]
+layout_mode = 2
+
+[node name="EquipmentTab" type="HBoxContainer" parent="TabContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SkillsTab" type="VBoxContainer" parent="TabContainer"]
+layout_mode = 2
+
+[node name="LoadingLabel" type="Label" parent="."]
+visible = false
+layout_mode = 2
+text = "Loading hero data..."
+horizontal_alignment = 1
+vertical_alignment = 1

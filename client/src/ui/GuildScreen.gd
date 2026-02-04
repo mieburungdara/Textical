@@ -1,12 +1,12 @@
 extends Control
 
-@onready var guild_name_label = $Main/LeftPanel/GuildInfo/VBox/GuildName
-@onready var guild_level_label = $Main/LeftPanel/GuildInfo/VBox/GuildLevel
-@onready var member_count_label = $Main/LeftPanel/GuildInfo/VBox/MemberCount
-@onready var treasury_label = $Main/LeftPanel/GuildInfo/VBox/Treasury
-@onready var members_panel = $Main/CenterPanel/MemberPanel/MemberPanelInst
-@onready var facilities_panel = $Main/RightPanel/FacilitiesPanel/FacilitiesPanelInst
-@onready var treasury_panel = $Main/RightPanel/TreasuryPanel/TreasuryPanelInst
+@onready var guild_name_label = $Main/LeftPanel/GuildInfo/VBox/GuildName if has_node("Main/LeftPanel/GuildInfo/VBox/GuildName") else null
+@onready var guild_level_label = $Main/LeftPanel/GuildInfo/VBox/GuildLevel if has_node("Main/LeftPanel/GuildInfo/VBox/GuildLevel") else null
+@onready var member_count_label = $Main/LeftPanel/GuildInfo/VBox/MemberCount if has_node("Main/LeftPanel/GuildInfo/VBox/MemberCount") else null
+@onready var treasury_label = $Main/LeftPanel/GuildInfo/VBox/Treasury if has_node("Main/LeftPanel/GuildInfo/VBox/Treasury") else null
+@onready var members_panel = $Main/CenterPanel/MemberPanel/MemberPanelInst if has_node("Main/CenterPanel/MemberPanel/MemberPanelInst") else null
+@onready var facilities_panel = $Main/RightPanel/FacilitiesPanel/FacilitiesPanelInst if has_node("Main/RightPanel/FacilitiesPanel/FacilitiesPanelInst") else null
+@onready var treasury_panel = $Main/RightPanel/TreasuryPanel/TreasuryPanelInst if has_node("Main/RightPanel/TreasuryPanel/TreasuryPanelInst") else null
 
 var _current_guild = null
 var _socket_handler = null

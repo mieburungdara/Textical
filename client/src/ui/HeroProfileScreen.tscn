@@ -1,9 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://hero_profile_screen"]
+[gd_scene load_steps=9 format=3 uid="uid://hero_profile_screen"]
 
 [ext_resource type="Script" path="res://src/ui/HeroProfileScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
 [ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://hero_grid_container" path="res://src/ui/components/HeroGridContainer.tscn" id="5_grid"]
+[ext_resource type="PackedScene" uid="uid://hero_profile_panel" path="res://src/ui/components/HeroProfilePanel.tscn" id="6_profile"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.05, 0.04, 0.03, 1, 0.08, 0.06, 0.04, 1, 0.03, 0.02, 0.01, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
 
 [node name="HeroProfileScreen" type="Control"]
 layout_mode = 3
@@ -14,14 +25,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.05, 0.05, 0.08, 1)
+texture = SubResource("GradientTexture2D_bg")
 
 [node name="TopHUD" parent="." instance=ExtResource("2_hud")]
 layout_mode = 1
@@ -41,27 +52,28 @@ offset_top = 100.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 30
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 30
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 15
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
+split_offset = 420
 
-[node name="HeroName" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="LeftPanel" type="PanelContainer" parent="MarginContainer/HSplitContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Hero Name"
-horizontal_alignment = 1
+size_flags_horizontal = 3
 
-[node name="StatsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="HeroGridContainer" parent="MarginContainer/HSplitContainer/LeftPanel"]
 layout_mode = 2
-text = "Stats..."
-horizontal_alignment = 1
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.8
 
-[node name="TraitsList" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="RightPanel" type="PanelContainer" parent="MarginContainer/HSplitContainer"]
 layout_mode = 2
-alignment = 1
+size_flags_horizontal = 3
+
+[node name="HeroProfilePanel" parent="MarginContainer/HSplitContainer/RightPanel"]
+layout_mode = 2
+size_flags_horizontal = 3

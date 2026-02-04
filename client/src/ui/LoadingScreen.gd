@@ -47,7 +47,8 @@ func _ready():
     DataManager.sync_finished.connect(_on_sync_finished)
     
     # Global error listener
-    ServerConnector.error_occurred.connect(_on_error)
+    if ServerConnector and ServerConnector.has_signal("error_occurred"):
+        ServerConnector.error_occurred.connect(_on_error)
     
     # Small delay to ensure everything is ready
     await get_tree().create_timer(1.0).timeout

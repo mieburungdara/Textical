@@ -25,7 +25,7 @@ func load_history(channel_type: String, channel_id: int = 0, limit: int = 50):
     
     _request(endpoint, HTTPClient.METHOD_GET)
 
-func notify_typing(channel_type: String, channel_id: int, is_typing: Boolean, other_user_id: int = 0):
+func notify_typing(channel_type: String, channel_id: int, is_typing: bool, other_user_id: int = 0):
     # Typing is usually purely real-time via Socket
     var data = {
         "channelType": channel_type,

@@ -22,6 +22,7 @@ DataManager="*res://src/autoload/data_manager.gd"
 SocketHandler="*res://src/network/SocketHandler.gd"
 GuildHandler="*res://src/network/GuildHandler.gd"
 DebugOverlay="*res://src/ui/DebugOverlay.tscn"
+MCPInputHandler="*res://addons/godot_mcp/mcp_input_handler.gd"
 
 [display]
 
@@ -38,7 +39,7 @@ project/assembly_name="Textical"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/DVs_behavior_tree/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [input_devices]
 

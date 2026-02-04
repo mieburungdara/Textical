@@ -31,16 +31,18 @@ func _ensure_dirs():
 func start_sync():
     print("[SYNC] Checking for updates...")
     # Use a one-shot connection to prevent multiple triggers
-    if !ServerConnector.request_completed.is_connected(_on_manifest_received):
-        ServerConnector.request_completed.connect(_on_manifest_received)
+    if ServerConnector and ServerConnector.has_signal("request_completed"):
+        if !ServerConnector.request_completed.is_connected(_on_manifest_received):
+            ServerConnector.request_completed.connect(_on_manifest_received)
     
-    ServerConnector._send_get("/assets/manifest")
+    if ServerConnector:
+        ServerConnector._send_get("/assets/manifest")
 
 func _on_manifest_received(endpoint, manifest):
     if !endpoint.contains("/assets/manifest"): return
     
     # Disconnect after receiving manifest
-    if ServerConnector.request_completed.is_connected(_on_manifest_received):
+    if ServerConnector and ServerConnector.request_completed.is_connected(_on_manifest_received):
         ServerConnector.request_completed.disconnect(_on_manifest_received)
     
     if !manifest is Dictionary:
@@ -50,7 +52,12 @@ func _on_manifest_received(endpoint, manifest):
     
     _sync_queue = []
     for category in manifest.keys():
-        for id in manifest[category]:
+        var category_data = manifest[category]
+        # Skip if category_data is not an Array (e.g., boolean or null)
+        if typeof(category_data) != TYPE_ARRAY:
+            print("[SYNC] Warning: category '%s' has unexpected type %s, skipping" % [category, typeof(category_data)])
+            continue
+        for id in category_data:
             var file_path = DATA_DIR + category + "/" + str(id) + ".json"
             if !FileAccess.file_exists(file_path):
                 _sync_queue.append({"cat": category, "id": id, "path": file_path})
@@ -79,8 +86,10 @@ func _process_next_in_queue():
         _process_next_in_queue()
     )
     
-    var url = ServerConnector.base_url + "/assets/raw/" + item.cat + "/" + str(item.id)
-    http.request(url)
+    var url = ""
+    if ServerConnector:
+        url = ServerConnector.base_url + "/assets/raw/" + item.cat + "/" + str(item.id)
+        http.request(url)
 
 func _on_asset_downloaded(result, code, body, save_path):
     if result == OK and code == 200:

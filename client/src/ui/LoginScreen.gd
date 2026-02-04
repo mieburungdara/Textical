@@ -103,27 +103,58 @@ func _on_login_pressed():
 
 func _on_login_success(user):
     status_label.text = "Syncing world state..."
-    GameState.set_user(user)
+    
+    # Debug: Print user data structure
+    print("[LOGIN] User data keys: ", user.keys())
+    
+    # Extract actual user data from nested "data" key
+    var user_data = user.get("data")
+    if user_data:
+        GameState.set_user(user_data)
+    else:
+        GameState.set_user(user)
+    
     _save_credentials(username_input.text, password_input.text)
     
+    # Get user ID from nested data
+    var actual_data = user.get("data", user)
+    var user_id = actual_data.get("id") or actual_data.get("_id") or actual_data.get("userId") or actual_data.get("uid")
+    var current_region = actual_data.get("currentRegion")
+    
+    print("[LOGIN] user_id found: ", user_id)
+    print("[LOGIN] current_region: ", current_region)
+    
     # Start Parallel Pre-loading
-    ServerConnector.fetch_heroes(user.id)
-    ServerConnector.fetch_inventory(user.id)
-    ServerConnector.get_region_details(user.currentRegion)
+    if user_id:
+        ServerConnector.fetch_heroes(int(user_id))
+        ServerConnector.fetch_inventory(int(user_id))
+    if current_region:
+        ServerConnector.get_region_details(int(current_region))
+    else:
+        print("[LOGIN] WARNING: current_region is nil, using default region 1")
+        ServerConnector.get_region_details(1)
 
 func _on_request_completed(endpoint, data):
+    print("[LOGIN] Response: ", endpoint)
     if endpoint.contains("/heroes"):
         heroes_loaded = true
+        print("[LOGIN] Heroes loaded: ", heroes_loaded)
     elif endpoint.contains("/inventory"):
         inventory_loaded = true
+        print("[LOGIN] Inventory loaded: ", inventory_loaded)
     elif endpoint.contains("/region/"):
         region_loaded = true
-        region_data = data
-        GameState.current_region_data = data
+        # Extract nested data from server response
+        region_data = data.get("data", data)
+        GameState.current_region_data = region_data
+        print("[LOGIN] Region loaded: ", region_data)
     
+    print("[LOGIN] Status: heroes=", heroes_loaded, " inventory=", inventory_loaded, " region=", region_loaded)
     _check_transition()
 
 func _check_transition():
+    print("[LOGIN] _check_transition called: heroes=", heroes_loaded, " inventory=", inventory_loaded, " region=", region_loaded, " transitioning=", _is_transitioning)
+    
     if heroes_loaded and inventory_loaded and region_loaded and !_is_transitioning:
         _is_transitioning = true
         status_label.text = "READY."
@@ -147,7 +178,10 @@ func _check_transition():
         
         var target_scene = GameState.get_region_scene(region_data.type)
         GameState.last_visited_hub = target_scene
+        print("[LOGIN] Transitioning to: ", target_scene)
         get_tree().change_scene_to_file(target_scene)
+    elif !_is_transitioning:
+        print("[LOGIN] Waiting for responses...")
 
 func _on_login_failed(error):
     _login_in_progress = false

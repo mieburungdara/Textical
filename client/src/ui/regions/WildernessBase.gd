@@ -30,9 +30,26 @@ func _fetch_data():
     ServerConnector.get_region_details(GameState.current_user.currentRegion)
 
 func _on_request_completed(endpoint, data):
+    print("[WildernessBase] _on_request_completed called")
+    print("[WildernessBase] endpoint:", endpoint)
+    print("[WildernessBase] data type:", typeof(data))
+    
     if "region/" in endpoint:
-        current_region_data = data
-        _update_ui()
+        # Handle server response format: { "success": true, "data": {...} }
+        if data is Dictionary and data.has("data"):
+            current_region_data = data.get("data")
+            print("[WildernessBase] Extracted region data from 'data' key")
+        else:
+            current_region_data = data
+            print("[WildernessBase] Using data directly")
+        
+        print("[WildernessBase] current_region_data type:", typeof(current_region_data))
+        print("[WildernessBase] current_region_data:", current_region_data)
+        
+        if current_region_data is Dictionary:
+            _update_ui()
+        else:
+            push_error("[WildernessBase] Invalid region data format")
     elif "action/travel" in endpoint:
         get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 
@@ -59,17 +76,23 @@ func _play_vfx(vfx_scene: PackedScene, pos: Vector2):
 
 func _update_ui():
     if not current_region_data: return
-    title_label.text = current_region_data.name.to_upper()
-    subtitle_label.text = current_region_data.get("description", "Danger Level: %d" % current_region_data.dangerLevel)
+    title_label.text = current_region_data.get("name", "Unknown").to_upper()
+    var danger_level = current_region_data.get("dangerLevel", 1)
+    subtitle_label.text = current_region_data.get("description", "Danger Level: %d" % danger_level)
     subtitle_label.remove_theme_color_override("font_color") # Reset to default
     
     for child in resource_container.get_children(): child.queue_free()
     
     # 1. Add Resources
-    for res in current_region_data.resources:
-        var emoji = _get_emoji_for_item(res.item.name)
-        var card = _create_action_card(res.item.name, emoji, "Gather Resource", func(btn): _on_gather_pressed(res.id, btn))
-        resource_container.add_child(card)
+    var resources = current_region_data.get("resources", [])
+    if resources is Array:
+        for res in resources:
+            if res is Dictionary and res.has("item"):
+                var item = res.get("item")
+                if item is Dictionary:
+                    var emoji = _get_emoji_for_item(item.get("name", "Unknown"))
+                    var card = _create_action_card(item.get("name", "Unknown"), emoji, "Gather Resource", func(btn): _on_gather_pressed(res.get("id", 0), btn))
+                    resource_container.add_child(card)
 
     # 2. Add Hunting Card
     var hunt_card = _create_action_card("Battle Slime", "⚔️", "Hunt Monsters", func(_b): _on_hunt_pressed())

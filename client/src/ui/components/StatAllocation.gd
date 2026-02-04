@@ -277,7 +277,7 @@ func _update_preview_stats():
 	
 	for stat in ALLOCATABLE_STATS:
 		var base = _base_stats.get(stat, 0)
-		var growth = _get_stat_growth(stat_name, _pending_allocations.get(stat_name, 0))
+		var growth = _get_stat_growth(stat, _pending_allocations.get(stat, 0))
 		_preview_stats[stat] = base + growth
 
 func _get_total_used() -> int:
@@ -395,7 +395,7 @@ func _format_value(value: float) -> String:
 
 # === GROWTH VISUALIZATION ===
 
-func show_growth_curve(stat_name: String):
+func _show_growth_curve_internal(stat_name: String):
 	if not show_growth_curve:
 		return
 	

@@ -1,5 +1,15 @@
 extends Node
 
+# Preload handler classes
+const AuthHandlerClass = preload("res://src/network/AuthHandler.gd")
+const WorldHandlerClass = preload("res://src/network/WorldHandler.gd")
+const TavernHandlerClass = preload("res://src/network/TavernHandler.gd")
+const MarketHandlerClass = preload("res://src/network/MarketHandler.gd")
+const QuestHandlerClass = preload("res://src/network/QuestHandler.gd")
+const InventoryHandlerClass = preload("res://src/network/InventoryHandler.gd")
+const BattleHandlerClass = preload("res://src/network/BattleHandler.gd")
+const StatHandlerClass = preload("res://src/network/StatHandler.gd")
+
 signal login_success(user)
 signal login_failed(error)
 signal request_completed(endpoint, data)
@@ -30,55 +40,64 @@ var stat
 var socket
 
 func _ready():
-	auth = AuthHandler.new()
-	world = WorldHandler.new()
-	tavern = TavernHandler.new()
-	market = MarketHandler.new()
-	quest = QuestHandler.new()
-	inventory = InventoryHandler.new()
-	battle = BattleHandler.new()
-	stat = StatHandler.new()
-	socket = SocketHandler.new()
-	
-	var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, socket]
-	for h in handlers:
-		add_child(h)
-		if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
-		if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
-	
-	# Socket Routing
-	socket.task_completed.connect(func(d): task_completed.emit(d))
-	socket.task_started.connect(func(d): task_started.emit(d))
-	socket.task_failed.connect(func(d): task_failed.emit(d))
-	
-	# Socket Stat Routing
-	socket.stat_updated.connect(func(u, s): stats_updated.emit(u, s))
-	socket.stat_changed.connect(func(u, n, o, v): stat_changed.emit(u, n, o, v))
-	socket.stat_cap_reached.connect(func(u, n, c, cap): stat_cap_reached.emit(u, n, c, cap))
-	socket.elemental_affinity_updated.connect(func(u, a): elemental_affinity_updated.emit(u, a))
-	socket.set_bonus_updated.connect(func(u, b): set_bonus_updated.emit(u, b))
-	
-	auth.login_success.connect(_on_login_success)
-	auth.login_failed.connect(func(e): emit_signal("login_failed", e))
+    auth = AuthHandlerClass.new()
+    world = WorldHandlerClass.new()
+    tavern = TavernHandlerClass.new()
+    market = MarketHandlerClass.new()
+    quest = QuestHandlerClass.new()
+    inventory = InventoryHandlerClass.new()
+    battle = BattleHandlerClass.new()
+    stat = StatHandlerClass.new()
+    # SocketHandler is autoload, use it directly
+    socket = SocketHandler
+    
+    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat]
+    for h in handlers:
+        add_child(h)
+        if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
+        if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+    
+    # Socket Routing
+    socket.task_completed.connect(func(d): task_completed.emit(d))
+    socket.task_started.connect(func(d): task_started.emit(d))
+    socket.task_failed.connect(func(d): task_failed.emit(d))
+    
+    # Socket Stat Routing
+    socket.stat_updated.connect(func(u, s): stats_updated.emit(u, s))
+    socket.stat_changed.connect(func(u, n, o, v): stat_changed.emit(u, n, o, v))
+    socket.stat_cap_reached.connect(func(u, n, c, cap): stat_cap_reached.emit(u, n, c, cap))
+    socket.elemental_affinity_updated.connect(func(u, a): elemental_affinity_updated.emit(u, a))
+    socket.set_bonus_updated.connect(func(u, b): set_bonus_updated.emit(u, b))
+    
+    auth.login_success.connect(_on_login_success)
+    auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
 func _on_handler_request_completed(endpoint: String, data):
-	emit_signal("request_completed", endpoint, data)
+    emit_signal("request_completed", endpoint, data)
 
 func _on_login_success(user):
-	# 1. Start Connection
-	socket.connect_to_server()
-	
-	# 2. Wait for the 'connected' signal from SocketHandler if not already open
-	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
-		await socket.connected
-	
-	# 3. Authenticate only if not already authenticated for this session
-	if !socket.is_authenticated:
-		socket.authenticate(user.id)
-		await socket.authenticated # Wait for confirmation
-	
-	# 4. Now allow the UI to transition
-	emit_signal("login_success", user)
+    # Extract actual user data from nested "data" key
+    var user_data = user.get("data", user)
+    
+    # Get user ID from nested data
+    var user_id = user_data.get("id") or user_data.get("_id") or user_data.get("userId") or user_data.get("uid")
+    
+    print("[CONNECTOR] user_id from nested data: ", user_id)
+    
+    # 1. Start Connection
+    socket.connect_to_server()
+    
+    # 2. Wait for the 'connected' signal from SocketHandler if not already open
+    if !socket.is_socket_connected:
+        await socket.connected
+    
+    # 3. Authenticate only if not already authenticated for this session
+    if !socket.is_authenticated and user_id:
+        socket.authenticate(int(user_id))
+        await socket.authenticated # Wait for confirmation
+    
+    # 4. Now allow the UI to transition
+    emit_signal("login_success", user)
 
 # --- FACADE METHODS ---
 func login_with_password(u, p): auth.login(u, p)
@@ -127,16 +146,16 @@ func stop_stat_sync(): stat.stop_stat_sync()
 
 # --- SOCKET STAT METHODS ---
 func socket_send_stat_change(unit_id: int, stat_name: String, change_amount: float):
-	socket.send_stat_change_request(unit_id, stat_name, change_amount)
+    socket.send_stat_change_request(unit_id, stat_name, change_amount)
 
 func socket_send_stat_allocation(unit_id: int, allocations: Dictionary):
-	socket.send_stat_allocation_request(unit_id, allocations)
+    socket.send_stat_allocation_request(unit_id, allocations)
 
 func socket_subscribe_unit_stats(unit_id: int):
-	socket.subscribe_to_unit_stats(unit_id)
+    socket.subscribe_to_unit_stats(unit_id)
 
 func socket_unsubscribe_unit_stats(unit_id: int):
-	socket.unsubscribe_from_unit_stats(unit_id)
+    socket.unsubscribe_from_unit_stats(unit_id)
 
 # --- UTILITY (For Sync System) ---
 func _send_get(path): world._request(path, HTTPClient.METHOD_GET)

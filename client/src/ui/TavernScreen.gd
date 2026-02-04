@@ -55,6 +55,10 @@ func _populate_mercs(mercs):
         return
 
     for merc in mercs:
+        # Validate merc is a Dictionary before accessing properties
+        if not merc is Dictionary:
+            print("TavernScreen: Skipping invalid merc data (not a Dictionary)")
+            continue
         # 1. Card Container (Kertas Perkamen)
         var card = PanelContainer.new()
         var style = StyleBoxFlat.new()
@@ -94,7 +98,17 @@ func _populate_mercs(mercs):
         avatar_bg.add_theme_stylebox_override("panel", av_style)
         
         var av_text = Label.new()
-        av_text.text = merc.hero.combatClass.name[0].to_upper()
+        # Validate merc is a Dictionary before accessing merc.hero
+        if merc is Dictionary and merc.get("hero") is Dictionary:
+            var combat_class = merc.hero.get("combatClass")
+            if combat_class is Dictionary:
+                av_text.text = str(combat_class.get("name", "?")).left(1).to_upper()
+            elif combat_class is String:
+                av_text.text = str(combat_class).left(1).to_upper()
+            else:
+                av_text.text = "?"
+        else:
+            av_text.text = "?"
         av_text.add_theme_font_size_override("font_size", 32)
         av_text.add_theme_color_override("font_color", Color(1, 0.8, 0.4))
         av_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -107,13 +121,26 @@ func _populate_mercs(mercs):
         info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
         
         var name_label = Label.new()
-        name_label.text = merc.hero.name
+        # Validate merc is a Dictionary before accessing merc.hero
+        if merc is Dictionary and merc.get("hero") is Dictionary:
+            name_label.text = str(merc.hero.get("name", "Unknown"))
+        else:
+            name_label.text = "Unknown"
         name_label.add_theme_color_override("font_color", Color(0.2, 0.1, 0)) # Dark Brown
         name_label.add_theme_font_size_override("font_size", 26)
         
         var class_label = Label.new()
-        var hero_class = merc.hero.combatClass.name
-        class_label.text = "Lv.%d %s" % [merc.hero.level, hero_class]
+        var hero_class = "Unknown"
+        var hero_level = 0
+        # Validate merc is a Dictionary before accessing merc.hero
+        if merc is Dictionary and merc.get("hero") is Dictionary:
+            hero_level = int(merc.hero.get("level", 0))
+            var combat_class = merc.hero.get("combatClass")
+            if combat_class is Dictionary:
+                hero_class = str(combat_class.get("name", "Unknown"))
+            elif combat_class is String:
+                hero_class = str(combat_class)
+        class_label.text = "Lv.%d %s" % [hero_level, hero_class]
         class_label.add_theme_color_override("font_color", Color(0.4, 0.3, 0.2))
         class_label.add_theme_font_size_override("font_size", 18)
         
@@ -129,7 +156,8 @@ func _populate_mercs(mercs):
         price_hbox.add_theme_constant_override("separation", 5)
         
         var price_label = Label.new()
-        price_label.text = str(merc.recruitmentCost)
+        # Use get() method to safely access recruitmentCost
+        price_label.text = str(merc.get("recruitmentCost", "?"))
         price_label.add_theme_color_override("font_color", Color(0.1, 0.4, 0.1)) # Dark Green for cost on paper
         price_label.add_theme_font_size_override("font_size", 22)
         

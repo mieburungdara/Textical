@@ -105,10 +105,10 @@ class QualityResolver {
         if (statKey && ['crit_chance', 'dodge_rate', 'block_chance'].includes(statKey)) {
             // Percent-based stats have reduced scaling
             const reducedMultiplier = 1 + (multiplier - 1) * 0.5;
-            return baseValue * reducedMultiplier;
+            return Math.round(baseValue * reducedMultiplier * 100) / 100;
         }
         
-        return baseValue * multiplier;
+        return Math.round(baseValue * multiplier * 100) / 100;
     }
 
     /**

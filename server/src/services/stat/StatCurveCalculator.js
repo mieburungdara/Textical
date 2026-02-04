@@ -42,10 +42,11 @@ class StatCurveCalculator {
      */
     static calculateExponential(base, rate, level, options = {}) {
         const effectiveLevel = Math.max(1, level);
-        const exponent = options.exponentBase || 1;
+        const exponentBase = options.exponentBase || 1;
         const offset = options.offsetLevel || 0;
         
-        return base * Math.pow(rate, effectiveLevel - 1 + offset);
+        const exponent = Math.pow(effectiveLevel - 1 + offset, exponentBase);
+        return Math.round(base * Math.pow(rate, exponent) * 100) / 100;
     }
 
     /**
@@ -60,7 +61,7 @@ class StatCurveCalculator {
     static calculateSigmoid(base, max, level, steepness = 0.1, midpoint = 50) {
         const effectiveLevel = Math.max(1, level);
         const sigmoidValue = 1 / (1 + Math.exp(-steepness * (effectiveLevel - midpoint)));
-        return base + (max * sigmoidValue);
+        return Math.round((base + (max * sigmoidValue)) * 100) / 100;
     }
 
     /**
@@ -90,7 +91,7 @@ class StatCurveCalculator {
      */
     static calculateLogarithmic(base, rate, level, baseLog = Math.E, options = {}) {
         const effectiveLevel = Math.max(1, level);
-        const offset = options.offsetLevel || 1;
+        const offset = options.offset || options.offsetLevel || 1;
         
         return base + (rate * Math.log(effectiveLevel + offset) / Math.log(baseLog));
     }
@@ -111,7 +112,12 @@ class StatCurveCalculator {
      */
     static calculate(base, level, curveConfig, options = {}) {
         const curveType = curveConfig.type || StatCurveCalculator.CurveType.LINEAR;
-        const rate = curveConfig.rate || 1;
+        let rate = curveConfig.rate;
+        
+        // Default rate based on curve type
+        if (rate === undefined) {
+            rate = (curveType === StatCurveCalculator.CurveType.LINEAR) ? 10 : 1;
+        }
         
         switch (curveType) {
             case StatCurveCalculator.CurveType.LINEAR:
@@ -148,8 +154,8 @@ class StatCurveCalculator {
                 );
             
             default:
-                // Default to linear if unknown type
-                return StatCurveCalculator.calculateLinear(base, rate, level, options);
+                // Default to linear if unknown type, use proper default rate
+                return StatCurveCalculator.calculateLinear(base, 10, level, options);
         }
     }
 
@@ -164,11 +170,23 @@ class StatCurveCalculator {
     static calculateGrowthToLevel(currentValue, currentLevel, targetLevel, curveConfig) {
         if (targetLevel <= currentLevel) return currentValue;
         
-        const currentAtLevel = StatCurveCalculator.calculate(0, currentLevel, curveConfig);
-        const targetAtLevel = StatCurveCalculator.calculate(0, targetLevel, curveConfig);
+        // For exponential and logarithmic curves, calculate directly from current level
+        if (curveConfig.type === StatCurveCalculator.CurveType.EXPONENTIAL || 
+            curveConfig.type === StatCurveCalculator.CurveType.LOGARITHMIC ||
+            curveConfig.type === StatCurveCalculator.CurveType.POLYNOMIAL) {
+            
+            // Calculate the ratio between target and current level values
+            const valueAtCurrent = StatCurveCalculator.calculate(currentValue, currentLevel, curveConfig);
+            const valueAtTarget = StatCurveCalculator.calculate(currentValue, targetLevel, curveConfig);
+            return valueAtTarget;
+        }
         
-        // Return the difference added to current value
-        return currentValue + (targetAtLevel - currentAtLevel);
+        // For linear and sigmoid curves, use difference calculation
+        const baseAtCurrent = StatCurveCalculator.calculate(0, currentLevel, curveConfig);
+        const baseAtTarget = StatCurveCalculator.calculate(0, targetLevel, curveConfig);
+        
+        const curveDifference = baseAtTarget - baseAtCurrent;
+        return currentValue + curveDifference;
     }
 
     /**
