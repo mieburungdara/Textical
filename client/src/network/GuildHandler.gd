@@ -162,11 +162,11 @@ func _on_guild_error_data(message: String):
 
 # === GUILD SOCKET METHODS ===
 
-func create_guild(template_id: int, name: String, description: String):
+func create_guild(template_id: int, guild_name: String, description: String):
     if _socket_handler:
         var msg = '42["guild:create", %s]' % JSON.stringify({
             "templateId": template_id,
-            "name": name,
+            "name": guild_name,
             "description": description
         })
         _socket_handler.socket.send_text(msg)

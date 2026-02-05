@@ -1,6 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://hero_profile_panel"]
+[gd_scene load_steps=13 format=3 uid="uid://hero_profile_panel"]
 
 [ext_resource type="Script" path="res://src/ui/components/HeroProfilePanel.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://stats_summary" path="res://src/ui/components/StatsSummary.tscn" id="2_stats_summary"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.1, 0.08, 0.06, 0.95)
@@ -175,62 +176,7 @@ layout_mode = 2
 text = "Warrior"
 label_settings = SubResource("LabelSettings_class")
 
-[node name="StatsSummary" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 20
-
-[node name="HPStat" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection/StatsSummary"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="HPIcon" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/HPStat"]
-layout_mode = 2
-text = "❤️"
-
-[node name="HPValue" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/HPStat"]
-layout_mode = 2
-text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
-
-[node name="MPStat" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection/StatsSummary"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="MPIcon" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/MPStat"]
-layout_mode = 2
-text = "💙"
-
-[node name="MPValue" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/MPStat"]
-layout_mode = 2
-text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
-
-[node name="ATKStat" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection/StatsSummary"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="ATKIcon" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/ATKStat"]
-layout_mode = 2
-text = "⚔️"
-
-[node name="ATKValue" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/ATKStat"]
-layout_mode = 2
-text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
-
-[node name="DEFStat" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection/StatsSummary"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="DEFIcon" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/DEFStat"]
-layout_mode = 2
-text = "🛡️"
-
-[node name="DEFValue" type="Label" parent="MainContainer/HeaderSection/InfoSection/StatsSummary/DEFStat"]
-layout_mode = 2
-text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
+[node name="StatsSummary" parent="MainContainer/HeaderSection/InfoSection" instance=ExtResource("2_stats_summary")]
 
 [node name="TabsContainer" type="TabContainer" parent="MainContainer"]
 layout_mode = 2

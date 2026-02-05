@@ -8,11 +8,12 @@ signal hero_selected(hero_data: Dictionary)
 signal heroes_loaded(count: int)
 
 # === NODE REFERENCES ===
-@onready var header_container: HBoxContainer = $HeaderContainer
-@onready var title_label: Label = $HeaderContainer/TitleLabel
-@onready var count_label: Label = $HeaderContainer/CountLabel
-@onready var scroll_container: ScrollContainer = $ScrollContainer
-@onready var grid_container: GridContainer = $ScrollContainer/GridContainer
+@onready var main_layout: VBoxContainer = $MainLayout
+@onready var header_container: HBoxContainer = $MainLayout/HeaderContainer
+@onready var title_label: Label = $MainLayout/HeaderContainer/TitleLabel
+@onready var count_label: Label = $MainLayout/HeaderContainer/CountLabel
+@onready var scroll_container: ScrollContainer = $MainLayout/ScrollContainer
+@onready var grid_container: GridContainer = $MainLayout/ScrollContainer/GridContainer
 @onready var empty_state: VBoxContainer = $EmptyState
 @onready var empty_label: Label = $EmptyState/EmptyLabel
 @onready var loading_label: Label = $LoadingLabel
@@ -74,8 +75,8 @@ func clear_selection():
 
 func _load_heroes():
     loading_label.visible = true
-    grid_container.visible = false
-    empty_label.visible = false
+    main_layout.visible = false # Use main_layout instead of grid_container for better hiding
+    empty_state.visible = false
     
     print("[HeroGridContainer] _load_heroes called")
     
@@ -116,7 +117,7 @@ func _continue_load_heroes(heroes: Array):
     _select_default_hero()
     
     loading_label.visible = false
-    grid_container.visible = true
+    main_layout.visible = true
     
     print("[HeroGridContainer] Heroes loaded successfully, total cards: ", _hero_cards.size())
     heroes_loaded.emit(_hero_cards.size())
@@ -155,15 +156,15 @@ func _select_default_hero():
 
 func _show_empty_state():
     loading_label.visible = false
-    grid_container.visible = false
-    empty_label.visible = true
+    main_layout.visible = false
+    empty_state.visible = true
     empty_label.text = "No heroes found.\nRecruit heroes from the Tavern!"
     _update_header_count(0)
 
 func _show_error_state(error: String):
     loading_label.visible = false
-    grid_container.visible = false
-    empty_label.visible = true
+    main_layout.visible = false
+    empty_state.visible = true
     empty_label.text = "Failed to load heroes: " + error + "\nPlease try again later."
     _update_header_count(0)
 

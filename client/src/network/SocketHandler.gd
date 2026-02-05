@@ -167,10 +167,10 @@ func chat_join_guild(guild_id: int):
 
 # === GUILD SOCKET METHODS ===
 
-func guild_create(template_id: int, name: String, description: String):
+func guild_create(template_id: int, guild_name: String, description: String):
     var msg = '42["guild:create", %s]' % JSON.stringify({
         "templateId": template_id,
-        "name": name,
+        "name": guild_name,
         "description": description
     })
     socket.send_text(msg)
