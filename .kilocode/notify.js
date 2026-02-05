@@ -14,7 +14,7 @@ const sendMessage = (rawMessage) => {
   const data = JSON.stringify({
     chat_id: CHAT_ID,
     text,
-    parse_mode: 'MarkdownV2'
+    parse_mode: 'Markdown'
   });
 
   const options = {

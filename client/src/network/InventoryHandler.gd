@@ -50,6 +50,7 @@ func _handle_success(endpoint: String, json):
 		
 		if heroes_data is Array:
 			GameState.set_heroes(heroes_data)
+			GameState._on_heroes_received(endpoint, heroes_data)
 		else:
 			print("[InventoryHandler] ERROR: Heroes data is not Array, setting empty")
 			GameState.set_heroes([])

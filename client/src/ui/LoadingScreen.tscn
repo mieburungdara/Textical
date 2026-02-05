@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bt7n2f1u3ucm"]
 
 [ext_resource type="Script" path="res://src/ui/LoadingScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://magic_sigil" path="res://src/ui/components/MagicSigil.tscn" id="2_sigil"]
+[ext_resource type="PackedScene" uid="uid://y0mq3anelbcp" path="res://src/ui/components/MagicSigil.tscn" id="2_sigil"]
 [ext_resource type="PackedScene" uid="uid://loading_bar" path="res://src/ui/components/LoadingBar.tscn" id="3_bar"]
 
 [sub_resource type="Gradient" id="Gradient_medieval"]

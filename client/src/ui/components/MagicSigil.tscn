@@ -1,6 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://magic_sigil"]
+[gd_scene load_steps=6 format=3 uid="uid://y0mq3anelbcp"]
 
-[ext_resource type="Script" path="res://src/ui/components/MagicSigil.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://d376cs6el5r2e" path="res://src/ui/components/MagicSigil.gd" id="1_script"]
 
 [sub_resource type="Gradient" id="Gradient_glow"]
 offsets = PackedFloat32Array(0, 0.4, 0.7, 1)
@@ -95,7 +95,8 @@ antialiased = true
 polygon = PackedVector2Array(500, 300, 673, 400, 673, 600, 500, 700, 327, 600, 327, 400)
 
 [node name="HexLine" type="Line2D" parent="Hexagon"]
-points = PackedVector2Array(500, 300, 673, 400, 673, 600, 500, 700, 327, 600, 327, 400, 500, 300)
+position = Vector2(-124, -48)
+points = PackedVector2Array(412, 412, 673, 400, 473, 469, 615, 558, 312, 602, 431, 549, 347, 406)
 width = 2.0
 default_color = Color(1, 0.8, 0.4, 0.2)
 

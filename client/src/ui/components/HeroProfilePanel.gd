@@ -8,7 +8,7 @@ signal equipment_changed(hero_id: int, slot: String, item_id: int)
 
 # === NODE REFERENCES ===
 @onready var header_section: HBoxContainer = $HeaderSection
-@onready var avatar_frame: TextureRect = $HeaderSection/AvatarFrame
+@onready var avatar_frame: ColorRect = $HeaderSection/AvatarFrame
 @onready var avatar_initial: Label = $HeaderSection/AvatarFrame/AvatarInitial
 @onready var info_section: VBoxContainer = $HeaderSection/InfoSection
 @onready var name_label: Label = $HeaderSection/InfoSection/NameLabel
@@ -44,13 +44,25 @@ func _setup_ui():
 func _connect_signals():
 	# Connect to server signals for real-time updates
 	if ServerConnector:
-		ServerConnector.stats_updated.connect(_on_stats_updated)
-		ServerConnector.equipment_updated.connect(_on_equipment_updated)
+		# Check if signals exist before connecting
+		if ServerConnector.has_signal("stats_updated"):
+			ServerConnector.stats_updated.connect(_on_stats_updated)
+		if ServerConnector.has_signal("equipment_updated"):
+			ServerConnector.equipment_updated.connect(_on_equipment_updated)
 
 # === PUBLIC METHODS ===
 
 func display_hero(hero_data: Dictionary):
+	print("[HeroProfilePanel] display_hero called with: ", hero_data)
+	
+	# Validate input
+	if hero_data.is_empty():
+		print("[HeroProfilePanel] ERROR: hero_data is empty!")
+		_show_loading()
+		return
+	
 	_current_hero = hero_data
+	print("[HeroProfilePanel] Hero name: ", hero_data.get("name", "Unknown"))
 	_update_display()
 
 func clear_display():
@@ -66,8 +78,11 @@ func _show_loading():
 
 func _update_display():
 	if _current_hero.is_empty():
+		print("[HeroProfilePanel] _current_hero is empty, showing loading")
 		_show_loading()
 		return
+	
+	print("[HeroProfilePanel] _update_display: ", _current_hero.get("name", "Unknown"))
 	
 	loading_label.visible = false
 	header_section.visible = true
@@ -120,7 +135,7 @@ func _rarity_color(rarity: String):
 	rarity_label.add_theme_color_override("font_color", color)
 
 func _update_stats_summary():
-	# Clear existing
+	# Clear existing - Godot 4.x compatible
 	for child in stats_summary.get_children():
 		child.queue_free()
 	
@@ -140,7 +155,7 @@ func _update_stats_summary():
 		stats_summary.add_child(label)
 
 func _update_stats_tab():
-	# Clear existing
+	# Clear existing - Godot 4.x compatible
 	for child in stats_tab.get_children():
 		child.queue_free()
 	
@@ -205,15 +220,15 @@ func _update_stats_tab():
 		row.add_child(name_label)
 		
 		var value_label = Label.new()
-		var sign = "+" if value >= 0 else ""
-		value_label.text = "%s%d%%" % [sign, value]
+		var sign_str = "+" if value >= 0 else ""
+		value_label.text = "%s%d%%" % [sign_str, value]
 		value_label.modulate = Color(0.3, 0.9, 0.4) if value >= 0 else Color(0.9, 0.3, 0.3)
 		row.add_child(value_label)
 		
 		stats_tab.add_child(row)
 
 func _update_equipment_tab():
-	# Clear existing
+	# Clear existing - Godot 4.x compatible
 	for child in equipment_tab.get_children():
 		child.queue_free()
 	
@@ -238,7 +253,11 @@ func _update_equipment_tab():
 		slot_row.add_child(slot_label)
 		
 		var item_label = Label.new()
-		var equipped_item = _current_hero.get("equipment", {}).get(slot_name.to_lower(), {})
+		var equipment = _current_hero.get("equipment", {})
+		print("Equipment type:", typeof(equipment), " Value:", equipment)
+		var equipped_item = {}
+		if equipment is Dictionary:
+			equipped_item = equipment.get(slot_name.to_lower(), {})
 		if equipped_item and equipped_item is Dictionary:
 			item_label.text = equipped_item.get("name", "Empty")
 		else:
@@ -264,7 +283,7 @@ func _update_equipment_tab():
 	details_container.add_child(details_label)
 
 func _update_skills_tab():
-	# Clear existing
+	# Clear existing - Godot 4.x compatible
 	for child in skills_tab.get_children():
 		child.queue_free()
 	

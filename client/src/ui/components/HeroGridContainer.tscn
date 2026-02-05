@@ -1,73 +1,158 @@
-[gd_scene load_steps=4 format=3 uid="uid://hero_grid_container"]
+[gd_scene load_steps=6 format=3 uid="uid://hero_grid_container"]
 
 [ext_resource type="Script" path="res://src/ui/components/HeroGridContainer.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.08, 0.06, 0.05, 0.9)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.08, 0.06, 0.05, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.3, 0.25, 0.2, 0.8)
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
+border_color = Color(0.35, 0.28, 0.22, 0.8)
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+
+[sub_resource type="Gradient" id="Gradient_header"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.12, 0.1, 0.08, 1, 0.1, 0.08, 0.06, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
-font_size = 20
-font_color = Color(1, 0.9, 0.7, 1.0)
+font_size = 22
+font_color = Color(1, 0.92, 0.8, 1.0)
 shadow_size = 4
-shadow_color = Color(0, 0, 0, 0.5)
+shadow_color = Color(0, 0, 0, 0.6)
+
+[sub_resource type="LabelSettings" id="LabelSettings_count"]
+font_size = 14
+font_color = Color(0.7, 0.65, 0.6, 1.0)
+
+[sub_resource type="LabelSettings" id="LabelSettings_empty"]
+font_size = 16
+font_color = Color(0.5, 0.48, 0.45, 1.0)
 
 [node name="HeroGridContainer" type="PanelContainer"]
-custom_minimum_size = Vector2(400, 0)
-offset_right = 400.0
+custom_minimum_size = Vector2(420, 0)
+offset_right = 420.0
 offset_bottom = 600.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_script")
 
 [node name="HeaderContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="HeaderBackground" type="ColorRect" parent="HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+color = Color(0.1, 0.08, 0.06, 0.8)
 
 [node name="TitleLabel" type="Label" parent="HeaderContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "My Heroes"
+text = "⚔️ My Heroes"
 label_settings = SubResource("LabelSettings_title")
+horizontal_alignment = 1
+
+[node name="FilterButton" type="Button" parent="HeaderContainer"]
+layout_mode = 2
+text = "Filter"
 
 [node name="CountLabel" type="Label" parent="HeaderContainer"]
 layout_mode = 2
 text = "[0]"
-label_settings = null
+label_settings = SubResource("LabelSettings_count")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="."]
 layout_mode = 2
 size_flags_vertical = 3
 follow_focus = true
+horizontal_scroll_mode = 0
 
 [node name="GridContainer" type="GridContainer" parent="ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
 
-[node name="EmptyLabel" type="Label" parent="."]
+[node name="EmptyState" type="VBoxContainer" parent="."]
 visible = false
 layout_mode = 2
-text = "No heroes found.
-Recruit heroes from the Tavern!"
+alignment = 1
+
+[node name="EmptyIcon" type="Label" parent="EmptyState"]
+layout_mode = 2
+text = "👥"
+horizontal_alignment = 1
+
+[node name="EmptyLabel" type="Label" parent="EmptyState"]
+layout_mode = 2
+text = "No heroes found."
+label_settings = SubResource("LabelSettings_empty")
 horizontal_alignment = 1
 autowrap_mode = 2
+
+[node name="EmptySubLabel" type="Label" parent="EmptyState"]
+layout_mode = 2
+text = "Recruit heroes from the Tavern!"
+label_settings = SubResource("LabelSettings_empty")
+horizontal_alignment = 1
 
 [node name="LoadingLabel" type="Label" parent="."]
 visible = false
 layout_mode = 2
-text = "Loading heroes..."
+text = "⚙️ Loading heroes..."
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FilterPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+
+[node name="FilterContent" type="VBoxContainer" parent="FilterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FilterTitle" type="Label" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Filter Heroes"
+horizontal_alignment = 1
+
+[node name="AllButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "All Heroes"
+
+[node name="CommonButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Common"
+
+[node name="RareButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Rare"
+
+[node name="EpicButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Epic"
+
+[node name="LegendaryButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Legendary"
+
+[node name="MythicButton" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Mythic"
+
+[node name="CloseFilter" type="Button" parent="FilterPanel/FilterContent"]
+layout_mode = 2
+text = "Close"

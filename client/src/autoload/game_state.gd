@@ -3,8 +3,13 @@ extends Node
 signal task_updated(task)
 signal region_changed(new_data)
 
+signal heroes_loaded(count: int)
+signal heroes_loading_failed(error: String)
+
 var current_user = null
 var current_heroes = []
+var _heroes_loading = false
+var _heroes_loaded_from_server = false
 var inventory = []
 var inventory_status = {"used": 0, "max": 20}
 var inventory_is_dirty = true
@@ -44,155 +49,81 @@ func _ready():
     if ServerConnector and ServerConnector.has_signal("task_completed"):
         ServerConnector.task_completed.connect(_on_global_task_completed)
     
-    # Add sample heroes for testing HeroProfileScreen
-    _setup_sample_heroes()
+    # Don't load from local DB anymore - fetch from server after login
+    # Local JSON is now a fallback only
+    print("[STATE] GameState ready. Heroes will be loaded from server on login.")
 
-func _setup_sample_heroes():
-    var sample_heroes = [
-        {
-            "id": 1,
-            "name": "Aldric the Brave",
-            "level": 15,
-            "rarity": "LEGENDARY",
-            "combatClass": {"name": "Paladin"},
-            "totalStats": {
-                "hp": 2500,
-                "mp": 450,
-                "ap": 120,
-                "attack": 380,
-                "defense": 520,
-                "magic_attack": 180,
-                "magic_defense": 350,
-                "speed": 85
-            },
-            "elementalAffinities": [{"fire": 10, "water": -5, "earth": 15, "wind": 0, "light": 25, "dark": -10}],
-            "equipment": {
-                "head": {"name": "Helm of Valor", "rarity": "RARE"},
-                "body": {"name": "Divine Plate", "rarity": "EPIC"},
-                "weapon": {"name": "Excalibur", "rarity": "LEGENDARY"},
-                "offhand": {"name": "Shield of Faith", "rarity": "RARE"},
-                "accessory": {"name": "Ring of Protection", "rarity": "RARE"}
-            },
-            "skills": ["Holy Strike", "Divine Shield", "Judgment"],
-            "passives": ["Bash", "Armored"],
-            "setBonuses": [{"name": "Divine Grace", "bonus": "+20% Defense"}]
-        },
-        {
-            "id": 2,
-            "name": "Lyra Moonwhisper",
-            "level": 12,
-            "rarity": "EPIC",
-            "combatClass": {"name": "Mage"},
-            "totalStats": {
-                "hp": 1200,
-                "mp": 980,
-                "ap": 80,
-                "attack": 150,
-                "defense": 180,
-                "magic_attack": 650,
-                "magic_defense": 480,
-                "speed": 120
-            },
-            "elementalAffinities": [{"fire": -10, "water": 30, "earth": 5, "wind": 20, "light": 15, "dark": -5}],
-            "equipment": {
-                "head": {"name": "Mystic Hood", "rarity": "RARE"},
-                "body": {"name": "Arcane Robes", "rarity": "EPIC"},
-                "weapon": {"name": "Staff of Wisdom", "rarity": "EPIC"},
-                "offhand": {"name": "Spell Tome", "rarity": "RARE"},
-                "accessory": {"name": "Amulet of Mana", "rarity": "RARE"}
-            },
-            "skills": ["Fireball", "Ice Spike", "Thunder"],
-            "passives": ["Mana Boost", "Focus"],
-            "setBonuses": [{"name": "Arcane Mastery", "bonus": "+15% Magic Attack"}]
-        },
-        {
-            "id": 3,
-            "name": "Garret Shadowstep",
-            "level": 18,
-            "rarity": "RARE",
-            "combatClass": {"name": "Rogue"},
-            "totalStats": {
-                "hp": 1800,
-                "mp": 380,
-                "ap": 150,
-                "attack": 420,
-                "defense": 280,
-                "magic_attack": 120,
-                "magic_defense": 200,
-                "speed": 200
-            },
-            "elementalAffinities": [{"fire": 5, "water": 0, "earth": -5, "wind": 15, "light": -15, "dark": 30}],
-            "equipment": {
-                "head": {"name": "Shadow Hood", "rarity": "RARE"},
-                "body": {"name": "Leather Armor", "rarity": "COMMON"},
-                "weapon": {"name": "Dagger of Venom", "rarity": "RARE"},
-                "offhand": {"name": "Poison Vial", "rarity": "COMMON"},
-                "accessory": {"name": "Cloak of Shadows", "rarity": "RARE"}
-            },
-            "skills": ["Backstab", "Shadow Walk", "Assassinate"],
-            "passives": ["Critical Strike", "Evasion"],
-            "setBonuses": []
-        },
-        {
-            "id": 4,
-            "name": "Thorin Ironforge",
-            "level": 10,
-            "rarity": "COMMON",
-            "combatClass": {"name": "Warrior"},
-            "totalStats": {
-                "hp": 2200,
-                "mp": 200,
-                "ap": 100,
-                "attack": 350,
-                "defense": 400,
-                "magic_attack": 50,
-                "magic_defense": 150,
-                "speed": 70
-            },
-            "elementalAffinities": [{"fire": 10, "water": -5, "earth": 20, "wind": 0, "light": 5, "dark": -5}],
-            "equipment": {
-                "head": {"name": "Iron Helm", "rarity": "COMMON"},
-                "body": {"name": "Chainmail", "rarity": "COMMON"},
-                "weapon": {"name": "Iron Sword", "rarity": "COMMON"},
-                "offhand": {"name": "Wooden Shield", "rarity": "COMMON"},
-                "accessory": {"name": "Basic Badge", "rarity": "COMMON"}
-            },
-            "skills": ["Slash", "Block", "Charge"],
-            "passives": ["Endurance", "Toughness"],
-            "setBonuses": []
-        },
-        {
-            "id": 5,
-            "name": "Seraphina Lightbringer",
-            "level": 20,
-            "rarity": "MYTHIC",
-            "combatClass": {"name": "Cleric"},
-            "totalStats": {
-                "hp": 2800,
-                "mp": 800,
-                "ap": 140,
-                "attack": 280,
-                "defense": 450,
-                "magic_attack": 550,
-                "magic_defense": 600,
-                "speed": 95
-            },
-            "elementalAffinities": [{"fire": 5, "water": 10, "earth": 5, "wind": 5, "light": 50, "dark": -30}],
-            "equipment": {
-                "head": {"name": "Divine Crown", "rarity": "MYTHIC"},
-                "body": {"name": "Celestial Robes", "rarity": "MYTHIC"},
-                "weapon": {"name": "Scepter of Dawn", "rarity": "MYTHIC"},
-                "offhand": {"name": "Holy Grail", "rarity": "LEGENDARY"},
-                "accessory": {"name": "Angel Wings", "rarity": "MYTHIC"}
-            },
-            "skills": ["Divine Light", "Healing Grace", "Resurrection", "Smite"],
-            "passives": ["Divine Blessing", "Spirit Ward", "Miracle Worker"],
-            "setBonuses": [{"name": "Divine Trinity", "bonus": "+30% All Stats"}, {"name": "Celestial Fury", "bonus": "+25% Light Damage"}]
-        }
-    ]
+func fetch_heroes_from_server(user_id: int):
+    """Fetch heroes from server API instead of local JSON"""
+    if not ServerConnector:
+        push_error("[STATE] ServerConnector not available")
+        heroes_loading_failed.emit("ServerConnector not available")
+        return
     
-    current_heroes = sample_heroes
-    print("[STATE] Sample heroes loaded: ", current_heroes.size(), " heroes")
+    if _heroes_loading:
+        print("[STATE] Heroes already loading, skipping...")
+        return
+    
+    _heroes_loading = true
+    current_heroes.clear()
+    _heroes_loaded_from_server = false
+    
+    print("[STATE] Fetching heroes from server for user_id: ", user_id)
+    ServerConnector.fetch_heroes(user_id)
+
+func _on_heroes_received(endpoint: String, data):
+    """Handle heroes data received from server"""
+    _heroes_loading = false
+    
+    var heroes_data = null
+    
+    # Handle both Array and {"success": true, "data": [...]} format
+    if data is Array:
+        heroes_data = data
+        print("[STATE] Heroes received as Array with ", heroes_data.size(), " items")
+    elif data is Dictionary:
+        if data.has("data"):
+            heroes_data = data.get("data")
+            print("[STATE] Heroes extracted from 'data' key")
+        elif data.has("heroes"):
+            heroes_data = data.get("heroes")
+            print("[STATE] Heroes extracted from 'heroes' key")
+    
+    if heroes_data is Array:
+        current_heroes = heroes_data
+        _heroes_loaded_from_server = true
+        print("[STATE] ", current_heroes.size(), " heroes loaded from server")
+        
+        # Log each hero for debugging
+        for hero in current_heroes:
+            print("  - ", hero.get("name", "Unknown"), " (ID:", hero.get("id", -1), ", ", hero.get("rarity", "COMMON"), ")")
+        
+        heroes_loaded.emit(current_heroes.size())
+    else:
+        print("[STATE] ERROR: Heroes data format invalid")
+        heroes_loading_failed.emit("Invalid heroes data format")
+
+func load_heroes_from_local_fallback():
+    """Load heroes from local JSON as fallback when server is unavailable"""
+    var path = "res://assets/data/heroes.json"
+    print("[STATE] Loading heroes from local fallback: ", path)
+    
+    if FileAccess.file_exists(path):
+        var file = FileAccess.open(path, FileAccess.READ)
+        var json_text = file.get_as_text()
+        var json = JSON.parse_string(json_text)
+        
+        if json and json is Dictionary and json.has("heroes"):
+            current_heroes = json.heroes
+            _heroes_loaded_from_server = false
+            print("[STATE] ", current_heroes.size(), " heroes loaded from local fallback")
+            heroes_loaded.emit(current_heroes.size())
+        else:
+            print("[STATE] Local fallback also failed: invalid format")
+            heroes_loading_failed.emit("Local fallback also invalid")
+    else:
+        print("[STATE] Local fallback file not found")
+        heroes_loading_failed.emit("Local fallback file not found")
 
 func _on_global_task_completed(data):
     if data.type == "TRAVEL":
