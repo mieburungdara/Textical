@@ -11,7 +11,11 @@ const heroRepository = require('../repositories/heroRepository');
  * Validate hero exists
  */
 const validateHero = async (heroId) => {
-    const hero = await heroRepository.findById(heroId);
+    const id = parseInt(heroId);
+    if (isNaN(id)) {
+        throw new Error('Invalid Hero ID');
+    }
+    const hero = await heroRepository.findById(id);
     if (!hero) {
         throw new Error('Hero not found');
     }

@@ -20,26 +20,32 @@ class HeroRepository {
     }
 
     async findById(heroId) {
-        return await prisma.hero.findUnique({ where: { id: heroId } });
+        const id = parseInt(heroId);
+        if (isNaN(id)) return null;
+        return await prisma.hero.findUnique({ where: { id } });
     }
 
     async updateProgression(heroId, deeds, acquiredTraits, unlockedBehaviors) {
+        const id = parseInt(heroId);
         return await prisma.hero.update({
-            where: { id: heroId },
+            where: { id },
             data: { deeds: JSON.stringify(deeds), acquiredTraits: JSON.stringify(acquiredTraits), unlockedBehaviors: JSON.stringify(unlockedBehaviors) }
         });
     }
 
     async updateLineage(heroId, data) {
-        return await prisma.hero.update({ where: { id: heroId }, data });
+        const id = parseInt(heroId);
+        return await prisma.hero.update({ where: { id }, data });
     }
 
     async markReproduced(heroId) {
-        return await prisma.hero.update({ where: { id: heroId }, data: { hasReproduced: true } });
+        const id = parseInt(heroId);
+        return await prisma.hero.update({ where: { id }, data: { hasReproduced: true } });
     }
 
     async delete(heroId) {
-        return await prisma.hero.delete({ where: { id: heroId } });
+        const id = parseInt(heroId);
+        return await prisma.hero.delete({ where: { id } });
     }
 
     async archiveToHallOfFame(hero, ownerName, cause) {

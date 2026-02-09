@@ -22,7 +22,6 @@ signal guild_updated(guild_data)
 signal member_kicked(user_id)
 signal member_promoted(user_id, new_role)
 signal member_demoted(user_id, new_role)
-signal member_joined(user_data)
 signal member_left(user_id)
 
 signal treasury_updated(gold, silver)
@@ -48,9 +47,6 @@ var socket: WebSocketPeer = WebSocketPeer.new()
 var is_socket_connected = false
 var is_authenticated = false
 var _pending_user_id = -1
-
-# Reference to StatHandler for routing events
-var _stat_handler = null
 
 func _ready():
     set_process(true)

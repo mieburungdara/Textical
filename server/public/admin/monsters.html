@@ -1,59 +1,172 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="/admin/css/style.css">
-    <title>Monsters - Admin</title>
-</head>
-<body>
-    <nav>
-        <div class="brand">🛡️ TEXTICAL</div>
-        <a href="/admin/monsters" class="nav-link active">👾 Monsters</a>
-        <a href="/admin/regions" class="nav-link">🗺️ Regions</a>
-        <a href="/admin/sync" class="nav-link">⚙️ Sync</a>
-    </nav>
-    <main>
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h2>Monster Database</h2>
-            <button class="btn-primary" onclick="openEditor()">+ Add New</button>
-        </div>
-        <div class="card">
-            <table>
-                <thead><tr><th>ID</th><th>Name</th><th>HP</th><th>ATK</th><th>Action</th></tr></thead>
-                <tbody id="list"></tbody>
-            </table>
-        </div>
-    </main>
+<title>Monsters Management</title>
+<style>
+    .data-table { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); }
+    .table { margin: 0; }
+    .table thead { background: #f8f9fa; }
+    .table th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; padding: 15px 20px; border: none; }
+    .table td { padding: 15px 20px; border-color: #f0f0f0; vertical-align: middle; }
+    .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 13px; margin: 0 3px; }
+    .search-box { position: relative; }
+    .search-box input { padding-left: 45px; border-radius: 10px; }
+    .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+    .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 50px; }
+</style>
 
-    <div id="editor" class="hidden" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
-        <div class="card" style="width:500px;">
-            <h3>Monster Editor</h3>
-            <input type="text" id="m-id" placeholder="ID">
-            <input type="text" id="m-name" placeholder="Name">
-            <input type="number" id="m-hp" placeholder="HP">
-            <input type="number" id="m-dmg" placeholder="Damage">
-            <button class="btn-primary" onclick="save()">SAVE</button>
-            <button onclick="document.getElementById('editor').classList.add('hidden')">CANCEL</button>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Monsters Management</h4>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="monsterSearch" placeholder="Search by monster name..." oninput="window.handleMonsterSearch()">
         </div>
     </div>
+</div>
 
-    <script src="/admin/js/shared.js"></script>
-    <script>
-        window.onload = () => { setTimeout(() => send({type: "admin_fetch_data"}), 500); };
-        window.handleServerMessage = (msg) => {
-            if (msg.type === "admin_data_load") {
-                const tbody = document.getElementById('list');
-                tbody.innerHTML = msg.monsters.map(m => `<tr><td>${m.id}</td><td>${m.name}</td><td>${m.hp_base}</td><td>${m.damage_base}</td><td><button onclick='openEditor(${JSON.stringify(m)})'>EDIT</button></td></tr>`).join('');
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>HP</th>
+                    <th>Damage</th>
+                    <th>Traits</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="monstersTable">
+                <tr>
+                    <td colspan="7" class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <small class="text-muted" id="monstersPaginationInfo">Showing 0 to 0 of 0</small>
+        <nav>
+            <ul class="pagination mb-0" id="monstersPagination"></ul>
+        </nav>
+    </div>
+</div>
+
+<div class="modal fade" id="monsterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Monster Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="monsterModalBody">
+                Loading...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+    let monstersState = { data: [], page: 1, total: 0 };
+
+    window.loadMonsters = async function() {
+        try {
+            console.log('[Monsters] Loading monsters...');
+            const data = await api.getMonsters(monstersState.page, document.getElementById('monsterSearch')?.value || '');
+            monstersState.data = data.monsters;
+            monstersState.total = data.pagination.total;
+            
+            const tbody = document.getElementById('monstersTable');
+            if (data.monsters.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No monsters found</td></tr>';
+            } else {
+                tbody.innerHTML = data.monsters.map(m => `
+                    <tr>
+                        <td>${m.id}</td>
+                        <td><strong>${m.name}</strong></td>
+                        <td>${m.category ? m.category.name : 'Unknown'}</td>
+                        <td>${m.hp_base}</td>
+                        <td>${m.damage_base}</td>
+                        <td>${m.traits?.length || 0}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary btn-action" onclick="window.viewMonster(${m.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
             }
-        };
-        function openEditor(m = null) {
-            document.getElementById('editor').classList.remove('hidden');
-            if(m) { document.getElementById('m-id').value = m.id; document.getElementById('m-name').value = m.name; document.getElementById('m-hp').value = m.hp_base; document.getElementById('m-dmg').value = m.damage_base; }
+            updatePagination('monsters', data.pagination);
+            console.log('[Monsters] Monsters loaded successfully');
+        } catch (error) {
+            console.error('[Monsters] Error loading monsters:', error);
+            document.getElementById('monstersTable').innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error: ${error.message}</td></tr>`;
+            showAlert('Failed to load monsters', 'danger');
         }
-        function save() {
-            const data = { id: document.getElementById('m-id').value, name: document.getElementById('m-name').value, hp: parseInt(document.getElementById('m-hp').value), dmg: parseInt(document.getElementById('m-dmg').value), spd: 10, exp: 50 };
-            send({ type: "admin_save_monster", data });
-            document.getElementById('editor').classList.add('hidden');
+    }
+
+    window.handleMonsterSearch = function() {
+        clearTimeout(window.monsterSearchTimeout);
+        window.monsterSearchTimeout = setTimeout(() => {
+            monstersState.page = 1;
+            window.loadMonsters();
+        }, 300);
+    }
+
+    window.viewMonster = async function(id) {
+        try {
+            console.log('[Monsters] Viewing monster:', id);
+            const monster = monstersState.data.find(m => m.id === id);
+            if (!monster) return;
+            
+            document.getElementById('monsterModalBody').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Monster Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>ID:</strong></td><td>${monster.id}</td></tr>
+                            <tr><td><strong>Name:</strong></td><td>${monster.name}</td></tr>
+                            <tr><td><strong>Category:</strong></td><td>${monster.category ? monster.category.name : 'Unknown'}</td></tr>
+                            <tr><td><strong>HP Base:</strong></td><td>${monster.hp_base}</td></tr>
+                            <tr><td><strong>Damage Base:</strong></td><td>${monster.damage_base}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Traits (${monster.traits?.length || 0})</h6>
+                        <ul class="list-group">
+                            ${monster.traits && monster.traits.length > 0 
+                                ? monster.traits.map(t => `<li class="list-group-item">${t.name || 'Unknown'}</li>`).join('')
+                                : '<li class="list-group-item"><em>No traits</em></li>'}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('monsterModal')).show();
+        } catch (error) {
+            console.error('[Monsters] Error viewing monster:', error);
+            showAlert('Failed to load monster details', 'danger');
         }
-    </script>
-</body>
-</html>
+    }
+
+    window.changeMonsterPage = function(page) {
+        monstersState.page = page;
+        window.loadMonsters();
+    }
+
+    // Auto-load when page is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.loadMonsters);
+    } else {
+        window.loadMonsters();
+    }
+</script>

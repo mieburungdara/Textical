@@ -1,309 +1,59 @@
-[gd_scene load_steps=13 format=3 uid="uid://hero_profile_panel"]
+[gd_scene load_steps=5 format=3 uid="uid://c57ld4a1alv1c"]
 
-[ext_resource type="Script" path="res://src/ui/components/HeroProfilePanel.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://stats_summary" path="res://src/ui/components/StatsSummary.tscn" id="2_stats_summary"]
+[ext_resource type="Script" uid="uid://dxb5okb3rjavr" path="res://src/ui/components/HeroProfilePanel.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://psxgl11wf4nx" path="res://src/ui/components/HeaderSection.tscn" id="2_header"]
+[ext_resource type="PackedScene" path="res://src/ui/components/TabsContainer.tscn" id="3_tabs"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.1, 0.08, 0.06, 0.95)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.08, 0.07, 0.06, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.4, 0.35, 0.3, 0.8)
-content_margin_left = 20.0
-content_margin_top = 20.0
-content_margin_right = 20.0
-content_margin_bottom = 20.0
-
-[sub_resource type="Gradient" id="Gradient_header"]
-offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0.15, 0.12, 0.1, 1, 0.12, 0.1, 0.08, 1, 0.1, 0.08, 0.06, 1)
-
-[sub_resource type="Gradient" id="Gradient_avatar"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(0.25, 0.2, 0.15, 1, 0.18, 0.14, 0.1, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_name"]
-font_size = 30
-font_color = Color(1, 0.95, 0.85, 1.0)
-shadow_size = 6
-shadow_color = Color(0, 0, 0, 0.6)
-
-[sub_resource type="LabelSettings" id="LabelSettings_class"]
-font_size = 18
-font_color = Color(0.8, 0.75, 0.7, 1.0)
-
-[sub_resource type="LabelSettings" id="LabelSettings_rarity"]
-font_size = 14
-font_color = Color(0.9, 0.85, 0.8, 1.0)
-
-[sub_resource type="LabelSettings" id="LabelSettings_section"]
-font_size = 20
-font_color = Color(0.9, 0.85, 0.8, 1.0)
-outline_size = 2
-outline_color = Color(0.2, 0.15, 0.1, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
-bg_color = Color(0.15, 0.12, 0.1, 0.9)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.3, 0.25, 0.2, 0.5)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_filled"]
-bg_color = Color(0.18, 0.14, 0.1, 0.95)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 0.45, 0.4, 0.8)
-
-[sub_resource type="LabelSettings" id="LabelSettings_stat"]
-font_size = 14
-font_color = Color(0.85, 0.8, 0.75, 1.0)
-
-[sub_resource type="LabelSettings" id="LabelSettings_stat_value"]
-font_size = 14
-font_color = Color(0.6, 0.8, 0.5, 1.0)
+border_color = Color(0.5, 0.45, 0.35, 0.6)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
 
 [node name="HeroProfilePanel" type="PanelContainer"]
-custom_minimum_size = Vector2(550, 0)
-offset_right = 550.0
-offset_bottom = 700.0
+custom_minimum_size = Vector2(1100, 0)
+offset_right = 1100.0
+offset_bottom = 550.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_script")
 
-[node name="MainContainer" type="VBoxContainer" parent="."]
-layout_mode = 2
-theme_override_constants/separation = 15
-
-[node name="HeaderBackground" type="ColorRect" parent="MainContainer"]
-layout_mode = 2
-color = Color(0.12, 0.1, 0.08, 0.8)
-
-[node name="HeaderSection" type="HBoxContainer" parent="MainContainer"]
+[node name="MainContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="AvatarFrame" type="ColorRect" parent="MainContainer/HeaderSection"]
-custom_minimum_size = Vector2(120, 120)
-layout_mode = 2
-color = Color(0.2, 0.15, 0.12, 1)
-
-[node name="AvatarGradient" type="ColorRect" parent="MainContainer/HeaderSection/AvatarFrame"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.25, 0.2, 0.15, 1)
-
-[node name="AvatarTexture" type="TextureRect" parent="MainContainer/HeaderSection/AvatarFrame"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-stretch_mode = 6
-
-[node name="AvatarInitial" type="Label" parent="MainContainer/HeaderSection/AvatarFrame"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -35.0
-offset_top = -35.0
-offset_right = 35.0
-offset_bottom = 35.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "H"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="RarityFrame" type="ColorRect" parent="MainContainer/HeaderSection/AvatarFrame"]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -8.0
-color = Color(0.8, 0.8, 0.8, 0.8)
-
-[node name="InfoSection" type="VBoxContainer" parent="MainContainer/HeaderSection"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="NameLabel" type="Label" parent="MainContainer/HeaderSection/InfoSection"]
-layout_mode = 2
-text = "Hero Name"
-label_settings = SubResource("LabelSettings_name")
-
-[node name="LevelRarityRow" type="HBoxContainer" parent="MainContainer/HeaderSection/InfoSection"]
+[node name="LeftSection" type="VBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="LevelLabel" type="Label" parent="MainContainer/HeaderSection/InfoSection/LevelRarityRow"]
+[node name="HeaderSection" parent="MainContainer/LeftSection" instance=ExtResource("2_header")]
 layout_mode = 2
-text = "Level 1"
-label_settings = SubResource("LabelSettings_class")
 
-[node name="RarityLabel" type="Label" parent="MainContainer/HeaderSection/InfoSection/LevelRarityRow"]
+[node name="VSeparator" type="VSeparator" parent="MainContainer"]
 layout_mode = 2
-text = "COMMON"
-label_settings = SubResource("LabelSettings_rarity")
+theme_override_constants/separation = 10
 
-[node name="ClassLabel" type="Label" parent="MainContainer/HeaderSection/InfoSection"]
+[node name="RightSection" type="VBoxContainer" parent="MainContainer"]
 layout_mode = 2
-text = "Warrior"
-label_settings = SubResource("LabelSettings_class")
+size_flags_horizontal = 3
 
-[node name="StatsSummary" parent="MainContainer/HeaderSection/InfoSection" instance=ExtResource("2_stats_summary")]
-
-[node name="TabsContainer" type="TabContainer" parent="MainContainer"]
+[node name="TabsContainer" parent="MainContainer/RightSection" instance=ExtResource("3_tabs")]
 layout_mode = 2
 size_flags_vertical = 3
-tab_align = 0
-
-[node name="StatsTab" type="VBoxContainer" parent="MainContainer/TabsContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="StatsTitle" type="Label" parent="MainContainer/TabsContainer/StatsTab"]
-layout_mode = 2
-text = "📊 Statistics"
-label_settings = SubResource("LabelSettings_section")
-
-[node name="MainStatsPanel" type="PanelContainer" parent="MainContainer/TabsContainer/StatsTab"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="MainStatsContent" type="VBoxContainer" parent="MainContainer/TabsContainer/StatsTab/MainStatsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ElementalPanel" type="PanelContainer" parent="MainContainer/TabsContainer/StatsTab"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="ElementalContent" type="VBoxContainer" parent="MainContainer/TabsContainer/StatsTab/ElementalPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="EquipmentTab" type="HBoxContainer" parent="MainContainer/TabsContainer"]
-layout_mode = 2
-theme_override_constants/separation = 25
-
-[node name="EquipmentSlotsPanel" type="VBoxContainer" parent="MainContainer/TabsContainer/EquipmentTab"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="EquipmentTitle" type="Label" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "⚔️ Equipment"
-label_settings = SubResource("LabelSettings_section")
-
-[node name="HeadSlot" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "Head: Empty"
-theme_override_styles/normal = SubResource("StyleBoxFlat_slot")
-
-[node name="BodySlot" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "Body: Empty"
-theme_override_styles/normal = SubResource("StyleBoxFlat_slot")
-
-[node name="WeaponSlot" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "Weapon: Empty"
-theme_override_styles/normal = SubResource("StyleBoxFlat_slot")
-
-[node name="OffhandSlot" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "Offhand: Empty"
-theme_override_styles/normal = SubResource("StyleBoxFlat_slot")
-
-[node name="AccessorySlot" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/EquipmentSlotsPanel"]
-layout_mode = 2
-text = "Accessory: Empty"
-theme_override_styles/normal = SubResource("StyleBoxFlat_slot")
-
-[node name="ItemDetailsPanel" type="VBoxContainer" parent="MainContainer/TabsContainer/EquipmentTab"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="DetailsTitle" type="Label" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel"]
-layout_mode = 2
-text = "📋 Item Details"
-label_settings = SubResource("LabelSettings_section")
-
-[node name="DetailsContent" type="VBoxContainer" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ItemName" type="Label" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel/DetailsContent"]
-layout_mode = 2
-text = "Select an item"
-label_settings = SubResource("LabelSettings_stat")
-
-[node name="ItemStats" type="Label" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel/DetailsContent"]
-layout_mode = 2
-text = "to view details"
-label_settings = SubResource("LabelSettings_stat")
-
-[node name="EquipButton" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel/DetailsContent"]
-layout_mode = 2
-visible = false
-text = "Equip"
-
-[node name="UnequipButton" type="Button" parent="MainContainer/TabsContainer/EquipmentTab/ItemDetailsPanel/DetailsContent"]
-layout_mode = 2
-visible = false
-text = "Unequip"
-
-[node name="SkillsTab" type="VBoxContainer" parent="MainContainer/TabsContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SkillsTitle" type="Label" parent="MainContainer/TabsContainer/SkillsTab"]
-layout_mode = 2
-text = "✨ Skills"
-label_settings = SubResource("LabelSettings_section")
-
-[node name="ActiveSkillsPanel" type="PanelContainer" parent="MainContainer/TabsContainer/SkillsTab"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="ActiveSkillsContent" type="VBoxContainer" parent="MainContainer/TabsContainer/SkillsTab/ActiveSkillsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="PassiveSkillsPanel" type="PanelContainer" parent="MainContainer/TabsContainer/SkillsTab"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="PassiveSkillsContent" type="VBoxContainer" parent="MainContainer/TabsContainer/SkillsTab/PassiveSkillsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 5
+current_tab = 0
 
 [node name="LoadingLabel" type="Label" parent="MainContainer"]
 visible = false

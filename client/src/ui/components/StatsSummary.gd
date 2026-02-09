@@ -18,22 +18,22 @@ class_name StatsSummary
 ## @param atk: Nilai ATK
 ## @param def: Nilai DEF
 func update_stats(hp: int, mp: int, atk: int, def: int):
-	hp_value.text = str(hp)
-	mp_value.text = str(mp)
-	atk_value.text = str(atk)
-	def_value.text = str(def)
+    hp_value.text = str(hp)
+    mp_value.text = str(mp)
+    atk_value.text = str(atk)
+    def_value.text = str(def)
 
 
 ## Update nilai stat dari dictionary totalStats
 ## @param stats: Dictionary berisi key-value stat (hp, mp, attack, defense)
 func update_stats_from_dict(stats: Dictionary):
-	var hp = int(stats.get("hp", 0))
-	var mp = int(stats.get("mp", 0))
-	var atk = int(stats.get("attack", 0))
-	var def = int(stats.get("defense", 0))
-	update_stats(hp, mp, atk, def)
+    var hp = int(stats.get("hp", stats.get("health_max", 0)))
+    var mp = int(stats.get("mp", stats.get("mana_max", 0)))
+    var atk = int(stats.get("attack", stats.get("attack_damage", 0)))
+    var def = int(stats.get("defense", 0))
+    update_stats(hp, mp, atk, def)
 
 
 ## Reset semua nilai stat ke 0
 func reset_stats():
-	update_stats(0, 0, 0, 0)
+    update_stats(0, 0, 0, 0)

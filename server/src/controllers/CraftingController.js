@@ -5,7 +5,7 @@ class CraftingController extends BaseController {
     async craft(req, res) {
         await this.execute(res, async () => {
             const { userId, recipeId } = req.body;
-            const task = await craftingService.startCrafting(userId, recipeId);
+            const task = await craftingService.startCrafting(parseInt(userId), parseInt(recipeId));
             this.sendSuccess(res, task);
         });
     }

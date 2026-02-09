@@ -9,15 +9,15 @@ async function runLegendaryAudit() {
     const sim = new BattleSimulation(50, 50, "FOREST");
 
     // 1. Setup Units
-    const hero = sim.addUnit({ 
+    const hero = await sim.addUnit({ 
         instance_id: "h1", name: "Kaelthas", traits: ["bloodlink", "arcanemaster"], team: 0 
     }, 0, {x:25, y:25}, {health_max:200, attack_damage:10, speed:100});
 
-    const ally = sim.addUnit({ 
+    const ally = await sim.addUnit({ 
         instance_id: "a1", name: "Fragile Mage", team: 0 
     }, 0, {x:24, y:25}, {health_max:50, attack_damage:5, speed:0});
 
-    const enemy = sim.addUnit({ 
+    const enemy = await sim.addUnit({ 
         instance_id: "e1", name: "Giant Golem", team: 1 
     }, 1, {x:30, y:25}, {health_max:500, attack_damage:50, speed:0});
 
@@ -39,12 +39,12 @@ async function runLegendaryAudit() {
     console.log(`   Ally HP: ${ally.currentHealth} | Protector HP: ${hero.currentHealth}`);
 
     // --- TEST 3: GRAVITY ANCHOR ---
-    console.log("\n[3/4] Testing Gravity Anchor (AP Drain)...");
+    console.log("\n[3/4] Testing Gravity Anchor (Action Delay)...");
     sim.logger.startTick(3);
-    enemy.modifyAP(90, sim);
+    enemy.setActionDelay(90, sim);
     sim.rules.performSkill(hero, { name: "Gravity Anchor", mana_cost: 0 }, {x:30, y:25});
     sim.logger.commitTick(sim.units);
-    console.log(`   Enemy AP after Drain: ${enemy.currentActionPoints}`);
+    console.log(`   Enemy nextActionTick after Drain: ${enemy.nextActionTick}`);
 
     // --- TEST 4: CHAIN OVERLOAD ---
     console.log("\n[4/4] Testing Chain Overload (Synergy)...");

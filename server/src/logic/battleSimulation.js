@@ -23,7 +23,7 @@ class BattleSimulation {
         this.currentTick = 0;
         this.isFinished = false;
         this.winnerTeam = -1;
-        this.MAX_TICKS = 1500;
+        this.MAX_TICKS = 10000;
         this.killedMonsterIds = [];
         this.unitDeeds = {};
         this.rewards = { gold: 0, exp: 0 };

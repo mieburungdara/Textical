@@ -24,6 +24,7 @@ class UserController extends BaseController {
     async getHeroProfile(req, res) {
         await this.execute(res, async () => {
             const heroId = parseInt(req.params.id);
+            if (isNaN(heroId)) return this.sendError(res, "Invalid Hero ID", 400);
             const profile = await formationService.getHeroCombatProfile(heroId);
             this.sendSuccess(res, profile);
         });
@@ -32,6 +33,7 @@ class UserController extends BaseController {
     async getHeroes(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const heroes = await prisma.hero.findMany({
                 where: { userId },
                 include: { combatClass: true, equipment: true }
@@ -43,6 +45,7 @@ class UserController extends BaseController {
     async getInventory(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const items = await prisma.inventoryItem.findMany({
                 where: { userId },
                 include: { template: true }
@@ -55,6 +58,7 @@ class UserController extends BaseController {
     async getRecipes(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const recipes = await prisma.userRecipe.findMany({
                 where: { userId },
                 include: { recipe: { include: { resultItem: true } } }
@@ -66,6 +70,7 @@ class UserController extends BaseController {
     async getFormation(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const presets = await prisma.formationPreset.findMany({
                 where: { userId },
                 include: { slots: { include: { hero: true } } }
@@ -77,6 +82,7 @@ class UserController extends BaseController {
     async getActiveTask(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const tasks = await prisma.taskQueue.findMany({
                 where: { userId, status: "RUNNING" },
                 include: { targetRegion: true }
@@ -88,6 +94,7 @@ class UserController extends BaseController {
     async getUserProfile(req, res) {
         await this.execute(res, async () => {
             const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             
             // Sync vitality first
             await vitalityService.syncUserVitality(userId);

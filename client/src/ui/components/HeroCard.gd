@@ -126,9 +126,9 @@ func _update_display():
     _set_rarity_visuals(rarity)
     
     # Avatar initial
-    var name = hero_data.get("name", "U")
+    var hero_name = hero_data.get("name", "U")
     if avatar_initial:
-        avatar_initial.text = name.substr(0, 1).to_upper()
+        avatar_initial.text = hero_name.substr(0, 1).to_upper()
     
     # Load hero image (placeholder - would load actual texture)
     _load_hero_image()
@@ -186,13 +186,13 @@ func _update_stats_bar():
     if total_stats.has("attack"):
         power += int(total_stats["attack"])
     if total_stats.has("defense"):
-        power += int(total_stats["defense"]) / 2
+        power += int(total_stats["defense"]) / 2.0
     if total_stats.has("hp"):
-        power += int(total_stats["hp"]) / 10
+        power += int(total_stats["hp"]) / 10.0
     
     # Normalize to 0-100
-    var max_power = 1000  # Approximate max power
-    var percentage = min(100, (power * 100) / max_power)
+    var max_power = 1000.0  # Approximate max power
+    var percentage = min(100.0, (power * 100.0) / max_power)
     
     stats_bar.value = percentage
     
@@ -262,7 +262,8 @@ func _start_glow_animation():
     _glow_tween = create_tween()
     _glow_tween.set_loops()
     
-    var colors = _rarity_colors.get(hero_data.get("rarity", "COMMON"), _rarity_colors["COMMON"])
+    _glow_tween = create_tween()
+    _glow_tween.set_loops()
     
     _glow_tween.tween_property(glow_frame, "color:a", 0.4, 0.8).set_trans(Tween.TRANS_SINE)
     _glow_tween.tween_property(glow_frame, "color:a", 0.15, 0.8).set_trans(Tween.TRANS_SINE)

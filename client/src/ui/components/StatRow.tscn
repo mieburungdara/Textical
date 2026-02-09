@@ -1,0 +1,96 @@
+[gd_scene load_steps=8 format=3 uid="uid://stat_row"]
+
+[ext_resource type="Script" path="res://src/ui/components/StatRow.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_bg"]
+bg_color = Color(0.18, 0.15, 0.12, 0.4)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.05)
+content_margin_left = 10
+content_margin_top = 4
+content_margin_right = 10
+content_margin_bottom = 4
+
+[sub_resource type="LabelSettings" id="LabelSettings_icon"]
+font_size = 14
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="LabelSettings" id="LabelSettings_stat_name"]
+font_size = 11
+font_color = Color(0.6, 0.55, 0.5, 1.0)
+letter_spacing = 0.5
+
+[sub_resource type="LabelSettings" id="LabelSettings_stat_value"]
+font_size = 16
+font_color = Color(1, 0.95, 0.9, 1.0)
+outline_size = 1
+outline_color = Color(0, 0, 0, 0.8)
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 0.3)
+
+[sub_resource type="LabelSettings" id="LabelSettings_stat_bonus"]
+font_size = 10
+font_color = Color(0.4, 0.8, 0.4, 1.0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_accent"]
+bg_color = Color(0.4, 0.35, 0.3, 0.8)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="StatRow" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 36)
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 36.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("1_script")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Accent" type="Panel" parent="HBox"]
+custom_minimum_size = Vector2(3, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_accent")
+
+[node name="StatIcon" type="Label" parent="HBox"]
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+text = "⚔️"
+label_settings = SubResource("LabelSettings_icon")
+horizontal_alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = -2
+alignment = 1
+
+[node name="StatName" type="Label" parent="HBox/VBox"]
+layout_mode = 2
+text = "ATTACK"
+label_settings = SubResource("LabelSettings_stat_name")
+
+[node name="StatValue" type="Label" parent="HBox/VBox"]
+layout_mode = 2
+text = "125"
+label_settings = SubResource("LabelSettings_stat_value")
+
+[node name="StatBonus" type="Label" parent="HBox"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "+12"
+label_settings = SubResource("LabelSettings_stat_bonus")
+horizontal_alignment = 2

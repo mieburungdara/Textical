@@ -12,10 +12,16 @@ AttackTarget.prototype.initialize = function(params = {}) {
 
 AttackTarget.prototype.tick = function(tick) {
     const { unit, sim } = tick.blackboard.get('context');
-    // Global scope target
     const target = tick.blackboard.get('target') || sim.ai.findTarget(unit);
     
     if (!target || target.currentHealth <= 0) return b3.FAILURE;
+    
+    // AAA: Final BT Range Check
+    const dist = sim.grid.getDistance(unit.gridPos, target.gridPos);
+    const range = unit.stats.attack_range || 1.5;
+    if (dist > range) {
+        return b3.FAILURE; // Target moved, cancel attack at AI level
+    }
     
     sim.rules.performAttack(unit, target);
     return b3.SUCCESS;

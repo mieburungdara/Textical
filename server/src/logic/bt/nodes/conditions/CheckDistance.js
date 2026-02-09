@@ -27,7 +27,7 @@ CheckDistance.prototype.tick = function(tick) {
         case '==': met = currentDist === threshold; break;
     }
     
-    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} distance to ${target.data.name}: ${currentDist} ${operator} ${threshold}. Result: ${met}`);
+    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} distance to ${target.data.name}: ${currentDist} ${operator} ${threshold}. Result: ${met}`, {}, true);
     return this.executePath(tick, met);
 }
 

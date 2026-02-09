@@ -23,7 +23,7 @@ class MarketController extends BaseController {
     async listMarketItem(req, res) {
         await this.execute(res, async () => {
             const { userId, itemId, price } = req.body;
-            await marketService.listItem(userId, itemId, price);
+            await marketService.listItem(parseInt(userId), parseInt(itemId), parseInt(price));
             this.sendSuccess(res, null, "Item listed");
         });
     }
@@ -31,7 +31,7 @@ class MarketController extends BaseController {
     async buyMarketItem(req, res) {
         await this.execute(res, async () => {
             const { userId, listingId } = req.body;
-            await marketService.purchaseItem(userId, listingId);
+            await marketService.purchaseItem(parseInt(userId), parseInt(listingId));
             this.sendSuccess(res, null, "Item purchased");
         });
     }
@@ -39,7 +39,7 @@ class MarketController extends BaseController {
     async sellToNPC(req, res) {
         await this.execute(res, async () => {
             const { userId, itemId } = req.body;
-            await marketService.npcSell(userId, itemId);
+            await marketService.npcSell(parseInt(userId), parseInt(itemId));
             this.sendSuccess(res, null, "Item sold to NPC");
         });
     }

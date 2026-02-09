@@ -183,25 +183,24 @@ class BTManager {
      * @param {Object} sim - Simulation context
      */
     execute(treeName, unit, sim) {
-        // Validate inputs
         if (!treeName || typeof treeName !== 'string') {
             logger.error('Invalid treeName: must be a string');
-            return;
+            return false;
         }
 
         if (!this.trees[treeName]) {
             logger.error(`Behavior tree not found: ${treeName}`);
-            return;
+            return false;
         }
 
         if (!unit || !unit.instanceId) {
             logger.error('Invalid unit: must have instanceId property');
-            return;
+            return false;
         }
 
         if (!sim) {
             logger.error('Invalid sim: simulation context is required');
-            return;
+            return false;
         }
 
         // Initialize blackboard if it doesn't exist
@@ -214,9 +213,11 @@ class BTManager {
         blackboard.set('context', { unit, sim });
 
         try {
-            this.trees[treeName].tick(unit, blackboard);
+            const status = this.trees[treeName].tick(unit, blackboard);
+            return status === b3.SUCCESS; // Return true if action succeeded
         } catch (e) {
             logger.error(`Error executing tree ${treeName} for unit ${unit.instanceId}: ${e.message}`);
+            return false;
         }
     }
 

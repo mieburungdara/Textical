@@ -1,6 +1,7 @@
 extends Control
 
 signal action_requested(region_id)
+signal close_requested()
 
 @onready var name_label = $Margin/VBox/RegionName
 @onready var lore_label = $Margin/VBox/LoreLabel
@@ -9,7 +10,7 @@ signal action_requested(region_id)
 @onready var close_btn = $Margin/VBox/HBox/CloseBtn
 
 func _ready():
-	close_btn.pressed.connect(hide)
+	close_btn.pressed.connect(func(): close_requested.emit(); hide())
 	start_btn.pressed.connect(func(): action_requested.emit(_current_id))
 
 var _current_id = -1

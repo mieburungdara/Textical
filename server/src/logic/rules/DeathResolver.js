@@ -16,7 +16,6 @@ class DeathResolver {
             
             this.sim.rules._broadcastAdjacencyLost(u);
             u.isDead = true; 
-            u.modifyAP(-u.currentActionPoints, this.sim);
             
             this.sim.grid.unitGrid[u.gridPos.y][u.gridPos.x] = null;
             traitService.executeHook("onDeath", u, this.sim);

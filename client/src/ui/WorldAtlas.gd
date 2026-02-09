@@ -3,10 +3,28 @@ extends AtlasBase
 @onready var travel_system = $MapLayer/PathGroup
 @onready var ui_panel = $UI/InfoPanel
 
+## Setup as overlay logic
+func setup_as_overlay(_data: Dictionary = {}):
+    # Sembunyikan HUD internal saja, biarkan InfoPanel tetap bisa muncul
+    if has_node("UI/TopHUD"): $UI/TopHUD.visible = false
+    if has_node("UI/SideHUD"): $UI/SideHUD.visible = false
+    if has_node("UI/TaskListHUD"): $UI/TaskListHUD.visible = false
+    
+    # Map HARUS full screen (x=0), tidak boleh ada offset di root
+    self.offset_left = 0
+    
+    # Tapi InfoPanel (UI interaksi) harus tergeser agar tidak tertutup sidebar
+    if has_node("UI/InfoPanel"):
+        $UI/InfoPanel.offset_left = 200
+    
+    # Ensure map content is properly centered
+    _center_on_player()
+
 func _ready():
     # 1. Component Signal Connections
     travel_system.camera = cam
     ui_panel.action_requested.connect(_on_action_requested)
+    ui_panel.close_requested.connect(_on_close_panel_requested)
     travel_system.travel_finished.connect(_on_travel_finished)
     ServerConnector.request_completed.connect(_on_request_completed)
     ServerConnector.task_completed.connect(func(d): 
@@ -69,7 +87,18 @@ func _on_travel_finished(tid, t_type):
         # Update shared state for HUD navigation
         GameState.current_region_data = DataManager.get_region(tid)
         _update_player_position(false)
+    
+    # Close overlay before routing to new scene
+    if UIManager.is_overlay_open("World"):
+        UIManager.close_overlay("World")
+        
     _route_to(t_type)
 
 func _route_to(r_type):
     get_tree().change_scene_to_file(GameState.get_region_scene(r_type))
+
+func _on_close_panel_requested():
+    if UIManager.is_overlay_open("World"):
+        UIManager.close_overlay("World")
+    else:
+        ui_panel.hide()

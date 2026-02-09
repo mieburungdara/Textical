@@ -64,7 +64,7 @@ class CombatRules {
         if (Math.random() * 100 > hitChance) {
             debugInfo.result = "MISS";
             if (sim) {
-                sim.logger.addEvent("DEBUG", `Damage Calculation: MISS`, { debug: debugInfo });
+                sim.logger.addEvent("DEBUG", `Damage Calculation: MISS`, { debug: debugInfo }, true);
             }
             return { damage: 0, isMiss: true, isCrit: false, isBlocked: false, debug: debugInfo };
         }
@@ -77,7 +77,7 @@ class CombatRules {
 
         // 4. Base Damage & Multipliers
         const baseAtk = attacker.getStat("attack_damage");
-        let damage = Math.max(1, (baseAtk * dmgMult * elementalMult) - effectiveDef);
+        let damage = Math.floor(Math.max(1, (baseAtk * dmgMult * elementalMult) - effectiveDef));
         debugInfo.calculations.push(`Base damage: ${baseAtk} * ${dmgMult} * ${elementalMult} = ${baseAtk * dmgMult * elementalMult}`);
         debugInfo.calculations.push(`After defense: ${damage}`);
 
@@ -101,7 +101,7 @@ class CombatRules {
         debugInfo.result = "HIT";
 
         if (sim) {
-            sim.logger.addEvent("DEBUG", `Damage Calculation: ${damage}`, { debug: debugInfo });
+            sim.logger.addEvent("DEBUG", `Damage Calculation: ${damage}`, { debug: debugInfo }, true);
         }
 
         return {

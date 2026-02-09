@@ -20,6 +20,7 @@ class ReplayService extends BaseService {
 
     async saveReplay(battleId, logs) {
         const filePath = path.join(this.REPLAY_DIR, `${battleId}.json`);
+        // Save with pretty print for easier debugging as requested
         await fs.writeFile(filePath, JSON.stringify(logs, null, 2));
         return filePath;
     }

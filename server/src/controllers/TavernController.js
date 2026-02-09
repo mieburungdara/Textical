@@ -6,7 +6,7 @@ class TavernController extends BaseController {
     async enterTavern(req, res) {
         await this.execute(res, async () => {
             const { userId } = req.body;
-            const user = await vitalityService.enterTavern(userId);
+            const user = await vitalityService.enterTavern(parseInt(userId));
             this.sendSuccess(res, user, "Entered Tavern");
         });
     }
@@ -14,7 +14,7 @@ class TavernController extends BaseController {
     async exitTavern(req, res) {
         await this.execute(res, async () => {
             const { userId } = req.body;
-            const user = await vitalityService.exitTavern(userId);
+            const user = await vitalityService.exitTavern(parseInt(userId));
             this.sendSuccess(res, user, "Exited Tavern");
         });
     }
@@ -30,7 +30,7 @@ class TavernController extends BaseController {
     async recruit(req, res) {
         await this.execute(res, async () => {
             const { userId, mercenaryId } = req.body;
-            await tavernService.recruitMercenary(userId, mercenaryId);
+            await tavernService.recruitMercenary(parseInt(userId), parseInt(mercenaryId));
             this.sendSuccess(res, null, "Mercenary recruited");
         });
     }

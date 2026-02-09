@@ -9,6 +9,7 @@ const taskProcessor = require('./services/taskProcessor');
 const socketService = require('./services/socketService');
 const apiRoutes = require('./routes/api');
 const debugRoutes = require('./routes/debugRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const PORT = process.env.PORT || 3000;
 
@@ -25,6 +26,7 @@ taskProcessor.start();
 // Mount API
 app.use('/api', apiRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: "alive", engine: "Textical AAA Tactical Enabled" });

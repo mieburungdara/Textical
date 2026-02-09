@@ -39,7 +39,7 @@ const mockHeroData = {
             lukGrowthFactor: 1.0
         }
     },
-    heroStatAllocation: {
+    statAllocation: {
         strAllocated: 5,
         dexAllocated: 3,
         intAllocated: 2,

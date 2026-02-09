@@ -1,0 +1,276 @@
+[gd_scene load_steps=12 format=3 uid="uid://side_hud"]
+
+[ext_resource type="Script" path="res://src/ui/SideHUD.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/components/SideNavButton.tscn" id="2_btn"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar"]
+bg_color = Color(0.05, 0.04, 0.03, 0.9)
+border_width_right = 2
+border_color = Color(0.6, 0.5, 0.3, 0.3)
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_res_bg"]
+bg_color = Color(0, 0, 0, 0.3)
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.05)
+content_margin_left = 12
+content_margin_top = 15
+content_margin_right = 12
+content_margin_bottom = 15
+
+[sub_resource type="LabelSettings" id="LabelSettings_res_val"]
+font_size = 11
+font_color = Color(0.9, 0.9, 0.9, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0, 0, 0, 0.4)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vit_fill"]
+bg_color = Color(0.3, 0.8, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.8, 0.2, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mp_fill"]
+bg_color = Color(0.2, 0.4, 0.9, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ap_fill"]
+bg_color = Color(0.9, 0.8, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SideHUD" type="CanvasLayer"]
+layer = 110
+
+[node name="UIRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="SidebarPanel" type="PanelContainer" parent="UIRoot"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 140.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sidebar")
+
+[node name="Layout" type="VBoxContainer" parent="UIRoot/SidebarPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ResourceSection" type="PanelContainer" parent="UIRoot/SidebarPanel/Layout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_res_bg")
+
+[node name="VBox" type="VBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="VitalityRow" type="VBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HBox" type="HBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/VitalityRow"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/VitalityRow/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "⚡"
+
+[node name="VitalityLabel" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/VitalityRow/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100 / 100"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="VitBar" type="ProgressBar" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/VitalityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_vit_fill")
+value = 100.0
+show_percentage = false
+
+[node name="HPBox" type="VBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HBox" type="HBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/HPBox"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/HPBox/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "❤️"
+
+[node name="HPLabel" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/HPBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0 / 0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="HPBar" type="ProgressBar" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/HPBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="MPBox" type="VBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HBox" type="HBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/MPBox"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/MPBox/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "💙"
+
+[node name="MPLabel" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/MPBox/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0 / 0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="MPBar" type="ProgressBar" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/MPBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_mp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="SilverRow" type="HBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/SilverRow"]
+layout_mode = 2
+text = "🪙"
+
+[node name="SilverLabel" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/SilverRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="GoldRow" type="HBoxContainer" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/GoldRow"]
+layout_mode = 2
+text = "💰"
+
+[node name="GoldLabel" type="Label" parent="UIRoot/SidebarPanel/Layout/ResourceSection/VBox/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="NavSection" type="VBoxContainer" parent="UIRoot/SidebarPanel/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="HeroBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🤴"
+menu_label = "HERO"
+is_overlay = true
+overlay_name = "Hero"
+target_scene = "res://src/ui/HeroProfileScreen.tscn"
+
+[node name="PartyBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "👥"
+menu_label = "PARTY"
+is_overlay = true
+overlay_name = "Party"
+target_scene = "res://src/ui/FormationScreen.tscn"
+
+[node name="QuestBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "📜"
+menu_label = "QUESTS"
+is_overlay = true
+overlay_name = "Quests"
+target_scene = "res://src/ui/QuestScreen.tscn"
+
+[node name="WorldBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🗺️"
+menu_label = "WORLD"
+is_overlay = true
+overlay_name = "World"
+target_scene = "res://src/ui/WorldAtlas.tscn"
+
+[node name="TownBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🏰"
+menu_label = "TOWN"
+target_scene = "res://src/ui/TownScreen.tscn"
+
+[node name="BagBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🎒"
+menu_label = "BAG"
+is_overlay = true
+overlay_name = "Inventory"
+target_scene = "res://src/ui/InventoryScreen.tscn"
+
+[node name="GuildBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🏛️"
+menu_label = "GUILD"
+is_overlay = true
+overlay_name = "Guild"
+target_scene = "res://src/ui/GuildScreen.tscn"

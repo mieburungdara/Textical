@@ -23,6 +23,14 @@ class BattleGrid {
         });
     }
 
+    addObstacle(x, y) {
+        this.easystar.avoidAdditionalPoint(x, y);
+    }
+
+    removeObstacle(x, y) {
+        this.easystar.stopAvoidingAdditionalPoint(x, y);
+    }
+
     findPath(start, target) {
         if (!start || !target) return null;
         let pathFound = null;

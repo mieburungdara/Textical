@@ -11,30 +11,37 @@ class InventoryRepository {
         return await prisma.inventoryItem.create({ data: { userId, templateId, quantity, uniqueData: JSON.stringify(uniqueData) } });
     }
 
-    async updateEquipStatus(itemId, isEquipped) {
+    async updateEquipStatus(id, isEquipped) {
+        const itemId = parseInt(id);
         return await prisma.inventoryItem.update({ where: { id: itemId }, data: { isEquipped } });
     }
 
-    async findItemById(itemId, userId) {
+    async findItemById(id, uId) {
+        const itemId = parseInt(id);
+        const userId = parseInt(uId);
         return await prisma.inventoryItem.findFirst({
             where: { id: itemId, userId },
             include: { template: true }
         });
     }
 
-    async updateOwner(itemId, newUserId) {
+    async updateOwner(id, newUserId) {
+        const itemId = parseInt(id);
+        const uId = parseInt(newUserId);
         return await prisma.inventoryItem.update({
             where: { id: itemId },
-            data: { userId: newUserId, isEquipped: false, ownerHeroId: null }
+            data: { userId: uId, isEquipped: false, ownerHeroId: null }
         });
     }
 
-    async updateQuantity(itemId, quantity) {
+    async updateQuantity(id, quantity) {
+        const itemId = parseInt(id);
         if (quantity <= 0) return await prisma.inventoryItem.delete({ where: { id: itemId } });
         return await prisma.inventoryItem.update({ where: { id: itemId }, data: { quantity } });
     }
 
-    async updateDurability(itemId, durability) {
+    async updateDurability(id, durability) {
+        const itemId = parseInt(id);
         return await prisma.inventoryItem.update({ where: { id: itemId }, data: { currentDurability: durability } });
     }
 }

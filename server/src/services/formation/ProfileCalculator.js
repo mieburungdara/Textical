@@ -34,8 +34,20 @@ class ProfileCalculator extends BaseService {
         const profile = {
             id: hero.id,
             name: hero.name,
-            isMain: hero.isMain, // AAA: Unit Utama Identification
-            totalStats: {},
+            isMain: hero.isMain,
+            totalStats: {
+                HP: hero.hp_base,
+                MP: 100, // Default base MP
+                ATK: hero.damage_base,
+                DEF: hero.defense_base,
+                SPD: hero.speed_base,
+                RANGE: hero.range_base,
+                DEX: hero.dex,
+                STR: hero.str,
+                INT: hero.int,
+                VIT: hero.vit,
+                LUK: hero.luk
+            },
             activeTraits: [],
             equippedItems: [], // AAA: Tracking for Durability
             abilities: heroSkills.map(hs => ({
@@ -53,6 +65,11 @@ class ProfileCalculator extends BaseService {
             }))
         };
 
+        // Add class-based resource types if needed
+        if (hero.combatClass && hero.combatClass.resourceType === "ENERGY") {
+            profile.totalStats.MP = 100; // Energy max
+        }
+
         hero.traits.forEach(t => profile.activeTraits.push(t.trait.name));
 
         for (const eq of hero.equipment) {
@@ -66,7 +83,9 @@ class ProfileCalculator extends BaseService {
             });
 
             item.stats.forEach(s => {
-                profile.totalStats[s.statKey] = (profile.totalStats[s.statKey] || 0) + s.statValue;
+                // Key standardization: Ensure we use uppercase keys consistently
+                const key = s.statKey.toUpperCase();
+                profile.totalStats[key] = (profile.totalStats[key] || 0) + s.statValue;
             });
             item.traits.forEach(t => {
                 profile.activeTraits.push({

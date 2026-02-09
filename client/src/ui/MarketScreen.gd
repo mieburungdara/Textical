@@ -19,6 +19,20 @@ var _pending_list_item_id: int = -1
 var _raw_listings = []
 var _raw_inventory = []
 
+## Setup as overlay logic
+func setup_as_overlay(_data: Dictionary = {}):
+	# Sembunyikan HUD internal agar tidak tumpang tindih
+	if has_node("TopHUD"): $TopHUD.visible = false
+	if has_node("SideHUD"): $SideHUD.visible = false
+	if has_node("TaskListHUD"): $TaskListHUD.visible = false
+	
+	# Beri margin agar tidak menabrak SideHUD di kiri
+	if has_node("MainContainer"):
+		$MainContainer.offset_left = 200
+		$MainContainer.offset_right = -40
+		$MainContainer.offset_top = 40
+		$MainContainer.offset_bottom = -40
+
 func _ready():
 	ServerConnector.request_completed.connect(_on_request_completed)
 	confirm_btn.pressed.connect(_on_price_confirmed)

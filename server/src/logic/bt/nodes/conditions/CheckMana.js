@@ -19,7 +19,7 @@ CheckMana.prototype.tick = function(tick) {
     const currentRatio = unit.currentMana / unit.stats.mana_max;
     const met = currentRatio >= threshold;
 
-    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} MP check: ${(currentRatio*100).toFixed(0)}% >= ${(threshold*100).toFixed(0)}%. Result: ${met}`);
+    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} MP check: ${(currentRatio*100).toFixed(0)}% >= ${(threshold*100).toFixed(0)}%. Result: ${met}`, {}, true);
     
     return this.executePath(tick, met);
 }

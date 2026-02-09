@@ -19,6 +19,20 @@ var is_mirror_view = false
 var formation_loaded = false
 var heroes_loaded = false
 
+## Setup as overlay logic
+func setup_as_overlay(_data: Dictionary = {}):
+    # Sembunyikan HUD internal karena overlay akan numpang di HUD scene di bawahnya
+    if has_node("TopHUD"): $TopHUD.visible = false
+    if has_node("SideHUD"): $SideHUD.visible = false
+    if has_node("TaskListHUD"): $TaskListHUD.visible = false
+    
+    # Beri margin agar tidak menabrak SideHUD di kiri
+    if has_node("MarginContainer"):
+        $MarginContainer.offset_left = 200
+        $MarginContainer.offset_right = -40
+        $MarginContainer.offset_top = 40
+        $MarginContainer.offset_bottom = -40
+
 func _ready():
     ServerConnector.request_completed.connect(_on_request_completed)
     tactical_grid.gui_input.connect(_on_grid_input)
@@ -37,8 +51,10 @@ func refresh():
     if GameState.current_user:
         formation_loaded = false
         heroes_loaded = false
-        ServerConnector.fetch_formation(GameState.current_user.id)
-        ServerConnector.fetch_heroes(GameState.current_user.id)
+        var uid = GameState.current_user.get("id")
+        if uid:
+            ServerConnector.fetch_formation(int(uid))
+            ServerConnector.fetch_heroes(int(uid))
 
 func _on_request_completed(endpoint, data):
     if !is_inside_tree(): return

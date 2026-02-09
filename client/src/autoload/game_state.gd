@@ -71,7 +71,7 @@ func fetch_heroes_from_server(user_id: int):
     print("[STATE] Fetching heroes from server for user_id: ", user_id)
     ServerConnector.fetch_heroes(user_id)
 
-func _on_heroes_received(endpoint: String, data):
+func _on_heroes_received(_endpoint: String, data):
     """Handle heroes data received from server"""
     _heroes_loading = false
     
@@ -200,4 +200,4 @@ func get_region_scene(r_type: String) -> String:
         _: return "res://src/ui/regions/ForestScreen.tscn" # Fallback
 
 func is_in_town():
-    return current_user and current_user.currentRegion == 1
+    return current_user and current_user.get("currentRegion", 0) == 1

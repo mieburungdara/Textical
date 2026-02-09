@@ -1,11 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://bqqqqqqqqqqqqq"]
+[gd_scene load_steps=9 format=3 uid="uid://igf20she4dvs"]
 
-[ext_resource type="Script" path="res://src/ui/HeroProfileScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
+[ext_resource type="Script" uid="uid://b2pl38alioyai" path="res://src/ui/HeroProfileScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
-[ext_resource type="PackedScene" uid="uid://hero_grid_container" path="res://src/ui/components/HeroGridContainer.tscn" id="5_grid"]
-[ext_resource type="PackedScene" uid="uid://hero_profile_panel" path="res://src/ui/components/HeroProfilePanel.tscn" id="6_profile"]
+[ext_resource type="PackedScene" path="res://src/ui/SideHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://b7gtungyt03pq" path="res://src/ui/components/HeroGridContainer.tscn" id="5_grid"]
+[ext_resource type="PackedScene" uid="uid://16ypmxfkqdh4" path="res://src/ui/components/ProfileOverlay.tscn" id="6_overlay"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 offsets = PackedFloat32Array(0, 0.5, 1)
@@ -15,22 +14,6 @@ colors = PackedColorArray(0.05, 0.04, 0.03, 1, 0.08, 0.06, 0.04, 1, 0.03, 0.02, 
 gradient = SubResource("Gradient_bg")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
-bg_color = Color(0.08, 0.06, 0.05, 0.98)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 0
-corner_radius_bottom_left = 0
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 0
-border_color = Color(0.4, 0.35, 0.3, 0.8)
-content_margin_left = 15.0
-content_margin_top = 15.0
-content_margin_right = 15.0
-content_margin_bottom = 15.0
 
 [node name="HeroProfileScreen" type="Control"]
 layout_mode = 3
@@ -50,39 +33,12 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_bg")
 
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 80.0
-grow_horizontal = 2
-
-[node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -200.0
-offset_top = 80.0
-offset_bottom = 140.0
-grow_horizontal = 0
-
-[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -80.0
-grow_horizontal = 2
-grow_vertical = 0
-
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 15.0
+offset_left = 200.0
 offset_top = 90.0
 offset_right = -15.0
 offset_bottom = -90.0
@@ -95,46 +51,16 @@ theme_override_constants/margin_bottom = 10
 
 [node name="HeroGridContainer" parent="MarginContainer" instance=ExtResource("5_grid")]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
-[node name="ProfileOverlay" type="PanelContainer" parent="."]
-visible = false
+[node name="ProfileOverlay" parent="." instance=ExtResource("6_overlay")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 250.0
+anchors_preset = -1
+anchor_left = 0.0069444445
+anchor_top = 0.23203126
+anchor_right = 1.0069444
+anchor_bottom = 1.2320312
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
 offset_bottom = 0.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
-
-[node name="ProfileContent" type="VBoxContainer" parent="ProfileOverlay"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="HeaderRow" type="HBoxContainer" parent="ProfileOverlay/ProfileContent"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="CloseButton" type="Button" parent="ProfileOverlay/ProfileContent/HeaderRow"]
-layout_mode = 2
-text = "✕ Close"
-
-[node name="TitleLabel" type="Label" parent="ProfileOverlay/ProfileContent/HeaderRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Hero Profile"
-horizontal_alignment = 1
-
-[node name="ScrollContainer" type="ScrollContainer" parent="ProfileOverlay/ProfileContent"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 1
-
-[node name="HeroProfilePanel" parent="ProfileOverlay/ProfileContent/ScrollContainer" instance=ExtResource("6_profile")]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+metadata/_edit_use_anchors_ = true

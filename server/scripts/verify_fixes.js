@@ -20,7 +20,7 @@ console.log('-'.repeat(60));
 function verifyBug1Fix() {
     // Simulate the fixed _applyGrowth function
     function fixedApplyGrowth(stats, primary, heroData, context) {
-        const allocation = heroData.heroStatAllocation;
+        const allocation = heroData.statAllocation;
         if (allocation && heroData.combatClass?.statAllocationTemplate) {
             ['str', 'dex', 'int', 'vit', 'luk'].forEach(attr => {
                 const allocated = allocation[`${attr}Allocated`] || 0;
@@ -42,7 +42,7 @@ function verifyBug1Fix() {
         dex: new EnhancedStat(10, { name: 'dex', max: 255 })
     };
     const heroData = {
-        heroStatAllocation: { strAllocated: 5, dexAllocated: 3 },
+        statAllocation: { strAllocated: 5, dexAllocated: 3 },
         combatClass: { statAllocationTemplate: {} }
     };
     const context = { level: 10 };

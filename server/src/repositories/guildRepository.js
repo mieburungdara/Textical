@@ -16,8 +16,10 @@ class GuildRepository {
     }
 
     async findById(id) {
+        const guildId = parseInt(id);
+        if (isNaN(guildId)) return null;
         return await prisma.guild.findUnique({
-            where: { id },
+            where: { id: guildId },
             include: { 
                 members: true, 
                 template: true,
@@ -32,18 +34,22 @@ class GuildRepository {
     }
 
     async getTemplateById(id) {
-        return await prisma.guildTemplate.findUnique({ where: { id } });
+        const templateId = parseInt(id);
+        if (isNaN(templateId)) return null;
+        return await prisma.guildTemplate.findUnique({ where: { id: templateId } });
     }
 
     async update(id, data) {
+        const guildId = parseInt(id);
         return await prisma.guild.update({
-            where: { id },
+            where: { id: guildId },
             data
         });
     }
 
     async delete(id) {
-        return await prisma.guild.delete({ where: { id } });
+        const guildId = parseInt(id);
+        return await prisma.guild.delete({ where: { id: guildId } });
     }
 
     async search(query, page = 1, limit = 10) {
@@ -60,17 +66,21 @@ class GuildRepository {
                 }
             },
             take: limit,
-            skip: (page - 1) * limit
+            skip: (parseInt(page) - 1) * parseInt(limit)
         });
     }
 
     async getFacilityTemplateById(id) {
-        return await prisma.guildFacilityTemplate.findUnique({ where: { id } });
+        const templateId = parseInt(id);
+        if (isNaN(templateId)) return null;
+        return await prisma.guildFacilityTemplate.findUnique({ where: { id: templateId } });
     }
 
     async getFacilityById(id) {
+        const facilityId = parseInt(id);
+        if (isNaN(facilityId)) return null;
         return await prisma.guildFacility.findUnique({ 
-            where: { id },
+            where: { id: facilityId },
             include: { template: true }
         });
     }
@@ -78,14 +88,15 @@ class GuildRepository {
     async addFacility(guildId, templateId, level) {
         return await prisma.guildFacility.create({
             data: {
-                guildId,
-                templateId,
-                level
+                guildId: parseInt(guildId),
+                templateId: parseInt(templateId),
+                level: parseInt(level)
             }
         });
     }
 
-    async upgradeFacility(facilityId) {
+    async upgradeFacility(id) {
+        const facilityId = parseInt(id);
         return await prisma.guildFacility.update({
             where: { id: facilityId },
             data: {
@@ -97,8 +108,8 @@ class GuildRepository {
     async createInvite(data) {
         return await prisma.guildInvite.create({
             data: {
-                guildId: data.guildId,
-                invitedBy: data.invitedBy,
+                guildId: parseInt(data.guildId),
+                invitedBy: parseInt(data.invitedBy),
                 inviteCode: data.inviteCode,
                 expiresAt: data.expiresAt,
                 status: "PENDING"
@@ -113,24 +124,28 @@ class GuildRepository {
         });
     }
 
-    async findInviteById(inviteId) {
+    async findInviteById(id) {
+        const inviteId = parseInt(id);
+        if (isNaN(inviteId)) return null;
         return await prisma.guildInvite.findUnique({
             where: { id: inviteId }
         });
     }
 
-    async updateInviteStatus(inviteId, status) {
+    async updateInviteStatus(id, status) {
+        const inviteId = parseInt(id);
         return await prisma.guildInvite.update({
             where: { id: inviteId },
             data: { status }
         });
     }
 
-    async getGuildHistory(guildId, limit = 50) {
+    async getGuildHistory(id, limit = 50) {
+        const guildId = parseInt(id);
         return await prisma.guildHistory.findMany({
             where: { guildId },
             orderBy: { createdAt: 'desc' },
-            take: limit
+            take: parseInt(limit)
         });
     }
 }

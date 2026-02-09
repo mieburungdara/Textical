@@ -114,7 +114,9 @@ class ElementalResolver {
 
         // Apply base elemental damage bonuses from affinities
         heroData.elementalAffinities.forEach(affinity => {
-            const element = affinity.elementTypeId;
+            const element = (affinity.elementType || affinity.elementTypeId || '').toLowerCase();
+            if (!element) return;
+
             const bonusDamage = affinity.bonusDamage || 0;
             
             if (bonusDamage > 0) {
@@ -146,7 +148,10 @@ class ElementalResolver {
         if (!heroData.elementalAffinities) return resistances;
 
         heroData.elementalAffinities.forEach(affinity => {
-            resistances[affinity.elementTypeId] = affinity.resistance || 0;
+            const element = (affinity.elementType || affinity.elementTypeId || '').toLowerCase();
+            if (element) {
+                resistances[element] = affinity.resistance || 0;
+            }
         });
 
         return resistances;
@@ -167,7 +172,10 @@ class ElementalResolver {
         if (!heroData.elementalAffinities) return bonusDamage;
 
         heroData.elementalAffinities.forEach(affinity => {
-            bonusDamage[affinity.elementTypeId] = affinity.bonusDamage || 0;
+            const element = (affinity.elementType || affinity.elementTypeId || '').toLowerCase();
+            if (element) {
+                bonusDamage[element] = affinity.bonusDamage || 0;
+            }
         });
 
         return bonusDamage;
@@ -181,61 +189,41 @@ class ElementalResolver {
      */
     static hasAffinity(heroData, element) {
         if (!heroData.elementalAffinities) return false;
-        return heroData.elementalAffinities.some(a => a.elementTypeId === element);
+        return heroData.elementalAffinities.some(a => 
+            (a.elementType || a.elementTypeId || '').toLowerCase() === element.toLowerCase()
+        );
     }
 
-    /**
-     * Calculate total elemental damage for all elements
-     * @param {Object} stats - Stats object with base damage
-     * @param {Object} affinities - Elemental affinities
-     * @returns {Object} Object with total damage per element
-     */
-    static calculateTotalElementalDamage(stats, affinities) {
-        const baseDamage = stats.attack_damage || 0;
-        const totalDamage = {};
+    // === Instance Methods for compatibility with statService ===
 
-        Object.values(ElementalResolver.Element).forEach(element => {
-            const affinity = affinities?.find(a => a.elementTypeId === element);
-            const bonusMultiplier = affinity?.bonusDamage || 0;
-            const baseElemental = stats[`${element}_damage`] || 0;
-            
-            totalDamage[element] = (baseDamage + baseElemental) * (1 + bonusMultiplier);
+    getAffinityBonus(element, level) {
+        // Fallback for affinity system if level-based
+        return level * 0.05; 
+    }
+
+    getResistanceBonus(element, level) {
+        return level * 0.02;
+    }
+
+    getEquipmentElementalBonuses(equipment) {
+        const bonuses = {};
+        equipment.forEach(eq => {
+            const traits = eq.itemInstance?.template?.traits || [];
+            traits.forEach(t => {
+                t.trait.stats?.forEach(s => {
+                    if (s.statKey.includes('_damage') || s.statKey.includes('_resistance')) {
+                        bonuses[s.statKey] = (bonuses[s.statKey] || 0) + s.statValue;
+                    }
+                });
+            });
         });
-
-        return totalDamage;
+        return bonuses;
     }
 
-    /**
-     * Get interaction description between two elements
-     * @param {string} attackerElement - Attacking element
-     * @param {string} defenderElement - Defending element
-     * @returns {Object} Interaction result with multiplier and description
-     */
-    static getInteraction(attackerElement, defenderElement) {
-        const interaction = ElementalResolver.INTERACTIONS[attackerElement];
-        
-        if (!interaction) {
-            return { multiplier: 1.0, description: 'Unknown element' };
-        }
-
-        if (interaction.strongAgainst.includes(defenderElement)) {
-            return { 
-                multiplier: ElementalResolver.MULTIPLIERS.STRONG, 
-                description: `Strong against ${defenderElement}` 
-            };
-        }
-        
-        if (interaction.weakAgainst === defenderElement) {
-            return { 
-                multiplier: ElementalResolver.MULTIPLIERS.WEAK, 
-                description: `Weak against ${defenderElement}` 
-            };
-        }
-
-        return { 
-            multiplier: ElementalResolver.MULTIPLIERS.NEUTRAL, 
-            description: 'Neutral interaction' 
-        };
+    getSetElementalBonuses(equipment) {
+        // Set bonuses are handled by SetBonusResolver generally,
+        // but this provides a summary for getElementalStats
+        return {};
     }
 }
 

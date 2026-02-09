@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const traitService = require('../../services/traitService');
+const delayCalculator = require('./DelayCalculator');
 
 class SimLoopProcessor {
     constructor(sim) {
@@ -9,7 +10,7 @@ class SimLoopProcessor {
     run() {
         this.sim.units.forEach(u => traitService.executeHook("onBattleStart", u, this.sim));
         this.sim.logger.startTick(0);
-        this.sim.logger.addEvent("ENGINE", `Tactical Engine Engaged. Region: ${this.sim.regionType}`);
+        this.sim.logger.addEvent("ENGINE", `Tactical Engine Engaged. Region: ${this.sim.regionType}`, {}, true);
         this.sim.logger.commitTick(this.sim.units);
 
         while (!this.sim.isFinished && this.sim.currentTick < this.sim.MAX_TICKS) {
@@ -38,19 +39,50 @@ class SimLoopProcessor {
         _.forEach(s.units, (u) => { 
             if (!u.isDead) { 
                 u.tick(1.0, s); 
+                u.applyRegen(s); // Move regen here to sync with tick update
                 const dotDamage = u.applyStatusDamage(s);
                 if (dotDamage > 0) traitService.executeHook("onPostHit", u, null, dotDamage, s);
             } 
         });
 
-        const readyUnits = _.chain(s.units).filter(u => !u.isDead && u.isReady()).orderBy(['currentActionPoints'], ['desc']).value();
+        // AAA: Timeline Execution Loop
+        // Filter units whose 'nextActionTick' has been reached
+        const readyUnits = _.chain(s.units)
+            .filter(u => !u.isDead && u.isReady(s))
+            .orderBy(['nextActionTick'], ['asc']) // Oldest readiness first
+            .value();
+
         for (let actor of readyUnits) {
             if (actor.isDead) continue; 
             traitService.executeHook("onTurnStart", actor, s);
-            s.ai.decideAction(actor);
-            traitService.executeHook("onTurnEnd", actor, s);
-            actor.modifyAP(-100.0, s);
-            actor.applyRegen(s);
+            
+            // Capture state BEFORE action for delay calculation
+            const oldPos = { ...actor.gridPos };
+            
+            const actionTaken = s.ai.decideAction(actor);
+            
+            if (actionTaken) {
+                traitService.executeHook("onTurnEnd", actor, s);
+                
+                // AAA: Calculate Delay based on what happened
+                let delay = 100; // Default
+                const moved = actor.gridPos.x !== oldPos.x || actor.gridPos.y !== oldPos.y;
+                
+                if (moved) {
+                    delay = delayCalculator.calculateMoveDelay(actor);
+                } else {
+                    // Logic: If they attacked or used skill, use attack delay
+                    delay = delayCalculator.calculateAttackDelay(actor);
+                }
+                
+                actor.setActionDelay(delay, s);
+                actor.stuckTicks = 0; 
+            } else {
+                // If blocked or nothing to do, rest for a standardized duration
+                actor.setActionDelay(delayCalculator.calculateIdleDelay(actor), s);
+                actor.stuckTicks = (actor.stuckTicks || 0) + 1;
+            }
+            
             if (s.rules.checkWinCondition()) break;
         }
         
@@ -61,3 +93,4 @@ class SimLoopProcessor {
 }
 
 module.exports = SimLoopProcessor;
+

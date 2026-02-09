@@ -1,9 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://quest_screen"]
 
 [ext_resource type="Script" path="res://src/ui/QuestScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
 
 [node name="QuestScreen" type="Control"]
 layout_mode = 3
@@ -23,22 +22,15 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.08, 0.05, 1)
 
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
-
-[node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
-layout_mode = 1
-
-[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
-layout_mode = 1
-
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 100.0
-offset_bottom = -100.0
+offset_left = 200.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 30
@@ -51,6 +43,7 @@ layout_mode = 2
 theme_override_constants/separation = 20
 
 [node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "DAILY QUEST BOARD"
@@ -61,6 +54,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="QuestList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 15

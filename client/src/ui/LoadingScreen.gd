@@ -92,7 +92,6 @@ func _process(delta):
     if magic_sigil:
         magic_sigil.update_animation(delta, current_val)
 
-var _is_transitioning = false
 var _ripple_tex: ImageTexture = null
 
 func _input(event):

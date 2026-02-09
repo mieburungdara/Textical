@@ -1,103 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Textical God Mode - Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Textical Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; margin: 0; display: flex; height: 100vh; }
-        
-        /* Sidebar */
-        .sidebar { width: 250px; background: #1e1e1e; border-right: 1px solid #333; padding: 20px; display: flex; flex-direction: column; }
-        .brand { font-size: 1.2rem; color: #ff5555; font-weight: bold; margin-bottom: 30px; letter-spacing: -1px; }
-        .menu-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 4px; color: #888; transition: all 0.2s; }
-        .menu-item:hover, .menu-item.active { background: #333; color: white; }
-        .menu-item.active { border-left: 3px solid #ff5555; }
-        
-        /* Content */
-        .content { flex: 1; padding: 30px; overflow-y: auto; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        h2 { margin: 0; color: white; }
-        
-        /* Data Grid */
-        .grid-container { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #252525; padding: 15px; color: #aaa; font-size: 0.85rem; border-bottom: 1px solid #333; }
-        td { padding: 15px; border-bottom: 1px solid #2a2a2a; color: #ddd; font-size: 0.9rem; }
-        tr:hover { background: #2a2a2a; }
-        
-        /* Buttons */
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; }
-        .btn-primary { background: #ff5555; color: white; }
-        .btn-primary:hover { background: #ff7777; }
-        .btn-sync { background: #4caf50; color: white; }
-        
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
-        .modal-content { background: #252525; padding: 25px; border-radius: 8px; width: 400px; border: 1px solid #444; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #888; font-size: 0.8rem; }
-        input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 4px; }
-
-        /* Category Item Style */
-        .cat-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #2a2a2a; font-size: 0.85rem; color: #aaa; transition: 0.2s; }
-        .cat-item:hover { background: #2a2a2a; color: white; }
-        .cat-item.selected { background: #333; color: #ff5555; border-left: 3px solid #ff5555; }
+        :root {
+            --sidebar-width: 260px;
+            --header-height: 60px;
+            --primary-color: #4f46e5;
+        }
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            padding-top: calc(var(--header-height) + 20px);
+            min-height: 100vh;
+        }
+        #content-area {
+            min-height: calc(100vh - var(--header-height) - 40px);
+        }
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 998;
+        }
+        .page-loader.active {
+            display: flex;
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">⚡ TEXTICAL GOD MODE</div>
-        <div class="menu-item active" onclick="loadTab('monsters')">👹 Monsters</div>
-        <div class="menu-item" onclick="loadTab('items')">💎 Items / Stones</div>
-        <div class="menu-item" onclick="loadTab('regions')">🗺️ Regions</div>
-        <div style="flex:1"></div>
-        <div style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
-            <div class="menu-item" style="color:#4caf50; font-size: 0.9em;" onclick="triggerSync('export')">📤 Export DB to JSON</div>
-            <div class="menu-item" style="color:#ff9800; font-size: 0.9em;" onclick="triggerSync('import')">📥 Import JSON to DB</div>
+    <!-- Sidebar Container -->
+    <div id="sidebarContainer"></div>
+    
+    <!-- Top Header -->
+    <div id="headerContainer"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div id="content-area">
+            <!-- Content will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Footer Container -->
+    <div id="footerContainer"></div>
+
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
-    <div class="content">
-        <header>
-            <h2 id="page-title">Monster Database</h2>
-            <button class="btn btn-primary" onclick="openModal()">+ New Entry</button>
-        </header>
-
-        <!-- NEW: DUAL PANE LAYOUT -->
-        <div id="dual-pane" style="display: flex; gap: 20px; height: calc(100vh - 150px);">
-            <!-- Left Pane: Categories -->
-            <div id="category-pane" style="width: 200px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; overflow-y: auto;">
-                <div style="padding: 15px; border-bottom: 1px solid #333; font-size: 0.8rem; font-weight: bold; color: #ff5555;">CATEGORIES</div>
-                <div id="category-list"></div>
-            </div>
-
-            <!-- Right Pane: Data Table -->
-            <div class="grid-container" style="flex: 1; height: 100%; overflow-y: auto;">
-                <table id="data-table">
-                    <thead>
-                        <tr><th>ID</th><th>Name</th><th>HP</th><th>DMG</th><th>EXP</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <!-- Data Injected Here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="editor-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0">Edit Data</h3>
-            <div id="form-fields"></div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="saveData()">Save Changes</button>
-                <button class="btn" style="background:#444; color:white" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="admin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="common.js"></script>
+    <script src="component-loader.js"></script>
+    <script>
+        console.log('[Admin] Script loaded, setting up...');
+        
+        // Debug: Check if Bootstrap is loaded
+        console.log('[Admin] Bootstrap loaded:', typeof bootstrap !== 'undefined');
+        
+        // Function to attach click handlers to nav links
+        function attachNavClickHandlers() {
+            console.log('[Admin] Attaching nav click handlers...');
+            const navLinks = document.querySelectorAll('.nav-link[data-page]');
+            console.log(`[Admin] Found ${navLinks.length} nav links`);
+            
+            navLinks.forEach((link, index) => {
+                console.log(`[Admin] Link ${index}: ${link.textContent.trim()} -> ${link.dataset.page}`);
+                
+                // Remove any existing onclick handlers
+                link.onclick = null;
+                
+                // Add direct click handler
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Admin] Click detected on:', this.dataset.page);
+                    
+                    const page = this.dataset.page;
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Store current page name
+                    window.currentPageName = page.replace('.html', '');
+                    
+                    // Load the page
+                    loadPage(page);
+                });
+            });
+        }
+        
+        // Function to load a page
+        function loadPage(page) {
+            const loader = document.getElementById('pageLoader');
+            const content = document.getElementById('content-area');
+            
+            if (!loader || !content) {
+                console.error('[Admin] Loader or content area not found');
+                return;
+            }
+            
+            console.log(`[Admin] Loading page: ${page}`);
+            loader.classList.add('active');
+            
+            fetch(page)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Page not found: ${page} (${response.status})`);
+                    return response.text();
+                })
+                .then(html => {
+                    // Extract title from page content FIRST
+                    const titleMatch = html.match(/<title>(.*?)<\/title>/);
+                    if (titleMatch) {
+                        const pageTitleEl = document.getElementById('pageTitle');
+                        if (pageTitleEl) {
+                            pageTitleEl.textContent = titleMatch[1];
+                        }
+                    }
+                    
+                    // Extract style tags from head section to preserve them
+                    const styleRegex = /<style[\s\S]*?<\/style>/gi;
+                    let styles = html.match(styleRegex) || [];
+                    
+                    // Remove DOCTYPE, html, head, body tags
+                    let cleanHtml = html
+                        .replace(/<!DOCTYPE[^>]*>/gi, '')
+                        .replace(/<head[\s\S]*?<\/head>/gi, '')  // Remove entire head section
+                        .replace(/<\/?html[^>]*>/gi, '')
+                        .replace(/<\/?body[^>]*>/gi, '');
+                    
+                    // Prepend extracted styles if any
+                    if (styles.length > 0) {
+                        cleanHtml = styles.join('\n') + '\n' + cleanHtml;
+                    }
+                    
+                    // Extract and remove script tags to execute them later
+                    const scriptRegex = /<script[\s\S]*?>(\s*[\s\S]*?)\s*<\/script>/gi;
+                    const scripts = [];
+                    cleanHtml = cleanHtml.replace(scriptRegex, (match, scriptContent) => {
+                        scripts.push(scriptContent);
+                        return '';
+                    });
+                    
+                    // Set content
+                    content.innerHTML = cleanHtml;
+                    console.log(`[Admin] Page ${page} loaded successfully`);
+                    
+                    // Execute inline scripts
+                    scripts.forEach((scriptContent, index) => {
+                        if (scriptContent.trim()) {
+                            try {
+                                // Use new Function and attach to window for global access
+                                const scriptFn = new Function(scriptContent);
+                                scriptFn();
+                                
+                                // Also try to extract and attach any function declarations to window
+                                const functionRegex = /function\s+(\w+)\s*\(/g;
+                                let match;
+                                while ((match = functionRegex.exec(scriptContent)) !== null) {
+                                    const funcName = match[1];
+                                    if (typeof window[funcName] === 'undefined' && typeof eval(funcName) === 'function') {
+                                        window[funcName] = eval(funcName);
+                                    }
+                                }
+                                
+                                console.log(`[Admin] Script ${index + 1} executed successfully`);
+                            } catch (error) {
+                                console.error(`[Admin] Error executing script ${index + 1}:`, error);
+                            }
+                        }
+                    });
+                    
+                    loader.classList.remove('active');
+                })
+                .catch(error => {
+                    console.error('[Admin] Error loading page:', error);
+                    content.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4>Error</h4>
+                            <p>Failed to load page: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadPage('dashboard.html')">Go to Dashboard</button>
+                        </div>
+                    `;
+                    loader.classList.remove('active');
+                });
+        }
+        
+        function logout() {
+            console.log('[Admin] Logging out...');
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('adminCredentials');
+            window.location.href = 'login.html';
+        }
+        
+        // Make functions available globally
+        window.logout = logout;
+        window.loadPage = loadPage;
+        
+        // Initialize app
+        async function initApp() {
+            console.log('[Admin] Initializing app...');
+            
+            // Load sidebar, header, footer
+            await ComponentLoader.loadAll();
+            console.log('[Admin] Components loaded, attaching handlers...');
+            
+            // Attach click handlers to nav links
+            attachNavClickHandlers();
+            
+            // Set initial page
+            window.currentPageName = 'dashboard';
+            
+            // Highlight initial active nav item
+            const initialLink = document.querySelector('.nav-link[data-page="dashboard.html"]');
+            if (initialLink) {
+                initialLink.classList.add('active');
+                console.log('[Admin] Set initial active link to dashboard');
+            }
+            
+            // Load initial page
+            loadPage('dashboard.html');
+        }
+        
+        // Listen for components loaded event (in case loadAll was already called)
+        window.addEventListener('componentsLoaded', function() {
+            console.log('[Admin] ComponentsLoaded event received');
+            attachNavClickHandlers();
+        });
+        
+        // Start app
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
 </body>
 </html>

@@ -120,4 +120,8 @@ func _update_player_position(is_traveling: bool = false):
 func _center_on_player():
     if GameState.current_user:
         var rid = int(str(GameState.current_user.get("currentRegion", 1)).to_float())
-        cam.global_position = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        var target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        if cam and cam.has_method("center_on"):
+            cam.center_on(target_pos)
+        else:
+            cam.global_position = target_pos

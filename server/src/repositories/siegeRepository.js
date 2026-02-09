@@ -10,23 +10,29 @@ class SiegeRepository {
     }
 
     async getSiegeById(id) {
+        const siegeId = parseInt(id);
+        if (isNaN(siegeId)) return null;
         return await prisma.siege.findUnique({
-            where: { id },
+            where: { id: siegeId },
             include: { region: true, attacker: true, defender: true }
         });
     }
 
     async updateStatus(id, status, winnerId = null, warLog = "[]") {
+        const siegeId = parseInt(id);
+        const winner = winnerId ? parseInt(winnerId) : null;
         return await prisma.siege.update({
-            where: { id },
-            data: { status, winnerGuildId: winnerId, warLog }
+            where: { id: siegeId },
+            data: { status, winnerGuildId: winner, warLog }
         });
     }
 
     async transferOwnership(regionId, newOwnerGuildId) {
+        const rId = parseInt(regionId);
+        const gId = parseInt(newOwnerGuildId);
         return await prisma.regionTemplate.update({
-            where: { id: regionId },
-            data: { ownerGuildId: newOwnerGuildId }
+            where: { id: rId },
+            data: { ownerGuildId: gId }
         });
     }
 }

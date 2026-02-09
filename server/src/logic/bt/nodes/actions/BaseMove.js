@@ -26,8 +26,8 @@ BaseMove.prototype.canMove = function(unit, sim) {
  */
 BaseMove.prototype.stepTowards = function(unit, targetPos, sim) {
     if (!this.canMove(unit, sim)) return b3.FAILURE;
-    sim.ai.moveTowards(unit, { gridPos: targetPos, data: { name: "Destination" } });
-    return b3.SUCCESS;
+    const moved = sim.ai.moveTowards(unit, { gridPos: targetPos, data: { name: "Destination" } });
+    return moved ? b3.SUCCESS : b3.FAILURE;
 }
 
 module.exports = BaseMove;

@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://stats_tab_footer"]
+
+[ext_resource type="Script" path="res://src/ui/components/StatsTabFooter.gd" id="1_script"]
+
+[node name="StatsTabFooter" type="HBoxContainer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 16
+script = ExtResource("1_script")
+
+[node name="FooterText" type="Label" parent="."]
+layout_mode = 2
+text = "💡 Tap on stats to see detailed breakdown"
+
+[node name="FooterIcon1" type="Label" parent="."]
+layout_mode = 2
+text = "📈"
+
+[node name="FooterIcon2" type="Label" parent="."]
+layout_mode = 2
+text = "🎯"

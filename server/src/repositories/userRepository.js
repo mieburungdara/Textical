@@ -17,25 +17,31 @@ class UserRepository {
     }
 
     async findById(id) {
+        const userId = parseInt(id);
+        if (isNaN(userId)) return null;
         return await prisma.user.findUnique({
-            where: { id },
+            where: { id: userId },
             include: { heroes: true }
         });
     }
 
     async update(id, data) {
+        const userId = parseInt(id);
         return await prisma.user.update({
-            where: { id },
+            where: { id: userId },
             data
         });
     }
 
-    async updateGold(userId, amount) {
+    async updateGold(id, amount) {
+        const userId = parseInt(id);
         return await prisma.user.update({ where: { id: userId }, data: { gold: amount } });
     }
 
-    async updateLocation(userId, regionId) {
-        return await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId } });
+    async updateLocation(id, regionId) {
+        const userId = parseInt(id);
+        const rId = parseInt(regionId);
+        return await prisma.user.update({ where: { id: userId }, data: { currentRegion: rId } });
     }
 
     async removeFromGuild(guildId) {

@@ -12,7 +12,16 @@ class BattleAI {
     }
 
     decideAction(actor) {
-        if (traitService.executeHook("onPreAction", actor, this.sim) === false) return;
+        if (traitService.executeHook("onPreAction", actor, this.sim) === false) return false;
+        
+        // AAA: Forced Target Re-evaluation if stuck
+        if (actor.stuckTicks >= 3) {
+            this.sim.logger.addEvent("ENGINE", `[AI_RETARGET] ${actor.data.name} searching for new path.`, { unit_id: actor.instanceId }, true);
+            // Clear current target to force re-finding
+            const blackboard = btManager.blackboards[actor.instanceId];
+            if (blackboard) blackboard.set('target', null);
+        }
+
         if (!actor.temporaryStats) {
             actor.temporaryStats = {};
         }
@@ -20,47 +29,52 @@ class BattleAI {
 
         const treeName = actor.data.bt_tree || null; 
         if (treeName) {
-            btManager.execute(treeName, actor, this.sim);
+            const success = btManager.execute(treeName, actor, this.sim);
             traitService.executeHook("onPostAction", actor, this.sim);
-            return; 
+            return success; 
         }
 
         // Fallback Logic
         const target = traitService.executeHook("onTargetAcquisition", actor, this.sim) || this.findTarget(actor);
+        let actionTaken = false;
+
         if (target) {
             const dist = this.sim.grid.getDistance(actor.gridPos, target.gridPos);
             const range = actor.stats.attack_range || 1;
 
             // --- AAA SKILL LOGIC ---
-            let skillUsed = false;
             if (actor.activeSkills && actor.activeSkills.length > 0) {
                 // Simple AI: 30% chance to use a skill if range is valid
                 if (Math.random() < 0.3) {
-                    const skill = actor.activeSkills[0]; // For now use the first available
+                    const skill = actor.activeSkills[0];
                     const skillMeta = skill.metadata || {};
                     const skillRange = skillMeta.range || range;
 
                     if (dist <= skillRange) {
                         skillExecutor.execute(actor, target, skill, this.sim);
-                        skillUsed = true;
+                        actionTaken = true;
                     }
                 }
             }
 
-            if (!skillUsed) {
+            if (!actionTaken) {
                 if (dist <= range) {
                     this.sim.rules.performAttack(actor, target);
+                    actionTaken = true;
                 } else {
                     if (traitService.executeHook("onBeforeMove", actor, this.sim) !== false) {
-                        this.moveTowards(actor, target);
+                        actionTaken = this.moveTowards(actor, target);
                     }
                 }
             }
         }
+        
         traitService.executeHook("onPostAction", actor, this.sim);
+        return actionTaken;
     }
 
     findTarget(actor) {
+        // ... (rest of findTarget remains same) ...
         const units = this.sim.units || [];
         const hasTrueSight = traitService.executeHook("CheckTrait", actor, this.sim, { traitName: "truesight" });
 
@@ -89,7 +103,7 @@ class BattleAI {
     }
 
     moveTowards(actor, target) {
-        if (!target) return;
+        if (!target) return false;
         
         // AAA: Dynamic Strategy Composition
         // Allows a trait to swap movement logic (e.g. Charge, Teleport)
@@ -100,6 +114,24 @@ class BattleAI {
         if (moved) {
             traitService.executeHook("onMoveEnd", actor, this.sim);
         }
+        return moved;
+    }
+
+    /**
+     * getEngagedCount: Returns how many units from the same team are currently 
+     * adjacent to the given target.
+     */
+    getEngagedCount(target, teamId) {
+        if (!target || !target.gridPos) return 0;
+        const neighbors = this.sim.grid.getNeighbors(target.gridPos);
+        let count = 0;
+        neighbors.forEach(pos => {
+            const unit = this.sim.grid.unitGrid[pos.y][pos.x];
+            if (unit && unit.teamId === teamId && !unit.isDead) {
+                count++;
+            }
+        });
+        return count;
     }
 }
 

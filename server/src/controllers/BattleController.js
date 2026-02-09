@@ -16,7 +16,7 @@ class BattleController extends BaseController {
     async startBattle(req, res) {
         await this.execute(res, async () => {
             const { userId, monsterId } = req.body;
-            const result = await battleService.startBattle(userId, monsterId);
+            const result = await battleService.startBattle(parseInt(userId), parseInt(monsterId));
             this.sendSuccess(res, result);
         });
     }
@@ -24,7 +24,7 @@ class BattleController extends BaseController {
     async updateFormation(req, res) {
         await this.execute(res, async () => {
             const { userId, presetId, slots } = req.body;
-            const result = await formationService.updateFormation(userId, presetId, slots);
+            const result = await formationService.updateFormation(parseInt(userId), parseInt(presetId), slots);
             this.sendSuccess(res, result, "Formation updated");
         });
     }
@@ -32,7 +32,7 @@ class BattleController extends BaseController {
     async moveFormationUnit(req, res) {
         await this.execute(res, async () => {
             const { userId, presetId, heroId, gridX, gridY } = req.body;
-            const result = await formationService.moveUnit(userId, presetId, heroId, gridX, gridY);
+            const result = await formationService.moveUnit(parseInt(userId), parseInt(presetId), parseInt(heroId), parseInt(gridX), parseInt(gridY));
             this.sendSuccess(res, result, "Unit moved");
         });
     }
@@ -40,7 +40,7 @@ class BattleController extends BaseController {
     async swapFormationUnits(req, res) {
         await this.execute(res, async () => {
             const { userId, presetId, heroA, heroB } = req.body;
-            const result = await formationService.swapUnits(userId, presetId, heroA, heroB);
+            const result = await formationService.swapUnits(parseInt(userId), parseInt(presetId), parseInt(heroA), parseInt(heroB));
             this.sendSuccess(res, result, "Units swapped");
         });
     }

@@ -61,5 +61,9 @@ func _on_tavern_pressed():
         push_error("TownScreen: No current user in GameState")
 
 func _on_market_pressed(): get_tree().change_scene_to_file("res://src/ui/MarketScreen.tscn")
-func _on_quest_pressed(): get_tree().change_scene_to_file("res://src/ui/QuestScreen.tscn")
+func _on_quest_pressed():
+    if UIManager:
+        UIManager.open_overlay("Quests", "res://src/ui/QuestScreen.tscn")
+    else:
+        get_tree().change_scene_to_file("res://src/ui/QuestScreen.tscn")
 func _on_crafting_pressed(): get_tree().change_scene_to_file("res://src/ui/CraftingScreen.tscn")

@@ -3,7 +3,7 @@ class_name WildernessBase
 
 @onready var title_label = $HeaderContainer/Title
 @onready var subtitle_label = $HeaderContainer/Subtitle
-@onready var resource_container = $MarginContainer/ResourceGrid
+@onready var resource_container = find_child("ResourceGrid", true, false)
 
 const GATHER_VFX = preload("res://assets/vfx/GatherEffect.tscn")
 
@@ -13,7 +13,7 @@ var _last_clicked_button: Button = null
 func _ready():
     # BUG FIX: Auto-redirect if a task is already running
     if GameState.active_task:
-        if GameState.active_task.type == "TRAVEL":
+        if GameState.active_task.get("type") == "TRAVEL":
             get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
             return
 
@@ -27,24 +27,17 @@ func _ready():
         _fetch_data()
 
 func _fetch_data():
-    ServerConnector.get_region_details(GameState.current_user.currentRegion)
+    var rid = GameState.current_user.get("currentRegion", 1)
+    ServerConnector.get_region_details(int(rid))
 
 func _on_request_completed(endpoint, data):
-    print("[WildernessBase] _on_request_completed called")
-    print("[WildernessBase] endpoint:", endpoint)
-    print("[WildernessBase] data type:", typeof(data))
-    
+    if !is_inside_tree(): return
     if "region/" in endpoint:
         # Handle server response format: { "success": true, "data": {...} }
         if data is Dictionary and data.has("data"):
             current_region_data = data.get("data")
-            print("[WildernessBase] Extracted region data from 'data' key")
         else:
             current_region_data = data
-            print("[WildernessBase] Using data directly")
-        
-        print("[WildernessBase] current_region_data type:", typeof(current_region_data))
-        print("[WildernessBase] current_region_data:", current_region_data)
         
         if current_region_data is Dictionary:
             _update_ui()
@@ -54,7 +47,9 @@ func _on_request_completed(endpoint, data):
         get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 
 func _on_task_completed(data):
-    if data.type == "GATHERING":
+    if not data is Dictionary: return
+    
+    if data.get("type") == "GATHERING":
         if is_instance_valid(subtitle_label):
             subtitle_label.text = "Gathering Success!"
             subtitle_label.add_theme_color_override("font_color", Color.GREEN)
@@ -66,8 +61,10 @@ func _on_task_completed(data):
         
         GameState.inventory_is_dirty = true
         if GameState.current_user:
-            ServerConnector.fetch_inventory(GameState.current_user.id)
-            ServerConnector.fetch_profile(GameState.current_user.id)
+            var uid = GameState.current_user.get("id")
+            if uid:
+                ServerConnector.fetch_inventory(int(uid))
+                ServerConnector.fetch_profile(int(uid))
 
 func _play_vfx(vfx_scene: PackedScene, pos: Vector2):
     var effect = vfx_scene.instantiate()
@@ -83,6 +80,12 @@ func _update_ui():
     
     for child in resource_container.get_children(): child.queue_free()
     
+    # Optimize grid for landscape
+    if resource_container is GridContainer:
+        resource_container.columns = 4
+        resource_container.add_theme_constant_override("h_separation", 25)
+        resource_container.add_theme_constant_override("v_separation", 25)
+    
     # 1. Add Resources
     var resources = current_region_data.get("resources", [])
     if resources is Array:
@@ -90,8 +93,10 @@ func _update_ui():
             if res is Dictionary and res.has("item"):
                 var item = res.get("item")
                 if item is Dictionary:
-                    var emoji = _get_emoji_for_item(item.get("name", "Unknown"))
-                    var card = _create_action_card(item.get("name", "Unknown"), emoji, "Gather Resource", func(btn): _on_gather_pressed(res.get("id", 0), btn))
+                    var i_name = item.get("name", "Unknown")
+                    var res_id = res.get("id", 0)
+                    var emoji = _get_emoji_for_item(i_name)
+                    var card = _create_action_card(i_name, emoji, "Gather Resource", func(btn): _on_gather_pressed(int(res_id), btn))
                     resource_container.add_child(card)
 
     # 2. Add Hunting Card
@@ -102,7 +107,7 @@ func _update_ui():
 
 func _create_action_card(title: String, icon: String, sub: String, callback: Callable) -> Button:
     var btn = Button.new()
-    btn.custom_minimum_size = Vector2(160, 160)
+    btn.custom_minimum_size = Vector2(180, 140)
     btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     btn.focus_mode = Control.FOCUS_NONE
     
@@ -178,19 +183,27 @@ func _play_entry_animation():
 
 func _on_hunt_pressed():
     var monster_id = 6001 # Fallback
-    if current_region_data and current_region_data.has("monsters") and current_region_data.monsters.size() > 0:
-        monster_id = current_region_data.monsters[0].id
+    if current_region_data and current_region_data.has("monsters"):
+        var monsters = current_region_data.get("monsters", [])
+        if monsters is Array and monsters.size() > 0:
+            monster_id = int(monsters[0].get("id", 6001))
     
     GameState.target_monster_id = monster_id
     get_tree().change_scene_to_file("res://src/ui/CombatScreen.tscn")
-func _on_gather_pressed(resource_id, btn):
+
+func _on_gather_pressed(resource_id: int, btn: Button):
     _last_clicked_button = btn
-    if GameState.current_heroes.size() > 0:
-        ServerConnector.gather(GameState.current_user.id, GameState.current_heroes[0].id, resource_id)
-        if is_instance_valid(subtitle_label):
-            subtitle_label.text = "Extracting..."
-            subtitle_label.add_theme_color_override("font_color", Color.CYAN)
+    if GameState.current_user and GameState.current_heroes.size() > 0:
+        var uid = GameState.current_user.get("id")
+        var hid = GameState.current_heroes[0].get("id")
+        if uid and hid:
+            ServerConnector.gather(int(uid), int(hid), resource_id)
+            if is_instance_valid(subtitle_label):
+                subtitle_label.text = "Extracting..."
+                subtitle_label.add_theme_color_override("font_color", Color.CYAN)
     else:
         if is_instance_valid(subtitle_label):
             subtitle_label.text = "Fetching heroes..."
-        ServerConnector.fetch_heroes(GameState.current_user.id)
+        if GameState.current_user:
+            var uid = GameState.current_user.get("id")
+            if uid: ServerConnector.fetch_heroes(int(uid))

@@ -4,36 +4,84 @@ const replayService = require('./battle/ReplayService');
 const lootService = require('./logistics/LootService');
 
 /**
- * BattleService (v2.0 - Modular Orchestrator)
+ * BattleService (v2.1 - Dual-Replay Orchestrator)
+ * Exports separate files for UI visualization and Engine debugging.
  */
 class BattleService {
-    async startBattle(userId, monsterTemplateId) {
-        // 0. AAA: Loot Interruption Logic
-        // If user is currently looting, and they enter a NEW battle (attacked or attacking),
-        // their current loot session is interrupted and the cargo is destroyed.
-        await lootService.interruptSession(userId);
-
-        // 1. Setup and Initialize
-        const { sim, monsterTemplate } = await battleInitializer.setupSimulation(userId, monsterTemplateId);
+    async startHordeBattle(userId, monsterTemplateIds) {
+        const { sim } = await battleInitializer.setupHordeSimulation(userId, monsterTemplateIds);
+        sim.logger.setMetadata({
+            battle_type: "HORDE",
+            user_id: userId,
+            monsters: monsterTemplateIds
+        });
         
-        // 2. Run Simulation
         const battleResult = sim.run();
 
-        // 3. Save Replay (AAA Integration)
-        await replayService.saveReplay(sim.battleId, battleResult.logs);
+        // 3. Save DUAL Replays
+        // Save Debug Replay (Full with AI Traces)
+        const debugData = sim.logger.getReplayData(true);
+        await replayService.saveReplay(`debug_${sim.battleId}`, debugData);
+
+        // Save View Replay (Clean for Godot UI)
+        const viewData = sim.logger.getReplayData(false);
+        await replayService.saveReplay(`view_${sim.battleId}`, viewData);
 
         // 4. Process Rewards
         const { lootEarned, heroResults } = await rewardProcessor.process(
             userId, 
-            { ...battleResult, victimUserId: monsterTemplate.userId || null }, // In case of PvP, monsterTemplate might hold user context
+            battleResult,
+            { name: "Horde", loot: [] }, 
+            sim.units.filter(u => u.teamId === 0).length
+        );
+
+        return {
+            battleId: sim.battleId,
+            result: battleResult.winner === 0 ? "VICTORY" : "DEFEAT",
+            replay: viewData, // Return clean version to UI
+            loot: lootEarned,
+            heroProgress: heroResults,
+            initialUnits: sim.units.map(u => ({
+                id: u.instanceId,
+                name: u.data.name,
+                team: u.teamId === 0 ? "PLAYER" : "MONSTER",
+                maxHp: u.stats.health_max,
+                x: u.gridPos.x,
+                y: u.gridPos.y
+            }))
+        };
+    }
+
+    async startBattle(userId, monsterTemplateId) {
+        await lootService.interruptSession(userId);
+        const { sim, monsterTemplate } = await battleInitializer.setupSimulation(userId, monsterTemplateId);
+        sim.logger.setMetadata({
+            battle_type: "SOLO",
+            user_id: userId,
+            monster_id: monsterTemplateId
+        });
+
+        const battleResult = sim.run();
+
+        // 3. Save DUAL Replays
+        const debugData = sim.logger.getReplayData(true);
+        await replayService.saveReplay(`debug_${sim.battleId}`, debugData);
+
+        const viewData = sim.logger.getReplayData(false);
+        await replayService.saveReplay(`view_${sim.battleId}`, viewData);
+
+        // 4. Process Rewards
+        const { lootEarned, heroResults } = await rewardProcessor.process(
+            userId, 
+            { ...battleResult, victimUserId: monsterTemplate.userId || null }, 
             monsterTemplate, 
             sim.units.filter(u => u.teamId === 0).length
         );
 
         return {
-            battleId: sim.battleId, // Return ID so client can fetch replay
+            battleId: sim.battleId,
             result: battleResult.winner === 0 ? "VICTORY" : "DEFEAT",
-            // replay: battleResult.logs, // Optional: Don't send full log if too big, client fetches via ID
+            replay: viewData,
             loot: lootEarned,
             rewards: battleResult.rewards,
             heroProgress: heroResults,

@@ -13,7 +13,7 @@ IsTargetInRange.prototype.initialize = function(params = {}) {
 
 IsTargetInRange.prototype.tick = function(tick) {
     const { unit, sim } = tick.blackboard.get('context');
-    const target = tick.blackboard.get('target', tick.tree.id, unit.instanceId) || sim.ai.findTarget(unit);
+    const target = tick.blackboard.get('target') || sim.ai.findTarget(unit);
     
     if (!target) return this.executePath(tick, false);
     
@@ -21,7 +21,7 @@ IsTargetInRange.prototype.tick = function(tick) {
     const range = unit.stats.attack_range || 1;
     const inRange = dist <= range;
 
-    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} distance to ${target.data.name} is ${dist} (Range: ${range}). Result: ${inRange}`);
+    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} distance to ${target.data.name} is ${dist} (Range: ${range}). Result: ${inRange}`, {}, true);
     
     return this.executePath(tick, inRange);
 }

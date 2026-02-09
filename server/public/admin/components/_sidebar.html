@@ -1,0 +1,257 @@
+<!-- Sidebar Component -->
+<style>
+    :root {
+        --sidebar-width: 260px;
+        --sidebar-bg: #1e293b;
+        --sidebar-hover: #334155;
+        --primary-color: #4f46e5;
+    }
+    
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--sidebar-bg);
+        color: #fff;
+        padding: 20px 0;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+    
+    .sidebar-brand {
+        padding: 0 20px 20px;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-brand h4 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+    
+    .sidebar-brand span {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .sidebar-nav {
+        padding: 0 12px;
+    }
+    
+    .nav-section {
+        margin-bottom: 24px;
+    }
+    
+    .nav-section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: #64748b;
+        padding: 0 12px;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+    
+    .nav-item {
+        margin-bottom: 4px;
+    }
+    
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        color: #cbd5e1;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .nav-link:hover {
+        background: var(--sidebar-hover);
+        color: #fff;
+    }
+    
+    .nav-link.active {
+        background: var(--primary-color);
+        color: #fff;
+    }
+    
+    .nav-link i {
+        width: 24px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-footer {
+        padding: 20px;
+        border-top: 1px solid #334155;
+        margin-top: auto;
+    }
+    
+    .admin-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .admin-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .admin-user-info {
+        flex: 1;
+    }
+    
+    .admin-user-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .admin-user-role {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .nav-divider {
+        height: 1px;
+        background: #334155;
+        margin: 12px 12px;
+    }
+</style>
+
+<nav class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+        <h4>⚔️ TEXTICAL</h4>
+        <span>Admin Panel</span>
+    </div>
+    
+    <div class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="dashboard.html">
+                        <i class="bi bi-speedometer2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="analytics.html">
+                        <i class="bi bi-bar-chart-line"></i>
+                        Analytics
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Game Data</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="users.html">
+                        <i class="bi bi-people"></i>
+                        Players
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="heroes.html">
+                        <i class="bi bi-shield-check"></i>
+                        Heroes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="monsters.html">
+                        <i class="bi bi-ghost"></i>
+                        Monsters
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="regions.html">
+                        <i class="bi bi-map"></i>
+                        Regions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="items.html">
+                        <i class="bi bi-box"></i>
+                        Items
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="quests.html">
+                        <i class="bi bi-clipboard-check"></i>
+                        Quests
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="skills.html">
+                        <i class="bi bi-lightning"></i>
+                        Skills
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="traits.html">
+                        <i class="bi bi-gem"></i>
+                        Traits
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="factions.html">
+                        <i class="bi bi-flag"></i>
+                        Factions
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">System</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="server.html">
+                        <i class="bi bi-hdd-stack"></i>
+                        Server Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="bulk.html">
+                        <i class="bi bi-box-seam"></i>
+                        Bulk Operations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-page="logs.html">
+                        <i class="bi bi-journal-text"></i>
+                        Activity Logs
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="admin-user">
+            <div class="admin-user-avatar">A</div>
+            <div class="admin-user-info">
+                <div class="admin-user-name">Administrator</div>
+                <div class="admin-user-role">Admin Panel</div>
+            </div>
+            <button onclick="logout()" class="btn btn-sm btn-outline-light" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</nav>

@@ -157,24 +157,15 @@ class EnhancedStatService extends BaseService {
         // Layer 11: Apply world event modifiers
         await this._applyWorldEvents(stats, heroData, calcContext, applyMod);
 
-        // Layer 12: Apply caps first
-        this._finalizeStats(stats, primary, heroData, calcContext);
-        
-        // Layer 13: Apply attribute scaling (AFTER caps to allow proper limiting)
+        // Layer 12: Apply attribute scaling
         scalingComponent.applyAttributeScaling(primary, stats, applyMod);
 
-        // Get final values
+        // Layer 13: Finalize and apply caps (must be after scaling)
+        const finalStats = this._finalizeStats(stats, primary, heroData, calcContext);
 
         // Build result with breakdown
         const result = {
             ...finalStats,
-            attributes: {
-                str: primary.str.getValue(),
-                dex: primary.dex.getValue(),
-                int: primary.int.getValue(),
-                vit: primary.vit.getValue(),
-                luk: primary.luk?.getValue() || 0
-            },
             calculationLayers: Object.keys(CalculationLayer),
             calculatedAt: new Date().toISOString(),
             calculationTime: Date.now() - startTime,
@@ -254,7 +245,7 @@ class EnhancedStatService extends BaseService {
             });
 
             // Apply primary stat growth
-            const statAllocation = heroData.heroStatAllocation;
+            const statAllocation = heroData.statAllocation;
             if (statAllocation) {
                 const growthConfig = {
                     type: GrowthCurveType.LINEAR,
@@ -312,7 +303,7 @@ class EnhancedStatService extends BaseService {
      * @private
      */
     async _fetchHeroData(heroId) {
-        return await this.db.hero.findUnique({
+        const hero = await this.db.hero.findUnique({
             where: { id: heroId },
             include: {
                 user: { 
@@ -326,9 +317,7 @@ class EnhancedStatService extends BaseService {
                         } 
                     } 
                 },
-                combatClass: {
-                    include: { statAllocationTemplate: true }
-                },
+                combatClass: true,
                 skills: { 
                     where: { isActive: true }, 
                     include: { skill: true } 
@@ -352,9 +341,18 @@ class EnhancedStatService extends BaseService {
                     } 
                 },
                 elementalAffinities: true,
-                heroStatAllocation: true
+                statAllocation: true
             }
         });
+
+        // Manually fetch statAllocationTemplate because of Prisma include issues
+        if (hero && hero.combatClass) {
+            hero.combatClass.statAllocationTemplate = await this.db.statAllocationTemplate.findUnique({
+                where: { classId: hero.combatClass.id }
+            });
+        }
+
+        return hero;
     }
 
     /**
@@ -433,7 +431,7 @@ class EnhancedStatService extends BaseService {
      * @private
      */
     _initializePrimaryStats(heroData) {
-        const allocation = heroData.heroStatAllocation;
+        const allocation = heroData.statAllocation;
         const baseStats = {
             str: heroData.str || 10,
             dex: heroData.dex || 10,
@@ -459,7 +457,7 @@ class EnhancedStatService extends BaseService {
         statGrowthSystem.applyGrowth(stats, heroData.combatClass, context.level);
         
         // Apply growth curves for primary stats
-        const allocation = heroData.heroStatAllocation;
+        const allocation = heroData.statAllocation;
         if (allocation && heroData.combatClass?.statAllocationTemplate) {
             const template = heroData.combatClass.statAllocationTemplate;
             
@@ -496,7 +494,7 @@ class EnhancedStatService extends BaseService {
      * @private
      */
     _applyStatAllocation(primary, heroData, context) {
-        const allocation = heroData.heroStatAllocation;
+        const allocation = heroData.statAllocation;
         if (!allocation) return;
 
         ['str', 'dex', 'int', 'vit', 'luk'].forEach(attr => {
@@ -572,7 +570,7 @@ class EnhancedStatService extends BaseService {
         if (traitIds.size === 0) return;
         
         // Fetch trait data
-        const traits = await this.db.trait.findMany({
+        const traits = await this.db.traitTemplate.findMany({
             where: { id: { in: [...traitIds] } },
             include: { stats: true }
         });
@@ -1008,7 +1006,7 @@ class EnhancedStatService extends BaseService {
             throw new Error('Hero not found');
         }
         
-        const allocation = hero.heroStatAllocation;
+        const allocation = hero.statAllocation;
         if (!allocation) {
             throw new Error('Stat allocation not initialized');
         }
@@ -1075,7 +1073,7 @@ class EnhancedStatService extends BaseService {
         }
         
         const caps = this.statCapResolver.getCaps(hero);
-        const allocation = hero.heroStatAllocation || {};
+        const allocation = hero.statAllocation || {};
         
         const primaryStats = ['str', 'dex', 'int', 'vit', 'luk'];
         const statDetails = {};
@@ -1157,10 +1155,9 @@ class EnhancedStatService extends BaseService {
         
         const elementalData = {
             affinities: affinities.map(a => ({
-                element: a.element,
-                affinityLevel: a.affinityLevel,
-                bonusDamage: elementalResolver.getAffinityBonus(a.element, a.affinityLevel),
-                resistanceBonus: elementalResolver.getResistanceBonus(a.element, a.affinityLevel)
+                element: a.elementType || a.elementTypeId,
+                bonusDamage: a.bonusDamage || 0,
+                resistanceBonus: a.resistance || 0
             })),
             resistances: {
                 fire: stats.fire_resistance || 0,
@@ -1178,8 +1175,8 @@ class EnhancedStatService extends BaseService {
                 light: stats.light_damage || 0,
                 dark: stats.dark_damage || 0
             },
-            equipmentBonuses: elementalResolver.getEquipmentElementalBonuses(hero.equipment || []),
-            setBonuses: elementalResolver.getSetElementalBonuses(hero.equipment || [])
+            equipmentBonuses: this.elementalResolver.getEquipmentElementalBonuses(hero.equipment || []),
+            setBonuses: this.elementalResolver.getSetElementalBonuses(hero.equipment || [])
         };
         
         return elementalData;

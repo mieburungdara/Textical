@@ -19,14 +19,43 @@ class SimUnitManager {
         scaledStats.attack_damage = Math.floor(scaledStats.attack_damage * envMods.combat.atkMult);
         // Add more scaling here if needed (e.g. elemental)
 
-        const unit = new BattleUnit(data, teamId, { 
-            x: _.clamp(pos.x, 0, this.sim.width - 1), 
-            y: _.clamp(pos.y, 0, this.sim.height - 1) 
-        }, scaledStats);
+        // AAA: Tile Occupancy Check - Find nearest empty tile if spawn is occupied
+        let targetX = _.clamp(pos.x, 0, this.sim.width - 1);
+        let targetY = _.clamp(pos.y, 0, this.sim.height - 1);
+        
+        if (this.sim.grid.isTileOccupied(targetX, targetY)) {
+            // Find neighbor or random empty nearby
+            const neighbors = this.sim.grid.getNeighbors({ x: targetX, y: targetY });
+            const free = neighbors.find(n => !this.sim.grid.isTileOccupied(n.x, n.y));
+            if (free) {
+                targetX = free.x;
+                targetY = free.y;
+            } else {
+                // Fallback to searching nearby
+                for (let r = 1; r < 5; r++) {
+                    let found = false;
+                    for (let dx = -r; dx <= r; dx++) {
+                        for (let dy = -r; dy <= r; dy++) {
+                            const nx = _.clamp(targetX + dx, 0, this.sim.width - 1);
+                            const ny = _.clamp(targetY + dy, 0, this.sim.height - 1);
+                            if (!this.sim.grid.isTileOccupied(nx, ny)) {
+                                targetX = nx; targetY = ny;
+                                found = true; break;
+                            }
+                        }
+                        if (found) break;
+                    }
+                    if (found) break;
+                }
+            }
+        }
+
+        const unit = new BattleUnit(data, teamId, { x: targetX, y: targetY }, scaledStats);
         
         if (data.facing) unit.facing = data.facing;
         this.sim.units.push(unit);
         this.sim.grid.unitGrid[unit.gridPos.y][unit.gridPos.x] = unit;
+        this.sim.grid.addObstacle(unit.gridPos.x, unit.gridPos.y);
         this.notifyAdjacencyGained(unit);
         return unit;
     }

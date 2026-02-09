@@ -1,8 +1,7 @@
 [gd_scene load_steps=10 format=3 uid="uid://guild_screen"]
 
-[ext_resource type="Script" uid="uid://guild_screen_script" path="res://src/ui/GuildScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
-[ext_resource type="PackedScene" path="res://src/ui/BottomHUD.tscn" id="3_nav"]
+[ext_resource type="Script" path="res://src/ui/GuildScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/SideHUD.tscn" id="3_nav"]
 
 [sub_resource type="Gradient" id="Gradient_guild_bg"]
 offsets = PackedFloat32Array(0, 0.5, 1)
@@ -26,10 +25,22 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
-font_size = 32
+font_size = 28
 font_color = Color(0.9, 0.8, 0.5, 1)
 shadow_size = 8
 shadow_color = Color(0, 0, 0, 0.6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_btn"]
+bg_color = Color(0.35, 0.25, 0.15, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.9, 0.6, 0.2)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="GuildScreen" type="Control"]
 layout_mode = 3
@@ -49,27 +60,22 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_bg")
 
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
-
-[node name="BottomHUD" parent="." instance=ExtResource("3_nav")]
-layout_mode = 1
-
 [node name="Main" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 110.0
-offset_bottom = -110.0
+offset_left = 200.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
 [node name="LeftPanel" type="VBoxContainer" parent="Main"]
-custom_minimum_size = Vector2(300, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 15
 
 [node name="GuildInfo" type="PanelContainer" parent="Main/LeftPanel"]
@@ -79,6 +85,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 [node name="VBox" type="VBoxContainer" parent="Main/LeftPanel/GuildInfo"]
 layout_mode = 2
 theme_override_constants/separation = 10
+alignment = 1
 
 [node name="GuildName" type="Label" parent="Main/LeftPanel/GuildInfo/VBox"]
 layout_mode = 2
@@ -86,18 +93,25 @@ text = "Guild Name"
 label_settings = SubResource("LabelSettings_title")
 horizontal_alignment = 1
 
+[node name="GuildLevel" type="Label" parent="Main/LeftPanel/GuildInfo/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.7, 0.4, 1)
+text = "LEVEL 1"
+horizontal_alignment = 1
+
 [node name="MemberCount" type="Label" parent="Main/LeftPanel/GuildInfo/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 text = "0/50 Members"
+horizontal_alignment = 1
 
 [node name="Treasury" type="Label" parent="Main/LeftPanel/GuildInfo/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.7, 0.3, 1)
 text = "Gold: 0 | Silver: 0"
+horizontal_alignment = 1
 
 [node name="CenterPanel" type="VBoxContainer" parent="Main"]
-custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 15
@@ -111,9 +125,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 layout_mode = 2
 
 [node name="RightPanel" type="VBoxContainer" parent="Main"]
-custom_minimum_size = Vector2(300, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 15
 
 [node name="FacilitiesPanel" type="PanelContainer" parent="Main/RightPanel"]

@@ -1,0 +1,126 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="GDScript" id="1"]
+script/source = "extends PanelContainer
+
+signal item_selected(item_data)
+
+@onready var name_label = $HBox/VBox/Name
+@onready var stats_label = $HBox/VBox/Stats
+@onready var icon_label = $HBox/Icon
+@onready var accent = $HBox/Accent
+
+var item_data: Dictionary = {}
+
+func setup(p_data: Dictionary):
+	item_data = p_data
+	name_label.text = p_data.get(\"name\", \"Unknown Item\")
+	
+	var rarity = p_data.get(\"rarity\", \"COMMON\").to_upper()
+	var rarity_color = Color(0.8, 0.8, 0.8)
+	match rarity:
+		\"RARE\": rarity_color = Color(0.2, 0.6, 1.0)
+		\"EPIC\": rarity_color = Color(0.7, 0.3, 1.0)
+		\"LEGENDARY\": rarity_color = Color(1.0, 0.6, 0.1)
+	
+	name_label.modulate = rarity_color
+	if accent: accent.modulate = rarity_color
+	
+	var category = p_data.get(\"category\", \"\").to_upper()
+	match category:
+		\"WEAPON\": icon_label.text = \"⚔️\"
+		\"ARMOR\": icon_label.text = \"🛡️\"
+		\"HELMET\": icon_label.text = \"🪖\"
+		\"ACCESSORY\": icon_label.text = \"💍\"
+		_: icon_label.text = \"📦\"
+	
+	var stats_text = \"No bonuses\"
+	var stats = p_data.get(\"stats\", [])
+	if stats is Array and stats.size() > 0:
+		var s = stats[0]
+		var key = s.get(\"statKey\", \"\").replace(\"_\", \" \").capitalize()
+		var val = s.get(\"statValue\", 0)
+		stats_text = \"+%d %s\" % [val, key]
+		if stats.size() > 1:
+			stats_text += \" (+%d more)\" % (stats.size() - 1)
+	
+	stats_label.text = stats_text
+
+func _on_mouse_entered():
+	modulate = Color(1.2, 1.2, 1.2)
+
+func _on_mouse_exited():
+	modulate = Color(1, 1, 1)
+
+func _gui_input(event):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		item_selected.emit(item_data)
+
+func _ready():
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+"
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(1, 1, 1, 0.03)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="LabelSettings" id="4"]
+font_size = 13
+font_color = Color(1, 1, 1, 1)
+
+[sub_resource type="LabelSettings" id="5"]
+font_size = 10
+font_color = Color(0.6, 0.55, 0.5, 1)
+
+[node name="ItemSelectionRow" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 44)
+offset_right = 200.0
+offset_bottom = 44.0
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("2")
+script = SubResource("1")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Accent" type="Panel" parent="HBox"]
+custom_minimum_size = Vector2(3, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("3")
+
+[node name="Icon" type="Label" parent="HBox"]
+layout_mode = 2
+text = "⚔️"
+horizontal_alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = -2
+alignment = 1
+
+[node name="Name" type="Label" parent="HBox/VBox"]
+layout_mode = 2
+text = "Iron Sword"
+label_settings = SubResource("4")
+
+[node name="Stats" type="Label" parent="HBox/VBox"]
+layout_mode = 2
+text = "+5 Attack"
+label_settings = SubResource("5")

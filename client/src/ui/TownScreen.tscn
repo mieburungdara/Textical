@@ -1,9 +1,8 @@
 [gd_scene load_steps=18 format=3 uid="uid://o2sucrfahuvn"]
 
 [ext_resource type="Script" uid="uid://cnx3av43g08fn" path="res://src/ui/TownScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 colors = PackedColorArray(0.15, 0.1, 0.05, 1, 0.05, 0.04, 0.06, 1)
@@ -376,11 +375,12 @@ theme_override_font_sizes/font_size = 12
 text = "Forge Gear"
 horizontal_alignment = 1
 
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
-
 [node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
+offset_left = -256.0
+offset_top = -964.0
+offset_right = -56.0
+offset_bottom = -864.0
 
-[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
+[node name="SideHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1

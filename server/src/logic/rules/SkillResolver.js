@@ -87,7 +87,7 @@ class SkillResolver {
         tiles.forEach(t => {
             const v = this.sim.grid.unitGrid[t.y]?.[t.x];
             if (v && v.teamId !== actor.teamId) {
-                v.modifyAP(-40, this.sim);
+                v.setActionDelay(40, this.sim);
                 const Leaden = require('../status/definitions/Leaden');
                 v.applyEffect(new Leaden(3), this.sim);
             }

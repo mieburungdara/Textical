@@ -6,7 +6,7 @@ signal travel_finished(target_id, target_type)
 @onready var line_2d = $Path2D/Line2D
 @onready var follow_2d = $Path2D/PathFollow2D
 
-var camera: Camera2D = null
+var camera: Node = null
 var is_traveling = false
 var _target_id = -1
 var _target_type = "TOWN"
@@ -22,7 +22,10 @@ func _process(delta):
         follow_2d.progress_ratio = p
         # Notify camera to follow this position
         if camera:
-            camera.global_position = camera.global_position.lerp(follow_2d.global_position, 0.1)
+            if camera.has_method("center_on"):
+                camera.center_on(follow_2d.position)
+            else:
+                camera.global_position = camera.global_position.lerp(follow_2d.global_position, 0.1)
     
     if p >= 1.0:
         is_traveling = false

@@ -1,9 +1,8 @@
 [gd_scene load_steps=15 format=3 uid="uid://d3r6s5pwpj0es"]
 
 [ext_resource type="Script" path="res://src/ui/regions/WildernessBase.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
 
 [sub_resource type="Gradient" id="Gradient_forest"]
 colors = PackedColorArray(0.02, 0.08, 0.05, 1, 0.01, 0.03, 0.05, 1)
@@ -101,8 +100,10 @@ texture = SubResource("GradientTexture2D_vignette")
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 120.0
-offset_bottom = 220.0
+offset_left = 200.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = 140.0
 grow_horizontal = 2
 theme_override_constants/separation = 10
 
@@ -133,7 +134,9 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 220.0
+offset_left = 200.0
+offset_top = 160.0
+offset_right = -40.0
 offset_bottom = -110.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -142,17 +145,19 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 20
 
-[node name="ResourceGrid" type="GridContainer" parent="MarginContainer"]
+[node name="Scroll" type="ScrollContainer" parent="MarginContainer"]
 layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="ResourceGrid" type="GridContainer" parent="MarginContainer/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
-columns = 2
-
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
+columns = 4
 
 [node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
 
-[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
+[node name="SideHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1

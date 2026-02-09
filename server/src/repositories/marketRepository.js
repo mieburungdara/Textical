@@ -17,15 +17,17 @@ class MarketRepository {
     }
 
     async findListingById(id) {
+        const listingId = parseInt(id);
+        if (isNaN(listingId)) return null;
         return await prisma.marketListing.findUnique({
-            where: { id },
+            where: { id: listingId },
             include: { itemInstance: true, seller: true }
         });
     }
 
     async getActiveListings(templateId = null) {
         const where = { isSold: false, expiresAt: { gt: new Date() } };
-        if (templateId) where.templateId = templateId;
+        if (templateId) where.templateId = parseInt(templateId);
         
         return await prisma.marketListing.findMany({
             where,
@@ -35,8 +37,9 @@ class MarketRepository {
     }
 
     async markAsSold(id) {
+        const listingId = parseInt(id);
         return await prisma.marketListing.update({
-            where: { id },
+            where: { id: listingId },
             data: { isSold: true }
         });
     }
@@ -46,8 +49,9 @@ class MarketRepository {
     }
 
     async getHistory(templateId) {
+        const tId = parseInt(templateId);
         return await prisma.marketHistory.findMany({
-            where: { templateId },
+            where: { templateId: tId },
             orderBy: { soldAt: 'desc' },
             take: 20
         });

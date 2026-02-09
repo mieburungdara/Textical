@@ -57,6 +57,15 @@ func _ready():
         if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
         if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
     
+    # Stat Handler Signal Routing
+    stat.stats_updated.connect(func(u, s): stats_updated.emit(u, s))
+    stat.stat_changed.connect(func(u, n, o, v): stat_changed.emit(u, n, o, v))
+    if stat.has_signal("stat_comparison_received"):
+        stat.stat_comparison_received.connect(func(_u, d): emit_signal("request_completed", "/stats/compare", d))
+    stat.stat_cap_reached.connect(func(u, n, c, cap): stat_cap_reached.emit(u, n, c, cap))
+    stat.elemental_affinity_updated.connect(func(u, a): elemental_affinity_updated.emit(u, a))
+    stat.set_bonus_updated.connect(func(u, b): set_bonus_updated.emit(u, b))
+    
     # Socket Routing
     socket.task_completed.connect(func(d): task_completed.emit(d))
     socket.task_started.connect(func(d): task_started.emit(d))
@@ -79,8 +88,11 @@ func _on_login_success(user):
     # Extract actual user data from nested "data" key
     var user_data = user.get("data", user)
     
-    # Get user ID from nested data
-    var user_id = user_data.get("id") or user_data.get("_id") or user_data.get("userId") or user_data.get("uid")
+    # Get user ID from nested data (defensive check for different possible keys)
+    var user_id = user_data.get("id")
+    if user_id == null: user_id = user_data.get("_id")
+    if user_id == null: user_id = user_data.get("userId")
+    if user_id == null: user_id = user_data.get("uid")
     
     print("[CONNECTOR] user_id from nested data: ", user_id)
     
@@ -139,6 +151,7 @@ func fetch_set_bonuses(unit_id: int): stat.fetch_set_bonuses(unit_id)
 func fetch_stat_caps(unit_id: int): stat.fetch_stat_caps(unit_id)
 func fetch_growth_curve(unit_id: int, stat_name: String): stat.fetch_growth_curve(unit_id, stat_name)
 func fetch_available_stat_points(unit_id: int): stat.fetch_available_stat_points(unit_id)
+func get_cached_stats(unit_id: int) -> Dictionary: return stat.get_cached_stats(unit_id)
 func subscribe_to_stat_updates(unit_id: int): stat.subscribe_to_stat_updates(unit_id)
 func unsubscribe_from_stat_updates(unit_id: int): stat.unsubscribe_from_stat_updates(unit_id)
 func start_stat_sync(): stat.start_stat_sync()

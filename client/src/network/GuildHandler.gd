@@ -7,7 +7,6 @@ signal guild_disbanded()
 signal guild_info_received(guild_data)
 signal guild_my_info_received(guild_data)
 signal guild_search_results(guilds)
-signal guild_updated(guild_data)
 
 signal member_kicked(user_id)
 signal member_promoted(user_id, new_role)

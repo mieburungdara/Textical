@@ -7,7 +7,7 @@ class QuestRepository {
      */
     async findActiveQuestWithProgress(userId, questId) {
         return await prisma.userQuest.findUnique({
-            where: { userId_questId: { userId, questId } },
+            where: { userId_questId: { userId: parseInt(userId), questId: parseInt(questId) } },
             include: {
                 quest: true,
                 objectives: {
@@ -17,7 +17,9 @@ class QuestRepository {
         });
     }
 
-    async acceptQuest(userId, questId, objectiveTemplates) {
+    async acceptQuest(uId, qId, objectiveTemplates) {
+        const userId = parseInt(uId);
+        const questId = parseInt(qId);
         return await prisma.userQuest.create({
             data: {
                 userId,
@@ -25,7 +27,7 @@ class QuestRepository {
                 status: "ACTIVE",
                 objectives: {
                     create: objectiveTemplates.map(obj => ({
-                        objectiveId: obj.id,
+                        objectiveId: parseInt(obj.id),
                         currentAmount: 0,
                         isCompleted: false
                     }))
@@ -35,21 +37,24 @@ class QuestRepository {
         });
     }
 
-    async updateObjectiveProgress(userObjectiveId, newAmount, isCompleted) {
+    async updateObjectiveProgress(id, newAmount, isCompleted) {
+        const userObjectiveId = parseInt(id);
         return await prisma.userQuestObjective.update({
             where: { id: userObjectiveId },
-            data: { currentAmount: newAmount, isCompleted }
+            data: { currentAmount: parseInt(newAmount), isCompleted }
         });
     }
 
-    async completeQuest(userQuestId) {
+    async completeQuest(id) {
+        const userQuestId = parseInt(id);
         return await prisma.userQuest.update({
             where: { id: userQuestId },
             data: { status: "COMPLETED", completedAt: new Date() }
         });
     }
 
-    async getPlayerQuests(userId) {
+    async getPlayerQuests(uId) {
+        const userId = parseInt(uId);
         return await prisma.userQuest.findMany({
             where: { userId },
             include: { 

@@ -29,7 +29,6 @@ class_name TopHUD
 var _current_stats: Dictionary = {}
 var _active_buffers: Array = []
 var _elemental_affinity: Dictionary = {}
-var _buff_icons: Dictionary = {}
 
 # === BUFF/DEBUFF METADATA ===
 const BUFF_METADATA: Dictionary = {
@@ -50,6 +49,10 @@ func _ready():
     _setup_connections()
     _setup_ui()
     refresh()
+    
+    # Register with UIManager to allow auto-hide on overlays
+    if UIManager:
+        UIManager.register_world_hud(self)
 
 func _setup_connections():
     ServerConnector.login_success.connect(_on_data_updated)

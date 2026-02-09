@@ -23,17 +23,28 @@ FindTarget.prototype.tick = function(tick) {
     }
     
     if (targets.length === 0) {
-        sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} failed to find ${strategy}`);
+        sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} failed to find ${strategy}`, {}, true);
         return b3.FAILURE;
     }
     
-    const closest = targets.sort((a, b) => {
-        const distA = sim.grid.getDistance(unit.gridPos, a.gridPos);
-        const distB = sim.grid.getDistance(unit.gridPos, b.gridPos);
-        return distA - distB;
-    })[0];
+    const scoredTargets = targets.map(t => {
+        const dist = sim.grid.getDistance(unit.gridPos, t.gridPos);
+        const engagedCount = sim.ai.getEngagedCount(t, unit.teamId);
+        
+        // AAA: Scoring Logic with Stuck Awareness
+        // If unit is stuck, we add a massive penalty to the current target to force a switch
+        const isCurrentTarget = tick.blackboard.get('target') === t;
+        const stuckPenalty = (isCurrentTarget && (unit.stuckTicks > 0)) ? (unit.stuckTicks * 20) : 0;
+        
+        const score = dist + (engagedCount * 5) + stuckPenalty; 
+        
+        return { target: t, score: score };
+    });
     
-    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} targeted ${closest.data.name} at [${closest.gridPos.x}, ${closest.gridPos.y}]`);
+    scoredTargets.sort((a, b) => a.score - b.score);
+    const closest = scoredTargets[0].target;
+    
+    sim.logger.addEvent("ENGINE", `[AI_TRACE] ${unit.data.name} targeted ${closest.data.name} (Score: ${scoredTargets[0].score.toFixed(1)})`, {}, true);
     
     // AAA: Use a consistent key without tree-scoping for easier access by other nodes
     tick.blackboard.set('target', closest); 

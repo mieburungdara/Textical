@@ -8,49 +8,40 @@ class BattleUnit {
         this.behavior = data.activeBehavior || "balanced"; 
         this.instanceId = data.instance_id; 
         this.stats = stats; 
-        // Support both EnhancedStat objects and plain objects for backward compatibility
-        this._enhancedStats = null;
-        if (stats && typeof stats.getValue === 'function') {
-            this._enhancedStats = stats;
-        }
+        this._enhancedStats = (stats && typeof stats.getValue === 'function') ? stats : null;
         this.teamId = teamId;
         this.gridPos = pos;
-        this.facing = "SOUTH"; // Directional combat support
+        this.facing = "SOUTH";
         
-        // Initialize temporary stats before calling getStat
         this.temporaryStats = {}; 
+        const maxHp = this.getStat("health_max") || stats.health_max || 100;
+        this.currentHealth = maxHp;
         
-        this.currentHealth = this.getStat("health_max") || stats.health_max;
-        
-        // Dynamic Resource Initialization
         const resType = data.resourceType || "MANA";
         const maxMana = this.getStat("mana_max") || stats.mana_max || 100;
         this.currentMana = (resType === "RAGE") ? 0 : maxMana; 
-        this.currentRage = (resType === "RAGE") ? 0 : 0;
+        this.currentRage = 0;
         this.currentEnergy = (resType === "ENERGY") ? 100 : 0;
         
-        this._actionPoints = this.getStat("initiative") || stats.initiative || 0.0;
+        // AAA: Timeline-Based Action Readiness (Replaced legacy AP)
+        this.nextActionTick = 0; 
+        this.skillCooldowns = {}; // { skillId: readyAtTick }
+        this.stuckTicks = 0;
+        this.waitTicks = 0;
+        this.moveCooldownTicks = 0;
+        this.posHistory = [];
+
         this.isDead = false;
-        
-        this.skillCooldowns = {};
         this.activeEffects = [];
         
-        // Skill Integration
         const allAbilities = data.abilities || [];
         this.activeSkills = allAbilities.filter(a => a.category === "ACTIVE");
         this.passiveSkills = allAbilities.filter(a => a.category === "PASSIVE");
 
         this.equippedItems = data.equippedItems || [];
         this.durabilityLoss = {};
-
-        this.weaponTraits = [];
         this.traits = data.traits || [];
-        this.temporaryStats = {}; 
         this.isStealthed = false;
-        
-        // Directional combat tracking
-        this.lastAttackDirection = null;
-        this.receivedAttackFrom = null;
     }
 
     recordDurabilityLoss(slotKey, amount = 1) {
@@ -66,206 +57,107 @@ class BattleUnit {
         }
     }
 
-    get currentActionPoints() { return this._actionPoints; }
-    set currentActionPoints(val) { this._actionPoints = val; }
+    setActionDelay(delay, sim) {
+        if (!sim) {
+            console.error(`[UNIT_ERR] setActionDelay called without sim for ${this.instanceId}`);
+            return;
+        }
+        this.nextActionTick = sim.currentTick + delay;
+    }
 
-    modifyAP(amount, sim) {
-        const old = this._actionPoints;
-        this._actionPoints += amount;
-        traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
+    setSkillCooldown(skillId, duration, sim) {
+        if (!sim) return;
+        this.skillCooldowns[skillId] = sim.currentTick + duration;
+    }
+
+    isSkillReady(skillId, sim) {
+        if (!sim) return true; // Fail-safe
+        const readyAt = this.skillCooldowns[skillId] || 0;
+        return sim.currentTick >= readyAt;
     }
 
     tick(delta, sim) {
         if (this.isDead) return;
-        this.temporaryStats = {}; // Clear transient stats
-        const old = this._actionPoints;
-        const effectiveSpeed = this.getStat("speed");
-        this._actionPoints += effectiveSpeed * delta;
-        if (Math.floor(this._actionPoints) !== Math.floor(old)) {
-            traitService.executeHook("onActionPointsChange", this, old, this._actionPoints, sim);
-        }
+        this.temporaryStats = {}; 
     }
 
-    /**
-     * Get stat value with EnhancedStat support
-     * Supports both EnhancedStat objects and plain stat objects
-     */
+    isReady(sim) { 
+        if (this.activeEffects.some(e => e.type === "STUN" || e.type === "CRYSTALLIZED")) return false;
+        if (!sim) return true; // Fail-safe
+        return sim.currentTick >= this.nextActionTick; 
+    }
+
     getStat(key) {
-        // Check temporary stats first (overrides)
         if (this.temporaryStats && this.temporaryStats[key] !== undefined) {
             return Math.max(0, this.temporaryStats[key]);
         }
-        
-        // Check EnhancedStat object
-        if (this._enhancedStats && typeof this._enhancedStats.getValue === 'function') {
+        if (this._enhancedStats) {
             const stat = this._enhancedStats[key];
             if (stat && typeof stat.getValue === 'function') {
                 return Math.max(0, stat.getValue());
             }
         }
-        
-        // Fallback to plain stats object
         const base = this.stats[key] || 0;
         const mod = this.temporaryStats[key] || 0;
         return Math.max(0, base + mod);
     }
 
-    /**
-     * Get action point cost for an action based on speed and action_speed
-     */
-    getActionPointCost(baseCost) {
-        const actionSpeed = this.getStat("action_speed") || 1.0;
-        return Math.max(1, Math.floor(baseCost / actionSpeed));
-    }
-
-    /**
-     * Calculate hit chance against a target (stealth affects this)
-     */
     getHitChanceAgainst(target) {
         let hitChance = 100;
-        
-        // Stealth penalty - attacker has reduced accuracy against stealthed target
         if (target.isStealthed) {
             const stealthLevel = target.getStat("stealth_level") || 50;
             hitChance -= Math.min(50, stealthLevel / 2);
         }
-        
-        // Apply trait hooks
         if (traitService.executeHook) {
             const mod = traitService.executeHook("onCalculateHitChance", this, target);
-            if (mod && mod.hitChance !== undefined) {
-                hitChance = mod.hitChance;
-            }
+            if (mod && mod.hitChance !== undefined) hitChance = mod.hitChance;
         }
-        
         return Math.max(0, Math.min(100, hitChance));
     }
 
-    /**
-     * Get directional combat bonus (back attack = crit, etc.)
-     */
-    getDirectionalBonus(attackerPos, defenderPos) {
-        const dx = defenderPos.x - attackerPos.x;
-        const dy = defenderPos.y - attackerPos.y;
-        
-        // Determine attack direction relative to defender's facing
-        const relativePos = this.getRelativePosition(attackerPos, defenderPos);
-        
-        let bonuses = {
-            damageMult: 1.0,
-            critChanceBonus: 0,
-            accuracyBonus: 0,
-            bypassBlock: false
-        };
-        
-        switch (relativePos) {
-            case "BACK":
-                bonuses.damageMult = 1.5; // Backstab bonus
-                bonuses.critChanceBonus = 25; // Back attack crit bonus
-                bonuses.accuracyBonus = 20;
-                bonuses.bypassBlock = true;
-                break;
-            case "SIDE":
-                bonuses.damageMult = 1.1;
-                bonuses.critChanceBonus = 10;
-                bonuses.accuracyBonus = 5;
-                break;
-            case "FRONT":
-            default:
-                bonuses.damageMult = 1.0;
-                bonuses.critChanceBonus = 0;
-                bonuses.accuracyBonus = 0;
-                bonuses.bypassBlock = false;
-        }
-        
-        // Apply trait hooks
-        if (traitService.executeHook) {
-            const mod = traitService.executeHook("onDirectionalBonus", this, bonuses, relativePos);
-            if (mod) {
-                bonuses = { ...bonuses, ...mod };
-            }
-        }
-        
-        return bonuses;
-    }
-
-    /**
-     * Get relative position of attacker from defender's perspective
-     */
     getRelativePosition(attackerPos, defenderPos) {
         const dx = attackerPos.x - defenderPos.x;
         const dy = attackerPos.y - defenderPos.y;
-        
-        // Check if attacker is behind (opposite of facing direction)
         const facing = this.facing || "SOUTH";
-        
         const backPositions = {
             "NORTH": [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: -1, y: 1 }],
             "SOUTH": [{ x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: -1 }],
             "EAST": [{ x: -1, y: 0 }, { x: -1, y: 1 }, { x: -1, y: -1 }],
             "WEST": [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: -1 }]
         };
-        
         const backSet = backPositions[facing] || backPositions["SOUTH"];
-        
-        if (backSet.some(pos => pos.x === dx && pos.y === dy)) {
-            return "BACK";
-        }
-        
-        // Check for side positions
+        if (backSet.some(pos => pos.x === dx && pos.y === dy)) return "BACK";
         const sidePositions = {
             "NORTH": [{ x: -1, y: 0 }, { x: 1, y: 0 }],
             "SOUTH": [{ x: -1, y: 0 }, { x: 1, y: 0 }],
             "EAST": [{ x: 0, y: -1 }, { x: 0, y: 1 }],
             "WEST": [{ x: 0, y: -1 }, { x: 0, y: 1 }]
         };
-        
         const sideSet = sidePositions[facing] || sidePositions["SOUTH"];
-        if (sideSet.some(pos => pos.x === dx && pos.y === dy)) {
-            return "SIDE";
-        }
-        
+        if (sideSet.some(pos => pos.x === dx && pos.y === dy)) return "SIDE";
         return "FRONT";
     }
 
-    /**
-     * Get resource value based on type
-     */
     getResourceValue(type) {
         switch (type.toUpperCase()) {
-            case "MANA":
-                return this.currentMana;
-            case "RAGE":
-                return this.currentRage;
-            case "ENERGY":
-                return this.currentEnergy;
-            default:
-                return this.currentMana;
+            case "MANA": return this.currentMana;
+            case "RAGE": return this.currentRage;
+            case "ENERGY": return this.currentEnergy;
+            default: return this.currentMana;
         }
     }
 
-    /**
-     * Get max resource value based on type
-     */
     getMaxResourceValue(type) {
         switch (type.toUpperCase()) {
-            case "MANA":
-                return this.getStat("mana_max");
-            case "RAGE":
-                return this.getStat("rage_max") || 100;
-            case "ENERGY":
-                return this.getStat("energy_max") || 100;
-            default:
-                return this.getStat("mana_max");
+            case "MANA": return this.getStat("mana_max");
+            case "RAGE": return this.getStat("rage_max") || 100;
+            case "ENERGY": return this.getStat("energy_max") || 100;
+            default: return this.getStat("mana_max");
         }
     }
 
-    /**
-     * Consume resource
-     */
     consumeResource(amount, type = "MANA", sim) {
         const resourceType = (type || "MANA").toUpperCase();
-        
         switch (resourceType) {
             case "MANA":
                 this.currentMana = Math.max(0, this.currentMana - amount);
@@ -282,32 +174,8 @@ class BattleUnit {
         }
     }
 
-    /**
-     * Gain resource
-     */
-    gainResource(amount, type = "MANA", sim) {
-        const resourceType = (type || "MANA").toUpperCase();
-        const maxVal = this.getMaxResourceValue(resourceType);
-        
-        switch (resourceType) {
-            case "MANA":
-                this.currentMana = Math.min(maxVal, this.currentMana + amount);
-                traitService.executeHook("onManaGain", this, amount, sim);
-                break;
-            case "RAGE":
-                this.currentRage = Math.min(maxVal, this.currentRage + amount);
-                traitService.executeHook("onRageGain", this, amount, sim);
-                break;
-            case "ENERGY":
-                this.currentEnergy = Math.min(maxVal, this.currentEnergy + amount);
-                traitService.executeHook("onEnergyGain", this, amount, sim);
-                break;
-        }
-    }
-
     applyEffect(statusInstance, sim) {
         if (traitService.executeHook("onStatusApplied", this, statusInstance, sim) === false) return;
-
         const existingIdx = this.activeEffects.findIndex(e => e.type === statusInstance.type);
         if (existingIdx !== -1) {
             this.activeEffects[existingIdx] = statusInstance;
@@ -348,10 +216,29 @@ class BattleUnit {
         traitService.executeHook("onManaGain", this, amount, sim);
     }
 
+    gainResource(amount, type = "MANA", sim) {
+        const resourceType = (type || "MANA").toUpperCase();
+        const maxVal = this.getMaxResourceValue(resourceType);
+        
+        switch (resourceType) {
+            case "MANA":
+                this.currentMana = Math.min(maxVal, this.currentMana + amount);
+                traitService.executeHook("onManaGain", this, amount, sim);
+                break;
+            case "RAGE":
+                this.currentRage = Math.min(maxVal, this.currentRage + amount);
+                traitService.executeHook("onRageGain", this, amount, sim);
+                break;
+            case "ENERGY":
+                this.currentEnergy = Math.min(maxVal, this.currentEnergy + amount);
+                traitService.executeHook("onEnergyGain", this, amount, sim);
+                break;
+        }
+    }
+
     takeDamage(amount, sim) {
         this.currentHealth -= amount;
         if (this.currentHealth < 0) this.currentHealth = 0;
-
         if (sim) {
             const resourceResolver = require('./rules/ResourceResolver');
             resourceResolver.handleCombatGain(this, "TAKE_DAMAGE", amount, sim);
@@ -359,36 +246,32 @@ class BattleUnit {
     }
 
     applyRegen(sim) {
-        // HP Regen
         const hpRegen = this.getStat("hp_regen") || this.stats.hp_regen || 0;
         const maxHp = this.getStat("health_max") || this.stats.health_max;
         const regenAmount = hpRegen > 0 ? hpRegen : Math.floor(maxHp * 0.02);
+        const oldHp = this.currentHealth;
         this.currentHealth = Math.min(maxHp, this.currentHealth + regenAmount);
-        if (regenAmount > 0) traitService.executeHook("onHealthRegen", this, regenAmount, sim);
-
-        // Dynamic Resource Regen
+        const actualGain = this.currentHealth - oldHp;
+        if (actualGain > 0) {
+            if (regenAmount > 0) traitService.executeHook("onHealthRegen", this, actualGain, sim);
+            if (sim && sim.logger) {
+                sim.logger.addEvent("HEAL", `${this.data.name} regenerated ${actualGain} HP`, {
+                    targetId: this.instanceId,
+                    amount: actualGain,
+                    isRegen: true
+                });
+            }
+        }
         const resourceResolver = require('./rules/ResourceResolver');
         resourceResolver.applyRegen(this, sim);
-        
-        return regenAmount;
-    }
-
-    isReady() { 
-        if (this.activeEffects.some(e => e.type === "STUN" || e.type === "CRYSTALLIZED")) return false;
-        return this._actionPoints >= 100.0; 
+        return actualGain;
     }
 
     applyStatusDamage(sim) {
-        let totalImpactCount = 0;
-
         this.activeEffects = this.activeEffects.filter(eff => {
             traitService.executeHook("onStatusTick", this, eff, sim);
-            
-            // AAA: Execute modular onTick logic
             if (eff.onTick) eff.onTick(this, sim);
-
             eff.duration--;
-
             if (eff.duration <= 0) {
                 if (eff.onExpire) eff.onExpire(this, sim);
                 traitService.executeHook("onStatusExpired", this, eff, sim);
@@ -396,7 +279,7 @@ class BattleUnit {
             }
             return true;
         });
-        return totalImpactCount;
+        return 0;
     }
 }
 

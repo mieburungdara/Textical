@@ -13,7 +13,7 @@ class QuestController extends BaseController {
     async completeQuest(req, res) {
         await this.execute(res, async () => {
             const { userId, userQuestId } = req.body;
-            await questService.completeQuest(userId, userQuestId);
+            await questService.completeQuest(parseInt(userId), parseInt(userQuestId));
             this.sendSuccess(res, null, "Quest completed");
         });
     }

@@ -103,9 +103,19 @@ class BattleRules {
         return result;
     }
 
-    performAttack(attacker, defender) {
-        if (traitService.executeHook("onPreAction", attacker, this.sim) === false) return;
+    performAttack(attacker, defender, isReaction = false) {
+        if (!isReaction && traitService.executeHook("onPreAction", attacker, this.sim) === false) return;
         attacker.reveal(this.sim);
+
+        // AAA: Final Range Safeguard - Double check distance at moment of impact
+        const actualDist = this.sim.grid.getDistance(attacker.gridPos, defender.gridPos);
+        const baseRange = attacker.getStat("attack_range") || 1;
+        const maxRange = baseRange > 1 ? baseRange : 1.5; // Give 0.5 buffer for melee adjacency
+        
+        if (actualDist > (maxRange + 0.2)) {
+            this.sim.logger.addEvent("ENGINE", `[ATTACK_CANCEL] ${attacker.data.name} target out of range (${actualDist.toFixed(1)} > ${maxRange}).`, { actorId: attacker.instanceId });
+            return;
+        }
 
         // 1. Tactical Sensing (Directional & Cover)
         const relPos = this.sensor.getRelativePosition(attacker, defender); 
@@ -160,9 +170,10 @@ class BattleRules {
         if (roll > hitChance) {
             traitService.executeHook("onDodge", defender, attacker, this.sim);
             this.sim.logger.addEvent("MISS", `${defender.data.name} dodged!`, { 
-                target_id: defender.instanceId,
-                hit_chance: hitChance,
-                roll: roll.toFixed(2)
+                targetId: defender.instanceId,
+                hitChance: hitChance,
+                roll: roll.toFixed(2),
+                isReaction
             });
             return;
         }
@@ -172,8 +183,9 @@ class BattleRules {
         
         if (blockResult.parried) {
             this.sim.logger.addEvent("PARRY", `${defender.data.name} parried!`, { 
-                actor_id: defender.instanceId,
-                target_id: attacker.instanceId
+                actorId: defender.instanceId,
+                targetId: attacker.instanceId,
+                isReaction
             });
             return; // Parry ends the attack
         }
@@ -197,7 +209,7 @@ class BattleRules {
 
         // 7. Mitigation & Hit Hooks
         const impactMods = traitService.executeHook("onTakeDamage", defender, attacker, result.damage, this.sim) || {};
-        const finalDamage = Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus);
+        const finalDamage = Math.floor(Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus));
 
         defender.takeDamage(finalDamage, this.sim);
         
@@ -219,20 +231,25 @@ class BattleRules {
 
         // Log with combat details
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
-            actor_id: attacker.instanceId,
-            target_id: defender.instanceId,
+            actorId: attacker.instanceId,
+            targetId: defender.instanceId,
+            actorPos: { x: attacker.gridPos.x, y: attacker.gridPos.y }, // Snapshot current pos
+            targetPos: { x: defender.gridPos.x, y: defender.gridPos.y }, // Snapshot current pos
             damage: finalDamage,
-            rel_pos: relPos,
-            is_crit: critResult.isCritical,
-            is_blocked: blockResult.blocked,
-            hit_chance: hitChance
+            relPos: relPos,
+            isCrit: critResult.isCritical,
+            isBlocked: blockResult.blocked,
+            hitChance: hitChance,
+            isReaction,
+            nextAction: attacker.nextActionTick,
+            range: attacker.getStat("attack_range") || 1.5
         });
 
         if (defender.currentHealth <= 0) {
             traitService.executeHook("onKill", attacker, defender, this.sim);
             this._broadcastAllyEvent("onAllyKill", attacker, defender);
         }
-        traitService.executeHook("onPostAction", attacker, this.sim);
+        if (!isReaction) traitService.executeHook("onPostAction", attacker, this.sim);
     }
 
     _handleKnockback(attacker, defender) {
@@ -246,9 +263,22 @@ class BattleRules {
 
         if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
             this._broadcastAdjacencyLost(defender);
+            
+            // Update occupancy and obstacles
             this.sim.grid.unitGrid[defender.gridPos.y][defender.gridPos.x] = null;
+            this.sim.grid.removeObstacle(defender.gridPos.x, defender.gridPos.y);
+            
+            const oldPos = { ...defender.gridPos };
             defender.gridPos = { x: nextX, y: nextY };
             this.sim.grid.unitGrid[nextY][nextX] = defender;
+            this.sim.grid.addObstacle(nextX, nextY);
+            
+            this.sim.logger.addEvent("KNOCKBACK", `${defender.data.name} was knocked back!`, {
+                targetId: defender.instanceId,
+                from: oldPos,
+                to: { x: nextX, y: nextY }
+            });
+            
             this._broadcastAdjacencyGained(defender);
         } else {
             const obstacle = this.sim.grid.unitGrid[nextY]?.[nextX] || "WALL";
@@ -290,6 +320,11 @@ class BattleRules {
 
         const target = this.sim.grid.unitGrid[targetPos.y]?.[targetPos.x];
         
+        // AAA: Record Cooldown in the new Timeline System
+        if (skill.cooldown) {
+            actor.setSkillCooldown(skill.id, skill.cooldown, this.sim);
+        }
+
         if (target) {
             skillExecutor.execute(actor, target, skill, this.sim);
         } else {
@@ -313,4 +348,4 @@ class BattleRules {
     }
 }
 
-module.exports = BattleRules;module.exports = BattleRules;
+module.exports = BattleRules;

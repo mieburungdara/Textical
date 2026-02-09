@@ -5,7 +5,7 @@ class EquipmentController extends BaseController {
     async equipItem(req, res) {
         await this.execute(res, async () => {
             const { userId, heroId, itemInstanceId, slotKey } = req.body;
-            const result = await equipmentService.equipItem(userId, heroId, itemInstanceId, slotKey);
+            const result = await equipmentService.equipItem(parseInt(userId), parseInt(heroId), parseInt(itemInstanceId), slotKey);
             this.sendSuccess(res, result, "Item equipped");
         });
     }
@@ -13,7 +13,7 @@ class EquipmentController extends BaseController {
     async unequipItem(req, res) {
         await this.execute(res, async () => {
             const { userId, heroId, slotKey } = req.body;
-            await equipmentService.unequipItem(userId, heroId, slotKey);
+            await equipmentService.unequipItem(parseInt(userId), parseInt(heroId), slotKey);
             this.sendSuccess(res, null, "Item unequipped");
         });
     }

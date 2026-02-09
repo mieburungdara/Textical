@@ -1,9 +1,8 @@
 [gd_scene load_steps=10 format=3 uid="uid://formation_screen"]
 
 [ext_resource type="Script" path="res://src/ui/FormationScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://bottom_hud" path="res://src/ui/BottomHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
 
 [sub_resource type="Gradient" id="Gradient_war"]
 offsets = PackedFloat32Array(0, 0.7, 1)
@@ -59,13 +58,10 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_bg")
 
-[node name="TopHUD" parent="." instance=ExtResource("2_hud")]
-layout_mode = 1
-
 [node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
 
-[node name="BottomHUD" parent="." instance=ExtResource("4_nav")]
+[node name="SideHUD" parent="." instance=ExtResource("4_nav")]
 layout_mode = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -73,7 +69,9 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 200.0
 offset_top = 90.0
+offset_right = -20.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2

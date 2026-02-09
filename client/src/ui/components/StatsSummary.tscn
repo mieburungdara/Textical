@@ -1,74 +1,82 @@
-[gd_scene load_steps=4 format=3 uid="uid://stats_summary"]
+[gd_scene load_steps=6 format=3 uid="uid://bwepxom5kcsor"]
 
-[ext_resource type="Script" path="res://src/ui/components/StatsSummary.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://d2o1425ohmtew" path="res://src/ui/components/StatsSummary.gd" id="1_script"]
 
-[sub_resource type="LabelSettings" id="LabelSettings_stat"]
-font_size = 14
-font_color = Color(0.85, 0.8, 0.75, 1.0)
+[sub_resource type="LabelSettings" id="LabelSettings_hp"]
+font_size = 13
+font_color = Color(0.9, 0.4, 0.4, 1)
 
-[sub_resource type="LabelSettings" id="LabelSettings_stat_value"]
-font_size = 14
-font_color = Color(0.6, 0.8, 0.5, 1.0)
+[sub_resource type="LabelSettings" id="LabelSettings_mp"]
+font_size = 13
+font_color = Color(0.4, 0.6, 0.9, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_atk"]
+font_size = 13
+font_color = Color(0.9, 0.7, 0.3, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_def"]
+font_size = 13
+font_color = Color(0.7, 0.7, 0.7, 1)
 
 [node name="StatsSummary" type="HBoxContainer"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 20
+visible = false
+offset_right = 300.0
+offset_bottom = 24.0
+theme_override_constants/separation = 12
 script = ExtResource("1_script")
 
 [node name="HPStat" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 
 [node name="HPIcon" type="Label" parent="HPStat"]
 layout_mode = 2
-text = "❤️"
+text = "HP"
+label_settings = SubResource("LabelSettings_hp")
 
 [node name="HPValue" type="Label" parent="HPStat"]
 layout_mode = 2
 text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
+label_settings = SubResource("LabelSettings_hp")
 
 [node name="MPStat" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 
 [node name="MPIcon" type="Label" parent="MPStat"]
 layout_mode = 2
-text = "💙"
+text = "MP"
+label_settings = SubResource("LabelSettings_mp")
 
 [node name="MPValue" type="Label" parent="MPStat"]
 layout_mode = 2
 text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
+label_settings = SubResource("LabelSettings_mp")
 
 [node name="ATKStat" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 
 [node name="ATKIcon" type="Label" parent="ATKStat"]
 layout_mode = 2
-text = "⚔️"
+text = "ATK"
+label_settings = SubResource("LabelSettings_atk")
 
 [node name="ATKValue" type="Label" parent="ATKStat"]
 layout_mode = 2
 text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
+label_settings = SubResource("LabelSettings_atk")
 
 [node name="DEFStat" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 
 [node name="DEFIcon" type="Label" parent="DEFStat"]
 layout_mode = 2
-text = "🛡️"
+text = "DEF"
+label_settings = SubResource("LabelSettings_def")
 
 [node name="DEFValue" type="Label" parent="DEFStat"]
 layout_mode = 2
 text = "0"
-label_settings = SubResource("LabelSettings_stat_value")
+label_settings = SubResource("LabelSettings_def")

@@ -1,0 +1,148 @@
+<title>Heroes Management</title>
+
+<style>
+    .data-table { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); }
+    .table { margin: 0; }
+    .table thead { background: #f8f9fa; }
+    .table th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; padding: 15px 20px; border: none; }
+    .table td { padding: 15px 20px; border-color: #f0f0f0; vertical-align: middle; }
+    .table tbody tr:hover { background: #f8f9fa; }
+    .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 13px; margin: 0 3px; }
+    .search-box { position: relative; }
+    .search-box input { padding-left: 45px; border-radius: 10px; }
+    .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+    .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 50px; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Heroes Management</h4>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="heroSearch" placeholder="Search by hero name..." oninput="window.handleHeroSearch()">
+        </div>
+    </div>
+</div>
+
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Owner</th>
+                    <th>Level</th>
+                    <th>Class</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="heroesTable">
+                <tr><td colspan="6" class="loading-spinner"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <small class="text-muted" id="heroesPaginationInfo">Showing 0 to 0 of 0</small>
+        <nav><ul class="pagination mb-0" id="heroesPagination"></ul></nav>
+    </div>
+</div>
+
+<div class="modal fade" id="heroModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Hero Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="heroModalBody">Loading...</div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+let heroesState = { data: [], page: 1, total: 0 };
+
+// Call loadHeroes immediately since DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadHeroes);
+} else {
+    loadHeroes();
+}
+
+window.loadHeroes = async function() {
+    try {
+        console.log('[Heroes] Loading heroes...');
+        const data = await api.getHeroes(heroesState.page, document.getElementById('heroSearch')?.value || '');
+        heroesState.data = data.heroes;
+        heroesState.total = data.pagination.total;
+        
+        const tbody = document.getElementById('heroesTable');
+        if (data.heroes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No heroes found</td></tr>';
+        } else {
+            tbody.innerHTML = data.heroes.map(hero => `
+                <tr>
+                    <td>${hero.id}</td>
+                    <td><strong>${hero.name}</strong></td>
+                    <td>${hero.user ? hero.user.username : '<em>Unowned</em>'}</td>
+                    <td>${hero.unitLevel}</td>
+                    <td>${hero.combatClass ? hero.combatClass.name : 'None'}</td>
+                    <td><button class="btn btn-sm btn-outline-primary btn-action" onclick="window.viewHero(${hero.id})"><i class="bi bi-eye"></i></button></td>
+                </tr>
+            `).join('');
+        }
+        updatePagination('heroes', data.pagination);
+        console.log('[Heroes] Heroes loaded successfully');
+    } catch (error) {
+        console.error('[Heroes] Error loading heroes:', error);
+        document.getElementById('heroesTable').innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error: ${error.message}</td></tr>`;
+        showAlert('Failed to load heroes', 'danger');
+    }
+}
+
+window.handleHeroSearch = function() {
+    clearTimeout(window.heroSearchTimeout);
+    window.heroSearchTimeout = setTimeout(() => { heroesState.page = 1; window.loadHeroes(); }, 300);
+}
+
+window.viewHero = async function(id) {
+    try {
+        console.log('[Heroes] Viewing hero:', id);
+        const hero = heroesState.data.find(h => h.id === id);
+        const modalBody = document.getElementById('heroModalBody');
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Hero Information</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>ID:</strong></td><td>${hero.id}</td></tr>
+                        <tr><td><strong>Name:</strong></td><td>${hero.name}</td></tr>
+                        <tr><td><strong>Owner:</strong></td><td>${hero.user ? hero.user.username : 'Unowned'}</td></tr>
+                        <tr><td><strong>Level:</strong></td><td>${hero.unitLevel}</td></tr>
+                        <tr><td><strong>XP:</strong></td><td>${formatCurrency(hero.unitXp)}</td></tr>
+                        <tr><td><strong>Class:</strong></td><td>${hero.combatClass ? hero.combatClass.name : 'None'}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Traits (${hero.traits?.length || 0})</h6>
+                    <ul class="list-group">
+                        ${hero.traits && hero.traits.length > 0 ? hero.traits.map(t => `<li class="list-group-item">${t.name || 'Unknown'}</li>`).join('') : '<li class="list-group-item"><em>No traits</em></li>'}
+                    </ul>
+                </div>
+            </div>
+        `;
+        new bootstrap.Modal(document.getElementById('heroModal')).show();
+    } catch (error) {
+        console.error('[Heroes] Error viewing hero:', error);
+        showAlert('Failed to load hero details', 'danger');
+    }
+}
+
+window.changeHeroPage = function(page) {
+    heroesState.page = page;
+    window.loadHeroes();
+}
+</script>
