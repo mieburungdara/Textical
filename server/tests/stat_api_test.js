@@ -1,3 +1,5 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const statService = require('../src/services/statService');
 const prisma = require('../src/db');
 
