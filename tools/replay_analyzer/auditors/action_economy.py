@@ -3,7 +3,7 @@ from typing import List, Dict
 
 class ActionEconomyAuditor(BaseAuditor):
     """
-    Ensures a unit doesn't perform multiple major actions (Attack/Skill) in a single AP cycle.
+    Ensures a unit doesn't perform multiple major actions (Attack/Skill) in a single timeline tick.
     """
     def __init__(self):
         super().__init__()

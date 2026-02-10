@@ -25,7 +25,7 @@ The database operates on a pure relational schema using **Prisma ORM**. We have 
 Textical features a grid-based, tick-driven combat simulation that rewards strategic positioning and hero composition.
 
 ### 🎮 Battle Mechanics
-- **Action Points (AP) & Initiative**: Units gain AP based on their Speed. When a unit reaches 100 AP, they take a turn. Initiative determines the starting AP advantage.
+- **Timeline & Initiative**: Units act based on a tick-driven timeline. Initiative determines the starting position on the timeline, while Speed/DEX determines the recovery delay between actions.
 - **Directional Combat**: Attacking from the **SIDE** grants a 1.1x damage bonus, while **BACK** attacks grant a 1.5x bonus and a +50 Accuracy boost.
 - **Cover & Obstacles**: Units can utilize environmental cover to gain significant Defense bonuses (+15 DEF).
 - **Authoritative SkillExecutor**: A centralized engine that processes active skills using metadata-driven multipliers for damage, healing, and buffs.

@@ -22,7 +22,7 @@ Setiap detik di medan perang simulasi kami melewati 20 filter logika yang sangat
 13. **Efek Luka**: Memicu pendarahan (Bleed) atau pantulan damage (Thorns).
 14. **Resistansi Tubuh**: Peluang tubuh menolak racun atau api secara alami.
 15. **Haus Darah**: Pemulihan nyawa otomatis saat berhasil melukai musuh (Lifesteal).
-16. **Energi Pembunuh**: Bonus kecepatan aksi (AP) setelah menumbangkan lawan.
+16. **Energi Pembunuh**: Bonus kecepatan aksi (Speed/Recovery) setelah menumbangkan lawan.
 17. **Nafas Terakhir**: Peluang melakukan serangan bunuh diri atau bertahan dengan 1 HP.
 18. **Ledakan Kematian**: Memicu efek saat unit hancur (Meledak/Membelah diri).
 19. **Regenerasi Alami**: Pemulihan HP/Mana dan pancaran aura penyembuh di akhir giliran.

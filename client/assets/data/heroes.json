@@ -9,7 +9,7 @@
       "totalStats": {
         "hp": 2500,
         "mp": 450,
-        "ap": 120,
+        "initiative": 120,
         "attack": 380,
         "defense": 520,
         "magic_attack": 180,
@@ -39,7 +39,7 @@
       "totalStats": {
         "hp": 1200,
         "mp": 980,
-        "ap": 80,
+        "initiative": 80,
         "attack": 150,
         "defense": 180,
         "magic_attack": 650,
@@ -69,7 +69,7 @@
       "totalStats": {
         "hp": 1800,
         "mp": 380,
-        "ap": 150,
+        "initiative": 150,
         "attack": 420,
         "defense": 280,
         "magic_attack": 120,
@@ -99,7 +99,7 @@
       "totalStats": {
         "hp": 2200,
         "mp": 200,
-        "ap": 100,
+        "initiative": 100,
         "attack": 350,
         "defense": 400,
         "magic_attack": 50,
@@ -129,7 +129,7 @@
       "totalStats": {
         "hp": 2800,
         "mp": 800,
-        "ap": 140,
+        "initiative": 140,
         "attack": 280,
         "defense": 450,
         "magic_attack": 550,

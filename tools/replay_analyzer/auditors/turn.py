@@ -3,7 +3,7 @@ from typing import List, Dict
 
 class TurnAudit(BaseAuditor):
     """
-    Ensures units only act (Attack/Skill) when they have enough Action Points (AP >= 100).
+    Ensures units only act (Attack/Skill) when the timeline allows (tick >= nextAction).
     """
     def audit_tick(self, tick_idx: int, units: List[Dict], events: List[Dict], last_state: Dict):
         action_events = ["ATTACK", "SKILL", "ITEM"]

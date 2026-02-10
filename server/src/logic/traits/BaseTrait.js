@@ -91,10 +91,10 @@ class BaseTrait {
     onBattleEnd(unit, sim) {}
 
     // --- 3. UNIT TURN PHASES ---
-    onTurnStart(unit, sim) {} // Exactly when unit hits 100 AP
+    onTurnStart(unit, sim) {} // Unit action tick arrived
     onPreAction(unit, sim) { return true; } // Chance to skip/override action
     onPostAction(unit, sim) {} // After skill/attack finishes
-    onTurnEnd(unit, sim) {} // Before AP is deducted
+    onTurnEnd(unit, sim) {} // Action cycle finished
 
     // --- 4. MOVEMENT & GRID SENSING ---
     onBeforeMove(unit, sim) { return true; }
@@ -128,7 +128,7 @@ class BaseTrait {
     onStatusPurged(unit, effect, sim) {}
 
     // --- 8. RESOURCE & VITALITY ---
-    onActionPointsChange(unit, oldVal, newVal, sim) {}
+    onTimelineAdvance(unit, sim) {}
     onManaGain(unit, amount, sim) {}
     onManaSpend(unit, amount, sim) {}
     onHealthRegen(unit, amount, sim) {}

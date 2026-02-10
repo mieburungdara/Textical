@@ -17,10 +17,10 @@ The Textical Engine provides extreme granularity for tactical combat. Every micr
 ## 🔄 Unit Turn Flow
 | Hook Name | Timing | Context | Strategy |
 | :--- | :--- | :--- | :--- |
-| `onTurnStart` | Unit AP reaches 100 | `(unit, sim)` | Purging status effects (e.g. Skeleton immunity). |
+| `onTurnStart` | Unit action tick arrived | `(unit, sim)` | Purging status effects (e.g. Skeleton immunity). |
 | `onPreAction` | Before choosing move/skill | `(unit, sim)` | Chance to skip action (e.g. Fear/Paralysis). |
 | `onPostAction` | After action finishes | `(unit, sim)` | Cooldown modifications or "Quick-Step" movement. |
-| `onTurnEnd` | Before AP deduction | `(unit, sim)` | Post-turn regeneration or resource balance. |
+| `onTurnEnd` | Action finished | `(unit, sim)` | Post-turn regeneration or resource balance. |
 
 ---
 
@@ -47,7 +47,7 @@ These hooks trigger inside the exact calculation window of an attack or skill.
 | `onTakeDamage` | Defender | `(def, atk, dmg, sim)`| Mitigation, reflection (Thorns), or mana shield. |
 | `onPostHit` | Defender | `(def, atk, dmg, sim)`| "Pain" triggers or reactive healing. |
 | `onLifesteal` | Attacker | `(atk, dmg, sim)` | Specialized healing (Vampire logic). |
-| `onKill` | Attacker | `(atk, victim, sim)` | "Bloodlust" (AP gain) or "Bounty" (Gold gain). |
+| `onKill` | Attacker | `(atk, victim, sim)` | "Bloodlust" (Recovery bonus) or "Bounty" (Gold gain). |
 
 ---
 
