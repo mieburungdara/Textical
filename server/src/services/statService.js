@@ -15,8 +15,8 @@ const StatCurveCalculator = require('./stat/StatCurveCalculator');
 const ElementalResolver = require('./stat/ElementalResolver');
 const SetBonusResolver = require('./stat/SetBonusResolver');
 const StatCapResolver = require('./stat/StatCapResolver');
-const statGrowthSystem = require('./stat/StatGrowthSystem');
-const scalingComponent = require('./stat/ScalingComponent');
+const enhancedStatGrowthSystem = require('./stat/EnhancedStatGrowthSystem');
+const enhancedScalingComponent = require('./stat/EnhancedScalingComponent');
 const facilityResolver = require('../logic/guild/FacilityEffectResolver');
 const factionService = require('./factionService');
 
@@ -158,7 +158,9 @@ class EnhancedStatService extends BaseService {
         await this._applyWorldEvents(stats, heroData, calcContext, applyMod);
 
         // Layer 12: Apply attribute scaling
-        scalingComponent.applyAttributeScaling(primary, stats, applyMod);
+        enhancedScalingComponent.applyAttributeScaling(primary, stats, applyMod);
+        enhancedScalingComponent.applyComplexScaling(primary, stats, applyMod);
+        enhancedScalingComponent.applyJobScaling(heroData, stats, applyMod);
 
         // Layer 13: Finalize and apply caps (must be after scaling)
         const finalStats = this._finalizeStats(stats, primary, heroData, calcContext);
@@ -390,6 +392,13 @@ class EnhancedStatService extends BaseService {
                 max: 0.75, 
                 type: 'percent' 
             }),
+            block: new EnhancedStat(heroData.block_base || 0, { name: 'block' }),
+            parry: new EnhancedStat(heroData.parry_base || 0, { name: 'parry' }),
+            parry_chance: new EnhancedStat(heroData.parry_chance || 0, { 
+                name: 'parry_chance', 
+                max: 0.5, 
+                type: 'percent' 
+            }),
             accuracy: new EnhancedStat(heroData.accuracy_base || 100, { 
                 name: 'accuracy', 
                 max: 100, 
@@ -402,6 +411,11 @@ class EnhancedStatService extends BaseService {
                 max: 1.0, 
                 type: 'percent' 
             }),
+            spell_vamp: new EnhancedStat(heroData.spell_vamp_base || 0, { 
+                name: 'spell_vamp', 
+                max: 1.0, 
+                type: 'percent' 
+            }),
             block_power: new EnhancedStat(heroData.block_power_base || 0.5, { name: 'block_power' }),
             initiative: new EnhancedStat(heroData.initiative_base || 0, { name: 'initiative' }),
             lifesteal_rate: new EnhancedStat(heroData.lifesteal_base || 0, { 
@@ -409,6 +423,10 @@ class EnhancedStatService extends BaseService {
                 max: 1.0, 
                 type: 'percent' 
             }),
+            item_find_chance: new EnhancedStat(0, { name: 'item_find_chance', max: 5.0, type: 'percent' }),
+            vitality_max: new EnhancedStat(heroData.vitality_base || 100, { name: 'vitality_max' }),
+            move_speed: new EnhancedStat(heroData.move_speed_base || 5, { name: 'move_speed' }),
+            attack_speed: new EnhancedStat(heroData.attack_speed_base || 1.0, { name: 'attack_speed' }),
             // Elemental damage stats
             fire_damage: new EnhancedStat(0, { name: 'fire_damage', isExempt: true }),
             water_damage: new EnhancedStat(0, { name: 'water_damage', isExempt: true }),
@@ -454,7 +472,11 @@ class EnhancedStatService extends BaseService {
      * @private
      */
     _applyGrowth(stats, primary, heroData, context) {
-        statGrowthSystem.applyGrowth(stats, heroData.combatClass, context.level);
+        // Apply base level growth (independent of class)
+        enhancedStatGrowthSystem.applyBaseGrowth(stats, context.level);
+        
+        // Apply class-specific growth
+        enhancedStatGrowthSystem.applyGrowth(stats, heroData.combatClass, context.level);
         
         // Apply growth curves for primary stats
         const allocation = heroData.statAllocation;

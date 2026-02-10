@@ -27,7 +27,14 @@ const STAT_INFO = {
     "defense": {"icon": "🛡️", "name": "Defense", "desc": "Defense reduces incoming physical damage from enemies."},
     "magic_attack": {"icon": "🔮", "name": "Magic Attack", "desc": "Magic attack power determines magical damage dealt to enemies."},
     "magic_defense": {"icon": "✨", "name": "Magic Defense", "desc": "Magic defense reduces incoming magical damage from enemies."},
-    "speed": {"icon": "💨", "name": "Speed", "desc": "Speed determines turn order and dodge chance."}
+    "speed": {"icon": "💨", "name": "Speed", "desc": "Speed determines turn order and dodge chance."},
+    "accuracy": {"icon": "🎯", "name": "Accuracy", "desc": "Accuracy increases the chance to hit enemies, counteracting their dodge chance."},
+    "crit_chance": {"icon": "💥", "name": "Crit Chance", "desc": "The percentage chance to deal critical damage on a successful hit."},
+    "hp_regen": {"icon": "🍏", "name": "HP Regen", "desc": "The amount of health points a unit restores naturally at the start of each turn or over time."},
+    "vitality": {"icon": "🌱", "name": "Vitality", "desc": "Vitality is consumed during world actions like gathering or travel. It slowly regenerates over time."},
+    "tenacity": {"icon": "💎", "name": "Tenacity", "desc": "Tenacity reduces the duration and effect of negative status conditions."},
+    "spell_vamp": {"icon": "🍷", "name": "Spell Vamp", "desc": "Heals the unit for a percentage of the magical damage they deal."},
+    "attack_speed": {"icon": "🏹", "name": "Attack Speed", "desc": "Determines how frequently the unit can perform basic attacks in combat."}
 }
 
 const ELEMENTAL_INFO = {

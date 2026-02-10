@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://csy5gxdpf40by"]
+[gd_scene load_steps=7 format=3 uid="uid://csy5gxdpf40by"]
 
 [ext_resource type="Script" uid="uid://iaeb2nddramq" path="res://src/ui/components/BattleStatsPanel.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cw6myyg7onniy" path="res://src/ui/components/StatRow.gd" id="3_433jy"]
 [ext_resource type="PackedScene" path="res://src/ui/components/StatRow.tscn" id="3_atk_row"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_padding"]
@@ -8,6 +9,22 @@ content_margin_left = 2.0
 content_margin_top = 2.0
 content_margin_right = 2.0
 content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_bg"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+bg_color = Color(0.18, 0.15, 0.12, 0.4)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.05)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="LabelSettings" id="LabelSettings_section"]
 font_size = 10
@@ -70,6 +87,55 @@ size_flags_horizontal = 3
 [node name="INITStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="ACCStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="CRITStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="HPREGENStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="VITALITYStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="TENACITYStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="SVAMPStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
+
+[node name="ASPDStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
+script = ExtResource("3_433jy")
 
 [node name="ElementSection" type="VBoxContainer" parent="BattleStatsContent"]
 layout_mode = 2

@@ -28,6 +28,13 @@ const STAT_CONFIG = {
     "MAGDEFStatRow": {"name": "MAG DEF", "icon": "✨", "key": "magic_defense"},
     "SPDStatRow": {"name": "SPD", "icon": "💨", "key": "speed"},
     "INITStatRow": {"name": "INIT", "icon": "⚡", "key": "initiative"},
+    "ACCStatRow": {"name": "ACC", "icon": "🎯", "key": "accuracy"},
+    "CRITStatRow": {"name": "CRIT", "icon": "💥", "key": "crit_chance"},
+    "HPREGENStatRow": {"name": "REGEN", "icon": "🍏", "key": "hp_regen"},
+    "VITALITYStatRow": {"name": "VIT", "icon": "🌱", "key": "vitality"},
+    "TENACITYStatRow": {"name": "TEN", "icon": "💎", "key": "tenacity"},
+    "SVAMPStatRow": {"name": "VAMP", "icon": "🍷", "key": "spell_vamp"},
+    "ASPDStatRow": {"name": "ASPD", "icon": "🏹", "key": "attack_speed"},
     "FireElement": {"name": "FIRE", "icon": "🔥", "key": "fire", "is_element": true},
     "WaterElement": {"name": "WATER", "icon": "💧", "key": "water", "is_element": true},
     "EarthElement": {"name": "EARTH", "icon": "🌍", "key": "earth", "is_element": true},
@@ -66,7 +73,14 @@ func update_stats(total: Dictionary = {}, _max_vals: Dictionary = {}):
         "defense": _total_stats.get("defense", 0),
         "magic_attack": _total_stats.get("skill_power", _total_stats.get("magic_attack", 0)),
         "magic_defense": _total_stats.get("tenacity", _total_stats.get("magic_defense", 0)),
-        "speed": _total_stats.get("speed", _total_stats.get("movement_speed", 0))
+        "speed": _total_stats.get("speed", _total_stats.get("movement_speed", 0)),
+        "accuracy": _total_stats.get("accuracy", 100),
+        "crit_chance": int(_total_stats.get("crit_chance", 0) * 100), # Show as percentage
+        "hp_regen": _total_stats.get("hp_regen", 0),
+        "vitality": _total_stats.get("vitality_max", 100),
+        "tenacity": int(_total_stats.get("tenacity", 0) * 100),
+        "spell_vamp": int(_total_stats.get("spell_vamp", 0) * 100),
+        "attack_speed": _total_stats.get("attack_speed", 1.0)
     }
     
     # Update combat stats
@@ -148,5 +162,12 @@ func _on_stat_row_clicked(stat_key: String):
                 "magic_defense": val = _total_stats.get("tenacity", 0)
                 "speed": val = _total_stats.get("speed", 0)
                 "initiative": val = _total_stats.get("initiative", 10)
+                "accuracy": val = _total_stats.get("accuracy", 100)
+                "crit_chance": val = int(_total_stats.get("crit_chance", 0) * 100)
+                "hp_regen": val = _total_stats.get("hp_regen", 0)
+                "vitality": val = _total_stats.get("vitality_max", 100)
+                "tenacity": val = int(_total_stats.get("tenacity", 0) * 100)
+                "spell_vamp": val = int(_total_stats.get("spell_vamp", 0) * 100)
+                "attack_speed": val = _total_stats.get("attack_speed", 1.0)
             
             _parent_stats_tab.show_stat_detail(stat_key, int(val), int(val))

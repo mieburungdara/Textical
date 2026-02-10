@@ -6,3 +6,5 @@ server/node_modules/**
 gha-creds-*.json
 client/src/ui/CombatScreen.gd
 replays/*
+node_modules/**
+node_modules/*
