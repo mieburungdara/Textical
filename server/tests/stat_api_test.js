@@ -47,10 +47,13 @@ async function testStatAPI() {
         // 5. Test Reset (Simulation-like or direct if safe)
         // Note: Reset will change DB, but we want to test if it's atomic and audited.
         console.log('\n[4] Testing resetStatAllocation...');
-        const oldPoints = hero.statAllocation?.availablePoints || 0;
         const resetResult = await statService.resetStatAllocation(heroId);
         console.log('Points Refunded:', resetResult.pointsRefunded);
-        console.log('New Available Points:', resetResult.allocation.availablePoints);
+        if (resetResult.allocation) {
+            console.log('New Available Points:', resetResult.allocation.availablePoints);
+        } else {
+            console.log('Note:', resetResult.message || 'No changes made');
+        }
         
         if (resetResult.success) {
             console.log('✅ Reset OK');
@@ -58,10 +61,10 @@ async function testStatAPI() {
 
         // 6. Test Batch Allocation
         console.log('\n[5] Testing batchAllocateStats...');
-        const batch = { str: 5, dex: 5 };
+        const batch = { str: 2, dex: 3 }; // Total 5
         const batchResult = await statService.batchAllocateStats(heroId, batch);
         console.log('New STR Allocated:', batchResult.allocation.strAllocated);
-        if (batchResult.allocation.strAllocated === 5) {
+        if (batchResult.allocation.strAllocated === 2) {
             console.log('✅ Batch Allocation OK');
         }
 

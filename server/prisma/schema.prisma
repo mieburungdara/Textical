@@ -1,4 +1,3 @@
-// AAA Deep Master Relational Schema (v5.0 - Strict Normalization)
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,80 +8,80 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  username      String   @unique
-  password      String
-  
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+
   // AAA: Dual-Currency System (1,000,000 Silver = 1 Gold)
-  silver        Int      @default(0)
-  gold          Int      @default(0)
+  silver Int @default(0)
+  gold   Int @default(0)
 
-  vitality      Int      @default(100)
-  maxVitality   Int      @default(100)
-  lastVitalityUpdate DateTime @default(now())
-  maxInventorySlots Int    @default(20)
-  currentRegion Int      @default(1)
-  region        RegionTemplate @relation(fields: [currentRegion], references: [id])
-  
-  tavernTimeSecondsToday Int      @default(0)
-  lastTavernResetAt      DateTime @default(now())
-  lastQuestResetAt       DateTime @default(now())
+  vitality           Int            @default(100)
+  maxVitality        Int            @default(100)
+  lastVitalityUpdate DateTime       @default(now())
+  maxInventorySlots  Int            @default(20)
+  currentRegion      Int            @default(1)
+  region             RegionTemplate @relation(fields: [currentRegion], references: [id])
+
+  tavernTimeSecondsToday Int       @default(0)
+  lastTavernResetAt      DateTime  @default(now())
+  lastQuestResetAt       DateTime  @default(now())
   tavernEntryAt          DateTime?
-  isInTavern             Boolean  @default(false)
+  isInTavern             Boolean   @default(false)
 
-  premiumTierId Int      @default(0)
+  premiumTierId Int                 @default(0)
   premiumTier   PremiumTierTemplate @relation(fields: [premiumTierId], references: [id])
-  
-  guildId       Int?
-  guild         Guild?   @relation(fields: [guildId], references: [id])
-  guildRole     String?  // MASTER, OFFICER, MEMBER, RECRUIT
 
-  heroes        Hero[]
-  inventory     InventoryItem[]
-  marketOrders  MarketOrder[]
-  heroOrders    HeroOrder[]
-  ledger        TransactionLedger[]
-  activeQuests  UserQuest[]
-  receivedMail  Mail[]   @relation("ReceiverRelation")
-  notifications Notification[]
+  guildId   Int?
+  guild     Guild?  @relation(fields: [guildId], references: [id])
+  guildRole String? // MASTER, OFFICER, MEMBER, RECRUIT
+
+  heroes           Hero[]
+  inventory        InventoryItem[]
+  marketOrders     MarketOrder[]
+  heroOrders       HeroOrder[]
+  ledger           TransactionLedger[]
+  activeQuests     UserQuest[]
+  receivedMail     Mail[]              @relation("ReceiverRelation")
+  notifications    Notification[]
   formationPresets FormationPreset[]
-  taskQueue     TaskQueue[]
-  recipes       UserRecipe[]
-  reputation    UserReputation[]
-  
-  factionId     Int?
-  faction       Faction? @relation(fields: [factionId], references: [id])
+  taskQueue        TaskQueue[]
+  recipes          UserRecipe[]
+  reputation       UserReputation[]
+
+  factionId Int?
+  faction   Faction? @relation(fields: [factionId], references: [id])
 
   // World Safety & Logistics
-  pvpFlagged    Boolean  @default(false)
-  lastPvpAction DateTime?
-  isKnockedOut  Boolean  @default(false)
-  knockedOutUntil DateTime?
-  recoveryUntil DateTime?
+  pvpFlagged        Boolean   @default(false)
+  lastPvpAction     DateTime?
+  isKnockedOut      Boolean   @default(false)
+  knockedOutUntil   DateTime?
+  recoveryUntil     DateTime?
   lastVisitedCityId Int?
-  activeWagon   Wagon?
-  
+  activeWagon       Wagon?
+
   lootSessionsAsLooter LootSession[] @relation("LooterRelation")
   lootSessionsAsVictim LootSession[] @relation("VictimRelation")
 
   // AAA: Bounty Board
   bountiesAsTarget Bounty[] @relation("TargetRelation")
   bountiesAsHunter Bounty[] @relation("HunterRelation")
-  
-  salesHistory  ItemSaleHistory[] @relation("SellerHistoryRelation")
-  chatMessages  ChatMessage[]
-  
+
+  salesHistory ItemSaleHistory[] @relation("SellerHistoryRelation")
+  chatMessages ChatMessage[]
+
   // Guild System Relations
-  invitedUsers   GuildInvite[] @relation("InvitedUserRelation")
-  createdInvites GuildInvite[] @relation("InviterRelation")
-  guildHistory   GuildHistory[]
+  invitedUsers      GuildInvite[]  @relation("InvitedUserRelation")
+  createdInvites    GuildInvite[]  @relation("InviterRelation")
+  guildHistory      GuildHistory[]
   targetUserHistory GuildHistory[] @relation("TargetUserRelation")
 
   // Social & Personalization
-  settings      String   @default("{}") // JSON for user preferences (volume, graphics, etc.)
-  friends       UserFriend[] @relation("UserFriends")
-  friendedBy    UserFriend[] @relation("FriendedBy")
-  achievements  UserAchievement[]
+  settings     String            @default("{}") // JSON for user preferences (volume, graphics, etc.)
+  friends      UserFriend[]      @relation("UserFriends")
+  friendedBy   UserFriend[]      @relation("FriendedBy")
+  achievements UserAchievement[]
 }
 
 model UserFriend {
@@ -98,881 +97,883 @@ model UserFriend {
 }
 
 model AchievementTemplate {
-  id          Int      @id
+  id          Int               @id
   name        String
   description String
-  icon        String   @default("🏆")
-  category    String   @default("GENERAL")
+  icon        String            @default("🏆")
+  category    String            @default("GENERAL")
   unlockedBy  UserAchievement[]
 }
 
 model UserAchievement {
-  id            Int      @id @default(autoincrement())
+  id            Int                 @id @default(autoincrement())
   userId        Int
-  user          User     @relation(fields: [userId], references: [id])
+  user          User                @relation(fields: [userId], references: [id])
   achievementId Int
   achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
-  unlockedAt    DateTime @default(now())
+  unlockedAt    DateTime            @default(now())
 
   @@unique([userId, achievementId])
 }
 
 model MonsterTemplate {
-  id           Int      @id
-  name         String
-  hp_base      Int
-  damage_base  Int
-  
-  // Secondary Stats
-  defense_base    Int      @default(0)
-  speed_base      Int      @default(5)
-  range_base      Int      @default(1)
-  accuracy_base   Int      @default(100)
-  dodge_rate      Float    @default(0.05)
-  crit_chance     Float    @default(0.05)
-  crit_damage     Float    @default(1.5)
-  block_chance    Float    @default(0)
-  block_power_base Float   @default(0.5)
-  initiative_base Int      @default(0)
-  lifesteal_base  Float    @default(0)
-  cooldown_reduction Float @default(0)
-  move_speed      Float    @default(100)
-  attack_speed    Float    @default(1.0)
+  id          Int    @id
+  name        String
+  hp_base     Int
+  damage_base Int
 
-  behaviorTree String   @default("SimpleAI") 
-  categoryId   Int
-  category     MonsterCategory @relation(fields: [categoryId], references: [id])
-  loot         MonsterLootEntry[]
-  regions      RegionMonster[]
-  traits       MonsterTrait[]
+  // Secondary Stats
+  defense_base       Int   @default(0)
+  speed_base         Int   @default(5)
+  range_base         Int   @default(1)
+  accuracy_base      Int   @default(100)
+  dodge_rate         Float @default(0.05)
+  crit_chance        Float @default(0.05)
+  crit_damage        Float @default(1.5)
+  block_chance       Float @default(0)
+  block_power_base   Float @default(0.5)
+  initiative_base    Int   @default(0)
+  lifesteal_base     Float @default(0)
+  cooldown_reduction Float @default(0)
+  move_speed         Float @default(100)
+  attack_speed       Float @default(1.0)
+
+  behaviorTree     String             @default("SimpleAI")
+  categoryId       Int
+  category         MonsterCategory    @relation(fields: [categoryId], references: [id])
+  loot             MonsterLootEntry[]
+  regions          RegionMonster[]
+  traits           MonsterTrait[]
   eventAppearances EventMonster[]
 }
 
 model MonsterTrait {
-  id          Int      @id @default(autoincrement())
-  monsterId   Int
-  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
-  traitId     Int
-  trait       TraitTemplate @relation(fields: [traitId], references: [id])
+  id        Int             @id @default(autoincrement())
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
+  traitId   Int
+  trait     TraitTemplate   @relation(fields: [traitId], references: [id])
 }
 
 model MonsterCategory {
-  id        Int      @id
-  name      String
-  monsters  MonsterTemplate[]
+  id       Int               @id
+  name     String
+  monsters MonsterTemplate[]
 }
 
 model MonsterLootEntry {
-  id          Int      @id @default(autoincrement())
-  monsterId   Int
-  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
-  itemId      Int
-  chance      Float
+  id        Int             @id @default(autoincrement())
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
+  itemId    Int
+  chance    Float
 }
 
 model Notification {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  type        String
-  message     String
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  message   String
+  createdAt DateTime @default(now())
 }
 
 model ItemTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  category        String   @default("EQUIPMENT")
-  baseValue       Int      @default(10)
-  rarity          String   @default("COMMON")
-  isTwoHanded     Boolean  @default(false)
-  maxStack        Int      @default(1)
-  
+  id          Int     @id
+  name        String
+  description String
+  category    String  @default("EQUIPMENT")
+  baseValue   Int     @default(10)
+  rarity      String  @default("COMMON")
+  isTwoHanded Boolean @default(false)
+  maxStack    Int     @default(1)
+
   // Mining/Gathering Metadata (Normalized)
-  hardness        Int      @default(1)
-  minStr          Int      @default(0)
-  minToolTier     Int      @default(0)
-  toolTier        Int      @default(0)
-  elementalAffinity Int    @default(0)
-  
+  hardness          Int @default(1)
+  minStr            Int @default(0)
+  minToolTier       Int @default(0)
+  toolTier          Int @default(0)
+  elementalAffinity Int @default(0)
+
   // AAA Mastery Trading
   masteryClassId  Int?
   masteryXpAmount Int?
   masteryClass    ClassTemplate? @relation("MasteryTomeRelation", fields: [masteryClassId], references: [id])
-  
-  traits          ItemTrait[]
-  equipSlots      ItemEquipSlot[]
-  stats           ItemStat[]
-  instances       InventoryItem[]
-  marketOrders    MarketOrder[]
-  recipeResult    RecipeTemplate[]
-  ingredients     RecipeIngredient[]
-  regionResources RegionResource[]
-  taskTargets     TaskQueue[]
-  shopAppearances NPCShopItem[]
+
+  traits           ItemTrait[]
+  equipSlots       ItemEquipSlot[]
+  stats            ItemStat[]
+  instances        InventoryItem[]
+  marketOrders     MarketOrder[]
+  recipeResult     RecipeTemplate[]
+  ingredients      RecipeIngredient[]
+  regionResources  RegionResource[]
+  taskTargets      TaskQueue[]
+  shopAppearances  NPCShopItem[]
   eventAppearances EventResource[]
-  wagonItems      WagonItem[]
-  saleHistory     ItemSaleHistory[]
-  shopStocks      ShopStock[]
-  extractionStats RegionalExtractionStats[]
+  wagonItems       WagonItem[]
+  saleHistory      ItemSaleHistory[]
+  shopStocks       ShopStock[]
+  extractionStats  RegionalExtractionStats[]
 }
 
 model RegionTemplate {
-  id              Int      @id
+  id              Int     @id
   name            String
   description     String
-  visualType      String   @default("TOWN")
-  zoneType        String   @default("GREEN") // GREEN, BLUE, RED
-  zoneLevel       Int      @default(1)
-  regionalTaxRate Float    @default(0.10)
-  weatherOverride String?  // Optional regional weather override
-  specialization  String?  // e.g., "BLACKSMITH_HUB", "ALCHEMIST_GARDEN", "CARPENTRY_MILL"
-  
-  regionTypeId    String?
-  regionType      RegionType? @relation(fields: [regionTypeId], references: [id])
-  factionId       Int?
-  faction         Faction?    @relation(fields: [factionId], references: [id])
+  visualType      String  @default("TOWN")
+  zoneType        String  @default("GREEN") // GREEN, BLUE, RED
+  zoneLevel       Int     @default(1)
+  regionalTaxRate Float   @default(0.10)
+  weatherOverride String? // Optional regional weather override
+  specialization  String? // e.g., "BLACKSMITH_HUB", "ALCHEMIST_GARDEN", "CARPENTRY_MILL"
 
-  territory       Territory?
-  connections     RegionConnection[] @relation("OriginRegion")
-  connectedFrom   RegionConnection[] @relation("TargetRegion")
-  resources       RegionResource[]
-  monsters        RegionMonster[]
-  npcs            RegionNPC[]
-  activeEvents    ActiveEvent[]
-  marketOrders    MarketOrder[]
-  heroOrders      HeroOrder[]
-  travelOrigins   TaskQueue[] @relation("TaskTravelOrigin")
-  travelTargets   TaskQueue[] @relation("TaskTravelTarget")
-  tavernMercenaries TavernMercenary[]
-  residents       User[]
+  regionTypeId String?
+  regionType   RegionType? @relation(fields: [regionTypeId], references: [id])
+  factionId    Int?
+  faction      Faction?    @relation(fields: [factionId], references: [id])
+
+  territory              Territory?
+  connections            RegionConnection[]        @relation("OriginRegion")
+  connectedFrom          RegionConnection[]        @relation("TargetRegion")
+  resources              RegionResource[]
+  monsters               RegionMonster[]
+  npcs                   RegionNPC[]
+  activeEvents           ActiveEvent[]
+  marketOrders           MarketOrder[]
+  heroOrders             HeroOrder[]
+  travelOrigins          TaskQueue[]               @relation("TaskTravelOrigin")
+  travelTargets          TaskQueue[]               @relation("TaskTravelTarget")
+  tavernMercenaries      TavernMercenary[]
+  residents              User[]
   incomingTeleportRoutes NPCTeleportRoute[]
-  npcSchedules    NPCSchedule[]
-  npcEventReactions NPCEventReaction[]
-  influence       RegionalInfluence[]
-  heroSaleHistory HeroSaleHistory[]
-  itemSaleHistory ItemSaleHistory[]
-  npcStocks       ShopStock[]
-  extractionStats RegionalExtractionStats[]
-  bounties        Bounty[]
+  npcSchedules           NPCSchedule[]
+  npcEventReactions      NPCEventReaction[]
+  influence              RegionalInfluence[]
+  heroSaleHistory        HeroSaleHistory[]
+  itemSaleHistory        ItemSaleHistory[]
+  npcStocks              ShopStock[]
+  extractionStats        RegionalExtractionStats[]
+  bounties               Bounty[]
 }
 
 model WorldEventTemplate {
-  id            Int      @id
-  name          String
-  description   String
-  
+  id          Int    @id
+  name        String
+  description String
+
   // Normalized Modifiers
-  combatAtkMult     Float?
-  combatDefMult     Float?
-  miningYieldMult   Float?
+  combatAtkMult      Float?
+  combatDefMult      Float?
+  miningYieldMult    Float?
   lumberingYieldMult Float?
   herbalismYieldMult Float?
   fishingYieldMult   Float?
-  expGainMult       Float?
-  lootChanceMult    Float?
-  statIntBonus      Int?
-  dangerLevelBonus  Int?
+  expGainMult        Float?
+  lootChanceMult     Float?
+  statIntBonus       Int?
+  dangerLevelBonus   Int?
 
-  activeEvents      ActiveEvent[]
-  eventResources    EventResource[]
-  eventMonsters     EventMonster[]
-  npcReactions      NPCEventReaction[]
+  activeEvents   ActiveEvent[]
+  eventResources EventResource[]
+  eventMonsters  EventMonster[]
+  npcReactions   NPCEventReaction[]
 }
 
 model EventResource {
-  id            Int      @id @default(autoincrement())
-  templateId    Int
-  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
-  itemId        Int
-  item          ItemTemplate @relation(fields: [itemId], references: [id])
-  spawnChance   Float    @default(1.0)
-  gatherTime    Int      @default(10)
+  id          Int                @id @default(autoincrement())
+  templateId  Int
+  template    WorldEventTemplate @relation(fields: [templateId], references: [id])
+  itemId      Int
+  item        ItemTemplate       @relation(fields: [itemId], references: [id])
+  spawnChance Float              @default(1.0)
+  gatherTime  Int                @default(10)
 }
 
 model EventMonster {
-  id            Int      @id @default(autoincrement())
-  templateId    Int
-  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
-  monsterId     Int
-  monster       MonsterTemplate @relation(fields: [monsterId], references: [id])
-  spawnChance   Float    @default(1.0)
+  id          Int                @id @default(autoincrement())
+  templateId  Int
+  template    WorldEventTemplate @relation(fields: [templateId], references: [id])
+  monsterId   Int
+  monster     MonsterTemplate    @relation(fields: [monsterId], references: [id])
+  spawnChance Float              @default(1.0)
 }
 
 model ActiveEvent {
-  id            Int      @id @default(autoincrement())
-  templateId    Int
-  template      WorldEventTemplate @relation(fields: [templateId], references: [id])
-  regionId      Int
-  region        RegionTemplate @relation(fields: [regionId], references: [id])
-  startedAt     DateTime @default(now())
-  expiresAt     DateTime
-  
+  id         Int                @id @default(autoincrement())
+  templateId Int
+  template   WorldEventTemplate @relation(fields: [templateId], references: [id])
+  regionId   Int
+  region     RegionTemplate     @relation(fields: [regionId], references: [id])
+  startedAt  DateTime           @default(now())
+  expiresAt  DateTime
+
   @@unique([regionId, templateId])
 }
 
 model RegionNPC {
-  id            Int      @id @default(autoincrement())
-  regionId      Int
-  region        RegionTemplate @relation(fields: [regionId], references: [id])
-  npcId         Int
-  npc           NPCTemplate @relation(fields: [npcId], references: [id])
-  
-  spawnChance   Float    @default(1.0)
-  isTemporary   Boolean  @default(false)
-  expiresAt     DateTime?
-  
+  id       Int            @id @default(autoincrement())
+  regionId Int
+  region   RegionTemplate @relation(fields: [regionId], references: [id])
+  npcId    Int
+  npc      NPCTemplate    @relation(fields: [npcId], references: [id])
+
+  spawnChance Float     @default(1.0)
+  isTemporary Boolean   @default(false)
+  expiresAt   DateTime?
+
   @@unique([regionId, npcId])
 }
 
 model NPCTemplate {
-  id            Int      @id
-  name          String
-  title         String   
-  description   String
-  type          String   // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, GAMBLER, TELEPORTER
-  
+  id          Int    @id
+  name        String
+  title       String
+  description String
+  type        String // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, GAMBLER, TELEPORTER
+
   // Normalized NPC Properties
-  isWanderer    Boolean  @default(false)
+  isWanderer    Boolean @default(false)
   healCost      Int?
   betMultiplier Float?
   betWinChance  Float?
   travelCost    Int?
-  
-  factionId     Int?
-  faction       Faction? @relation(fields: [factionId], references: [id])
-  
-  regions       RegionNPC[]
-  shopItems     NPCShopItem[]
+
+  factionId Int?
+  faction   Faction? @relation(fields: [factionId], references: [id])
+
+  regions        RegionNPC[]
+  shopItems      NPCShopItem[]
   teleportRoutes NPCTeleportRoute[]
-  dialogueNodes DialogueNode[]
-  schedules     NPCSchedule[]
+  dialogueNodes  DialogueNode[]
+  schedules      NPCSchedule[]
   eventReactions NPCEventReaction[]
-  currentStock  ShopStock[]
+  currentStock   ShopStock[]
 }
 
 model ShopStock {
-  id              Int      @id @default(autoincrement())
-  npcId           Int
-  npc             NPCTemplate @relation(fields: [npcId], references: [id])
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      Int
-  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  
-  quantity        Int      @default(0)
-  maxQuantity     Int      @default(50)
-  nextRestock     DateTime
-  
+  id           Int            @id @default(autoincrement())
+  npcId        Int
+  npc          NPCTemplate    @relation(fields: [npcId], references: [id])
+  regionId     Int
+  region       RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId   Int
+  itemTemplate ItemTemplate   @relation(fields: [templateId], references: [id])
+
+  quantity    Int      @default(0)
+  maxQuantity Int      @default(50)
+  nextRestock DateTime
+
   @@unique([npcId, regionId, templateId])
 }
 
 model NPCSchedule {
-  id              Int      @id @default(autoincrement())
-  npcId           Int
-  npc             NPCTemplate @relation(fields: [npcId], references: [id])
-  hourStart       Int      // 0-23
-  hourEnd         Int
-  targetRegionId  Int
-  targetRegion    RegionTemplate @relation(fields: [targetRegionId], references: [id])
+  id             Int            @id @default(autoincrement())
+  npcId          Int
+  npc            NPCTemplate    @relation(fields: [npcId], references: [id])
+  hourStart      Int // 0-23
+  hourEnd        Int
+  targetRegionId Int
+  targetRegion   RegionTemplate @relation(fields: [targetRegionId], references: [id])
 }
 
 model NPCEventReaction {
-  id              Int      @id @default(autoincrement())
+  id              Int                @id @default(autoincrement())
   npcId           Int
-  npc             NPCTemplate @relation(fields: [npcId], references: [id])
+  npc             NPCTemplate        @relation(fields: [npcId], references: [id])
   eventTemplateId Int
   eventTemplate   WorldEventTemplate @relation(fields: [eventTemplateId], references: [id])
-  
-  actionType      String   // MOVE, CHANGE_DIALOGUE, CHANGE_SHOP
-  targetRegionId  Int?
-  targetRegion    RegionTemplate? @relation(fields: [targetRegionId], references: [id])
+
+  actionType         String // MOVE, CHANGE_DIALOGUE, CHANGE_SHOP
+  targetRegionId     Int?
+  targetRegion       RegionTemplate? @relation(fields: [targetRegionId], references: [id])
   overrideDialogueId Int?
 }
 
 model NPCTeleportRoute {
-  id            Int      @id @default(autoincrement())
-  npcId         Int
-  npc           NPCTemplate @relation(fields: [npcId], references: [id])
+  id             Int            @id @default(autoincrement())
+  npcId          Int
+  npc            NPCTemplate    @relation(fields: [npcId], references: [id])
   targetRegionId Int
-  targetRegion  RegionTemplate @relation(fields: [targetRegionId], references: [id])
-  
+  targetRegion   RegionTemplate @relation(fields: [targetRegionId], references: [id])
+
   @@unique([npcId, targetRegionId])
 }
 
 model NPCShopItem {
-  id            Int      @id @default(autoincrement())
-  npcId         Int
-  npc           NPCTemplate @relation(fields: [npcId], references: [id])
-  itemId        Int
-  item          ItemTemplate @relation(fields: [itemId], references: [id])
-  priceGold     Int
-  stock         Int      @default(-1)
+  id        Int          @id @default(autoincrement())
+  npcId     Int
+  npc       NPCTemplate  @relation(fields: [npcId], references: [id])
+  itemId    Int
+  item      ItemTemplate @relation(fields: [itemId], references: [id])
+  priceGold Int
+  stock     Int          @default(-1)
 }
 
 model RegionMonster {
-  id          Int      @id @default(autoincrement())
-  regionId    Int
-  region      RegionTemplate @relation(fields: [regionId], references: [id])
-  monsterId   Int
-  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
+  id        Int             @id @default(autoincrement())
+  regionId  Int
+  region    RegionTemplate  @relation(fields: [regionId], references: [id])
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
 }
 
 model RegionType {
-  id          String   @id // e.g. "VOLCANO"
-  name        String   // Display Name
+  id          String           @id // e.g. "VOLCANO"
+  name        String // Display Name
   description String?
   regions     RegionTemplate[]
   effects     TerrainEffect[]
 }
 
 model TerrainEffect {
-  id            Int      @id @default(autoincrement())
-  regionTypeId  String
-  regionType    RegionType @relation(fields: [regionTypeId], references: [id])
-  effectType    String   // BURN, SLOW, HEAL, DRAIN, NO_MANA
-  chance        Float    @default(1.0)
-  power         Float    @default(0)
-  statKey       String?  
-  statValue     Float?   
-  tickInterval  Int      @default(1)
+  id           Int        @id @default(autoincrement())
+  regionTypeId String
+  regionType   RegionType @relation(fields: [regionTypeId], references: [id])
+  effectType   String // BURN, SLOW, HEAL, DRAIN, NO_MANA
+  chance       Float      @default(1.0)
+  power        Float      @default(0)
+  statKey      String?
+  statValue    Float?
+  tickInterval Int        @default(1)
 }
 
 model TavernMercenary {
-  id              Int      @id @default(autoincrement())
-  heroId          Int      @unique
-  hero            Hero     @relation(fields: [heroId], references: [id])
+  id              Int            @id @default(autoincrement())
+  heroId          Int            @unique
+  hero            Hero           @relation(fields: [heroId], references: [id])
   regionId        Int
   region          RegionTemplate @relation(fields: [regionId], references: [id])
-  recruitmentCost Int      @default(100)
-  expiresAt       DateTime 
+  recruitmentCost Int            @default(100)
+  expiresAt       DateTime
 }
 
 model RegionConnection {
-  id              Int      @id @default(autoincrement())
-  originRegionId  Int
-  origin          RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
-  targetRegionId  Int
-  target          RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
-  travelTimeSeconds Int    @default(15)
+  id                Int            @id @default(autoincrement())
+  originRegionId    Int
+  origin            RegionTemplate @relation("OriginRegion", fields: [originRegionId], references: [id])
+  targetRegionId    Int
+  target            RegionTemplate @relation("TargetRegion", fields: [targetRegionId], references: [id])
+  travelTimeSeconds Int            @default(15)
 
   @@unique([originRegionId, targetRegionId])
 }
 
 model RegionResource {
-  id              Int      @id @default(autoincrement())
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  itemId          Int
-  item            ItemTemplate   @relation(fields: [itemId], references: [id])
-  gatherTimeSeconds Int    @default(10)
+  id                Int            @id @default(autoincrement())
+  regionId          Int
+  region            RegionTemplate @relation(fields: [regionId], references: [id])
+  itemId            Int
+  item              ItemTemplate   @relation(fields: [itemId], references: [id])
+  gatherTimeSeconds Int            @default(10)
 }
 
 model ItemTrait {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  traitId         Int
-  trait           TraitTemplate @relation(fields: [traitId], references: [id])
+  id      Int           @id @default(autoincrement())
+  itemId  Int
+  item    ItemTemplate  @relation(fields: [itemId], references: [id])
+  traitId Int
+  trait   TraitTemplate @relation(fields: [traitId], references: [id])
 }
 
 model TraitTemplate {
-  id              Int      @id
-  name            String
-  description     String   @default("")
-  category        String   @default("GENERAL")
-  items           ItemTrait[]
-  heroes          HeroTrait[]
-  monsters        MonsterTrait[]
-  instanceItems   ItemInstanceTrait[]
-  stats           TraitStat[]
+  id            Int                 @id
+  name          String
+  description   String              @default("")
+  category      String              @default("GENERAL")
+  items         ItemTrait[]
+  heroes        HeroTrait[]
+  monsters      MonsterTrait[]
+  instanceItems ItemInstanceTrait[]
+  stats         TraitStat[]
 }
 
 model TraitStat {
-  id              Int      @id @default(autoincrement())
-  traitId         Int
-  trait           TraitTemplate @relation(fields: [traitId], references: [id])
-  statKey         String
-  statValue       Float
+  id        Int           @id @default(autoincrement())
+  traitId   Int
+  trait     TraitTemplate @relation(fields: [traitId], references: [id])
+  statKey   String
+  statValue Float
 }
 
 model ItemEquipSlot {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  slotKey         String   
+  id      Int          @id @default(autoincrement())
+  itemId  Int
+  item    ItemTemplate @relation(fields: [itemId], references: [id])
+  slotKey String
 }
 
 model ItemStat {
-  id              Int      @id @default(autoincrement())
-  itemId          Int
-  item            ItemTemplate @relation(fields: [itemId], references: [id])
-  statKey         String
-  statValue       Float
+  id        Int          @id @default(autoincrement())
+  itemId    Int
+  item      ItemTemplate @relation(fields: [itemId], references: [id])
+  statKey   String
+  statValue Float
 }
 
 model RecipeTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  resultItemId    Int
-  resultItem      ItemTemplate @relation(fields: [resultItemId], references: [id])
-  craftTimeSeconds Int     @default(30)
-  ingredients     RecipeIngredient[]
-  learnedBy       UserRecipe[]
+  id               Int                @id
+  name             String
+  description      String
+  resultItemId     Int
+  resultItem       ItemTemplate       @relation(fields: [resultItemId], references: [id])
+  craftTimeSeconds Int                @default(30)
+  ingredients      RecipeIngredient[]
+  learnedBy        UserRecipe[]
 }
 
 model RecipeIngredient {
-  id              Int      @id @default(autoincrement())
-  recipeId        Int
-  recipe          RecipeTemplate @relation(fields: [recipeId], references: [id])
-  itemId          Int
-  item            ItemTemplate   @relation(fields: [itemId], references: [id])
-  quantity        Int
+  id       Int            @id @default(autoincrement())
+  recipeId Int
+  recipe   RecipeTemplate @relation(fields: [recipeId], references: [id])
+  itemId   Int
+  item     ItemTemplate   @relation(fields: [itemId], references: [id])
+  quantity Int
 }
 
 model UserRecipe {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  recipeId      Int
-  recipe        RecipeTemplate @relation(fields: [recipeId], references: [id])
+  id       Int            @id @default(autoincrement())
+  userId   Int
+  user     User           @relation(fields: [userId], references: [id])
+  recipeId Int
+  recipe   RecipeTemplate @relation(fields: [recipeId], references: [id])
+
   @@unique([userId, recipeId])
 }
 
 model Hero {
-  id          Int      @id @default(autoincrement())
-  userId      Int?     
-  user        User?    @relation(fields: [userId], references: [id])
-  name        String
-  
+  id     Int    @id @default(autoincrement())
+  userId Int?
+  user   User?  @relation(fields: [userId], references: [id])
+  name   String
+
   // AAA Dual-Level Architecture
-  unitLevel   Int      @default(1)
-  unitXp      Int      @default(0)
-  classLevel  Int      @default(1)
-  classXp     Int      @default(0)
-  
+  unitLevel  Int @default(1)
+  unitXp     Int @default(0)
+  classLevel Int @default(1)
+  classXp    Int @default(0)
+
   // Legacy fields (Deprecated)
-  level       Int      @default(1)
-  xp          Int      @default(0)
-  
-  hp_base     Int      @default(100)
-  damage_base Int      @default(10)
-  
+  level Int @default(1)
+  xp    Int @default(0)
+
+  hp_base     Int @default(100)
+  damage_base Int @default(10)
+
   // Primary Attributes
-  str         Int      @default(10)
-  dex         Int      @default(10)
-  int         Int      @default(10)
-  vit         Int      @default(10)
-  luk         Int      @default(5)
-  
+  str Int @default(10)
+  dex Int @default(10)
+  int Int @default(10)
+  vit Int @default(10)
+  luk Int @default(5)
+
   // Elemental Damage Bases
-  fire_damage     Int      @default(0)
-  water_damage    Int      @default(0)
-  earth_damage    Int      @default(0)
-  wind_damage     Int      @default(0)
-  light_damage    Int      @default(0)
-  dark_damage     Int      @default(0)
-  
+  fire_damage  Int @default(0)
+  water_damage Int @default(0)
+  earth_damage Int @default(0)
+  wind_damage  Int @default(0)
+  light_damage Int @default(0)
+  dark_damage  Int @default(0)
+
   // New Secondary Stat Bases
-  defense_base    Int      @default(0)
-  speed_base      Int      @default(5)
-  range_base      Int      @default(1)
-  
+  defense_base Int @default(0)
+  speed_base   Int @default(5)
+  range_base   Int @default(1)
+
   // Combat Stat Bases
-  dodge_chance    Float    @default(0.05)
-  crit_chance     Float    @default(0.05)
-  crit_damage     Float    @default(1.5)
-  block_chance    Float    @default(0)
-  parry_chance    Float    @default(0)
-  
+  dodge_chance Float @default(0.05)
+  crit_chance  Float @default(0.05)
+  crit_damage  Float @default(1.5)
+  block_chance Float @default(0)
+  parry_chance Float @default(0)
+
   // Regen Bases
-  hp_regen        Float    @default(0)
-  mana_regen      Float    @default(2)
-  
+  hp_regen   Float @default(0)
+  mana_regen Float @default(2)
+
   // New Derived Stat Bases
-  accuracy_base   Int      @default(100)
-  armor_penetration Int    @default(0)
-  skill_power_base Int     @default(10)
-  tenacity_base   Float    @default(0)
-  block_power_base Float   @default(0.5)
-  initiative_base Int      @default(0)
-  lifesteal_base  Float    @default(0)
-  spell_vamp      Float    @default(0)
+  accuracy_base      Int   @default(100)
+  armor_penetration  Int   @default(0)
+  skill_power_base   Int   @default(10)
+  tenacity_base      Float @default(0)
+  block_power_base   Float @default(0.5)
+  initiative_base    Int   @default(0)
+  lifesteal_base     Float @default(0)
+  spell_vamp         Float @default(0)
   cooldown_reduction Float @default(0)
-  move_speed      Float    @default(100)
-  attack_speed    Float    @default(1.0)
-  
-  classId     Int      
+  move_speed         Float @default(100)
+  attack_speed       Float @default(1.0)
+
+  classId     Int
   combatClass ClassTemplate @relation(fields: [classId], references: [id])
   jobId       Int?
-  job         JobTemplate? @relation(fields: [jobId], references: [id])
-  vitality    Int      @default(100)
-  isMain      Boolean  @default(false)
-  
+  job         JobTemplate?  @relation(fields: [jobId], references: [id])
+  vitality    Int           @default(100)
+  isMain      Boolean       @default(false)
+
   // Genetics & Lineage
-  generation    Int      @default(1)
-  hasOffspring  Boolean  @default(false)
-  fatherId      Int?
-  father        Hero?    @relation("FatherRelation", fields: [fatherId], references: [id])
-  motherId      Int?
-  mother        Hero?    @relation("MotherRelation", fields: [motherId], references: [id])
-  childrenOfFather Hero[] @relation("FatherRelation")
-  childrenOfMother Hero[] @relation("MotherRelation")
+  generation       Int     @default(1)
+  hasOffspring     Boolean @default(false)
+  fatherId         Int?
+  father           Hero?   @relation("FatherRelation", fields: [fatherId], references: [id])
+  motherId         Int?
+  mother           Hero?   @relation("MotherRelation", fields: [motherId], references: [id])
+  childrenOfFather Hero[]  @relation("FatherRelation")
+  childrenOfMother Hero[]  @relation("MotherRelation")
 
   // Unit Stat System Relations
-  equipment       HeroEquipment[]
-  formationSlots  FormationSlot[]
-  taskQueue       TaskQueue[]
-  traits          HeroTrait[]
-  tavernEntry     TavernMercenary?
-  buffs           HeroBuff[]
-  mastery         HeroClassMastery[]
-  skills          HeroSkill[]
-  heroOrders      HeroOrder[]
-  
+  equipment      HeroEquipment[]
+  formationSlots FormationSlot[]
+  taskQueue      TaskQueue[]
+  traits         HeroTrait[]
+  tavernEntry    TavernMercenary?
+  buffs          HeroBuff[]
+  mastery        HeroClassMastery[]
+  skills         HeroSkill[]
+  heroOrders     HeroOrder[]
+
   // Unit Stat System Relations
   elementalAffinities HeroElementalAffinity[]
-  equipmentSets   HeroEquipmentSet[]
-  statAllocation  HeroStatAllocation?
-  statHistory     HeroStatHistory[]
-  statAudits      HeroStatAudit[]
+  equipmentSets       HeroEquipmentSet[]
+  statAllocation      HeroStatAllocation?
+  statHistory         HeroStatHistory[]
+  statAudits          HeroStatAudit[]
 }
 
 model HeroOrder {
-  id              Int      @id @default(autoincrement())
-  creatorId       Int
-  creator         User     @relation(fields: [creatorId], references: [id])
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  
-  type            String   // BUY, SELL
-  price           Int
-  
+  id        Int            @id @default(autoincrement())
+  creatorId Int
+  creator   User           @relation(fields: [creatorId], references: [id])
+  regionId  Int
+  region    RegionTemplate @relation(fields: [regionId], references: [id])
+
+  type  String // BUY, SELL
+  price Int
+
   // For SELL orders
-  heroId          Int?     @unique
-  hero            Hero?    @relation(fields: [heroId], references: [id])
-  
+  heroId Int?  @unique
+  hero   Hero? @relation(fields: [heroId], references: [id])
+
   // For BUY orders (Criteria)
-  targetClassId   Int?
-  targetClass     ClassTemplate? @relation(fields: [targetClassId], references: [id])
-  minUnitLevel    Int      @default(1)
-  
-  status          String   @default("OPEN") // OPEN, FILLED, CANCELLED, EXPIRED
-  expiresAt       DateTime
-  createdAt       DateTime @default(now())
+  targetClassId Int?
+  targetClass   ClassTemplate? @relation(fields: [targetClassId], references: [id])
+  minUnitLevel  Int            @default(1)
+
+  status    String   @default("OPEN") // OPEN, FILLED, CANCELLED, EXPIRED
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model SkillTemplate {
-  id            Int      @id
-  name          String
-  description   String
-  category      String   // ACTIVE, PASSIVE
-  type          String   // DAMAGE, HEAL, BUFF, DEBUFF
-  
+  id          Int    @id
+  name        String
+  description String
+  category    String // ACTIVE, PASSIVE
+  type        String // DAMAGE, HEAL, BUFF, DEBUFF
+
   // Normalized Effect Columns
-  statKey       String?  
-  statValue     Float?
-  power         Float?
-  duration      Int?     
-  multiplier    Float?   
-  manaCost      Int      @default(0)
-  
-  classTrees    ClassSkillTree[]
-  heroSkills    HeroSkill[]
+  statKey    String?
+  statValue  Float?
+  power      Float?
+  duration   Int?
+  multiplier Float?
+  manaCost   Int     @default(0)
+
+  classTrees ClassSkillTree[]
+  heroSkills HeroSkill[]
 }
 
 model ClassSkillTree {
-  id            Int      @id @default(autoincrement())
-  classId       Int
-  class         ClassTemplate @relation(fields: [classId], references: [id])
-  skillId       Int
-  skill         SkillTemplate @relation(fields: [skillId], references: [id])
-  unlockLevel   Int      @default(1)
-  
+  id          Int           @id @default(autoincrement())
+  classId     Int
+  class       ClassTemplate @relation(fields: [classId], references: [id])
+  skillId     Int
+  skill       SkillTemplate @relation(fields: [skillId], references: [id])
+  unlockLevel Int           @default(1)
+
   @@unique([classId, skillId])
 }
 
 model HeroSkill {
-  id            Int      @id @default(autoincrement())
-  heroId        Int
-  hero          Hero     @relation(fields: [heroId], references: [id])
-  skillId       Int
-  skill         SkillTemplate @relation(fields: [skillId], references: [id])
-  unlockedAt    DateTime @default(now())
-  isActive      Boolean  @default(true)
+  id         Int           @id @default(autoincrement())
+  heroId     Int
+  hero       Hero          @relation(fields: [heroId], references: [id])
+  skillId    Int
+  skill      SkillTemplate @relation(fields: [skillId], references: [id])
+  unlockedAt DateTime      @default(now())
+  isActive   Boolean       @default(true)
 
   @@unique([heroId, skillId])
 }
 
 model HeroClassMastery {
-  id            Int      @id @default(autoincrement())
-  heroId        Int
-  hero          Hero     @relation(fields: [heroId], references: [id])
-  classId       Int
-  class         ClassTemplate @relation(fields: [classId], references: [id])
-  level         Int      @default(1)
-  xp            Int      @default(0)
-  isMastered    Boolean  @default(false)
+  id         Int           @id @default(autoincrement())
+  heroId     Int
+  hero       Hero          @relation(fields: [heroId], references: [id])
+  classId    Int
+  class      ClassTemplate @relation(fields: [classId], references: [id])
+  level      Int           @default(1)
+  xp         Int           @default(0)
+  isMastered Boolean       @default(false)
 
   @@unique([heroId, classId])
 }
 
 model HeroBuff {
-  id            Int      @id @default(autoincrement())
-  heroId        Int
-  hero          Hero     @relation(fields: [heroId], references: [id])
-  itemId        Int?     
-  name          String   
-  statKey       String   
-  statValue     Float
-  isPercent     Boolean  @default(false)
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  heroId    Int
+  hero      Hero     @relation(fields: [heroId], references: [id])
+  itemId    Int?
+  name      String
+  statKey   String
+  statValue Float
+  isPercent Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model ClassTemplate {
-  id              Int      @id
-  name            String
-  tier            Int      @default(1)
-  resourceType    String   @default("MANA") 
-  
-  focus           String   @default("General")
-  identity        String   @default("A versatile starting point.")
-  description     String   @default("") 
-  growthDesc      String   @default("Balanced growth across all stats.")
-  mechanicDesc    String   @default("Uses standard Mana.")
-  
-  hpGrowth        Float    @default(5)
-  mpGrowth        Float    @default(2)
-  atkGrowth       Float    @default(1)
-  defGrowth       Float    @default(0.5)
-  spdGrowth       Float    @default(0.1)
-  
-  promotionReqLevel Int    @default(20)
+  id           Int    @id
+  name         String
+  tier         Int    @default(1)
+  resourceType String @default("MANA")
+
+  focus        String @default("General")
+  identity     String @default("A versatile starting point.")
+  description  String @default("")
+  growthDesc   String @default("Balanced growth across all stats.")
+  mechanicDesc String @default("Uses standard Mana.")
+
+  hpGrowth  Float @default(5)
+  mpGrowth  Float @default(2)
+  atkGrowth Float @default(1)
+  defGrowth Float @default(0.5)
+  spdGrowth Float @default(0.1)
+
+  promotionReqLevel Int             @default(20)
   parentClassId     Int?
-  parentClass       ClassTemplate? @relation("ClassEvolution", fields: [parentClassId], references: [id])
+  parentClass       ClassTemplate?  @relation("ClassEvolution", fields: [parentClassId], references: [id])
   childClasses      ClassTemplate[] @relation("ClassEvolution")
-  
+
   heroes          Hero[]
   mastery         HeroClassMastery[]
   skills          ClassSkillTree[]
   heroBuyOrders   HeroOrder[]
-  masteryTomes    ItemTemplate[] @relation("MasteryTomeRelation")
+  masteryTomes    ItemTemplate[]     @relation("MasteryTomeRelation")
   heroSaleHistory HeroSaleHistory[]
 }
 
 model JobTemplate {
-  id              Int      @id
-  name            String
-  category        String   @default("COLLECTION")
-  workers         Hero[]
+  id       Int    @id
+  name     String
+  category String @default("COLLECTION")
+  workers  Hero[]
 }
 
 model TaskQueue {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id])
-  heroId          Int?
-  hero            Hero?    @relation(fields: [heroId], references: [id])
-  type            String   
-  targetItemId    Int?
-  targetItem      ItemTemplate? @relation(fields: [targetItemId], references: [id])
-  originRegionId  Int?
-  originRegion    RegionTemplate? @relation("TaskTravelOrigin", fields: [originRegionId], references: [id])
-  targetRegionId  Int?
-  targetRegion    RegionTemplate? @relation("TaskTravelTarget", fields: [targetRegionId], references: [id])
-  status          String   @default("PENDING")
-  startedAt       DateTime?
-  finishesAt      DateTime?
-  
+  id             Int             @id @default(autoincrement())
+  userId         Int
+  user           User            @relation(fields: [userId], references: [id])
+  heroId         Int?
+  hero           Hero?           @relation(fields: [heroId], references: [id])
+  type           String
+  targetItemId   Int?
+  targetItem     ItemTemplate?   @relation(fields: [targetItemId], references: [id])
+  originRegionId Int?
+  originRegion   RegionTemplate? @relation("TaskTravelOrigin", fields: [originRegionId], references: [id])
+  targetRegionId Int?
+  targetRegion   RegionTemplate? @relation("TaskTravelTarget", fields: [targetRegionId], references: [id])
+  status         String          @default("PENDING")
+  startedAt      DateTime?
+  finishesAt     DateTime?
+
   // AAA: Advanced Crafting
   affixMaterialId Int?
 }
 
 model FormationPreset {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  name        String   
-  slots       FormationSlot[]
+  id     Int             @id @default(autoincrement())
+  userId Int
+  user   User            @relation(fields: [userId], references: [id])
+  name   String
+  slots  FormationSlot[]
 }
 
 model FormationSlot {
-  id          Int      @id @default(autoincrement())
-  presetId    Int
-  preset      FormationPreset @relation(fields: [presetId], references: [id])
-  heroId      Int
-  hero        Hero     @relation(fields: [heroId], references: [id])
-  gridX       Int      
-  gridY       Int      
+  id       Int             @id @default(autoincrement())
+  presetId Int
+  preset   FormationPreset @relation(fields: [presetId], references: [id])
+  heroId   Int
+  hero     Hero            @relation(fields: [heroId], references: [id])
+  gridX    Int
+  gridY    Int
+
   @@unique([presetId, gridX, gridY])
   @@unique([presetId, heroId])
 }
 
 model HeroEquipment {
-  id          Int      @id @default(autoincrement())
-  heroId      Int
-  hero        Hero     @relation(fields: [heroId], references: [id])
-  slotKey     String
-  itemInstanceId Int      @unique
+  id             Int           @id @default(autoincrement())
+  heroId         Int
+  hero           Hero          @relation(fields: [heroId], references: [id])
+  slotKey        String
+  itemInstanceId Int           @unique
   itemInstance   InventoryItem @relation(fields: [itemInstanceId], references: [id])
 
   @@unique([heroId, slotKey])
 }
 
 model InventoryItem {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  templateId  Int
-  template    ItemTemplate @relation(fields: [templateId], references: [id])
-  quantity    Int      @default(1)
-  currentDurability Int  @default(100)
-  maxDurability     Int  @default(100)
-  isTrash           Boolean @default(false)
-  
+  id                Int          @id @default(autoincrement())
+  userId            Int
+  user              User         @relation(fields: [userId], references: [id])
+  templateId        Int
+  template          ItemTemplate @relation(fields: [templateId], references: [id])
+  quantity          Int          @default(1)
+  currentDurability Int          @default(100)
+  maxDurability     Int          @default(100)
+  isTrash           Boolean      @default(false)
+
   // AAA: Quality Tiers
-  quality           String @default("COMMON") // COMMON, RARE, MASTERWORK, LEGENDARY
-  powerScale        Float  @default(1.0)
-  
-  marketOrders MarketOrder[]
-  equippedIn    HeroEquipment?
+  quality    String @default("COMMON") // COMMON, RARE, MASTERWORK, LEGENDARY
+  powerScale Float  @default(1.0)
+
+  marketOrders   MarketOrder[]
+  equippedIn     HeroEquipment?
   instanceTraits ItemInstanceTrait[]
 }
 
 model ItemInstanceTrait {
-  id              Int      @id @default(autoincrement())
-  itemInstanceId  Int
-  itemInstance    InventoryItem @relation(fields: [itemInstanceId], references: [id])
-  traitId         Int
-  trait           TraitTemplate @relation(fields: [traitId], references: [id])
+  id             Int           @id @default(autoincrement())
+  itemInstanceId Int
+  itemInstance   InventoryItem @relation(fields: [itemInstanceId], references: [id])
+  traitId        Int
+  trait          TraitTemplate @relation(fields: [traitId], references: [id])
 }
 
 model MarketOrder {
-  id              Int      @id @default(autoincrement())
-  creatorId       Int
-  creator         User     @relation(fields: [creatorId], references: [id])
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      Int
-  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  
-  type            String   // BUY, SELL
-  pricePerUnit    Int
-  initialQuantity Int
+  id           Int            @id @default(autoincrement())
+  creatorId    Int
+  creator      User           @relation(fields: [creatorId], references: [id])
+  regionId     Int
+  region       RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId   Int
+  itemTemplate ItemTemplate   @relation(fields: [templateId], references: [id])
+
+  type              String // BUY, SELL
+  pricePerUnit      Int
+  initialQuantity   Int
   remainingQuantity Int
-  
+
   // For SELL orders, we optionally link to the specific instance being sold
-  itemInstanceId  Int?     
-  itemInstance    InventoryItem? @relation(fields: [itemInstanceId], references: [id])
-  
-  status          String   @default("OPEN") // OPEN, FILLED, CANCELLED, EXPIRED
-  expiresAt       DateTime
-  createdAt       DateTime @default(now())
+  itemInstanceId Int?
+  itemInstance   InventoryItem? @relation(fields: [itemInstanceId], references: [id])
+
+  status    String   @default("OPEN") // OPEN, FILLED, CANCELLED, EXPIRED
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model QuestTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  
-  minReputation   Int      @default(0)
-  factionId       Int?
-  faction         Faction? @relation(fields: [factionId], references: [id])
-  
+  id          Int    @id
+  name        String
+  description String
+
+  minReputation Int      @default(0)
+  factionId     Int?
+  faction       Faction? @relation(fields: [factionId], references: [id])
+
   // AAA: Dynamic Questing
-  isDynamic       Boolean  @default(false)
-  expiresAt       DateTime?
-  
-  stages          QuestStage[]
-  userQuests      UserQuest[]
+  isDynamic Boolean   @default(false)
+  expiresAt DateTime?
+
+  stages     QuestStage[]
+  userQuests UserQuest[]
 }
 
 model QuestStage {
-  id              Int      @id @default(autoincrement())
-  questId         Int
-  quest           QuestTemplate @relation(fields: [questId], references: [id])
-  order           Int      @default(1)
-  name            String
-  description     String
-  objectives      QuestObjective[]
-  rewards         QuestReward[]
-  userQuests      UserQuest[] @relation("CurrentStageRelation")
-  
+  id          Int              @id @default(autoincrement())
+  questId     Int
+  quest       QuestTemplate    @relation(fields: [questId], references: [id])
+  order       Int              @default(1)
+  name        String
+  description String
+  objectives  QuestObjective[]
+  rewards     QuestReward[]
+  userQuests  UserQuest[]      @relation("CurrentStageRelation")
+
   @@unique([questId, order])
 }
 
 model QuestObjective {
-  id              Int      @id @default(autoincrement())
-  stageId         Int
-  stage           QuestStage @relation(fields: [stageId], references: [id])
-  type            String   
-  targetId        Int      
-  amount          Int      @default(1)
-  description     String
+  id          Int        @id @default(autoincrement())
+  stageId     Int
+  stage       QuestStage @relation(fields: [stageId], references: [id])
+  type        String
+  targetId    Int
+  amount      Int        @default(1)
+  description String
 }
 
 model QuestReward {
-  id              Int      @id @default(autoincrement())
-  stageId         Int
-  stage           QuestStage @relation(fields: [stageId], references: [id])
-  type            String   
-  itemId          Int?
-  amount          Int      @default(1)
+  id      Int        @id @default(autoincrement())
+  stageId Int
+  stage   QuestStage @relation(fields: [stageId], references: [id])
+  type    String
+  itemId  Int?
+  amount  Int        @default(1)
 }
 
 model UserQuest {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  questId       Int
-  quest         QuestTemplate @relation(fields: [questId], references: [id])
+  id             Int           @id @default(autoincrement())
+  userId         Int
+  user           User          @relation(fields: [userId], references: [id])
+  questId        Int
+  quest          QuestTemplate @relation(fields: [questId], references: [id])
   currentStageId Int?
-  currentStage   QuestStage? @relation("CurrentStageRelation", fields: [currentStageId], references: [id])
-  status        String   @default("ACTIVE") 
+  currentStage   QuestStage?   @relation("CurrentStageRelation", fields: [currentStageId], references: [id])
+  status         String        @default("ACTIVE")
 }
 
 model Mail {
-  id              Int      @id @default(autoincrement())
-  receiverId      Int
-  receiver        User     @relation("ReceiverRelation", fields: [receiverId], references: [id])
-  subject         String
-  expiresAt       DateTime
+  id         Int      @id @default(autoincrement())
+  receiverId Int
+  receiver   User     @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  subject    String
+  expiresAt  DateTime
 }
 
 model HeroTrait {
-  id              Int      @id @default(autoincrement())
-  heroId      Int
-  hero            Hero     @relation(fields: [heroId], references: [id])
-  traitId     Int
-  trait       TraitTemplate @relation(fields: [traitId], references: [id])
+  id      Int           @id @default(autoincrement())
+  heroId  Int
+  hero    Hero          @relation(fields: [heroId], references: [id])
+  traitId Int
+  trait   TraitTemplate @relation(fields: [traitId], references: [id])
 }
 
 model Guild {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
-  templateId      Int
-  template        GuildTemplate @relation(fields: [templateId], references: [id])
-  vaultGold       Int      @default(0) // Legacy
-  treasury        Int      @default(0)
-  
-  marketTaxRate   Float    @default(0.0) // Additional tax for guild (0.0 to 0.5)
-  gatheringTaxRate Float   @default(0.0) // Additional tax for guild
-  
-  members         User[]
-  facilities      GuildFacility[]
-  perks           GuildPerk[]
-  territories     Territory[]
-  siegesAsAttacker Siege[] @relation("AttackerRelation")
-  
-  factionId       Int?
-  faction         Faction? @relation(fields: [factionId], references: [id])
-  
+  id         Int           @id @default(autoincrement())
+  name       String        @unique
+  templateId Int
+  template   GuildTemplate @relation(fields: [templateId], references: [id])
+  vaultGold  Int           @default(0) // Legacy
+  treasury   Int           @default(0)
+
+  marketTaxRate    Float @default(0.0) // Additional tax for guild (0.0 to 0.5)
+  gatheringTaxRate Float @default(0.0) // Additional tax for guild
+
+  members          User[]
+  facilities       GuildFacility[]
+  perks            GuildPerk[]
+  territories      Territory[]
+  siegesAsAttacker Siege[]         @relation("AttackerRelation")
+
+  factionId Int?
+  faction   Faction? @relation(fields: [factionId], references: [id])
+
   // Guild System Relations
-  invites         GuildInvite[]
-  history         GuildHistory[]
+  invites GuildInvite[]
+  history GuildHistory[]
 }
 
 // ============================================
@@ -980,492 +981,493 @@ model Guild {
 // ============================================
 
 model GuildInvite {
-  id              Int      @id @default(autoincrement())
-  guildId         Int
-  guild           Guild    @relation(fields: [guildId], references: [id])
-  invitedUserId   Int?
-  invitedUser     User?    @relation("InvitedUserRelation", fields: [invitedUserId], references: [id])
-  invitedBy       Int
-  inviter         User     @relation("InviterRelation", fields: [invitedBy], references: [id])
-  inviteCode      String   @unique
-  status          String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
-  expiresAt       DateTime
-  createdAt       DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  guildId       Int
+  guild         Guild    @relation(fields: [guildId], references: [id])
+  invitedUserId Int?
+  invitedUser   User?    @relation("InvitedUserRelation", fields: [invitedUserId], references: [id])
+  invitedBy     Int
+  inviter       User     @relation("InviterRelation", fields: [invitedBy], references: [id])
+  inviteCode    String   @unique
+  status        String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
 
   @@index([guildId])
   @@index([inviteCode])
 }
 
 model GuildHistory {
-  id              Int      @id @default(autoincrement())
-  guildId         Int
-  guild           Guild    @relation(fields: [guildId], references: [id])
-  eventType       String   // MEMBER_JOINED, MEMBER_LEFT, KICKED, PROMOTED, DEMOTED, TRANSFERRED, FACILITY_BUILT, UPGRADED, TREASURY_DEPOSIT, TREASURY_WITHDRAW
-  userId          Int?
-  user            User?    @relation(fields: [userId], references: [id])
-  targetUserId    Int?
-  targetUser      User?    @relation("TargetUserRelation", fields: [targetUserId], references: [id])
-  description     String
-  metadata        String   @default("{}") // JSON for additional data
-  createdAt       DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  guildId      Int
+  guild        Guild    @relation(fields: [guildId], references: [id])
+  eventType    String // MEMBER_JOINED, MEMBER_LEFT, KICKED, PROMOTED, DEMOTED, TRANSFERRED, FACILITY_BUILT, UPGRADED, TREASURY_DEPOSIT, TREASURY_WITHDRAW
+  userId       Int?
+  user         User?    @relation(fields: [userId], references: [id])
+  targetUserId Int?
+  targetUser   User?    @relation("TargetUserRelation", fields: [targetUserId], references: [id])
+  description  String
+  metadata     String   @default("{}") // JSON for additional data
+  createdAt    DateTime @default(now())
 
   @@index([guildId])
   @@index([createdAt])
 }
 
 model FactionRelation {
-  id            Int      @id @default(autoincrement())
-  factionAId    Int
-  factionBId    Int
-  status        String   @default("NEUTRAL") // WAR, PEACE, NEUTRAL
-  
-  factionA      Faction  @relation("FactionARelation", fields: [factionAId], references: [id])
-  factionB      Faction  @relation("FactionBRelation", fields: [factionBId], references: [id])
-  
+  id         Int    @id @default(autoincrement())
+  factionAId Int
+  factionBId Int
+  status     String @default("NEUTRAL") // WAR, PEACE, NEUTRAL
+
+  factionA Faction @relation("FactionARelation", fields: [factionAId], references: [id])
+  factionB Faction @relation("FactionBRelation", fields: [factionBId], references: [id])
+
   @@unique([factionAId, factionBId])
 }
 
 model Territory {
-  id              Int      @id @default(autoincrement())
-  regionId        Int      @unique
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  guildId         Int
-  guild           Guild    @relation(fields: [guildId], references: [id])
-  
+  id       Int            @id @default(autoincrement())
+  regionId Int            @unique
+  region   RegionTemplate @relation(fields: [regionId], references: [id])
+  guildId  Int
+  guild    Guild          @relation(fields: [guildId], references: [id])
+
   // AAA: Fortification and Siege Status
-  fortification     Int      @default(1000)
-  maxFortification  Int      @default(1000)
-  siegeStatus       String   @default("PEACE") // PEACE, UNDER_SIEGE
-  
-  capturedAt      DateTime @default(now())
-  lastUpkeepAt    DateTime @default(now())
-  
-  activeSieges    Siege[]
+  fortification    Int    @default(1000)
+  maxFortification Int    @default(1000)
+  siegeStatus      String @default("PEACE") // PEACE, UNDER_SIEGE
+
+  capturedAt   DateTime @default(now())
+  lastUpkeepAt DateTime @default(now())
+
+  activeSieges Siege[]
 }
 
 model GuildTemplate {
-  id              Int      @id
-  name            String
-  description     String   @default("")
-  creationReqs    String   @default("{}")  // JSON string with requirements
-  maxMembers      Int      @default(20)
-  baseTreasury    Int      @default(0)
-  guilds          Guild[]
+  id           Int     @id
+  name         String
+  description  String  @default("")
+  creationReqs String  @default("{}") // JSON string with requirements
+  maxMembers   Int     @default(20)
+  baseTreasury Int     @default(0)
+  guilds       Guild[]
 }
 
 model GuildFacilityTemplate {
-  id              Int      @id
-  name            String
-  description     String
-  type            String   // STAT_BUFF, PRODUCTION, etc.
-  
+  id          Int    @id
+  name        String
+  description String
+  type        String // STAT_BUFF, PRODUCTION, etc.
+
   // Normalized Effects
-  statKey         String?  // e.g., "ATK", "DEF", "EXP"
-  statValuePerLevel Float? 
-  
-  costBase        Int      @default(1000)
-  costMult        Float    @default(1.5)
-  
-  facilities      GuildFacility[]
+  statKey           String? // e.g., "ATK", "DEF", "EXP"
+  statValuePerLevel Float?
+
+  costBase Int   @default(1000)
+  costMult Float @default(1.5)
+
+  facilities GuildFacility[]
 }
 
 model GuildFacility {
-  id              Int      @id @default(autoincrement())
-  guildId         Int
-  guild           Guild    @relation(fields: [guildId], references: [id])
-  templateId      Int
-  template        GuildFacilityTemplate @relation(fields: [templateId], references: [id])
-  level           Int      @default(1)
-  
+  id         Int                   @id @default(autoincrement())
+  guildId    Int
+  guild      Guild                 @relation(fields: [guildId], references: [id])
+  templateId Int
+  template   GuildFacilityTemplate @relation(fields: [templateId], references: [id])
+  level      Int                   @default(1)
+
   @@unique([guildId, templateId])
 }
 
 model GuildPerk {
-  id              Int      @id @default(autoincrement())
-  guildId         Int
-  guild           Guild    @relation(fields: [guildId], references: [id])
-  perkKey         String
-  level           Int      @default(1)
+  id      Int    @id @default(autoincrement())
+  guildId Int
+  guild   Guild  @relation(fields: [guildId], references: [id])
+  perkKey String
+  level   Int    @default(1)
 }
 
 model Siege {
-  id              Int      @id @default(autoincrement())
-  territoryId     Int
-  territory       Territory @relation(fields: [territoryId], references: [id])
-  
+  id          Int       @id @default(autoincrement())
+  territoryId Int
+  territory   Territory @relation(fields: [territoryId], references: [id])
+
   attackerGuildId Int
   attackerGuild   Guild @relation("AttackerRelation", fields: [attackerGuildId], references: [id])
-  
-  status          String   @default("ACTIVE") // ACTIVE, WON, REPELLED
-  startedAt       DateTime @default(now())
-  endsAt          DateTime
-  
-  logs            SiegeLog[]
+
+  status    String   @default("ACTIVE") // ACTIVE, WON, REPELLED
+  startedAt DateTime @default(now())
+  endsAt    DateTime
+
+  logs SiegeLog[]
 }
 
 model SiegeLog {
-  id              Int      @id @default(autoincrement())
-  siegeId         Int
-  siege           Siege    @relation(fields: [siegeId], references: [id])
-  event           String
-  createdAt       DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  siegeId   Int
+  siege     Siege    @relation(fields: [siegeId], references: [id])
+  event     String
+  createdAt DateTime @default(now())
 }
 
 model TransactionLedger {
   id            Int      @id @default(autoincrement())
   userId        Int
   user          User     @relation(fields: [userId], references: [id])
-  type          String   
-  currencyTier  String   // Legacy or Category
+  type          String
+  currencyTier  String // Legacy or Category
   silverDelta   BigInt   @default(0) // Total change in base silver units
   silverBalance BigInt   @default(0) // Total balance in base silver units after change
-  sourceId      Int?     
-  sourceType    String?  
+  sourceId      Int?
+  sourceType    String?
   createdAt     DateTime @default(now())
 }
 
 model PremiumTierTemplate {
-  id              Int      @id
-  name            String   
-  queueSlots      Int      @default(0)
-  speedBonus      Float    @default(0.0)
-  vitalityRegenMult Float @default(1.0)
-  maxVitalityBonus Int @default(0)
-  users           User[]
+  id                Int    @id
+  name              String
+  queueSlots        Int    @default(0)
+  speedBonus        Float  @default(0.0)
+  vitalityRegenMult Float  @default(1.0)
+  maxVitalityBonus  Int    @default(0)
+  users             User[]
 }
 
 model Faction {
-  id            Int      @id
-  name          String
-  description   String
-  npcs          NPCTemplate[]
-  quests        QuestTemplate[]
-  regions       RegionTemplate[]
+  id              Int              @id
+  name            String
+  description     String
+  npcs            NPCTemplate[]
+  quests          QuestTemplate[]
+  regions         RegionTemplate[]
   userReputations UserReputation[]
-  ranks         FactionRank[]
-  members       User[]
-  alignedGuilds Guild[]
-  
-  relationsA    FactionRelation[] @relation("FactionARelation")
-  relationsB    FactionRelation[] @relation("FactionBRelation")
-  influence     RegionalInfluence[]
+  ranks           FactionRank[]
+  members         User[]
+  alignedGuilds   Guild[]
+
+  relationsA FactionRelation[]   @relation("FactionARelation")
+  relationsB FactionRelation[]   @relation("FactionBRelation")
+  influence  RegionalInfluence[]
 }
 
 model RegionalInfluence {
-  id            Int      @id @default(autoincrement())
-  factionId     Int
-  faction       Faction  @relation(fields: [factionId], references: [id])
-  regionId      Int
-  region        RegionTemplate @relation(fields: [regionId], references: [id])
-  points        Int      @default(0)
-  
-  lastUpdated   DateTime @default(now())
-  
+  id        Int            @id @default(autoincrement())
+  factionId Int
+  faction   Faction        @relation(fields: [factionId], references: [id])
+  regionId  Int
+  region    RegionTemplate @relation(fields: [regionId], references: [id])
+  points    Int            @default(0)
+
+  lastUpdated DateTime @default(now())
+
   @@unique([factionId, regionId])
 }
 
 model FactionRank {
-  id              Int      @id @default(autoincrement())
-  factionId       Int
-  faction         Faction  @relation(fields: [factionId], references: [id])
-  name            String
-  minReputation   Int      @default(0)
-  
+  id            Int     @id @default(autoincrement())
+  factionId     Int
+  faction       Faction @relation(fields: [factionId], references: [id])
+  name          String
+  minReputation Int     @default(0)
+
   // Normalized Perks
-  statKey         String?  // e.g., "str", "dex", "attack_damage"
-  statValue       Float?   // Additive or Mult based on logic
-  expBonus        Float?   // Global EXP multiplier for faction members
-  
+  statKey   String? // e.g., "str", "dex", "attack_damage"
+  statValue Float? // Additive or Mult based on logic
+  expBonus  Float? // Global EXP multiplier for faction members
+
   @@unique([factionId, minReputation])
 }
 
 model HeroSaleHistory {
-  id              Int      @id @default(autoincrement())
-  classId         Int
-  combatClass     ClassTemplate @relation(fields: [classId], references: [id])
-  unitLevel       Int
-  price           Int
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  soldAt          DateTime @default(now())
+  id          Int            @id @default(autoincrement())
+  classId     Int
+  combatClass ClassTemplate  @relation(fields: [classId], references: [id])
+  unitLevel   Int
+  price       Int
+  regionId    Int
+  region      RegionTemplate @relation(fields: [regionId], references: [id])
+  soldAt      DateTime       @default(now())
 }
 
 model ItemSaleHistory {
-  id              Int      @id @default(autoincrement())
-  sellerId        Int?     
-  seller          User?    @relation("SellerHistoryRelation", fields: [sellerId], references: [id])
-  templateId      Int
-  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  pricePerUnit    Int
-  quantity        Int
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  soldAt          DateTime @default(now())
+  id           Int            @id @default(autoincrement())
+  sellerId     Int?
+  seller       User?          @relation("SellerHistoryRelation", fields: [sellerId], references: [id])
+  templateId   Int
+  itemTemplate ItemTemplate   @relation(fields: [templateId], references: [id])
+  pricePerUnit Int
+  quantity     Int
+  regionId     Int
+  region       RegionTemplate @relation(fields: [regionId], references: [id])
+  soldAt       DateTime       @default(now())
 }
 
 model UserReputation {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  user          User     @relation(fields: [userId], references: [id])
-  factionId     Int
-  faction       Faction  @relation(fields: [factionId], references: [id])
-  amount        Int      @default(0)
-  
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  factionId Int
+  faction   Faction @relation(fields: [factionId], references: [id])
+  amount    Int     @default(0)
+
   @@unique([userId, factionId])
 }
 
 model DialogueNode {
-  id            Int      @id @default(autoincrement())
-  npcId         Int
-  npc           NPCTemplate @relation(fields: [npcId], references: [id])
-  text          String
-  isRoot        Boolean  @default(false)
-  choices       DialogueChoice[]
+  id      Int              @id @default(autoincrement())
+  npcId   Int
+  npc     NPCTemplate      @relation(fields: [npcId], references: [id])
+  text    String
+  isRoot  Boolean          @default(false)
+  choices DialogueChoice[]
 }
 
 model DialogueChoice {
-  id            Int      @id @default(autoincrement())
-  nodeId        Int
-  node          DialogueNode @relation(fields: [nodeId], references: [id])
-  text          String
-  nextNodeId    Int?     // If null, ends dialogue
-  
+  id         Int          @id @default(autoincrement())
+  nodeId     Int
+  node       DialogueNode @relation(fields: [nodeId], references: [id])
+  text       String
+  nextNodeId Int? // If null, ends dialogue
+
   // Choice Outcomes (Optional)
-  questId       Int?     // If set, offers/accepts quest
-  reputationAmount Int?
+  questId             Int? // If set, offers/accepts quest
+  reputationAmount    Int?
   reputationFactionId Int?
-  triggerCombat Boolean @default(false)
+  triggerCombat       Boolean @default(false)
 }
 
 model Wagon {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @unique
-  user            User     @relation(fields: [userId], references: [id])
-  
-  tier            String   // SMALL, MEDIUM, LARGE, HEAVY
-  capacity        Int      @default(5)
-  status          String   @default("LOADING") // LOADING, EN_ROUTE, ARRIVED, DESTROYED
-  
-  originRegionId  Int?
-  targetRegionId  Int?
-  
-  selectedPath    String?  // Store as comma-separated IDs or JSON string
-  currentPathIndex Int     @default(0)
-  elapsedTimeInCurrentMap Int @default(0)
-  nextAmbushCheckAt DateTime?
-  feePaid         Int      @default(0)
-  
-  items           WagonItem[]
-  lootSessions    LootSession[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  tier     String // SMALL, MEDIUM, LARGE, HEAVY
+  capacity Int    @default(5)
+  status   String @default("LOADING") // LOADING, EN_ROUTE, ARRIVED, DESTROYED
+
+  originRegionId Int?
+  targetRegionId Int?
+
+  selectedPath            String? // Store as comma-separated IDs or JSON string
+  currentPathIndex        Int       @default(0)
+  elapsedTimeInCurrentMap Int       @default(0)
+  nextAmbushCheckAt       DateTime?
+  feePaid                 Int       @default(0)
+
+  items        WagonItem[]
+  lootSessions LootSession[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model WagonItem {
-  id              Int      @id @default(autoincrement())
-  wagonId         Int
-  wagon           Wagon    @relation(fields: [wagonId], references: [id])
-  templateId      Int
-  template        ItemTemplate @relation(fields: [templateId], references: [id])
-  quantity        Int      @default(1)
+  id         Int          @id @default(autoincrement())
+  wagonId    Int
+  wagon      Wagon        @relation(fields: [wagonId], references: [id])
+  templateId Int
+  template   ItemTemplate @relation(fields: [templateId], references: [id])
+  quantity   Int          @default(1)
 }
 
 model LootSession {
-  id          Int      @id @default(autoincrement())
-  looterId    Int
-  looter      User     @relation("LooterRelation", fields: [looterId], references: [id])
-  victimId    Int      
-  victim      User     @relation("VictimRelation", fields: [victimId], references: [id])
-  wagonId     Int?     
-  wagon       Wagon?   @relation(fields: [wagonId], references: [id])
-  expiresAt   DateTime
-  isActive    Boolean  @default(true)
+  id        Int      @id @default(autoincrement())
+  looterId  Int
+  looter    User     @relation("LooterRelation", fields: [looterId], references: [id])
+  victimId  Int
+  victim    User     @relation("VictimRelation", fields: [victimId], references: [id])
+  wagonId   Int?
+  wagon     Wagon?   @relation(fields: [wagonId], references: [id])
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
 }
 
 model RegionalExtractionStats {
-  id              Int      @id @default(autoincrement())
-  regionId        Int
-  region          RegionTemplate @relation(fields: [regionId], references: [id])
-  templateId      Int
-  itemTemplate    ItemTemplate @relation(fields: [templateId], references: [id])
-  
-    volume24h       Int      @default(0)
-    lastUpdated     DateTime @default(now())
-  
-    @@unique([regionId, templateId])
-  }
-  
-  model Bounty {
-    id              Int      @id @default(autoincrement())
-    targetId        Int
-    target          User     @relation("TargetRelation", fields: [targetId], references: [id])
-    hunterId        Int?
-    hunter          User?    @relation("HunterRelation", fields: [hunterId], references: [id])
-    
-    rewardSilver    BigInt   @default(0)
-    status          String   @default("OPEN") // OPEN, CLAIMED, EXPIRED
-    
-    regionId        Int
-    region          RegionTemplate @relation(fields: [regionId], references: [id])
-    
-      createdAt       DateTime @default(now())
-      claimedAt       DateTime?
-    }
-    
-    model WorldState {
-      id              Int      @id @default(1)
-      currentHour     Int      @default(12) // 0-23
-      weatherType     String   @default("CLEAR") // CLEAR, RAIN, STORM, HEATWAVE
-      lastTick        DateTime @default(now())
-    }
+  id           Int            @id @default(autoincrement())
+  regionId     Int
+  region       RegionTemplate @relation(fields: [regionId], references: [id])
+  templateId   Int
+  itemTemplate ItemTemplate   @relation(fields: [templateId], references: [id])
 
-    model ChatMessage {
-      id          Int      @id @default(autoincrement())
-      channelType String   @default("GLOBAL") // GLOBAL, GUILD, PRIVATE
-      channelId   Int?
-      userId      Int
-      user        User     @relation(fields: [userId], references: [id])
-      message     String
-      timestamp   DateTime @default(now())
-      isDeleted   Boolean  @default(false)
-    }
+  volume24h   Int      @default(0)
+  lastUpdated DateTime @default(now())
 
-    // ============================================
-    // UNIT STAT SYSTEM - PHASE 1: DATABASE SCHEMA
-    // ============================================
+  @@unique([regionId, templateId])
+}
 
-    // NOTE: Using String instead of Enum for SQLite compatibility
-    // Elemental Types: FIRE, WATER, EARTH, WIND, LIGHT, DARK
+model Bounty {
+  id       Int   @id @default(autoincrement())
+  targetId Int
+  target   User  @relation("TargetRelation", fields: [targetId], references: [id])
+  hunterId Int?
+  hunter   User? @relation("HunterRelation", fields: [hunterId], references: [id])
 
-    // Elemental Affinity for Heroes
-    model HeroElementalAffinity {
-      id              Int      @id @default(autoincrement())
-      heroId          Int
-      hero            Hero     @relation(fields: [heroId], references: [id])
-      elementType     String   // FIRE, WATER, EARTH, WIND, LIGHT, DARK
-      resistance      Float    @default(0)
-      bonusDamage     Float    @default(0)
+  rewardSilver BigInt @default(0)
+  status       String @default("OPEN") // OPEN, CLAIMED, EXPIRED
 
-      @@unique([heroId, elementType])
-    }
+  regionId Int
+  region   RegionTemplate @relation(fields: [regionId], references: [id])
 
-    // Equipment Set Template
-    model EquipmentSetTemplate {
-      id              Int      @id @default(autoincrement())
-      name            String   @unique
-      description     String
-      setPieces       EquipmentSetPiece[]
-      setBonuses     EquipmentSetBonus[]
-    }
+  createdAt DateTime  @default(now())
+  claimedAt DateTime?
+}
 
-    // Equipment Set Piece
-    model EquipmentSetPiece {
-      id              Int      @id @default(autoincrement())
-      setId           Int
-      set             EquipmentSetTemplate @relation(fields: [setId], references: [id])
-      pieceOrder      Int      // 1=Helmet, 2=Armor, 3=Gloves, 4=Boots, 5=Weapon
-      itemTemplateId  Int
+model WorldState {
+  id          Int      @id @default(1)
+  currentHour Int      @default(12) // 0-23
+  weatherType String   @default("CLEAR") // CLEAR, RAIN, STORM, HEATWAVE
+  lastTick    DateTime @default(now())
+}
 
-      @@unique([setId, pieceOrder])
-    }
+model ChatMessage {
+  id          Int      @id @default(autoincrement())
+  channelType String   @default("GLOBAL") // GLOBAL, GUILD, PRIVATE
+  channelId   Int?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  message     String
+  timestamp   DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+}
 
-    // Equipment Set Bonus
-    model EquipmentSetBonus {
-      id              Int      @id @default(autoincrement())
-      setId           Int
-      set             EquipmentSetTemplate @relation(fields: [setId], references: [id])
-      requiredPieces  Int
-      description     String
-      bonusStats      String   @default("{}")
-      bonusSkillId    Int?
+// ============================================
+// UNIT STAT SYSTEM - PHASE 1: DATABASE SCHEMA
+// ============================================
 
-      @@unique([setId, requiredPieces])
-    }
+// NOTE: Using String instead of Enum for SQLite compatibility
+// Elemental Types: FIRE, WATER, EARTH, WIND, LIGHT, DARK
 
-    // Set Bonus Condition
-    model SetBonusCondition {
-      id              Int      @id @default(autoincrement())
-      bonusId         Int
-      conditionType   String   // e.g., "ELEMENT", "STAT_THRESHOLD", "CLASS"
-      conditionValue  String
-    }
+// Elemental Affinity for Heroes
+model HeroElementalAffinity {
+  id          Int    @id @default(autoincrement())
+  heroId      Int
+  hero        Hero   @relation(fields: [heroId], references: [id])
+  elementType String // FIRE, WATER, EARTH, WIND, LIGHT, DARK
+  resistance  Float  @default(0)
+  bonusDamage Float  @default(0)
 
-    // Hero Equipment Set
-    model HeroEquipmentSet {
-      id              Int      @id @default(autoincrement())
-      heroId          Int
-      hero            Hero     @relation(fields: [heroId], references: [id])
-      setId           Int
-      equippedPieces  Int      @default(0)
-      activeBonusId   Int?
+  @@unique([heroId, elementType])
+}
 
-      @@unique([heroId, setId])
-    }
+// Equipment Set Template
+model EquipmentSetTemplate {
+  id          Int                 @id @default(autoincrement())
+  name        String              @unique
+  description String
+  setPieces   EquipmentSetPiece[]
+  setBonuses  EquipmentSetBonus[]
+}
 
-    // Stat Allocation Template
-    model StatAllocationTemplate {
-      id              Int      @id @default(autoincrement())
-      classId         Int      @unique
-      strGrowthCurve  String   @default("linear")
-      dexGrowthCurve  String   @default("linear")
-      intGrowthCurve String   @default("linear")
-      vitGrowthCurve String   @default("linear")
-      lukGrowthCurve String   @default("linear")
-      strGrowthFactor Float   @default(1.0)
-      dexGrowthFactor Float   @default(1.0)
-      intGrowthFactor Float   @default(1.0)
-      vitGrowthFactor Float   @default(1.0)
-      lukGrowthFactor Float   @default(1.0)
-      basePointsPerLevel Int   @default(5)
-      maxStatCap     Int      @default(255)
-      recommendedStr  Int      @default(10)
-      recommendedDex  Int      @default(10)
-      recommendedInt  Int      @default(10)
-      recommendedVit  Int      @default(10)
-      recommendedLuk  Int      @default(5)
-    }
+// Equipment Set Piece
+model EquipmentSetPiece {
+  id             Int                  @id @default(autoincrement())
+  setId          Int
+  set            EquipmentSetTemplate @relation(fields: [setId], references: [id])
+  pieceOrder     Int // 1=Helmet, 2=Armor, 3=Gloves, 4=Boots, 5=Weapon
+  itemTemplateId Int
 
-    // Hero Stat Allocation
-    model HeroStatAllocation {
-      id              Int      @id @default(autoincrement())
-      heroId          Int      @unique
-      hero            Hero     @relation(fields: [heroId], references: [id])
-      availablePoints Int      @default(0)
-      strAllocated    Int      @default(0)
-      dexAllocated    Int      @default(0)
-      intAllocated    Int      @default(0)
-      vitAllocated    Int      @default(0)
-      lukAllocated    Int      @default(0)
-      statCaps        String   @default("{}")
-      totalSpent      Int      @default(0)
-      lastResetAt     DateTime?
-    }
+  @@unique([setId, pieceOrder])
+}
 
-    // Hero Stat History
-    model HeroStatHistory {
-      id              Int      @id @default(autoincrement())
-      heroId          Int
-      hero            Hero     @relation(fields: [heroId], references: [id])
-      recordedAt      DateTime @default(now())
-      primaryStats    String   @default("{}")
-      secondaryStats  String   @default("{}")
-      level           Int
-      equippedItems   String   @default("[]")
-      activeBuffs     String   @default("[]")
+// Equipment Set Bonus
+model EquipmentSetBonus {
+  id             Int                  @id @default(autoincrement())
+  setId          Int
+  set            EquipmentSetTemplate @relation(fields: [setId], references: [id])
+  requiredPieces Int
+  description    String
+  bonusStats     String               @default("{}")
+  bonusSkillId   Int?
 
-      @@index([heroId, recordedAt])
-    }
-    // Hero Stat Audit (Delta Tracking)
-    model HeroStatAudit {
-      id              Int      @id @default(autoincrement())
-      heroId          Int
-      hero            Hero     @relation(fields: [heroId], references: [id])
-      recordedAt      DateTime @default(now())
-      changeType      String   // ALLOCATION, RESET, LEVEL_UP, QUEST_REWARD, ADMIN
-      statName        String?  // str, dex, etc.
-      previousValue   Float?
-      newValue        Float?
-      notes           String?
+  @@unique([setId, requiredPieces])
+}
 
-      @@index([heroId, recordedAt])
-    }
+// Set Bonus Condition
+model SetBonusCondition {
+  id             Int    @id @default(autoincrement())
+  bonusId        Int
+  conditionType  String // e.g., "ELEMENT", "STAT_THRESHOLD", "CLASS"
+  conditionValue String
+}
+
+// Hero Equipment Set
+model HeroEquipmentSet {
+  id             Int  @id @default(autoincrement())
+  heroId         Int
+  hero           Hero @relation(fields: [heroId], references: [id])
+  setId          Int
+  equippedPieces Int  @default(0)
+  activeBonusId  Int?
+
+  @@unique([heroId, setId])
+}
+
+// Stat Allocation Template
+model StatAllocationTemplate {
+  id                 Int    @id @default(autoincrement())
+  classId            Int    @unique
+  strGrowthCurve     String @default("linear")
+  dexGrowthCurve     String @default("linear")
+  intGrowthCurve     String @default("linear")
+  vitGrowthCurve     String @default("linear")
+  lukGrowthCurve     String @default("linear")
+  strGrowthFactor    Float  @default(1.0)
+  dexGrowthFactor    Float  @default(1.0)
+  intGrowthFactor    Float  @default(1.0)
+  vitGrowthFactor    Float  @default(1.0)
+  lukGrowthFactor    Float  @default(1.0)
+  basePointsPerLevel Int    @default(5)
+  maxStatCap         Int    @default(255)
+  recommendedStr     Int    @default(10)
+  recommendedDex     Int    @default(10)
+  recommendedInt     Int    @default(10)
+  recommendedVit     Int    @default(10)
+  recommendedLuk     Int    @default(5)
+}
+
+// Hero Stat Allocation
+model HeroStatAllocation {
+  id              Int       @id @default(autoincrement())
+  heroId          Int       @unique
+  hero            Hero      @relation(fields: [heroId], references: [id])
+  availablePoints Int       @default(0)
+  strAllocated    Int       @default(0)
+  dexAllocated    Int       @default(0)
+  intAllocated    Int       @default(0)
+  vitAllocated    Int       @default(0)
+  lukAllocated    Int       @default(0)
+  statCaps        String    @default("{}")
+  totalSpent      Int       @default(0)
+  lastResetAt     DateTime?
+}
+
+// Hero Stat History
+model HeroStatHistory {
+  id             Int      @id @default(autoincrement())
+  heroId         Int
+  hero           Hero     @relation(fields: [heroId], references: [id])
+  recordedAt     DateTime @default(now())
+  primaryStats   String   @default("{}")
+  secondaryStats String   @default("{}")
+  level          Int
+  equippedItems  String   @default("[]")
+  activeBuffs    String   @default("[]")
+
+  @@index([heroId, recordedAt])
+}
+
+
+model HeroStatAudit {
+  id            Int      @id @default(autoincrement())
+  heroId        Int
+  hero          Hero     @relation(fields: [heroId], references: [id])
+  recordedAt    DateTime @default(now())
+  changeType    String
+  statName      String?
+  previousValue Float?
+  newValue      Float?
+  notes         String?
+
+  @@index([heroId, recordedAt])
+}

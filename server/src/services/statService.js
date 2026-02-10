@@ -1030,10 +1030,7 @@ class EnhancedStatService extends BaseService {
                 throw new Error('Hero not found');
             }
             
-            const allocation = hero.statAllocation;
-            if (!allocation) {
-                throw new Error('Stat allocation not initialized');
-            }
+            const allocation = await this._getOrInitializeAllocation(hero, tx);
             
             const availablePoints = allocation.availablePoints || 0;
             const currentAllocated = allocation[`${statName}Allocated`] || 0;
@@ -1098,8 +1095,7 @@ class EnhancedStatService extends BaseService {
             const hero = await this._fetchHeroData(heroId);
             if (!hero) throw new Error('Hero not found');
             
-            const allocation = hero.statAllocation;
-            if (!allocation) throw new Error('Stat allocation not initialized');
+            const allocation = await this._getOrInitializeAllocation(hero, tx);
 
             const totalRequested = Object.values(batch).reduce((sum, p) => sum + p, 0);
             if (totalRequested > (allocation.availablePoints || 0)) {
@@ -1164,7 +1160,13 @@ class EnhancedStatService extends BaseService {
             if (!hero) throw new Error('Hero not found');
             
             const allocation = hero.statAllocation;
-            if (!allocation) throw new Error('Stat allocation not initialized');
+            if (!allocation) {
+                return {
+                    success: true,
+                    pointsRefunded: 0,
+                    message: "No stat allocation found to reset"
+                };
+            }
 
             const primaryStats = ['str', 'dex', 'int', 'vit', 'luk'];
             let pointsRefunded = 0;
@@ -1263,39 +1265,44 @@ class EnhancedStatService extends BaseService {
     async getRecoveryStats(heroId) {
         const hero = await this.db.hero.findUnique({
             where: { id: heroId },
-            select: {
-                health: true,
-                mana: true,
-                vitality: true
-            }
+            include: { user: true }
         });
+        
+        if (!hero) throw new Error('Hero not found');
         
         const stats = await this.calculateHeroStats(heroId);
         
         const calculateTTF = (current, max, regen) => {
+            if (current == null || max == null) return null;
             if (current >= max) return 0;
             if (regen <= 0) return Infinity;
             return Math.ceil((max - current) / regen);
         };
 
+        // If current values aren't in DB, assume full for display (transient state)
+        const currentHp = hero.health ?? stats.health_max;
+        const currentMana = hero.mana ?? stats.mana_max;
+        const currentVitality = hero.vitality ?? hero.user?.vitality ?? 100;
+        const maxVitality = hero.user?.maxVitality ?? stats.vitality_max ?? 100;
+
         return {
             hp: {
-                current: hero.health,
+                current: currentHp,
                 max: stats.health_max,
                 regen: stats.hp_regen,
-                ttfSeconds: calculateTTF(hero.health, stats.health_max, stats.hp_regen)
+                ttfSeconds: calculateTTF(currentHp, stats.health_max, stats.hp_regen)
             },
             mana: {
-                current: hero.mana,
+                current: currentMana,
                 max: stats.mana_max,
                 regen: stats.mana_regen,
-                ttfSeconds: calculateTTF(hero.mana, stats.mana_max, stats.mana_regen)
+                ttfSeconds: calculateTTF(currentMana, stats.mana_max, stats.mana_regen)
             },
             vitality: {
-                current: hero.vitality,
-                max: stats.vitality_max,
-                regen: stats.vitality_regen || 5, // Default base vitality regen if not in stats
-                ttfSeconds: calculateTTF(hero.vitality, stats.vitality_max, stats.vitality_regen || 5)
+                current: currentVitality,
+                max: maxVitality,
+                regen: stats.vitality_regen || 5,
+                ttfSeconds: calculateTTF(currentVitality, maxVitality, stats.vitality_regen || 5)
             }
         };
     }
@@ -1337,6 +1344,43 @@ class EnhancedStatService extends BaseService {
                 crit_chance: "LUK * 0.5%"
             }
         };
+    }
+
+    /**
+     * Get or initialize stat allocation record for a hero
+     * @private
+     */
+    async _getOrInitializeAllocation(hero, tx) {
+        if (hero.statAllocation) return hero.statAllocation;
+
+        // Try to find if it exists (in case it wasn't loaded in _fetchHeroData)
+        const db = tx || this.db;
+        let allocation = await db.heroStatAllocation.findUnique({
+            where: { heroId: hero.id }
+        });
+
+        if (allocation) return allocation;
+
+        // Create new allocation record
+        const template = await db.statAllocationTemplate.findUnique({
+            where: { classId: hero.classId }
+        });
+
+        const basePoints = template?.basePointsPerLevel || 5;
+        const initialPoints = (hero.unitLevel || 1) * basePoints;
+
+        return await db.heroStatAllocation.create({
+            data: {
+                heroId: hero.id,
+                availablePoints: initialPoints,
+                totalSpent: 0,
+                strAllocated: 0,
+                dexAllocated: 0,
+                intAllocated: 0,
+                vitAllocated: 0,
+                lukAllocated: 0
+            }
+        });
     }
 
     /**
