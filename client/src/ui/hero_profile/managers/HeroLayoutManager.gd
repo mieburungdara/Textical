@@ -23,10 +23,23 @@ func setup_as_overlay() -> void:
 	if side_hud: side_hud.visible = false
 	if task_list_hud: task_list_hud.visible = false
 	
-	if margin_container:
-		margin_container.offset_top = 40
-		margin_container.offset_bottom = -40
-		margin_container.offset_left = 200 # Space for sidebar
+	var parent = get_parent()
+	if parent and parent is Control and parent.get_parent() is TabContainer:
+		# Tab mode
+		if margin_container:
+			margin_container.offset_top = 0
+			margin_container.offset_bottom = 0
+			margin_container.offset_left = 0
+		
+		var root = get_parent()
+		if root.has_node("Background"):
+			root.get_node("Background").visible = false
+	else:
+		# Standalone overlay mode
+		if margin_container:
+			margin_container.offset_top = 40
+			margin_container.offset_bottom = -40
+			margin_container.offset_left = 160 # Space for sidebar
 
 ## Toggle the visibility of the profile overlay
 func toggle_overlay() -> void:

@@ -1,0 +1,172 @@
+[gd_scene load_steps=4 format=3 uid="uid://side_hud_navigation"]
+
+[ext_resource type="Script" path="res://src/ui/side_hud/components/SideHUD_Navigation.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/components/SideNavButton.tscn" id="2_btn"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge_bg"]
+bg_color = Color(0.9, 0.2, 0.2, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 4.0
+expand_margin_right = 4.0
+
+[node name="SideHUD_Navigation" type="VBoxContainer"]
+offset_right = 160.0
+offset_bottom = 300.0
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+alignment = 1
+script = ExtResource("1_script")
+
+[node name="CharacterBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🤴"
+menu_label = "CHARACTER"
+is_overlay = true
+overlay_name = "CharacterHub"
+target_scene = "res://src/ui/CharacterHub.tscn"
+
+[node name="CharacterBadge" type="Label" parent="CharacterBtn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge_bg")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="QuestBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "📜"
+menu_label = "QUESTS"
+is_overlay = true
+overlay_name = "Quests"
+target_scene = "res://src/ui/QuestScreen.tscn"
+
+[node name="QuestBadge" type="Label" parent="QuestBtn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge_bg")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CodexBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "📜"
+menu_label = "CODEX"
+is_overlay = true
+overlay_name = "CodexHub"
+target_scene = "res://src/ui/codex/CodexHub.tscn"
+
+[node name="CodexBadge" type="Label" parent="CodexBtn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge_bg")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WorldBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🗺️"
+menu_label = "WORLD"
+is_overlay = true
+overlay_name = "World"
+target_scene = "res://src/ui/WorldAtlas.tscn"
+
+[node name="TownBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🏰"
+menu_label = "TOWN"
+target_scene = "res://src/ui/TownScreen.tscn"
+
+[node name="BagBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🎒"
+menu_label = "BAG"
+is_overlay = true
+overlay_name = "Inventory"
+target_scene = "res://src/ui/InventoryScreen.tscn"
+
+[node name="BagBadge" type="Label" parent="BagBtn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge_bg")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GuildBtn" parent="." instance=ExtResource("2_btn")]
+unique_name_in_owner = true
+layout_mode = 2
+icon_text = "🏛️"
+menu_label = "GUILD"
+is_overlay = true
+overlay_name = "Guild"
+target_scene = "res://src/ui/GuildScreen.tscn"
+
+[node name="GuildBadge" type="Label" parent="GuildBtn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge_bg")
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1

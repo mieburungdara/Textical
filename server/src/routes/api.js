@@ -14,15 +14,18 @@ const battleController = require('../controllers/BattleController');
 const inventoryController = require('../controllers/InventoryController');
 const regionController = require('../controllers/RegionController');
 const equipmentController = require('../controllers/EquipmentController');
+const worldController = require('../controllers/WorldController');
 const chatRoutes = require('./chatRoutes');
 const statRoutes = require('./statRoutes');
 
 // --- ASSETS (SYNC SYSTEM) ---
 router.get('/assets/manifest', (req, res) => assetController.getManifest(req, res));
+router.get('/assets/templates/:category', (req, res) => assetController.getTemplates(req, res));
 router.get('/assets/raw/:category/:id', (req, res) => assetController.getRawAsset(req, res));
 
 // --- USER ---
 router.use('/chat', chatRoutes);
+router.get('/world/state', (req, res) => worldController.getWorldState(req, res));
 router.post('/auth/login', (req, res) => userController.login(req, res));
 router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
 router.get('/user/:id/heroes', (req, res) => userController.getHeroes(req, res));
@@ -30,6 +33,9 @@ router.get('/user/:id/inventory', (req, res) => userController.getInventory(req,
 router.get('/user/:id/recipes', (req, res) => userController.getRecipes(req, res));
 router.get('/user/:id/formation', (req, res) => userController.getFormation(req, res));
 router.get('/user/:id/task', (req, res) => userController.getActiveTask(req, res));
+router.get('/user/:id/friends', (req, res) => userController.getFriends(req, res));
+router.get('/user/:id/achievements', (req, res) => userController.getAchievements(req, res));
+router.post('/user/settings', (req, res) => userController.updateSettings(req, res));
 
 // --- REGIONS ---
 router.get('/regions', (req, res) => regionController.getAllRegions(req, res));

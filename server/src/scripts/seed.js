@@ -49,16 +49,18 @@ async function main() {
 
   console.log("[1/2] Updating Region Lore...");
   for (const r of regions) {
-    const metaStr = JSON.stringify(r.metadata);
     await prisma.regionTemplate.upsert({
       where: { id: r.id },
-      update: { metadata: metaStr, name: r.name, type: r.type },
+      update: { 
+        name: r.name, 
+        visualType: r.type,
+        description: r.description
+      },
       create: { 
         id: r.id, 
         name: r.name, 
         description: r.description, 
-        type: r.type, 
-        metadata: metaStr 
+        visualType: r.type
       }
     });
   }

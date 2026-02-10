@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://src/ui/CraftingScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 
 [node name="CraftingScreen" type="Control"]
 layout_mode = 3
@@ -27,7 +27,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 200.0
+offset_left = 160.0
 offset_top = 40.0
 offset_right = -40.0
 offset_bottom = -40.0

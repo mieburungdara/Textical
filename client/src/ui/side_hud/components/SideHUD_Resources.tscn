@@ -1,0 +1,86 @@
+[gd_scene load_steps=5 format=3 uid="uid://side_hud_resources"]
+
+[ext_resource type="Script" path="res://src/ui/side_hud/components/SideHUD_Resources.gd" id="1_script"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_res_val"]
+font_size = 11
+font_color = Color(0.9, 0.9, 0.9, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0, 0, 0, 0.4)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vit_fill"]
+bg_color = Color(0.3, 0.8, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SideHUD_Resources" type="VBoxContainer"]
+offset_right = 136.0
+offset_bottom = 80.0
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="VitalityRow" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HBox" type="HBoxContainer" parent="VitalityRow"]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="VitalityRow/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "⚡"
+
+[node name="VitalityLabel" type="Label" parent="VitalityRow/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100 / 100"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="VitBar" type="ProgressBar" parent="VitalityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_vit_fill")
+value = 100.0
+show_percentage = false
+
+[node name="SilverRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="SilverRow"]
+layout_mode = 2
+text = "🪙"
+
+[node name="SilverLabel" type="Label" parent="SilverRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2
+
+[node name="GoldRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="GoldRow"]
+layout_mode = 2
+text = "💰"
+
+[node name="GoldLabel" type="Label" parent="GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_res_val")
+horizontal_alignment = 2

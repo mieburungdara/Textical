@@ -12,12 +12,12 @@ func setup_as_overlay(_data: Dictionary = {}):
     if has_node("TopHUD"): $TopHUD.visible = false
     if has_node("SideHUD"): $SideHUD.visible = false
     
-        # Beri margin agar tidak menabrak SideHUD di kiri
-        if has_node("MarginContainer"):
-            $MarginContainer.offset_left = 200
-            $MarginContainer.offset_right = -40
-            $MarginContainer.offset_top = 40
-            $MarginContainer.offset_bottom = -40
+    # Beri margin agar tidak menabrak SideHUD di kiri
+    if has_node("MarginContainer"):
+        $MarginContainer.offset_left = 160 # Matches SideHUD width
+        $MarginContainer.offset_right = -40
+        $MarginContainer.offset_top = 40
+        $MarginContainer.offset_bottom = -40
 func _ready():
     ServerConnector.request_completed.connect(_on_request_completed)
     refresh()

@@ -133,6 +133,67 @@ class UserController extends BaseController {
             });
         });
     }
+
+    async getFriends(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
+
+            const friendships = await prisma.userFriend.findMany({
+                where: { userId, status: "ACCEPTED" },
+                include: { friend: { select: { id: true, username: true, isInTavern: true, currentRegion: true } } }
+            });
+
+            const friends = friendships.map(f => ({
+                id: f.friend.id,
+                name: f.friend.username,
+                status: "online", // Simplification: in a real app, track online status via sockets/redis
+                location: f.friend.isInTavern ? "Tavern" : "World"
+            }));
+
+            this.sendSuccess(res, friends);
+        });
+    }
+
+    async updateSettings(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.body.userId);
+            const { settings } = req.body;
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
+
+            const updatedUser = await prisma.user.update({
+                where: { id: userId },
+                data: { settings: JSON.stringify(settings) }
+            });
+
+            this.sendSuccess(res, { settings: JSON.parse(updatedUser.settings) });
+        });
+    }
+
+    async getAchievements(req, res) {
+        await this.execute(res, async () => {
+            const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
+
+            const userAchievements = await prisma.userAchievement.findMany({
+                where: { userId },
+                include: { achievement: true }
+            });
+
+            const allAchievements = await prisma.achievementTemplate.findMany();
+
+            const result = allAchievements.map(template => {
+                const earned = userAchievements.find(ua => ua.achievementId === template.id);
+                return {
+                    ...template,
+                    unlocked: !!earned,
+                    unlockedAt: earned ? earned.unlockedAt : null
+                };
+            });
+
+            this.sendSuccess(res, result);
+        });
+    }
 }
 
 module.exports = new UserController();

@@ -23,7 +23,7 @@ SocketHandler="*res://src/network/SocketHandler.gd"
 GuildHandler="*res://src/network/GuildHandler.gd"
 DebugOverlay="*res://src/ui/DebugOverlay.tscn"
 UIManager="*res://src/autoload/ui_manager.gd"
-SideHUD="*res://src/ui/SideHUD.tscn"
+SideHUD="*res://src/ui/side_hud/SideHUD.tscn"
 MCPInputHandler="*res://addons/godot_mcp/mcp_input_handler.gd"
 LocalizationManager="*res://src/autoload/LocalizationManager.gd"
 

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bpupohps7gnvc" path="res://src/ui/MapTravelSystem.gd" id="2_tg1as"]
 [ext_resource type="Script" uid="uid://dd4kw6x555cxw" path="res://src/ui/MapCamera.gd" id="3_qavax"]
 [ext_resource type="Script" uid="uid://b75rsg7tdm6gh" path="res://src/ui/MapInfoPanel.gd" id="5_1arq2"]
-[ext_resource type="PackedScene" path="res://src/ui/SideHUD.tscn" id="6_nav"]
+[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="6_nav"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="7_task"]
 
 [sub_resource type="Gradient" id="Gradient_fog"]

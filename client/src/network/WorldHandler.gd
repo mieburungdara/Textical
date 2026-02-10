@@ -29,6 +29,18 @@ func swap_units_position(u_id: int, p_id: int, hero_a: int, hero_b: int):
         "userId": u_id, "presetId": p_id, "heroA": hero_a, "heroB": hero_b
     })
 
+func fetch_world_state():
+    _request("/world/state", HTTPClient.METHOD_GET)
+
+func fetch_friends(u_id: int):
+    _request("/user/" + str(u_id) + "/friends", HTTPClient.METHOD_GET)
+
+func fetch_achievements(u_id: int):
+    _request("/user/" + str(u_id) + "/achievements", HTTPClient.METHOD_GET)
+
+func update_settings(u_id: int, settings: Dictionary):
+    _request("/user/settings", HTTPClient.METHOD_POST, {"userId": u_id, "settings": settings})
+
 func _handle_success(_endpoint: String, json):
     if json is Dictionary and json.has("type") and json.has("status"):
         var status = json.get("status", "")

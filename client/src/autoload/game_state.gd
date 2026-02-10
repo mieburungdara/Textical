@@ -2,6 +2,11 @@ extends Node
 
 signal task_updated(task)
 signal region_changed(new_data)
+signal quest_updated()
+signal mail_received()
+signal achievement_unlocked(achievement)
+signal friends_updated(friends)
+signal world_state_updated(state)
 
 signal heroes_loaded(count: int)
 signal heroes_loading_failed(error: String)
@@ -19,6 +24,12 @@ var current_region_data = null:
     set(val):
         current_region_data = val
         region_changed.emit(val)
+
+# SYNCED DATA
+var online_friends = []
+var game_achievements = []
+var world_state = {"currentHour": 12, "weatherType": "CLEAR"}
+var user_settings = {}
 
 # PERSISTENCE
 var selected_hero_id: int = -1
@@ -46,91 +57,102 @@ const FLAVOR_LANDMARKS = [
 ]
 
 func _ready():
-    if ServerConnector and ServerConnector.has_signal("task_completed"):
-        ServerConnector.task_completed.connect(_on_global_task_completed)
+    if ServerConnector:
+        if ServerConnector.has_signal("task_completed"):
+            ServerConnector.task_completed.connect(_on_global_task_completed)
+        ServerConnector.request_completed.connect(_on_request_completed)
     
-    # Don't load from local DB anymore - fetch from server after login
-    # Local JSON is now a fallback only
-    print("[STATE] GameState ready. Heroes will be loaded from server on login.")
+    _setup_time_timer()
+    print("[STATE] GameState ready.")
+
+func _setup_time_timer():
+    var timer = Timer.new()
+    timer.name = "TimeTickTimer"
+    timer.wait_time = 60.0 # Sync with server every minute
+    timer.timeout.connect(func(): if current_user: ServerConnector.fetch_world_state())
+    add_child(timer)
+    timer.start()
+
+func _on_request_completed(endpoint: String, response):
+    var data = response.get("data", response) if response is Dictionary else response
+    
+    if endpoint.contains("/friends"):
+        online_friends = data if data is Array else []
+        friends_updated.emit(online_friends)
+    
+    elif endpoint.contains("/world/state"):
+        if data is Dictionary:
+            world_state = data
+            world_state_updated.emit(world_state)
+    
+    elif endpoint.contains("/achievements"):
+        game_achievements = data if data is Array else []
+        # Potential signal for achievement update if needed
+    
+    elif endpoint.contains("/user/settings"):
+        if data is Dictionary and data.has("settings"):
+            user_settings = data.settings
+            _apply_settings(user_settings)
+
+func _apply_settings(settings: Dictionary):
+    # Apply Audio settings
+    if settings.has("audio"):
+        var audio = settings.audio
+        if audio.has("master_volume"):
+            AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), linear_to_db(audio.master_volume / 100.0))
+    
+    # Apply Display settings
+    if settings.has("display"):
+        var display = settings.display
+        if display.has("fullscreen"):
+            DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if display.fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func fetch_heroes_from_server(user_id: int):
-    """Fetch heroes from server API instead of local JSON"""
-    if not ServerConnector:
-        push_error("[STATE] ServerConnector not available")
-        heroes_loading_failed.emit("ServerConnector not available")
-        return
-    
-    if _heroes_loading:
-        print("[STATE] Heroes already loading, skipping...")
-        return
-    
+    if _heroes_loading: return
     _heroes_loading = true
     current_heroes.clear()
-    _heroes_loaded_from_server = false
-    
-    print("[STATE] Fetching heroes from server for user_id: ", user_id)
     ServerConnector.fetch_heroes(user_id)
 
 func _on_heroes_received(_endpoint: String, data):
-    """Handle heroes data received from server"""
     _heroes_loading = false
-    
-    var heroes_data = null
-    
-    # Handle both Array and {"success": true, "data": [...]} format
-    if data is Array:
-        heroes_data = data
-        print("[STATE] Heroes received as Array with ", heroes_data.size(), " items")
-    elif data is Dictionary:
-        if data.has("data"):
-            heroes_data = data.get("data")
-            print("[STATE] Heroes extracted from 'data' key")
-        elif data.has("heroes"):
-            heroes_data = data.get("heroes")
-            print("[STATE] Heroes extracted from 'heroes' key")
-    
+    var heroes_data = data.get("data", data) if data is Dictionary else data
     if heroes_data is Array:
         current_heroes = heroes_data
         _heroes_loaded_from_server = true
-        print("[STATE] ", current_heroes.size(), " heroes loaded from server")
-        
-        # Log each hero for debugging
-        for hero in current_heroes:
-            print("  - ", hero.get("name", "Unknown"), " (ID:", hero.get("id", -1), ", ", hero.get("rarity", "COMMON"), ")")
-        
         heroes_loaded.emit(current_heroes.size())
-    else:
-        print("[STATE] ERROR: Heroes data format invalid")
-        heroes_loading_failed.emit("Invalid heroes data format")
 
-func load_heroes_from_local_fallback():
-    """Load heroes from local JSON as fallback when server is unavailable"""
-    var path = "res://assets/data/heroes.json"
-    print("[STATE] Loading heroes from local fallback: ", path)
+func set_user(data):
+    if not data is Dictionary: return
     
-    if FileAccess.file_exists(path):
-        var file = FileAccess.open(path, FileAccess.READ)
-        var json_text = file.get_as_text()
-        var json = JSON.parse_string(json_text)
-        
-        if json and json is Dictionary and json.has("heroes"):
-            current_heroes = json.heroes
-            _heroes_loaded_from_server = false
-            print("[STATE] ", current_heroes.size(), " heroes loaded from local fallback")
-            heroes_loaded.emit(current_heroes.size())
-        else:
-            print("[STATE] Local fallback also failed: invalid format")
-            heroes_loading_failed.emit("Local fallback also invalid")
-    else:
-        print("[STATE] Local fallback file not found")
-        heroes_loading_failed.emit("Local fallback file not found")
+    # Extract user object from "data" wrapper if present
+    var user_data = data.get("data", data)
+    current_user = user_data
+    
+    # Load settings if present
+    if user_data.has("settings"):
+        var settings_str = user_data.settings
+        if settings_str is String and !settings_str.is_empty():
+            user_settings = JSON.parse_string(settings_str)
+            if user_settings == null: user_settings = {}
+            _apply_settings(user_settings)
+    
+    # Fetch initial synced data
+    var user_id = int(user_data.get("id", -1))
+    if user_id != -1:
+        ServerConnector.fetch_friends(user_id)
+        ServerConnector.fetch_world_state()
+        ServerConnector.fetch_achievements(user_id)
+    
+    set_active_task(user_data.get("activeTask"))
 
 func _on_global_task_completed(data):
     if data.type == "TRAVEL":
         if data.has("targetRegion"):
             current_region_data = data.targetRegion
         elif data.has("targetRegionId"):
-            current_region_data = DataManager.get_region(int(data.targetRegionId))
+            # If DataManager is available, use it, otherwise keep current state
+            if has_node("/root/DataManager"):
+                current_region_data = get_node("/root/DataManager").get_region(int(data.targetRegionId))
         
         if current_user:
             current_user.currentRegion = int(data.get("targetRegionId", current_user.currentRegion))
@@ -138,38 +160,34 @@ func _on_global_task_completed(data):
 func set_active_task(task_data):
     active_task = task_data
     task_updated.emit(active_task)
-    if active_task:
-        print("[STATE] Task Active: ", active_task.type)
-    else:
-        print("[STATE] Task Cleared (IDLE)")
 
-func set_user(user_data):
-    if not user_data is Dictionary: return
-    current_user = user_data
-    
-    var new_task = null
-    if user_data.has("activeTask"):
-        new_task = user_data.activeTask
-    elif user_data.has("taskQueue"):
-        var queue = user_data.get("taskQueue", [])
-        new_task = queue[0] if queue.size() > 0 else null
-    
-    set_active_task(new_task)
-    print("[STATE] User Synced. Region: ", current_user.get("currentRegion"))
+func get_online_friends():
+    return online_friends
 
-func set_inventory(data):
-    if not data is Dictionary: return
-    if data.has("items"): inventory = data.items
-    if data.has("status"): inventory_status = data.status
-    inventory_is_dirty = false
+func get_game_time():
+    return {
+        "hour": world_state.get("currentHour", 12),
+        "minute": 0, # Simplified for now
+        "day": 1
+    }
 
-func set_heroes(data):
-    current_heroes = data
+func get_current_weather():
+    return world_state.get("weatherType", "CLEAR").to_lower()
 
-func update_vitality(new_vitality):
-    if current_user:
-        current_user.vitality = new_vitality
+func get_unread_achievements():
+    return game_achievements.filter(func(a): return a.get("unlocked", false))
 
+# Helper to format numbers with commas
+func format_number(n: int) -> String:
+    var s = str(n)
+    var out = ""
+    for i in range(s.length()):
+        if i > 0 and (s.length() - i) % 3 == 0:
+            out += ","
+        out += s[i]
+    return out
+
+# --- UI VISIBILITY HELPERS ---
 func get_region_scene(r_type: String) -> String:
     match r_type.to_upper():
         "TOWN": return "res://src/ui/TownScreen.tscn"
@@ -197,7 +215,26 @@ func get_region_scene(r_type: String) -> String:
         "SHIP": return "res://src/ui/regions/ShipScreen.tscn"
         "PRISON": return "res://src/ui/regions/PrisonScreen.tscn"
         "GIANT": return "res://src/ui/regions/GiantScreen.tscn"
-        _: return "res://src/ui/regions/ForestScreen.tscn" # Fallback
+        _: return "res://src/ui/regions/ForestScreen.tscn"
+
+func set_inventory(data):
+    if not data is Dictionary: return
+    if data.has("items"): inventory = data.items
+    if data.has("status"): inventory_status = data.status
+    inventory_is_dirty = false
+
+func set_heroes(data):
+    if data is Array:
+        current_heroes = data
+        _heroes_loaded_from_server = true
+
+func update_vitality(new_vitality):
+    if current_user:
+        current_user.vitality = new_vitality
 
 func is_in_town():
     return current_user and current_user.get("currentRegion", 0) == 1
+
+func get_title_rarity(_title): return "common"
+func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}
+func is_in_combat(): return false

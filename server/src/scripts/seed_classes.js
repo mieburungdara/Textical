@@ -28,12 +28,16 @@ async function main() {
   ];
 
   for (const c of classes) {
-    // Only update the description and name to avoid overwriting other seeded fields
-    await prisma.classTemplate.update({
+    await prisma.classTemplate.upsert({
       where: { id: c.id },
-      data: { 
+      update: { 
         name: c.name,
         description: c.description 
+      },
+      create: {
+        id: c.id,
+        name: c.name,
+        description: c.description
       }
     });
   }

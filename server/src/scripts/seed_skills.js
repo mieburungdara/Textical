@@ -124,11 +124,20 @@ async function main() {
     { id: 10408, name: "Rain of Arrows", category: "ULTIMATE", type: "DAMAGE", description: "Arrows fall on all enemies.", multiplier: 2.0, aoe_pattern: "SQUARE", aoe_size: 5 }
   ];
 
+  const validFields = ["id", "name", "description", "category", "type", "statKey", "statValue", "power", "duration", "multiplier", "manaCost"];
+
   for (const s of skills) {
+    const cleanData = {};
+    for (const key of validFields) {
+        if (s.hasOwnProperty(key)) {
+            cleanData[key] = s[key];
+        }
+    }
+    
     await prisma.skillTemplate.upsert({
       where: { id: s.id },
-      update: s,
-      create: s
+      update: cleanData,
+      create: cleanData
     });
   }
 

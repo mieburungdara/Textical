@@ -21,17 +21,25 @@ var heroes_loaded = false
 
 ## Setup as overlay logic
 func setup_as_overlay(_data: Dictionary = {}):
-    # Sembunyikan HUD internal karena overlay akan numpang di HUD scene di bawahnya
+    # Sembunyikan HUD internal
     if has_node("TopHUD"): $TopHUD.visible = false
     if has_node("SideHUD"): $SideHUD.visible = false
     if has_node("TaskListHUD"): $TaskListHUD.visible = false
     
-    # Beri margin agar tidak menabrak SideHUD di kiri
-    if has_node("MarginContainer"):
-        $MarginContainer.offset_left = 200
-        $MarginContainer.offset_right = -40
-        $MarginContainer.offset_top = 40
-        $MarginContainer.offset_bottom = -40
+    if get_parent() is TabContainer:
+        if has_node("Background"): $Background.visible = false
+        if has_node("MarginContainer"):
+            $MarginContainer.offset_left = 0
+            $MarginContainer.offset_right = 0
+            $MarginContainer.offset_top = 0
+            $MarginContainer.offset_bottom = 0
+    else:
+        # Standalone overlay
+        if has_node("MarginContainer"):
+            $MarginContainer.offset_left = 160 # Sidebar width
+            $MarginContainer.offset_right = -40
+            $MarginContainer.offset_top = 40
+            $MarginContainer.offset_bottom = -40
 
 func _ready():
     ServerConnector.request_completed.connect(_on_request_completed)

@@ -87,7 +87,7 @@ func _connect_signals():
 func setup_as_overlay(_data: Dictionary = {}):
     # Beri margin agar tidak menabrak SideHUD di kiri
     if has_node("MainContainer"):
-        $MainContainer.offset_left = 200
+        $MainContainer.offset_left = 160
         $MainContainer.offset_right = -40
         $MainContainer.offset_top = 40
         $MainContainer.offset_bottom = -40

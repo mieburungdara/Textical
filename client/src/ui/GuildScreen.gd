@@ -20,7 +20,7 @@ func setup_as_overlay(_data: Dictionary = {}):
     
     # Beri margin agar tidak menabrak SideHUD di kiri
     if has_node("Main"):
-        $Main.offset_left = 200
+        $Main.offset_left = 160
         $Main.offset_right = -40
 func _ready():
     _socket_handler = get_node_or_null("/root/SocketHandler")

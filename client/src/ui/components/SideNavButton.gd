@@ -27,8 +27,8 @@ func set_icon_text(p_icon: String):
 func _on_hover(is_hover: bool):
 	var tw = create_tween().set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	if is_hover:
-		tw.tween_property(self, "custom_minimum_size:x", 140.0, 0.2)
+		tw.tween_property(self, "custom_minimum_size:x", 160.0, 0.2)
 		modulate = Color(1.2, 1.2, 1.2)
 	else:
-		tw.tween_property(self, "custom_minimum_size:x", 130.0, 0.2)
+		tw.tween_property(self, "custom_minimum_size:x", 150.0, 0.2)
 		modulate = Color(1, 1, 1)

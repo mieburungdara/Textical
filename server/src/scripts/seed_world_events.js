@@ -29,8 +29,17 @@ async function main() {
 
   for (const e of events) {
     const data = {
-        ...e,
-        metadata: JSON.stringify(e.metadata)
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        combatDefMult: e.metadata.combat_def_mult,
+        combatAtkMult: e.metadata.combat_atk_mult,
+        lootChanceMult: e.metadata.loot_chance_mult,
+        dangerLevelBonus: e.metadata.danger_level_bonus,
+        miningYieldMult: e.metadata.mining_yield_mult,
+        statIntBonus: e.metadata.stat_int_bonus,
+        herbalismYieldMult: e.metadata.herbalism_yield_mult,
+        expGainMult: e.metadata.exp_gain_mult
     };
     await prisma.worldEventTemplate.upsert({
       where: { id: e.id },

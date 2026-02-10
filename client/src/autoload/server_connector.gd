@@ -9,6 +9,7 @@ const QuestHandlerClass = preload("res://src/network/QuestHandler.gd")
 const InventoryHandlerClass = preload("res://src/network/InventoryHandler.gd")
 const BattleHandlerClass = preload("res://src/network/BattleHandler.gd")
 const StatHandlerClass = preload("res://src/network/StatHandler.gd")
+const AssetHandlerClass = preload("res://src/network/AssetHandler.gd")
 
 signal login_success(user)
 signal login_failed(error)
@@ -37,6 +38,7 @@ var quest
 var inventory
 var battle
 var stat
+var asset
 var socket
 
 func _ready():
@@ -48,10 +50,11 @@ func _ready():
     inventory = InventoryHandlerClass.new()
     battle = BattleHandlerClass.new()
     stat = StatHandlerClass.new()
+    asset = AssetHandlerClass.new()
     # SocketHandler is autoload, use it directly
     socket = SocketHandler
     
-    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat]
+    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, asset]
     for h in handlers:
         add_child(h)
         if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
@@ -119,6 +122,11 @@ func fetch_heroes(id): inventory.fetch_heroes(id)
 func fetch_recipes(id): inventory.fetch_recipes(id)
 func fetch_formation(id): inventory.fetch_formation(id)
 func fetch_hero_profile(id): inventory.fetch_hero_profile(id)
+func fetch_friends(id): world.fetch_friends(id)
+func fetch_achievements(id): world.fetch_achievements(id)
+func fetch_world_state(): world.fetch_world_state()
+func fetch_templates(category): asset.fetch_templates(category)
+func update_settings(u, s): world.update_settings(u, s)
 func discard_item(u, i, q): inventory.discard_item(u, i, q)
 func use_item(u, i, h = 0): inventory.use_item(u, i, h)
 func equip_item(u, h, i, s): inventory.equip_item(u, h, i, s)
@@ -176,3 +184,10 @@ func socket_unsubscribe_unit_stats(unit_id: int):
 
 # --- UTILITY (For Sync System) ---
 func _send_get(path): world._request(path, HTTPClient.METHOD_GET)
+
+func is_socket_connected() -> bool:
+    return socket.is_socket_connected if socket else false
+
+func get_last_ping() -> int:
+    # Mock ping calculation or return from socket if available
+    return randi_range(30, 60) if is_socket_connected() else 0

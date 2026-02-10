@@ -2,7 +2,7 @@
 [ext_resource type="Script" path="res://src/ui/regions/WildernessBase.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://top_hud" path="res://src/ui/TopHUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/SideHUD.tscn" id="4_nav"]
+[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 [sub_resource type="Gradient" id="Gradient_bg"]
 colors = PackedColorArray(0.05, 0.08, 0.02, 1, 0.02, 0.04, 0.01, 1)
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]

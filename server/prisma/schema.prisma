@@ -77,6 +77,44 @@ model User {
   createdInvites GuildInvite[] @relation("InviterRelation")
   guildHistory   GuildHistory[]
   targetUserHistory GuildHistory[] @relation("TargetUserRelation")
+
+  // Social & Personalization
+  settings      String   @default("{}") // JSON for user preferences (volume, graphics, etc.)
+  friends       UserFriend[] @relation("UserFriends")
+  friendedBy    UserFriend[] @relation("FriendedBy")
+  achievements  UserAchievement[]
+}
+
+model UserFriend {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation("UserFriends", fields: [userId], references: [id])
+  friendId  Int
+  friend    User     @relation("FriendedBy", fields: [friendId], references: [id])
+  status    String   @default("PENDING") // PENDING, ACCEPTED, BLOCKED
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model AchievementTemplate {
+  id          Int      @id
+  name        String
+  description String
+  icon        String   @default("🏆")
+  category    String   @default("GENERAL")
+  unlockedBy  UserAchievement[]
+}
+
+model UserAchievement {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  achievementId Int
+  achievement   AchievementTemplate @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime @default(now())
+
+  @@unique([userId, achievementId])
 }
 
 model MonsterTemplate {

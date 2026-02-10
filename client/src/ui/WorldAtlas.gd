@@ -15,7 +15,7 @@ func setup_as_overlay(_data: Dictionary = {}):
     
     # Tapi InfoPanel (UI interaksi) harus tergeser agar tidak tertutup sidebar
     if has_node("UI/InfoPanel"):
-        $UI/InfoPanel.offset_left = 200
+        $UI/InfoPanel.offset_left = 160
     
     # Ensure map content is properly centered
     _center_on_player()

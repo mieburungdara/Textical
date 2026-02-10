@@ -74,14 +74,11 @@ async function main() {
   ];
 
   for (const n of npcs) {
-    const data = {
-        ...n,
-        metadata: JSON.stringify(n.metadata)
-    };
+    const { metadata, ...npcData } = n;
     await prisma.nPCTemplate.upsert({
       where: { id: n.id },
-      update: data,
-      create: data
+      update: npcData,
+      create: npcData
     });
   }
 

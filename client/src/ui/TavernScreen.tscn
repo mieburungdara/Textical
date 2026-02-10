@@ -1,7 +1,7 @@
 [gd_scene load_steps=14 format=3 uid="uid://qglynshcnt8s"]
 
 [ext_resource type="Script" uid="uid://4humij3qcfng" path="res://src/ui/TavernScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/SideHUD.tscn" id="3_nav"]
+[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="3_nav"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 offsets = PackedFloat32Array(0, 0.7, 1)
@@ -122,7 +122,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 200.0
+offset_left = 160.0
 offset_top = 40.0
 offset_right = -40.0
 offset_bottom = -40.0

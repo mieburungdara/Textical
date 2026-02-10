@@ -13,7 +13,7 @@ func setup_as_overlay(_data: Dictionary = {}):
     
     # Position container correctly to clear sidebar
     if has_node("MarginContainer"):
-        $MarginContainer.offset_left = 200
+        $MarginContainer.offset_left = 160
         $MarginContainer.offset_right = -40
         $MarginContainer.offset_top = 40
         $MarginContainer.offset_bottom = -40

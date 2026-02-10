@@ -42,9 +42,18 @@ async function main() {
   ];
 
   for (const m of minerals) {
-    await prisma.itemTemplate.update({
+    await prisma.itemTemplate.upsert({
       where: { id: m.id },
-      data: { minToolTier: m.minToolTier }
+      update: { minToolTier: m.minToolTier, minStr: m.minStr, hardness: m.hardness },
+      create: { 
+        id: m.id, 
+        name: m.name, 
+        minToolTier: m.minToolTier, 
+        minStr: m.minStr, 
+        hardness: m.hardness,
+        description: `Material: ${m.name}`,
+        category: "MATERIAL"
+      }
     });
   }
 

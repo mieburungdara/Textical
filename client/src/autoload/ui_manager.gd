@@ -23,7 +23,9 @@ func register_world_hud(hud: Control):
 
 ## Membuka layar sebagai overlay
 func open_overlay(overlay_name: String, scene_path: String, data: Dictionary = {}):
-	# ... (rest of function)
+	if active_overlays.has(overlay_name):
+		print("[UI] Overlay already open: ", overlay_name)
+		return active_overlays[overlay_name]
 	
 	print("[UI] Opening overlay: ", overlay_name)
 	var scene = load(scene_path)
