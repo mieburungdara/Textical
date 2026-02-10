@@ -11,6 +11,7 @@ const tavernController = require('../controllers/TavernController');
 const marketController = require('../controllers/MarketController');
 const questController = require('../controllers/QuestController');
 const battleController = require('../controllers/BattleController');
+const inventoryController = require('../controllers/InventoryController');
 const regionController = require('../controllers/RegionController');
 const equipmentController = require('../controllers/EquipmentController');
 const chatRoutes = require('./chatRoutes');
@@ -39,6 +40,8 @@ router.get('/region/:id', (req, res) => regionController.getRegionDetails(req, r
 router.post('/action/travel', (req, res) => travelController.travel(req, res));
 router.post('/action/gather', (req, res) => gatheringController.gather(req, res));
 router.post('/action/craft', (req, res) => craftingController.craft(req, res));
+router.post('/inventory/discard', (req, res) => inventoryController.discardItem(req, res));
+router.post('/inventory/use', (req, res) => inventoryController.useItem(req, res));
 
 // --- FORMATION ---
 router.post('/action/formation/update', (req, res) => battleController.updateFormation(req, res));

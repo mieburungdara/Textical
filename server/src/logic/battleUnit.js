@@ -248,23 +248,28 @@ class BattleUnit {
     applyRegen(sim) {
         const hpRegen = this.getStat("hp_regen") || this.stats.hp_regen || 0;
         const maxHp = this.getStat("health_max") || this.stats.health_max;
-        const regenAmount = hpRegen > 0 ? hpRegen : Math.floor(maxHp * 0.02);
+        const regenAmount = hpRegen;
         const oldHp = this.currentHealth;
-        this.currentHealth = Math.min(maxHp, this.currentHealth + regenAmount);
-        const actualGain = this.currentHealth - oldHp;
-        if (actualGain > 0) {
-            if (regenAmount > 0) traitService.executeHook("onHealthRegen", this, actualGain, sim);
-            if (sim && sim.logger) {
-                sim.logger.addEvent("HEAL", `${this.data.name} regenerated ${actualGain} HP`, {
-                    targetId: this.instanceId,
-                    amount: actualGain,
-                    isRegen: true
-                });
+        
+        if (regenAmount > 0) {
+            this.currentHealth = Math.min(maxHp, this.currentHealth + regenAmount);
+            const actualGain = this.currentHealth - oldHp;
+            
+            if (actualGain > 0) {
+                traitService.executeHook("onHealthRegen", this, actualGain, sim);
+                if (sim && sim.logger) {
+                    sim.logger.addEvent("HEAL", `${this.data.name} regenerated ${actualGain} HP`, {
+                        targetId: this.instanceId,
+                        amount: actualGain,
+                        isRegen: true
+                    });
+                }
             }
         }
+        
         const resourceResolver = require('./rules/ResourceResolver');
         resourceResolver.applyRegen(this, sim);
-        return actualGain;
+        return this.currentHealth - oldHp;
     }
 
     applyStatusDamage(sim) {

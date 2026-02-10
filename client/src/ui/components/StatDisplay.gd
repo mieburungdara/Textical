@@ -43,7 +43,7 @@ var _is_hovered: bool = false
 const STAT_METADATA: Dictionary = {
 	"hp": {"display_name": "Health Points", "icon": "❤️", "description": "Jumlah HP maksimum. Meningkat saat level up atau equipment."},
 	"mp": {"display_name": "Mana Points", "icon": "💙", "description": "Jumlah MP maksimum. Digunakan untuk skill magic."},
-	"ap": {"display_name": "Action Points", "icon": "⚡", "description": "Action Points untuk aksi battle. Regenerasi per turn."},
+	"initiative": {"display_name": "Initiative", "icon": "⚡", "description": "Menentukan posisi awal di timeline combat dan prioritas turn."},
 	"attack": {"display_name": "Attack Power", "icon": "⚔️", "description": "Damage fisik yang diberikan ke enemy."},
 	"defense": {"display_name": "Defense", "icon": "🛡️", "description": "Mengurangi damage yang diterima dari enemy."},
 	"magic_attack": {"display_name": "Magic Attack", "icon": "🔮", "description": "Damage magic yang diberikan ke enemy."},

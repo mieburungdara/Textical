@@ -161,16 +161,18 @@ func _run_replay():
     if not battle_data: return
     is_replaying = true
     
-    var ticks = battle_data.get("ticks", [])
+    var replay_data = battle_data.get("replay", {})
+    var ticks = []
+    
+    if replay_data is Dictionary:
+        ticks = replay_data.get("ticks", [])
+    elif battle_data.has("ticks"):
+        ticks = battle_data.get("ticks", [])
+        
     print("[COMBAT] Starting replay with ", ticks.size(), " ticks")
     
     for tick_data in ticks:
         if not is_inside_tree(): return
-        
-        # AAA: Validate tick_data is a Dictionary before accessing
-        if not tick_data is Dictionary:
-            print("[COMBAT] Warning: tick_data is not Dictionary, skipping. Type: ", typeof(tick_data))
-            continue
         
         # 1. Update Unit States (Only for units present in this tick's delta)
         var units_state = tick_data.get("units", [])
@@ -187,14 +189,16 @@ func _run_replay():
                     
                     # Smooth move
                     var tw = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-                    tw.tween_property(node, "position", target_pos, TICK_DELAY * 0.8)
+                    tw.tween_property(node, "position", target_pos, TICK_DELAY * 0.9)
                 
                 # Update HP if included in delta
                 var bar = node.get_meta("hp_bar")
                 if bar and u_state.has("hp"):
                     var hp_val = u_state.get("hp")
                     bar.value = int(hp_val) if hp_val != null else bar.value
-                    if bar.value <= 0: node.modulate.a = 0.3
+                    if bar.value <= 0: 
+                        var tween = create_tween()
+                        tween.tween_property(node, "modulate:a", 0.3, 0.5)
 
         # 2. Process Events in this tick
         var events = tick_data.get("events", [])
@@ -210,6 +214,12 @@ func _run_replay():
                 var target_id = e_data.get("targetId")
                 if target_id and unit_nodes.has(target_id):
                     _play_vfx(HIT_VFX, unit_nodes[target_id].position)
+            
+            if type == "DEATH":
+                var e_data = event.get("data", {})
+                var victim_id = e_data.get("victimId")
+                if victim_id and unit_nodes.has(victim_id):
+                    unit_nodes[victim_id].modulate = Color(0.5, 0.5, 0.5, 0.3)
         
         await get_tree().create_timer(TICK_DELAY).timeout
 

@@ -1,15 +1,17 @@
 const prisma = require('../db');
 
 class ConsumableService {
-    async consumeItem(userId, heroId, templateId) {
-        const item = await prisma.itemTemplate.findUnique({ where: { id: templateId } });
-        if (!item || item.category !== "CONSUMABLE") throw new Error("Item is not consumable.");
-
-        // 1. Check inventory
+    async useItemInstance(userId, heroId, itemInstanceId) {
         const inv = await prisma.inventoryItem.findUnique({
-            where: { userId_templateId: { userId, templateId } }
+            where: { id: itemInstanceId },
+            include: { template: true }
         });
-        if (!inv || inv.quantity < 1) throw new Error("Insufficient quantity.");
+
+        if (!inv || inv.userId !== userId) throw new Error("Item not found in your inventory.");
+        if (inv.template.category !== "CONSUMABLE") throw new Error("Item is not consumable.");
+
+        const templateId = inv.templateId;
+        const item = inv.template;
 
         // 2. Define Buff Logic
         const buffData = this._getBuffData(templateId);
@@ -27,12 +29,23 @@ class ConsumableService {
                 });
             }
 
+            // If no hero provided, try to find user's main hero
+            let targetHeroId = heroId;
+            if (!targetHeroId || targetHeroId <= 0) {
+                const mainHero = await tx.hero.findFirst({
+                    where: { userId, isMain: true }
+                });
+                if (mainHero) targetHeroId = mainHero.id;
+            }
+
+            if (!targetHeroId) throw new Error("No hero selected to receive the effect.");
+
             // PERMANENT STAT LOGIC
             if (buffData.isPermanent) {
                 const updateData = {};
                 updateData[buffData.statKey] = { increment: buffData.statValue };
                 return await tx.hero.update({
-                    where: { id: heroId },
+                    where: { id: targetHeroId },
                     data: updateData
                 });
             }
@@ -43,7 +56,7 @@ class ConsumableService {
 
             return await tx.heroBuff.create({
                 data: {
-                    heroId,
+                    heroId: targetHeroId,
                     itemId: templateId,
                     name: item.name,
                     statKey: buffData.statKey,
@@ -55,8 +68,20 @@ class ConsumableService {
         });
     }
 
+    async consumeItem(userId, heroId, templateId) {
+        // Legacy support or for scripts
+        const inv = await prisma.inventoryItem.findFirst({
+            where: { userId, templateId }
+        });
+        if (!inv) throw new Error("Item not found.");
+        return this.useItemInstance(userId, heroId, inv.id);
+    }
+
     _getBuffData(id) {
         const data = {
+            // BASIC POTIONS
+            101: { statKey: "hp_regen", statValue: 10, durationSeconds: 300 }, // Healing Potion: Fast regen for 5 mins
+            
             // DISHES
             4201: { statKey: "str", statValue: 2, durationSeconds: 600 },
             4202: { statKey: "int", statValue: 2, durationSeconds: 600 },

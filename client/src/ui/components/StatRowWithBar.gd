@@ -87,8 +87,8 @@ func _update_bar_color():
                 stat_bar.modulate = Color(0.9, 0.3, 0.3) # Critical Red
         "mp":
             stat_bar.modulate = Color(0.2, 0.5, 0.9) # Mana Blue
-        "ap":
-            stat_bar.modulate = Color(0.9, 0.8, 0.1) # Action Gold
+        "initiative", "init":
+            stat_bar.modulate = Color(0.9, 0.8, 0.1) # Initiative Gold
         _:
             stat_bar.modulate = Color(0.8, 0.8, 0.8) # Default Gray
 

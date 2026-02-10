@@ -27,7 +27,7 @@ const STAT_CONFIG = {
     "MAGATKStatRow": {"name": "MAG ATK", "icon": "🔮", "key": "magic_attack"},
     "MAGDEFStatRow": {"name": "MAG DEF", "icon": "✨", "key": "magic_defense"},
     "SPDStatRow": {"name": "SPD", "icon": "💨", "key": "speed"},
-    "APStatRow": {"name": "AP", "icon": "⚡", "key": "ap"},
+    "INITStatRow": {"name": "INIT", "icon": "⚡", "key": "initiative"},
     "FireElement": {"name": "FIRE", "icon": "🔥", "key": "fire", "is_element": true},
     "WaterElement": {"name": "WATER", "icon": "💧", "key": "water", "is_element": true},
     "EarthElement": {"name": "EARTH", "icon": "🌍", "key": "earth", "is_element": true},
@@ -61,7 +61,7 @@ func update_stats(total: Dictionary = {}, _max_vals: Dictionary = {}):
     var mapped_stats = {
         "hp": _total_stats.get("health_max", _total_stats.get("hp", 100)),
         "mp": _total_stats.get("mana_max", _total_stats.get("mp", 50)),
-        "ap": _total_stats.get("ap", _total_stats.get("initiative", 10)),
+        "initiative": _total_stats.get("initiative", 10),
         "attack": _total_stats.get("attack_damage", _total_stats.get("attack", 0)),
         "defense": _total_stats.get("defense", 0),
         "magic_attack": _total_stats.get("skill_power", _total_stats.get("magic_attack", 0)),
@@ -147,6 +147,6 @@ func _on_stat_row_clicked(stat_key: String):
                 "magic_attack": val = _total_stats.get("skill_power", 0)
                 "magic_defense": val = _total_stats.get("tenacity", 0)
                 "speed": val = _total_stats.get("speed", 0)
-                "ap": val = _total_stats.get("ap", 10)
+                "initiative": val = _total_stats.get("initiative", 10)
             
             _parent_stats_tab.show_stat_detail(stat_key, int(val), int(val))

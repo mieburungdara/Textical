@@ -63,6 +63,8 @@ class BattleInitializer extends BaseService {
             const stats = {
                 health_max: p.profile.totalStats.HP || 100,
                 mana_max: p.profile.totalStats.MP || 50,
+                hp_regen: p.profile.totalStats.HP_REGEN || 0,
+                mana_regen: p.profile.totalStats.MANA_REGEN || 0,
                 attack_damage: p.profile.totalStats.ATK || 10,
                 defense: p.profile.totalStats.DEF || 5,
                 speed: p.profile.totalStats.SPD || 10,
@@ -194,6 +196,8 @@ class BattleInitializer extends BaseService {
             const stats = {
                 health_max: p.profile.totalStats.HP || 100,
                 mana_max: p.profile.totalStats.MP || 50,
+                hp_regen: p.profile.totalStats.HP_REGEN || 0,
+                mana_regen: p.profile.totalStats.MANA_REGEN || 0,
                 attack_damage: p.profile.totalStats.ATK || 10,
                 defense: p.profile.totalStats.DEF || 5,
                 speed: p.profile.totalStats.SPD || 10,

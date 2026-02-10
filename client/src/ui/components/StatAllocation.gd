@@ -46,7 +46,7 @@ var _is_preview_shown: bool = false
 var _is_allocating: bool = false
 
 # === ALLOCATABLE STATS ===
-const ALLOCATABLE_STATS: Array = ["hp", "mp", "ap", "attack", "defense", "magic_attack", "magic_defense", "speed"]
+const ALLOCATABLE_STATS: Array = ["hp", "mp", "initiative", "attack", "defense", "magic_attack", "magic_defense", "speed"]
 
 func _ready():
 	_setup_ui()
@@ -262,7 +262,7 @@ func _get_stat_growth(stat_name: String, points: int) -> float:
 	var default_growth = {
 		"hp": 10.0,
 		"mp": 5.0,
-		"ap": 1.0,
+		"initiative": 1.0,
 		"attack": 2.0,
 		"defense": 2.0,
 		"magic_attack": 2.0,
@@ -377,7 +377,7 @@ func _get_stat_display_name(stat: String) -> String:
 	var display_names = {
 		"hp": "HP",
 		"mp": "MP",
-		"ap": "AP",
+		"initiative": "INIT",
 		"attack": "Attack",
 		"defense": "Defense",
 		"magic_attack": "Magic Atk",

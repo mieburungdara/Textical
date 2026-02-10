@@ -4,3 +4,5 @@ server\node_modules\**
 server/node_modules/**
 .gemini/
 gha-creds-*.json
+client/src/ui/CombatScreen.gd
+replays/*

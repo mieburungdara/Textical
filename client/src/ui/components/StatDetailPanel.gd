@@ -22,7 +22,7 @@ var _stat_data: Dictionary = {}
 const STAT_INFO = {
     "hp": {"icon": "❤️", "name": "Health Points", "desc": "Hit points determine how much damage a unit can take before being defeated."},
     "mp": {"icon": "💧", "name": "Mana Points", "desc": "Mana is required to cast spells and use special abilities."},
-    "ap": {"icon": "⚡", "name": "Action Points", "desc": "Action points determine how many actions a unit can perform per turn."},
+    "initiative": {"icon": "⚡", "name": "Initiative", "desc": "Initiative determines starting position on the combat timeline and turn priority."},
     "attack": {"icon": "⚔️", "name": "Attack", "desc": "Attack power determines physical damage dealt to enemies."},
     "defense": {"icon": "🛡️", "name": "Defense", "desc": "Defense reduces incoming physical damage from enemies."},
     "magic_attack": {"icon": "🔮", "name": "Magic Attack", "desc": "Magic attack power determines magical damage dealt to enemies."},

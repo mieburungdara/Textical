@@ -52,7 +52,7 @@ func _update_accent_color():
         "magic_attack", "mag_atk", "magic_damage": accent_bar.modulate = Color(0.7, 0.3, 0.9) # Purple
         "magic_defense", "mag_def": accent_bar.modulate = Color(0.2, 0.8, 0.7) # Cyan
         "speed", "spd", "movement_speed": accent_bar.modulate = Color(0.4, 0.9, 0.3) # Green
-        "ap", "action_points": accent_bar.modulate = Color(0.9, 0.8, 0.1) # Gold
+        "initiative", "init": accent_bar.modulate = Color(0.9, 0.8, 0.1) # Gold
         "range", "attack_range": accent_bar.modulate = Color(0.8, 0.5, 0.2) # Orange/Brown
         "fire": accent_bar.modulate = Color(1.0, 0.3, 0.1)
         "water": accent_bar.modulate = Color(0.1, 0.6, 1.0)

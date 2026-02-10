@@ -2,7 +2,7 @@ extends Control
 class_name TopHUD
 
 ## TopHUD - Heads-up display dengan stat summary, resource bars, dan elemental affinity
-## Features: HP/MP/AP bars, stat summary, buff/debuff indicators, elemental icon
+## Features: HP/MP bars, stat summary, buff/debuff indicators, elemental icon
 
 # === EXPORT VARIABLES ===
 @export var show_resource_bars: bool = true
@@ -11,8 +11,7 @@ class_name TopHUD
 @export var show_elemental_affinity: bool = true
 @export var bar_colors: Dictionary = {
     "hp": Color(0.8, 0.2, 0.2, 1.0),
-    "mp": Color(0.2, 0.4, 0.9, 1.0),
-    "ap": Color(0.9, 0.8, 0.2, 1.0)
+    "mp": Color(0.2, 0.4, 0.9, 1.0)
 }
 
 # === NODE REFERENCES ===
@@ -135,11 +134,6 @@ func _update_resource_bars(stats: Dictionary):
     var mp_current = stats.get("mp", 50)
     var mp_max = stats.get("maxMp", stats.get("mp", 50))
     _update_bar(resource_bars_container.get_node_or_null("MPBar"), mp_current, mp_max, bar_colors.mp)
-    
-    # AP Bar
-    var ap_current = stats.get("ap", 10)
-    var ap_max = stats.get("maxAp", stats.get("ap", 10))
-    _update_bar(resource_bars_container.get_node_or_null("APBar"), ap_current, ap_max, bar_colors.ap)
 
 func _update_bar(bar: ProgressBar, current: float, max_val: float, color: Color):
     if not bar: return
@@ -164,7 +158,7 @@ func _update_stat_summary(stats: Dictionary):
         child.queue_free()
     
     # Add main stat labels
-    var main_stats = ["hp", "mp", "ap", "attack", "defense"]
+    var main_stats = ["hp", "mp", "attack", "defense"]
     
     for stat_name in main_stats:
         if stats.has(stat_name):
@@ -178,13 +172,12 @@ func _update_stat_summary(stats: Dictionary):
             match stat_name:
                 "hp": label.modulate = bar_colors.hp
                 "mp": label.modulate = bar_colors.mp
-                "ap": label.modulate = bar_colors.ap
             
             stat_summary_container.add_child(label)
 
 func _get_stat_icon(stat_name: String) -> String:
     var icons = {
-        "hp": "❤️", "mp": "💙", "ap": "⚡",
+        "hp": "❤️", "mp": "💙",
         "attack": "⚔️", "defense": "🛡️",
         "magic_attack": "🔮", "magic_defense": "✨",
         "speed": "💨"

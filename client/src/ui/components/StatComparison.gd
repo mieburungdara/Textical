@@ -32,7 +32,7 @@ var _is_preview_mode: bool = false
 var _stat_comparisons: Dictionary = {}  # stat_name -> {base, current, diff, percent}
 
 # === CONSTANTS ===
-const MAIN_STATS: Array = ["hp", "mp", "ap", "attack", "defense", "magic_attack", "magic_defense", "speed"]
+const MAIN_STATS: Array = ["hp", "mp", "initiative", "attack", "defense", "magic_attack", "magic_defense", "speed"]
 const DERIVED_STATS: Array = ["critical_rate", "critical_damage", "accuracy", "evasion"]
 const ELEMENTAL_STATS: Array = ["elemental_fire", "elemental_water", "elemental_earth", "elemental_wind", "elemental_light", "elemental_dark"]
 
@@ -324,7 +324,7 @@ func _get_stat_display_name(stat: String) -> String:
 	var display_names = {
 		"hp": "HP",
 		"mp": "MP",
-		"ap": "AP",
+		"initiative": "INIT",
 		"attack": "Attack",
 		"defense": "Defense",
 		"magic_attack": "Magic Attack",

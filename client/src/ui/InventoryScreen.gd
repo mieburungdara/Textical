@@ -102,6 +102,25 @@ func refresh():
 
 func _on_request_completed(endpoint, data):
     if !is_inside_tree(): return
+    
+    var is_inv_action = "inventory/discard" in endpoint or "inventory/use" in endpoint or "action/equip" in endpoint or "action/unequip" in endpoint
+    
+    if is_inv_action:
+        print("[INVENTORY] Action successful: %s, refreshing..." % endpoint)
+        
+        # Reset button states
+        drop_btn.disabled = false
+        drop_btn.text = "DISCARD"
+        use_btn.disabled = false
+        use_btn.text = "USE ITEM"
+        equip_btn.disabled = false
+        equip_btn.text = "EQUIP RELIC"
+        
+        # Hide details since item state has changed
+        _on_close_details_pressed()
+        refresh() # Full refresh from server
+        return
+
     if "inventory" in endpoint:
         var inv_payload = data
         if data is Dictionary and data.has("data"):
@@ -360,16 +379,140 @@ func _get_item_emoji(p_item_name: String) -> String:
 
 # --- ACTION HANDLERS ---
 func _on_equip_pressed():
-    if _selected_item: 
-        var template = _selected_item.get("template", {})
-        print("Equip: ", template.get("name", "Item"))
+    if not _selected_item: return
+    
+    var item_instance_id = _selected_item.get("id")
+    var uid = GameState.current_user.get("id")
+    var hero_id = GameState.selected_hero_id if GameState.selected_hero_id != -1 else 0
+    
+    # Try to find main hero if none selected
+    if hero_id == 0:
+        for hero in GameState.current_heroes:
+            if hero.get("isMain", false):
+                hero_id = hero.get("id")
+                break
+    
+    if hero_id == 0 and not GameState.current_heroes.is_empty():
+        hero_id = GameState.current_heroes[0].get("id")
+
+    var template = _selected_item.get("template", {})
+    var equip_slots = template.get("equipSlots", [])
+    
+    if equip_slots.is_empty():
+        print("[INVENTORY] Item has no valid equip slots!")
+        return
+        
+    var slot_key = equip_slots[0].get("slotKey", "")
+    
+    if uid and item_instance_id and hero_id != 0 and slot_key != "":
+        print("[INVENTORY] Equipping item ID: %d to hero: %d in slot: %s" % [item_instance_id, hero_id, slot_key])
+        ServerConnector.equip_item(int(uid), int(hero_id), int(item_instance_id), slot_key)
+        
+        equip_btn.disabled = true
+        equip_btn.text = "EQUIPPING..."
 
 func _on_use_pressed():
-    if _selected_item: 
-        var template = _selected_item.get("template", {})
-        print("Use: ", template.get("name", "Item"))
+    if not _selected_item: return
+    
+    var item_instance_id = _selected_item.get("id")
+    var uid = GameState.current_user.get("id")
+    
+    if uid and item_instance_id:
+        print("[INVENTORY] Using item ID: %d" % [item_instance_id])
+        # Use selected hero ID if any, otherwise server defaults to main hero
+        var hero_id = GameState.selected_hero_id if GameState.selected_hero_id != -1 else 0
+        ServerConnector.use_item(int(uid), int(item_instance_id), int(hero_id))
+        
+        use_btn.disabled = true
+        use_btn.text = "USING..."
 
 func _on_drop_pressed():
-    if _selected_item: 
-        var template = _selected_item.get("template", {})
-        print("Drop: ", template.get("name", "Item"))
+    if not _selected_item: return
+    
+    var quantity = _selected_item.get("quantity", 1)
+    if quantity > 1:
+        _show_bulk_discard_dialog(quantity)
+    else:
+        _confirm_discard(1)
+
+func _show_bulk_discard_dialog(max_qty: int):
+    var dialog = ConfirmationDialog.new()
+    dialog.title = "Discard Item"
+    dialog.get_ok_button().text = "Discard"
+    
+    var vbox = VBoxContainer.new()
+    vbox.add_theme_constant_override("separation", 15)
+    
+    var label = Label.new()
+    label.text = "Choose quantity to discard:"
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    vbox.add_child(label)
+    
+    # Custom Quantity Selector (Large Buttons)
+    var hbox = HBoxContainer.new()
+    hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+    hbox.add_theme_constant_override("separation", 20)
+    
+    var btn_minus = Button.new()
+    btn_minus.text = "-"
+    btn_minus.custom_minimum_size = Vector2(60, 60)
+    btn_minus.add_theme_font_size_override("font_size", 24)
+    
+    var qty_label = Label.new()
+    qty_label.text = "1"
+    qty_label.custom_minimum_size = Vector2(80, 0)
+    qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    qty_label.add_theme_font_size_override("font_size", 28)
+    qty_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+    
+    var btn_plus = Button.new()
+    btn_plus.text = "+"
+    btn_plus.custom_minimum_size = Vector2(60, 60)
+    btn_plus.add_theme_font_size_override("font_size", 24)
+    
+    hbox.add_child(btn_minus)
+    hbox.add_child(qty_label)
+    hbox.add_child(btn_plus)
+    vbox.add_child(hbox)
+    
+    # Slider for quick large adjustments
+    var slider = HSlider.new()
+    slider.min_value = 1
+    slider.max_value = max_qty
+    slider.value = 1
+    slider.step = 1
+    vbox.add_child(slider)
+    
+    dialog.add_child(vbox)
+    add_child(dialog)
+    
+    # Logic connections
+    var update_qty = func(val):
+        val = clamp(val, 1, max_qty)
+        qty_label.text = str(val)
+        slider.value = val
+        
+    btn_minus.pressed.connect(func(): update_qty.call(int(qty_label.text) - 1))
+    btn_plus.pressed.connect(func(): update_qty.call(int(qty_label.text) + 1))
+    slider.value_changed.connect(func(v): qty_label.text = str(int(v)))
+    
+    dialog.confirmed.connect(func(): 
+        _confirm_discard(int(qty_label.text))
+        dialog.queue_free()
+    )
+    dialog.canceled.connect(func(): dialog.queue_free())
+    
+    dialog.popup_centered(Vector2(350, 250))
+
+func _confirm_discard(qty: int):
+    if not _selected_item: return
+    
+    var item_instance_id = _selected_item.get("id")
+    var uid = GameState.current_user.get("id")
+    
+    if uid and item_instance_id:
+        print("[INVENTORY] Discarding %d of item ID: %d" % [qty, item_instance_id])
+        ServerConnector.discard_item(int(uid), int(item_instance_id), qty)
+        
+        drop_btn.disabled = true
+        drop_btn.text = "DISCARDING..."

@@ -15,9 +15,11 @@ class ResourceResolver {
                 unit.gainMana(20, sim); 
                 break;
             case "MANA":
-                // Standard percentage regen for Mages
-                const regen = Math.max(2, Math.floor(unit.stats.mana_max * 0.05));
-                unit.gainMana(regen, sim);
+                // Use mana_regen stat
+                const manaRegen = unit.getStat("mana_regen") || 0;
+                if (manaRegen > 0) {
+                    unit.gainMana(manaRegen, sim);
+                }
                 break;
             case "RAGE":
                 // Rage usually decays out of combat, but stays flat here.

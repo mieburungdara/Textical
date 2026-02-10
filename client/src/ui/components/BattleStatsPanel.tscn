@@ -67,7 +67,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="APStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="INITStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 

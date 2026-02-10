@@ -137,6 +137,7 @@ func _create_hero_card(hero_data: Dictionary):
     _hero_cards.append(card)
 
 func _on_hero_card_selected(hero_data: Dictionary):
+    print("[HeroGridContainer] Card selected for hero ID: ", hero_data.get("id", -1))
     _selected_hero_id = hero_data.get("id", -1)
     _update_selection()
     hero_selected.emit(hero_data)
@@ -148,11 +149,9 @@ func _update_selection():
             card.set_selected(is_selected)
 
 func _select_default_hero():
-    if _selected_hero_id == -1 and not _hero_cards.is_empty():
-        var first_hero = _hero_cards[0].hero_data if _hero_cards[0].has_method("set_hero_data") else {}
-        if not first_hero.is_empty():
-            _selected_hero_id = first_hero.get("id", -1)
-            _update_selection()
+    # AAA: Disable automatic selection to prevent blocking user interaction
+    # The user should explicitly click a hero to see details.
+    pass
 
 func _show_empty_state():
     loading_label.visible = false

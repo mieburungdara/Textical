@@ -16,6 +16,35 @@ func fetch_formation(user_id: int):
 func fetch_hero_profile(hero_id: int):
 	_request("/hero/" + str(hero_id) + "/profile", HTTPClient.METHOD_GET)
 
+func discard_item(user_id: int, item_instance_id: int, quantity: int = 1):
+	_request("/inventory/discard", HTTPClient.METHOD_POST, {
+		"userId": user_id,
+		"itemInstanceId": item_instance_id,
+		"quantity": quantity
+	})
+
+func use_item(user_id: int, item_instance_id: int, hero_id: int = 0):
+	_request("/inventory/use", HTTPClient.METHOD_POST, {
+		"userId": user_id,
+		"itemInstanceId": item_instance_id,
+		"heroId": hero_id
+	})
+
+func equip_item(user_id: int, hero_id: int, item_instance_id: int, slot_key: String):
+	_request("/action/equip", HTTPClient.METHOD_POST, {
+		"userId": user_id,
+		"heroId": hero_id,
+		"itemInstanceId": item_instance_id,
+		"slotKey": slot_key
+	})
+
+func unequip_item(user_id: int, hero_id: int, slot_key: String):
+	_request("/action/unequip", HTTPClient.METHOD_POST, {
+		"userId": user_id,
+		"heroId": hero_id,
+		"slotKey": slot_key
+	})
+
 func _handle_success(endpoint: String, json):
 	print("[InventoryHandler] _handle_success called")
 	print("[InventoryHandler] endpoint:", endpoint)
