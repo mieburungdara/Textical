@@ -214,7 +214,7 @@ icon_text = "🤴"
 menu_label = "HERO"
 is_overlay = true
 overlay_name = "Hero"
-target_scene = "res://src/ui/HeroProfileScreen.tscn"
+target_scene = "res://src/ui/hero_profile/HeroProfileScreen.tscn"
 
 [node name="PartyBtn" parent="UIRoot/SidebarPanel/Layout/NavSection" instance=ExtResource("2_btn")]
 unique_name_in_owner = true

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Textical"
-run/main_scene="res://src/ui/LoadingScreen.tscn"
+run/main_scene="res://src/ui/loading/LoadingScreen.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
@@ -25,6 +25,7 @@ DebugOverlay="*res://src/ui/DebugOverlay.tscn"
 UIManager="*res://src/autoload/ui_manager.gd"
 SideHUD="*res://src/ui/SideHUD.tscn"
 MCPInputHandler="*res://addons/godot_mcp/mcp_input_handler.gd"
+LocalizationManager="*res://src/autoload/LocalizationManager.gd"
 
 [display]
 

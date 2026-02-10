@@ -6,7 +6,9 @@ extends TextureRect
 @onready var rune_ring = $RuneRing
 @onready var outer_rune_ring = $OuterRuneRing
 
-const RUNES = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᚾ", "ᛁ", "ᛃ", "ᛈ", "ᛇ", "ᛉ", "ᛊ", "ᛏ", "ᛒ", "ᛖ", "ᛗ", "ᛚ", "ᛜ", "ᛟ", "ᛞ"]
+@export var flash_duration: float = 0.5
+@export var flash_scale: Vector2 = Vector2(2, 2)
+@export var rune_color: Color = Color(1, 0.8, 0.4)
 
 func _ready():
 	_generate_runes(rune_ring, 16, 350, 0.4)
@@ -28,9 +30,11 @@ func _generate_runes(container, count, radius, opacity):
 	for i in range(count):
 		var angle = i * (PI * 2 / count)
 		var rune = Label.new()
-		rune.text = RUNES.pick_random()
+		rune.text = LoadingUtils.RUNES.pick_random()
 		rune.add_theme_font_size_override("font_size", 24)
-		rune.add_theme_color_override("font_color", Color(1, 0.8, 0.4, opacity))
+		var final_color = rune_color
+		final_color.a = opacity
+		rune.add_theme_color_override("font_color", final_color)
 		rune.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var pos = Vector2(cos(angle), sin(angle)) * radius
 		rune.position = pos - Vector2(20, 20)
@@ -39,6 +43,6 @@ func _generate_runes(container, count, radius, opacity):
 
 func play_final_flash():
 	var tw = create_tween()
-	tw.tween_property(self, "scale", Vector2(2, 2), 0.5).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(self, "modulate:a", 0.0, 0.5)
+	tw.tween_property(self, "scale", flash_scale, flash_duration).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(self, "modulate:a", 0.0, flash_duration)
 	return tw.finished

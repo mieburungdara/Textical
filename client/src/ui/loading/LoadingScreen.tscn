@@ -1,8 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://dm4qqxvaqds1b"]
+[gd_scene load_steps=5 format=3 uid="uid://bt7n2f1u3ucm"]
 
-[ext_resource type="Script" path="res://src/ui/LoadingScreen.gd" id="1_script"]
+[ext_resource type="Script" path="res://src/ui/loading/LoadingScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://y0mq3anelbcp" path="res://src/ui/components/MagicSigil.tscn" id="2_sigil"]
-[ext_resource type="PackedScene" path="res://src/ui/components/LoadingBar.tscn" id="3_bar"]
+[ext_resource type="PackedScene" uid="uid://b3k2m5p8q1r4" path="res://src/ui/components/LoadingBar.tscn" id="3_bar"]
 
 [sub_resource type="Gradient" id="Gradient_medieval"]
 offsets = PackedFloat32Array(0, 0.6, 1)
@@ -13,14 +13,6 @@ gradient = SubResource("Gradient_medieval")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 
-[sub_resource type="LabelSettings" id="LabelSettings_fantasy"]
-font_size = 72
-font_color = Color(1, 0.8, 0.4, 1)
-outline_size = 16
-outline_color = Color(0.15, 0.1, 0.05, 1)
-shadow_size = 25
-shadow_color = Color(0, 0, 0, 0.8)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bracket"]
 draw_center = false
 border_width_left = 6
@@ -29,6 +21,14 @@ border_color = Color(0.8, 0.6, 0.2, 0.2)
 corner_radius_top_left = 15
 expand_margin_left = 10.0
 expand_margin_top = 10.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_fantasy"]
+font_size = 72
+font_color = Color(1, 0.8, 0.4, 1)
+outline_size = 16
+outline_color = Color(0.15, 0.1, 0.05, 1)
+shadow_size = 25
+shadow_color = Color(0, 0, 0, 0.8)
 
 [node name="LoadingScreen" type="Control"]
 layout_mode = 3
@@ -161,9 +161,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_bracket")
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
-anchor_top = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
 offset_left = -60.0
 offset_top = -60.0
 grow_horizontal = 0

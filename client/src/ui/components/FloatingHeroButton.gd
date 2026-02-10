@@ -25,7 +25,7 @@ func _on_pressed():
 		UIManager.close_overlay("Hero")
 	else:
 		UIManager.close_all_overlays()
-		UIManager.open_overlay("Hero", "res://src/ui/HeroProfileScreen.tscn")
+		UIManager.open_overlay("Hero", "res://src/ui/hero_profile/HeroProfileScreen.tscn")
 
 func _on_hover(is_hover: bool):
 	var tw = create_tween().set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
