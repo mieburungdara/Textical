@@ -1,78 +1,52 @@
-# Unit Stat System - API Endpoints
+# Unit Stat System - "Golden Specification" API
 
-## Overview
-API endpoints baru untuk kalkulasi dan manajemen stat.
+Dokumen ini adalah standar utama untuk implementasi API sistem stat di Textical. Mengintegrasikan mekanisme RPG taktis tingkat lanjut dengan fitur administratif untuk balancing dan auditing.
 
 ---
 
-## Endpoints
+## 1. Core Endpoints (Calculation & Info)
 
-### 1. Calculate Hero Stats
+### 1.1 Calculate Unit Stats
+Menghitung total stat akhir berdasarkan base, level, equipment, buffs, dan context lingkungan.
+
 ```http
-GET /api/stats/:heroId
 POST /api/stats/calculate
 ```
-
-**Query Parameters:**
-- `context`: GLOBAL | COMBAT | GATHERING | CRAFTING
-- `breakdown`: true | false
 
 **Request Body:**
 ```json
 {
-    "heroId": 1,
-    "contextType": "COMBAT",
+    "heroId": 123,
+    "context": "COMBAT", // GLOBAL | COMBAT | GATHERING | CRAFTING
+    "environment": {
+        "regionId": 5,     // Untuk efek Terrain (Lava, Slow, dll)
+        "weather": "RAIN"  // Opsional: Buff/Debuff cuaca
+    },
+    "neighboringUnitIds": [124, 125], // Opsional: Untuk kalkulasi Aura/Synergy
     "includeBreakdown": true
 }
 ```
 
-**Response:**
-```json
-{
-    "attributes": {
-        "str": 50,
-        "dex": 40,
-        "int": 30,
-        "vit": 60,
-        "luk": 10
-    },
-    "health_max": 1000,
-    "mana_max": 300,
-    "attack_damage": 150,
-    "defense": 50,
-    "crit_chance": 0.15,
-    "crit_damage": 1.75,
-    "accuracy": 120,
-    "dodge_rate": 0.12,
-    "speed": 8,
-    "skill_power": 80,
-    "tenacity": 0.05,
-    "lifesteal_rate": 0.03,
-    "fire_damage": 20,
-    "fire_resistance": 0.1,
-    // ... more stats
-    
-    "_breakdown": {
-        "attack_damage": {
-            "base": 100,
-            "modifiers": {
-                "flat": [
-                    {"value": 20, "source": "Equipment:Sword"},
-                    {"value": 10, "source": "Buff:Power"}
-                ],
-                "percentAdd": [
-                    {"value": 0.1, "source": "Skill:Sharpness"}
-                ]
-            },
-            "final": 143
-        }
-    }
-}
+**Response Highlights:**
+- `finalStats`: Objek stat yang dikelompokkan (`core`, `offensive`, `defensive`, `utility`).
+- `_breakdown`: Detail sumber tiap stat (Base + Flat Modifiers + % Modifiers).
+
+---
+
+### 1.2 Get Stat Metadata
+Memberikan informasi tentang formula dan batas (caps) sistem stat.
+
+```http
+GET /api/stats/metadata
 ```
 
 ---
 
-### 2. Allocate Stat Point
+## 2. Stat Management (Allocation)
+
+### 2.1 Batch Stat Allocation
+Alokasi poin stat secara atomik dalam satu request.
+
 ```http
 POST /api/stats/allocate
 ```
@@ -80,206 +54,115 @@ POST /api/stats/allocate
 **Request Body:**
 ```json
 {
-    "heroId": 1,
-    "statKey": "str",
-    "points": 1
-}
-```
-
-**Response:**
-```json
-{
-    "allocation": {
-        "availablePoints": 4,
-        "strAllocated": 11,
-        "dexAllocated": 5
-    },
-    "stats": {
-        // ... calculated stats
+    "heroId": 123,
+    "allocations": {
+        "str": 5,
+        "dex": 2,
+        "vit": 3
     }
 }
 ```
 
 ---
 
-### 3. Reset Stat Allocation
-```http
-POST /api/stats/reset
-```
+### 2.2 Preview Allocation
+Melihat perubahan stat sebelum poin benar-benar dikurangi.
 
-**Request Body:**
-```json
-{
-    "heroId": 1
-}
-```
-
-**Response:**
-```json
-{
-    "allocation": {
-        "availablePoints": 20,
-        "strAllocated": 0,
-        "dexAllocated": 0,
-        "intAllocated": 0,
-        "vitAllocated": 0,
-        "totalSpent": 0
-    },
-    "refundedPoints": 20,
-    "stats": {
-        // ... recalculated stats
-    }
-}
-```
-
----
-
-### 4. Preview Allocation
 ```http
 POST /api/stats/preview
 ```
 
+---
+
+### 2.3 Reset Stat Allocation
+Mengembalikan semua poin alokasi ke `availablePoints`.
+
+```http
+POST /api/stats/reset
+```
+
+---
+
+## 3. Advanced Tactical Features
+
+### 3.1 Simulation & Analysis ("What If")
+Simulasi dampak item atau buff baru tanpa mengubah database.
+
+```http
+POST /api/stats/simulate
+```
+
 **Request Body:**
 ```json
 {
-    "heroId": 1,
-    "proposedAllocation": {
-        "str": 5,
-        "dex": 2,
-        "int": 0,
-        "vit": 3,
-        "luk": 0
-    }
-}
-```
-
-**Response:**
-```json
-{
-    "previewStats": {
-        "attack_damage": 180,
-        "health_max": 1200,
-        "crit_chance": 0.18
-    },
-    "pointsUsed": 10,
-    "pointsRemaining": 5,
-    "changes": {
-        "attack_damage": "+30",
-        "health_max": "+200",
-        "crit_chance": "+0.03"
-    }
+    "heroId": 123,
+    "addItems": [501, 502], // Template IDs
+    "addBuffs": ["bloodlust_v1"]
 }
 ```
 
 ---
 
-### 5. Get Stat Allocation
+### 3.2 Dynamic Template Scaling
+Menghitung stat Monster/NPC berdasarkan level dinamis (menggunakan growth curve).
+
 ```http
-GET /api/stats/allocation/:heroId
-```
-
-**Response:**
-```json
-{
-    "allocation": {
-        "availablePoints": 5,
-        "strAllocated": 10,
-        "dexAllocated": 5,
-        "intAllocated": 3,
-        "vitAllocated": 8,
-        "lukAllocated": 2,
-        "totalSpent": 28,
-        "statCaps": {
-            "str": 500,
-            "dex": 500,
-            "int": 500,
-            "vit": 500,
-            "luk": 300
-        }
-    },
-    "caps": {
-        "str": 500,
-        "dex": 500,
-        "int": 500,
-        "vit": 500,
-        "luk": 300,
-        "health_max": 100000,
-        "mana_max": 50000
-    }
-}
+GET /api/stats/template/:id?level=50
 ```
 
 ---
 
-### 6. Get Stat Recommendations
+### 3.3 Recovery & Time-To-Full (TTF)
+Menghitung waktu nyata hingga stat penuh (HP, Mana, Vitality).
+
 ```http
-GET /api/stats/recommendations/:heroId
+GET /api/stats/recovery/:heroId
 ```
 
 **Response:**
 ```json
 {
-    "recommendedDistribution": {
-        "str": 15,
-        "dex": 8,
-        "int": 5,
-        "vit": 10,
-        "luk": 2
-    },
-    "reasoning": "Warrior class benefits most from STR and VIT",
-    "alternativeBuilds": [
-        {
-            "name": "DPS Focus",
-            "distribution": {
-                "str": 20,
-                "dex": 10,
-                "int": 2,
-                "vit": 5,
-                "luk": 3
-            }
-        }
-    ]
+    "hp": { "current": 80, "max": 100, "secondsToFull": 120 },
+    "mana": { "current": 10, "max": 50, "secondsToFull": 600 }
 }
 ```
 
 ---
 
-## Error Responses
+## 4. Administrative & Balance Tools
 
-```json
-{
-    "error": "Hero not found",
-    "code": "HERO_NOT_FOUND"
-}
-```
+### 4.1 Stat Change History (Audit)
+Log perubahan stat permanen untuk mencegah eksploit atau debugging level up.
 
-```json
-{
-    "error": "Insufficient stat points",
-    "code": "INSUFFICIENT_POINTS"
-}
-```
-
-```json
-{
-    "error": "Stat cap reached",
-    "code": "STAT_CAP_REACHED",
-    "current": 500,
-    "cap": 500
-}
+```http
+GET /api/stats/history/:heroId
 ```
 
 ---
 
-## WebSocket Events (Optional)
+### 4.2 Balance Stress Test
+Simulasi pertarungan otomatis antara Hero vs Monster untuk cek balancing.
 
-### Subscribe to Stat Updates
-```javascript
-// Client → Server
-socket.emit("subscribe_stats", { heroId: 1 });
-
-// Server → Client (when stats change)
-socket.on("stats_updated", (data) => {
-    console.log("New stats:", data);
-});
+```http
+POST /api/admin/stats/balance-check
 ```
+
+---
+
+### 4.3 Global Recalculation (God Mode)
+Memaksa seluruh database untuk menghitung ulang stat jika ada perubahan formula global.
+
+```http
+POST /api/admin/stats/recalculate-all
+```
+
+> [!IMPORTANT]
+> Setiap kali Admin melakukan perubahan pada **Monster/Unit Template** melalui API, sistem **WAJIB** memanggil `DataSyncService.exportToJson()` untuk menjaga sinkronisasi file fisik (1 entity = 1 file).
+
+---
+
+## 5. Implementation Rules
+1. **Source of Truth**: Database SQLite adalah sumber data utama.
+2. **File Sync**: Setiap update pada template harus segera disinkronkan ke direktori `server/src/data/assets`.
+3. **Logic Layer**: Semua kalkulasi berat harus berada di `StatProcessor` atau `UnitStatService`.
+4. **Rounding**: Semua stat dasar menggunakan `Integer`, persentase menggunakan `Float`. Final calculation dibulatkan ke bawah (floor).

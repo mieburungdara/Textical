@@ -86,22 +86,23 @@ class EnhancedStatService extends BaseService {
      */
     async calculateHeroStats(heroId, context = {}) {
         const startTime = Date.now();
+        
+        // Fetch hero data (or use provided mock data for simulation)
+        const heroData = context.mockHeroData || await this._fetchHeroData(heroId);
+        if (!heroData) {
+            throw new Error('Hero not found');
+        }
+
         const cacheKey = this._getCacheKey(heroId, context);
         
-        // Check cache if enabled and not forcing recalculation
-        if (this.cacheEnabled && !context.forceRecalculate) {
+        // Check cache if enabled and not forcing recalculation (and not using mock data)
+        if (this.cacheEnabled && !context.forceRecalculate && !context.mockHeroData) {
             const cached = this._getFromCache(cacheKey);
             if (cached && !this._isCacheExpired(cached)) {
                 cached.fromCache = true;
                 cached.calculationTime = Date.now() - startTime;
                 return cached;
             }
-        }
-
-        // Fetch hero data with all necessary includes
-        const heroData = await this._fetchHeroData(heroId);
-        if (!heroData) {
-            throw new Error('Hero not found');
         }
 
         // Initialize calculation context
@@ -1023,63 +1024,318 @@ class EnhancedStatService extends BaseService {
      * @returns {Object} Allocation result with updated stats
      */
     async allocateStat(heroId, statName, points, options = {}) {
-        const hero = await this._fetchHeroData(heroId);
-        if (!hero) {
-            throw new Error('Hero not found');
+        return await this.runTransaction(async (tx) => {
+            const hero = await this._fetchHeroData(heroId);
+            if (!hero) {
+                throw new Error('Hero not found');
+            }
+            
+            const allocation = hero.statAllocation;
+            if (!allocation) {
+                throw new Error('Stat allocation not initialized');
+            }
+            
+            const availablePoints = allocation.availablePoints || 0;
+            const currentAllocated = allocation[`${statName}Allocated`] || 0;
+            
+            // Check available points
+            if (points > availablePoints) {
+                throw new Error(`Insufficient points. Available: ${availablePoints}, Requested: ${points}`);
+            }
+            
+            // Get caps
+            const caps = this.statCapResolver.getCaps(hero);
+            const statCap = caps[statName]?.max || 255;
+            
+            if (currentAllocated + points > statCap) {
+                throw new Error(`Stat cap exceeded for ${statName}. Current: ${currentAllocated}, Cap: ${statCap}`);
+            }
+            
+            // Update allocation
+            const updatedAllocation = await tx.heroStatAllocation.update({
+                where: { id: allocation.id },
+                data: {
+                    [`${statName}Allocated`]: currentAllocated + points,
+                    availablePoints: availablePoints - points,
+                    totalSpent: (allocation.totalSpent || 0) + points
+                }
+            });
+            
+            // Record detailed audit
+            await tx.heroStatAudit.create({
+                data: {
+                    heroId,
+                    changeType: 'ALLOCATION',
+                    statName,
+                    previousValue: currentAllocated,
+                    newValue: currentAllocated + points,
+                    notes: `Allocated ${points} points to ${statName}`
+                }
+            });
+            
+            // Invalidate cache
+            this.invalidateHeroCache(heroId);
+            
+            // Return updated stats
+            const updatedStats = await this.calculateStatsWithBreakdown(heroId);
+            
+            return {
+                success: true,
+                allocation: updatedAllocation,
+                stats: updatedStats
+            };
+        });
+    }
+
+    /**
+     * Allocate multiple stats at once (Atomic)
+     * @param {number} heroId - Hero ID
+     * @param {Object} batch - Allocations { str: 5, dex: 10, ... }
+     * @returns {Object} Result of batch allocation
+     */
+    async batchAllocateStats(heroId, batch) {
+        return await this.runTransaction(async (tx) => {
+            const hero = await this._fetchHeroData(heroId);
+            if (!hero) throw new Error('Hero not found');
+            
+            const allocation = hero.statAllocation;
+            if (!allocation) throw new Error('Stat allocation not initialized');
+
+            const totalRequested = Object.values(batch).reduce((sum, p) => sum + p, 0);
+            if (totalRequested > (allocation.availablePoints || 0)) {
+                throw new Error(`Insufficient points. Available: ${allocation.availablePoints}, Requested: ${totalRequested}`);
+            }
+
+            const caps = this.statCapResolver.getCaps(hero);
+            const updates = {
+                availablePoints: allocation.availablePoints - totalRequested,
+                totalSpent: (allocation.totalSpent || 0) + totalRequested
+            };
+
+            for (const [statName, points] of Object.entries(batch)) {
+                if (points <= 0) continue;
+                
+                const currentAllocated = allocation[`${statName}Allocated`] || 0;
+                const statCap = caps[statName]?.max || 255;
+                
+                if (currentAllocated + points > statCap) {
+                    throw new Error(`Stat cap exceeded for ${statName}. Current: ${currentAllocated}, Cap: ${statCap}`);
+                }
+                
+                updates[`${statName}Allocated`] = currentAllocated + points;
+
+                // Record audit for each stat in batch
+                await tx.heroStatAudit.create({
+                    data: {
+                        heroId,
+                        changeType: 'ALLOCATION',
+                        statName,
+                        previousValue: currentAllocated,
+                        newValue: currentAllocated + points,
+                        notes: `Batch allocation: +${points} to ${statName}`
+                    }
+                });
+            }
+
+            const updatedAllocation = await tx.heroStatAllocation.update({
+                where: { id: allocation.id },
+                data: updates
+            });
+
+            this.invalidateHeroCache(heroId);
+            const updatedStats = await this.calculateStatsWithBreakdown(heroId);
+
+            return {
+                success: true,
+                allocation: updatedAllocation,
+                stats: updatedStats
+            };
+        });
+    }
+
+    /**
+     * Reset all stat allocations for a hero
+     * @param {number} heroId - Hero ID
+     * @returns {Object} Reset result
+     */
+    async resetStatAllocation(heroId) {
+        return await this.runTransaction(async (tx) => {
+            const hero = await this._fetchHeroData(heroId);
+            if (!hero) throw new Error('Hero not found');
+            
+            const allocation = hero.statAllocation;
+            if (!allocation) throw new Error('Stat allocation not initialized');
+
+            const primaryStats = ['str', 'dex', 'int', 'vit', 'luk'];
+            let pointsRefunded = 0;
+            const updates = {
+                availablePoints: allocation.availablePoints,
+                totalSpent: 0,
+                lastResetAt: new Date()
+            };
+
+            for (const stat of primaryStats) {
+                const allocated = allocation[`${stat}Allocated`] || 0;
+                if (allocated > 0) {
+                    pointsRefunded += allocated;
+                    updates[`${stat}Allocated`] = 0;
+                    
+                    await tx.heroStatAudit.create({
+                        data: {
+                            heroId,
+                            changeType: 'RESET',
+                            statName: stat,
+                            previousValue: allocated,
+                            newValue: 0,
+                            notes: `Reset ${stat} allocation`
+                        }
+                    });
+                }
+            }
+
+            updates.availablePoints += pointsRefunded;
+
+            const updatedAllocation = await tx.heroStatAllocation.update({
+                where: { id: allocation.id },
+                data: updates
+            });
+
+            this.invalidateHeroCache(heroId);
+            const updatedStats = await this.calculateStatsWithBreakdown(heroId);
+
+            return {
+                success: true,
+                pointsRefunded,
+                allocation: updatedAllocation,
+                stats: updatedStats
+            };
+        });
+    }
+
+    /**
+     * Simulate stats with hypothetical changes
+     * @param {number} heroId - Hero ID
+     * @param {Object} additions - Mock additions { equipment: [], buffs: [], stats: {} }
+     * @param {Object} context - Base context
+     * @returns {Object} Simulated stats
+     */
+    async simulateStats(heroId, additions = {}, context = {}) {
+        const heroData = await this._fetchHeroData(heroId);
+        if (!heroData) throw new Error('Hero not found');
+
+        // Clone base data for simulation
+        const mockHero = JSON.parse(JSON.stringify(heroData));
+
+        // Apply equipment changes
+        if (additions.equipment) {
+            additions.equipment.forEach(newItem => {
+                const idx = mockHero.equipment.findIndex(e => e.slot === newItem.slot);
+                if (idx !== -1) mockHero.equipment[idx] = newItem;
+                else mockHero.equipment.push(newItem);
+            });
         }
-        
-        const allocation = hero.statAllocation;
-        if (!allocation) {
-            throw new Error('Stat allocation not initialized');
+
+        // Apply temporary buffs
+        if (additions.buffs) {
+            mockHero.buffs = [...(mockHero.buffs || []), ...additions.buffs];
         }
-        
-        const availablePoints = allocation.availablePoints || 0;
-        const currentAllocated = allocation[`${statName}Allocated`] || 0;
-        
-        // Check available points
-        if (points > availablePoints) {
-            throw new Error(`Insufficient points. Available: ${availablePoints}, Requested: ${points}`);
+
+        // Apply virtual stat bonuses
+        if (additions.stats) {
+            Object.entries(additions.stats).forEach(([stat, val]) => {
+                mockHero[stat] = (mockHero[stat] || 0) + val;
+            });
         }
-        
-        // Get caps
-        const caps = this.statCapResolver.getCaps(hero);
-        const statCap = caps[statName]?.max || 255;
-        
-        if (currentAllocated + points > statCap) {
-            throw new Error(`Stat cap exceeded. Current: ${currentAllocated}, Cap: ${statCap}`);
-        }
-        
-        // Update allocation
-        const updatedAllocation = await this.db.heroStatAllocation.update({
-            where: { id: allocation.id },
-            data: {
-                [`${statName}Allocated`]: currentAllocated + points,
-                availablePoints: availablePoints - points
+
+        // Calculate using mock data context
+        return await this.calculateStatsWithBreakdown(heroId, {
+            ...context,
+            mockHeroData: mockHero,
+            forceRecalculate: true
+        });
+    }
+
+    /**
+     * Get recovery stats and TTF (Time-To-Full)
+     * @param {number} heroId - Hero ID
+     * @returns {Object} Recovery details
+     */
+    async getRecoveryStats(heroId) {
+        const hero = await this.db.hero.findUnique({
+            where: { id: heroId },
+            select: {
+                health: true,
+                mana: true,
+                vitality: true
             }
         });
         
-        // Record history
-        await this.db.heroStatHistory.create({
-            data: {
-                heroId,
-                changeType: 'ALLOCATION',
-                statName,
-                previousValue: currentAllocated,
-                newValue: currentAllocated + points,
-                notes: `Allocated ${points} points to ${statName}`
-            }
-        });
+        const stats = await this.calculateHeroStats(heroId);
         
-        // Invalidate cache
-        this.invalidateHeroCache(heroId);
-        
-        // Return updated stats
-        const updatedStats = await this.calculateStatsWithBreakdown(heroId);
-        
+        const calculateTTF = (current, max, regen) => {
+            if (current >= max) return 0;
+            if (regen <= 0) return Infinity;
+            return Math.ceil((max - current) / regen);
+        };
+
         return {
-            success: true,
-            allocation: updatedAllocation,
-            stats: updatedStats
+            hp: {
+                current: hero.health,
+                max: stats.health_max,
+                regen: stats.hp_regen,
+                ttfSeconds: calculateTTF(hero.health, stats.health_max, stats.hp_regen)
+            },
+            mana: {
+                current: hero.mana,
+                max: stats.mana_max,
+                regen: stats.mana_regen,
+                ttfSeconds: calculateTTF(hero.mana, stats.mana_max, stats.mana_regen)
+            },
+            vitality: {
+                current: hero.vitality,
+                max: stats.vitality_max,
+                regen: stats.vitality_regen || 5, // Default base vitality regen if not in stats
+                ttfSeconds: calculateTTF(hero.vitality, stats.vitality_max, stats.vitality_regen || 5)
+            }
+        };
+    }
+
+    /**
+     * Bulk recalculation of all hero stats (Admin Tool)
+     */
+    async recalculateAllHeroes() {
+        const heroes = await this.db.hero.findMany({ select: { id: true } });
+        const results = { total: heroes.length, success: 0, failed: 0 };
+
+        for (const hero of heroes) {
+            try {
+                this.invalidateHeroCache(hero.id);
+                await this.calculateHeroStats(hero.id, { forceRecalculate: true });
+                results.success++;
+            } catch (e) {
+                results.failed++;
+                console.error(`Failed to recalculate hero ${hero.id}:`, e.message);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Get stat formula and cap metadata for UI
+     */
+    getStatMetadata() {
+        return {
+            primaryStats: ['str', 'dex', 'int', 'vit', 'luk'],
+            growthCurves: Object.keys(GrowthCurveType),
+            statCaps: this.statCapResolver.globalCaps,
+            formulas: {
+                health_max: "VIT * 10 + Level Base",
+                mana_max: "INT * 5 + Level Base",
+                attack_damage: "STR * 0.5 + Equipment",
+                hp_regen: "(INT + VIT) * 0.05",
+                crit_chance: "LUK * 0.5%"
+            }
         };
     }
 

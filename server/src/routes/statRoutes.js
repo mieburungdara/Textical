@@ -23,6 +23,38 @@ const validateHero = async (heroId) => {
 };
 
 /**
+ * POST /api/stats/calculate
+ * Calculate stats with context/environment
+ */
+router.post('/calculate', async (req, res) => {
+    try {
+        const { heroId, context, environment, includeBreakdown } = req.body;
+        if (!heroId) throw new Error('Hero ID required');
+
+        const result = includeBreakdown 
+            ? await statService.calculateStatsWithBreakdown(parseInt(heroId), { ...context, ...environment })
+            : await statService.calculateHeroStats(parseInt(heroId), { ...context, ...environment });
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/stats/metadata
+ * Get stat formulas and caps metadata
+ */
+router.get('/metadata', (req, res) => {
+    try {
+        const metadata = statService.getStatMetadata();
+        res.json({ success: true, data: metadata });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * GET /api/stats/:heroId
  * Get complete hero stats with breakdown
  */
@@ -79,48 +111,105 @@ router.get('/:heroId/history', async (req, res) => {
 /**
  * POST /api/stats/:heroId/allocate
  * Allocate stat points
- * Body: { statName, points, confirm }
  */
 router.post('/:heroId/allocate', async (req, res) => {
     try {
         const { heroId } = req.params;
-        const { statName, points, confirm } = req.body;
+        const { statName, points } = req.body;
 
-        // Validation
-        if (!statName || typeof points !== 'number' || points <= 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid request. Required: statName, points (positive number)'
-            });
-        }
+        await validateHero(heroId);
+        const result = await statService.allocateStat(parseInt(heroId), statName, points);
 
-        const validStats = ['str', 'dex', 'int', 'vit', 'luk'];
-        if (!validStats.includes(statName)) {
-            return res.status(400).json({
-                success: false,
-                error: `Invalid statName. Must be one of: ${validStats.join(', ')}`
-            });
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/stats/:heroId/allocate/batch
+ * Batch allocate stat points
+ */
+router.post('/:heroId/allocate/batch', async (req, res) => {
+    try {
+        const { heroId } = req.params;
+        const { batch } = req.body;
+
+        if (!batch || typeof batch !== 'object') {
+            throw new Error('Invalid batch data');
         }
 
         await validateHero(heroId);
+        const result = await statService.batchAllocateStats(parseInt(heroId), batch);
 
-        const result = await statService.allocateStat(parseInt(heroId), statName, points, {
-            confirm: confirm === true
-        });
-
-        res.json({
-            success: true,
-            data: result
-        });
+        res.json({ success: true, data: result });
     } catch (error) {
-        const statusCode = error.message.includes('not found') ? 404 :
-                          error.message.includes('Insufficient') ? 400 :
-                          error.message.includes('cap') ? 400 : 500;
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
 
-        res.status(statusCode).json({
-            success: false,
-            error: error.message
-        });
+/**
+ * POST /api/stats/:heroId/preview
+ * Preview/Simulate stat changes
+ */
+router.post('/:heroId/preview', async (req, res) => {
+    try {
+        const { heroId } = req.params;
+        const { additions, context } = req.body;
+
+        await validateHero(heroId);
+        const result = await statService.simulateStats(parseInt(heroId), additions, context);
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/stats/:heroId/reset
+ * Reset stat allocations
+ */
+router.post('/:heroId/reset', async (req, res) => {
+    try {
+        const { heroId } = req.params;
+
+        await validateHero(heroId);
+        const result = await statService.resetStatAllocation(parseInt(heroId));
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/stats/:heroId/recovery
+ * Get HP/Mana/Vitality recovery stats and TTF
+ */
+router.get('/:heroId/recovery', async (req, res) => {
+    try {
+        const { heroId } = req.params;
+
+        await validateHero(heroId);
+        const result = await statService.getRecoveryStats(parseInt(heroId));
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(404).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/stats/recalculate-all
+ * Bulk recalculation (Admin)
+ */
+router.post('/admin/recalculate-all', async (req, res) => {
+    try {
+        const result = await statService.recalculateAllHeroes();
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

@@ -637,6 +637,7 @@ model Hero {
   equipmentSets   HeroEquipmentSet[]
   statAllocation  HeroStatAllocation?
   statHistory     HeroStatHistory[]
+  statAudits      HeroStatAudit[]
 }
 
 model HeroOrder {
@@ -1451,6 +1452,20 @@ model RegionalExtractionStats {
       level           Int
       equippedItems   String   @default("[]")
       activeBuffs     String   @default("[]")
+
+      @@index([heroId, recordedAt])
+    }
+    // Hero Stat Audit (Delta Tracking)
+    model HeroStatAudit {
+      id              Int      @id @default(autoincrement())
+      heroId          Int
+      hero            Hero     @relation(fields: [heroId], references: [id])
+      recordedAt      DateTime @default(now())
+      changeType      String   // ALLOCATION, RESET, LEVEL_UP, QUEST_REWARD, ADMIN
+      statName        String?  // str, dex, etc.
+      previousValue   Float?
+      newValue        Float?
+      notes           String?
 
       @@index([heroId, recordedAt])
     }
