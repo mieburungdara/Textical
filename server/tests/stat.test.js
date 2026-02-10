@@ -1,81 +1,123 @@
 const StatProcessor = require('../src/logic/statProcessor');
+const { StatModifierType } = require('../src/logic/statSystem');
 
 describe('StatProcessor Tests', () => {
 
-    test('Should calculate base stats correctly', () => {
-        const heroData = {
-            hp_base: 100,
-            damage_base: 10,
-            speed_base: 5
-        };
+    describe('Hero Stat Calculation', () => {
+        test('Should calculate base stats correctly', () => {
+            const heroData = {
+                name: 'Test Hero',
+                hp_base: 100,
+                damage_base: 10,
+                speed_base: 5,
+                str: 10,
+                dex: 12,
+                int: 8
+            };
 
-        const stats = StatProcessor.calculateHeroStats(heroData);
+            const stats = StatProcessor.calculateHeroStats(heroData).toObject();
 
-        expect(stats.health_max).toBe(100);
-        expect(stats.attack_damage).toBe(10);
-        expect(stats.speed).toBe(5);
-    });
+            expect(stats.health_max).toBe(100);
+            expect(stats.attack_damage).toBe(10);
+            expect(stats.speed).toBe(5);
+            expect(stats.strength).toBe(10);
+            expect(stats.dexterity).toBe(12);
+        });
 
-    test('Should apply Job Multipliers (Percent)', () => {
-        const heroData = {
-            hp_base: 100,
-            current_job: {
-                hp_mult: 1.5 // +50% HP
-            }
-        };
-
-        const stats = StatProcessor.calculateHeroStats(heroData);
-
-        // 100 * 1.5 = 150
-        expect(stats.health_max).toBe(150);
-    });
-
-    test('Should apply Equipment Bonuses (Flat)', () => {
-        const heroData = {
-            damage_base: 10,
-            equipment: {
-                "weapon": { 
-                    data: { 
-                        stat_bonuses: { attack_damage: 5 } 
-                    } 
+        test('Should apply Job Multipliers (PERCENT_ADD)', () => {
+            const heroData = {
+                hp_base: 100,
+                current_job: {
+                    name: 'Warrior',
+                    hp_mult: 1.5 // +50% HP
                 }
-            }
-        };
+            };
 
-        const stats = StatProcessor.calculateHeroStats(heroData);
+            const stats = StatProcessor.calculateHeroStats(heroData).toObject();
 
-        // 10 + 5 = 15
-        expect(stats.attack_damage).toBe(15);
+            // 100 * (1 + 0.5) = 150
+            expect(stats.health_max).toBe(150);
+        });
+
+        test('Should combine Base + (Base * PercentMod) + FlatMod', () => {
+            const heroData = {
+                hp_base: 100,
+                current_job: { name: 'Knight', hp_mult: 1.2 }, // +20%
+                equipment: [
+                    {
+                        data: {
+                            name: 'Plate Armor',
+                            stats: [
+                                { statKey: 'health_max', statValue: 50 }
+                            ]
+                        }
+                    }
+                ]
+            };
+            
+            const stats = StatProcessor.calculateHeroStats(heroData).toObject();
+
+            // Formula in statSystem.js:
+            // value += flatSums; value *= (1 + percentAddTotal);
+            // (100 + 50) * (1 + 0.2) = 150 * 1.2 = 180
+            expect(stats.health_max).toBe(180);
+        });
+
+        test('Should handle negative modifiers', () => {
+            const heroData = {
+                speed_base: 10,
+                buffs: [
+                    { statKey: 'speed', statValue: -2, isPercent: false, name: 'Slow' }
+                ]
+            };
+
+            const stats = StatProcessor.calculateHeroStats(heroData).toObject();
+
+            expect(stats.speed).toBe(8);
+        });
     });
 
-    test('Should combine Job + Equipment + Base', () => {
-        const heroData = {
-            damage_base: 10,
-            current_job: { damage_mult: 2.0 }, // +100% (Base * 2) = 20
-            equipment: {
-                "weapon": { 
-                    data: { stat_bonuses: { attack_damage: 5 } } // Flat +5
-                }
-            }
-        };
+    describe('Monster Stat Calculation', () => {
+        test('Should calculate monster base stats correctly', () => {
+            const monsterData = {
+                name: 'Slime',
+                hp_base: 50,
+                damage_base: 5,
+                defense_base: 2,
+                speed_base: 3,
+                crit_chance: 0.1
+            };
 
-        // Order usually: (Base * Multiplier) + Flat OR (Base + Flat) * Multiplier?
-        // Let's check our logic. StatModifier usually sums flats then applies percents, 
-        // OR applies separately. Our Stat system applies all modifiers to base.
-        // If Logic is: Base + (Base * PercentMod) + FlatMod
-        
-        const stats = StatProcessor.calculateHeroStats(heroData);
+            const stats = StatProcessor.calculateMonsterStats(monsterData).toObject();
 
-        // 10 + (10 * 1.0) + 5 = 25? 
-        // Or 10 * 2.0 + 5 = 25?
-        // Our Stat class logic: (base + flat_sum) * (1 + percent_sum)
-        // Wait, let's verify Stat.js logic in mind or simple test.
-        // Usually StatModifier.Type.FLAT adds to base? No, modifiers are separate.
-        
-        // Let's assume standard RPG math: (Base * Mult) + Flat is safer for balance,
-        // but (Base + Flat) * Mult makes items stronger.
-        // Let's just expect it to be defined.
-        
-        expect(stats.attack_damage).toBeGreaterThan(10);
+            expect(stats.health_max).toBe(50);
+            expect(stats.attack_damage).toBe(5);
+            expect(stats.defense).toBe(2);
+            expect(stats.speed).toBe(3);
+            expect(stats.crit_chance).toBe(0.1);
+        });
+
+        test('Should apply monster traits', () => {
+            const monsterData = {
+                name: 'Elite Orc',
+                hp_base: 200,
+                traits: [
+                    {
+                        trait: {
+                            name: 'Hardened',
+                            stats: [
+                                { statKey: 'defense', statValue: 10 },
+                                { statKey: 'health_max', statValue: 0.2 } // PERCENT_ADD because < 1
+                            ]
+                        }
+                    }
+                ]
+            };
+
+            const stats = StatProcessor.calculateMonsterStats(monsterData).toObject();
+
+            expect(stats.defense).toBe(10); // 0 base + 10 flat
+            expect(stats.health_max).toBe(240); // 200 * 1.2
+        });
     });
 });

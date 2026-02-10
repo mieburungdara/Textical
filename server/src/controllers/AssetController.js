@@ -10,7 +10,12 @@ class AssetController extends BaseController {
 
             switch(category) {
                 case 'monsters':
-                    data = await prisma.monsterTemplate.findMany({ include: { category: true } });
+                    data = await prisma.monsterTemplate.findMany({ 
+                        include: { 
+                            category: true,
+                            traits: { include: { trait: true } }
+                        } 
+                    });
                     break;
                 case 'recipes':
                     data = await prisma.recipeTemplate.findMany({ include: { resultItem: true, ingredients: { include: { item: true } } } });

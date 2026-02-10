@@ -122,6 +122,23 @@ model MonsterTemplate {
   name         String
   hp_base      Int
   damage_base  Int
+  
+  // Secondary Stats
+  defense_base    Int      @default(0)
+  speed_base      Int      @default(5)
+  range_base      Int      @default(1)
+  accuracy_base   Int      @default(100)
+  dodge_rate      Float    @default(0.05)
+  crit_chance     Float    @default(0.05)
+  crit_damage     Float    @default(1.5)
+  block_chance    Float    @default(0)
+  block_power_base Float   @default(0.5)
+  initiative_base Int      @default(0)
+  lifesteal_base  Float    @default(0)
+  cooldown_reduction Float @default(0)
+  move_speed      Float    @default(100)
+  attack_speed    Float    @default(1.0)
+
   behaviorTree String   @default("SimpleAI") 
   categoryId   Int
   category     MonsterCategory @relation(fields: [categoryId], references: [id])

@@ -18,6 +18,9 @@ router.get('/heroes/:id', (req, res) => adminController.getHeroById(req, res));
 
 // --- Monsters Management ---
 router.get('/monsters', (req, res) => adminController.getMonsters(req, res));
+router.get('/monsters/categories', (req, res) => adminController.getMonsterCategories(req, res));
+router.put('/monsters/:id', (req, res) => adminController.updateMonsterTemplate(req, res));
+router.post('/monsters', (req, res) => adminController.createMonsterTemplate(req, res));
 
 // --- Regions Management ---
 router.get('/regions', (req, res) => adminController.getRegions(req, res));

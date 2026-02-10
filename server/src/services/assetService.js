@@ -33,7 +33,7 @@ class AssetService extends BaseService {
             case "monsters":
                 data = await this.db.monsterTemplate.findUnique({ 
                     where: { id: idInt }, 
-                    include: { loot: true } 
+                    include: { loot: true, traits: { include: { trait: true } } } 
                 });
                 break;
         }
@@ -69,6 +69,20 @@ class AssetService extends BaseService {
                 name: body.name,
                 hp_base: parseInt(body.hp_base),
                 damage_base: parseInt(body.damage_base),
+                defense_base: parseInt(body.defense_base || 0),
+                speed_base: parseInt(body.speed_base || 5),
+                range_base: parseInt(body.range_base || 1),
+                accuracy_base: parseInt(body.accuracy_base || 100),
+                dodge_rate: parseFloat(body.dodge_rate || 0.05),
+                crit_chance: parseFloat(body.crit_chance || 0.05),
+                crit_damage: parseFloat(body.crit_damage || 1.5),
+                block_chance: parseFloat(body.block_chance || 0),
+                block_power_base: parseFloat(body.block_power_base || 0.5),
+                initiative_base: parseInt(body.initiative_base || 0),
+                lifesteal_base: parseFloat(body.lifesteal_base || 0),
+                cooldown_reduction: parseFloat(body.cooldown_reduction || 0),
+                move_speed: parseFloat(body.move_speed || 100),
+                attack_speed: parseFloat(body.attack_speed || 1.0),
                 categoryId: parseInt(body.categoryId)
             },
             create: {
@@ -76,9 +90,23 @@ class AssetService extends BaseService {
                 name: body.name,
                 hp_base: parseInt(body.hp_base),
                 damage_base: parseInt(body.damage_base),
+                defense_base: parseInt(body.defense_base || 0),
+                speed_base: parseInt(body.speed_base || 5),
+                range_base: parseInt(body.range_base || 1),
+                accuracy_base: parseInt(body.accuracy_base || 100),
+                dodge_rate: parseFloat(body.dodge_rate || 0.05),
+                crit_chance: parseFloat(body.crit_chance || 0.05),
+                crit_damage: parseFloat(body.crit_damage || 1.5),
+                block_chance: parseFloat(body.block_chance || 0),
+                block_power_base: parseFloat(body.block_power_base || 0.5),
+                initiative_base: parseInt(body.initiative_base || 0),
+                lifesteal_base: parseFloat(body.lifesteal_base || 0),
+                cooldown_reduction: parseFloat(body.cooldown_reduction || 0),
+                move_speed: parseFloat(body.move_speed || 100),
+                attack_speed: parseFloat(body.attack_speed || 1.0),
                 categoryId: parseInt(body.categoryId)
             },
-            include: { loot: true }
+            include: { loot: true, traits: { include: { trait: true } } }
         });
 
         diskMirroringSystem.writeAsset("monsters", idInt, updated);

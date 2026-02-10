@@ -1,4 +1,5 @@
 const prisma = require('../db');
+const assetService = require('../services/assetService');
 
 class AdminController {
     // --- Dashboard Stats ---
@@ -344,46 +345,73 @@ class AdminController {
     // --- Monsters Management ---
     async getMonsters(req, res) {
         try {
-            const { page = 1, limit = 50, search = '' } = req.query;
+            const { page = 1, limit = 100, search = '', categoryId } = req.query;
             const skip = (page - 1) * limit;
             
-            const where = search ? {
-                OR: [
-                    { name: { contains: search } }
-                ]
-            } : {};
+            const where = {};
+            if (search) {
+                where.name = { contains: search };
+            }
+            if (categoryId && categoryId !== 'null' && categoryId !== '0') {
+                where.categoryId = parseInt(categoryId);
+            }
             
             const [monsters, total] = await Promise.all([
                 prisma.monsterTemplate.findMany({
                     where,
                     skip,
                     take: parseInt(limit),
-                    orderBy: { id: 'desc' },
+                    orderBy: { id: 'asc' },
                     include: {
                         category: true,
-                        traits: true
+                        traits: { include: { trait: true } }
                     }
                 }),
                 prisma.monsterTemplate.count({ where })
             ]);
             
-            res.json({
-                success: true,
-                data: {
-                    monsters,
-                    pagination: {
-                        page: parseInt(page),
-                        limit: parseInt(limit),
-                        total,
-                        pages: Math.ceil(total / limit)
-                    }
-                }
-            });
+            res.json(monsters); // Return flat array for simpler frontend handling
         } catch (error) {
             res.status(500).json({ 
                 success: false, 
                 error: error.message 
             });
+        }
+    }
+
+    async getMonsterCategories(req, res) {
+        try {
+            const categories = await prisma.monsterCategory.findMany({
+                orderBy: { name: 'asc' }
+            });
+            res.json(categories);
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async updateMonsterTemplate(req, res) {
+        try {
+            const id = req.params.id;
+            const updated = await assetService.saveMonster(id, req.body);
+            res.json({ success: true, data: updated });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async createMonsterTemplate(req, res) {
+        try {
+            // Find next ID
+            const lastMonster = await prisma.monsterTemplate.findFirst({
+                orderBy: { id: 'desc' }
+            });
+            const nextId = (lastMonster ? lastMonster.id : 0) + 1;
+            
+            const created = await assetService.saveMonster(nextId, req.body);
+            res.json({ success: true, data: created });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
         }
     }
 
