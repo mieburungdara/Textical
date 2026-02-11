@@ -17,8 +17,10 @@ const equipmentController = require('../controllers/EquipmentController');
 const worldController = require('../controllers/WorldController');
 const chatRoutes = require('./chatRoutes');
 const statRoutes = require('./statRoutes');
+const dataRoutes = require('./dataRoutes');
 
 // --- ASSETS (SYNC SYSTEM) ---
+router.use('/data', dataRoutes);
 router.get('/assets/manifest', (req, res) => assetController.getManifest(req, res));
 router.get('/assets/templates/:category', (req, res) => assetController.getTemplates(req, res));
 router.get('/assets/raw/:category/:id', (req, res) => assetController.getRawAsset(req, res));

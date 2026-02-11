@@ -122,7 +122,52 @@ model MonsterTemplate {
   hp_base     Int
   damage_base Int
 
-  // Secondary Stats
+  // Identity & Visuals
+  description  String @default("")
+  shortDesc    String @default("")
+  iconPath     String @default("")
+  modelPath    String @default("")
+  modelScale   Float  @default(1.0)
+  race         String @default("BEAST")
+  
+  // Rank & Size
+  rank String @default("COMMON") // MINION, COMMON, UNCOMMON, RARE, UNIQUE, ELITE, CHAMPION, BOSS, WORLD_BOSS
+  size String @default("MEDIUM") // TINY, SMALL, MEDIUM, LARGE, HUGE, COLOSSAL
+  
+  // Tactical
+  gridSize     Int    @default(1)
+  movementType String @default("WALK") // WALK, FLY, HOVER, TELEPORT, PHASE
+  
+  // Audio
+  sfx_attack String?
+  sfx_hit    String?
+  sfx_die    String?
+  
+  // Dialogue
+  dialoguePack String? // JSON key for dialogue lines
+  
+  // Progression
+  level      Int @default(1)
+  xpReward   Int @default(10)
+  goldReward Int @default(0)
+  
+  // Growth Stats (Dynamic Scaling)
+  hp_growth      Float @default(0)
+  damage_growth  Float @default(0)
+  defense_growth Float @default(0)
+  
+  // AI & Threat
+  aiScript         String @default("SimpleAI")
+  aiConfig         String @default("{}") // JSON params
+  attack_element   String @default("PHYSICAL")
+  threat_modifier  Float  @default(1.0)
+  preferred_target String @default("RANDOM") // RANDOM, LOWEST_HP, HIGHEST_DAMAGE, HEALER, TANK
+  
+  // Environment
+  preferred_weather String?
+  active_time       String? // DAY, NIGHT, ANY
+
+  // Secondary Stats (Existing)
   defense_base       Int   @default(0)
   speed_base         Int   @default(5)
   range_base         Int   @default(1)
@@ -137,14 +182,41 @@ model MonsterTemplate {
   cooldown_reduction Float @default(0)
   move_speed         Float @default(100)
   attack_speed       Float @default(1.0)
+  
+  // Elemental Resistances
+  res_fire  Float @default(1.0)
+  res_water Float @default(1.0)
+  res_earth Float @default(1.0)
+  res_wind  Float @default(1.0)
+  res_light Float @default(1.0)
+  res_dark  Float @default(1.0)
 
-  behaviorTree     String             @default("SimpleAI")
+  // Legacy
+  behaviorTree String @default("SimpleAI")
+  
+  // Existing Relations
   categoryId       Int
   category         MonsterCategory    @relation(fields: [categoryId], references: [id])
   loot             MonsterLootEntry[]
   regions          RegionMonster[]
   traits           MonsterTrait[]
   eventAppearances EventMonster[]
+  
+  // New Relations
+  tags           MonsterTag[]
+  skills         MonsterSkill[]
+  reactions      MonsterReaction[]
+  auras          MonsterAura[]
+  summons        MonsterSummon[]
+  immunities     MonsterImmunity[]
+  vulnerabilities MonsterVulnerability[]
+  enrages        MonsterEnrage[]
+  companions     MonsterCompanion[]     @relation("ParentMonster")
+  companionOf    MonsterCompanion[]     @relation("CompanionMonster")
+  phases         MonsterPhase[]
+  formations     MonsterFormation[]
+  territoryBonuses MonsterTerritoryBonus[]
+  summonSpawns   SummonTemplate[]       @relation("SummonUnit")
 }
 
 model MonsterTrait {
@@ -424,6 +496,7 @@ model RegionType {
   description String?
   regions     RegionTemplate[]
   effects     TerrainEffect[]
+  monsterTerritoryBonuses MonsterTerritoryBonus[]
 }
 
 model TerrainEffect {
@@ -679,8 +752,9 @@ model SkillTemplate {
   multiplier Float?
   manaCost   Int     @default(0)
 
-  classTrees ClassSkillTree[]
-  heroSkills HeroSkill[]
+  classTrees   ClassSkillTree[]
+  heroSkills   HeroSkill[]
+  monsterSkills MonsterSkill[]
 }
 
 model ClassSkillTree {
@@ -1470,4 +1544,213 @@ model HeroStatAudit {
   notes         String?
 
   @@index([heroId, recordedAt])
+}
+
+model SystemSetting {
+  key   String @id
+  value String
+}
+
+// ============================================================================
+// GLOBAL MECHANICS TEMPLATES (Shared by Heroes & Monsters)
+// ============================================================================
+
+model StatusEffectTemplate {
+  id          Int                    @id
+  name        String
+  type        String // STUN, POISON, FREEZE, BURN, SLOW, SILENCE, BLEED, etc.
+  description String                 @default("")
+  immunities  MonsterImmunity[]
+  vulnerabilities MonsterVulnerability[]
+}
+
+model MechanicTag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique // UNDEAD, FLYING, FIRE_IMMUNE, LARGE, BOSS, etc.
+  description String       @default("")
+  monsters    MonsterTag[]
+}
+
+model ReactionTemplate {
+  id       Int               @id @default(autoincrement())
+  name     String
+  script   String // Script/Class name
+  trigger  String // ON_CRIT_RECEIVED, ON_ALLY_DEATH, ON_HP_BELOW_50, etc.
+  cooldown Int               @default(0)
+  monsters MonsterReaction[]
+}
+
+model AuraTemplate {
+  id       Int           @id @default(autoincrement())
+  name     String
+  radius   Int           @default(1) // In tiles
+  effect   String // JSON or key
+  vfxPath  String        @default("")
+  monsters MonsterAura[]
+}
+
+model SummonTemplate {
+  id           Int             @id @default(autoincrement())
+  name         String
+  spawnUnitId  Int
+  spawnUnit    MonsterTemplate @relation("SummonUnit", fields: [spawnUnitId], references: [id])
+  duration     Int             @default(0) // 0 = permanent
+  statScale    Float           @default(1.0)
+  monsters     MonsterSummon[]
+}
+
+model EnrageCondition {
+  id             Int             @id @default(autoincrement())
+  name           String
+  trigger        String // HP_BELOW, ALLY_DIED, TURN_COUNT, etc.
+  threshold      Float           @default(0) // HP%, turn count, etc.
+  monsters       MonsterEnrage[]
+}
+
+model PhaseTemplate {
+  id       Int            @id @default(autoincrement())
+  name     String
+  trigger  String // HP_BELOW, TURN_COUNT, etc.
+  threshold Float         @default(0)
+  monsters MonsterPhase[]
+}
+
+// ============================================================================
+// MONSTER RELATIONS (Many-to-Many)
+// ============================================================================
+
+model MonsterTag {
+  id        Int             @id @default(autoincrement())
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
+  tagId     Int
+  tag       MechanicTag     @relation(fields: [tagId], references: [id])
+
+  @@unique([monsterId, tagId])
+}
+
+model MonsterSkill {
+  id          Int             @id @default(autoincrement())
+  monsterId   Int
+  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
+  skillId     Int
+  skill       SkillTemplate   @relation(fields: [skillId], references: [id])
+  usageChance Float           @default(1.0) // AI hint
+  cooldown    Int             @default(0) // Override skill's default
+  priority    Int             @default(0)
+
+  @@unique([monsterId, skillId])
+}
+
+model MonsterReaction {
+  id         Int               @id @default(autoincrement())
+  monsterId  Int
+  monster    MonsterTemplate   @relation(fields: [monsterId], references: [id])
+  reactionId Int
+  reaction   ReactionTemplate  @relation(fields: [reactionId], references: [id])
+  chance     Float             @default(1.0)
+  priority   Int               @default(0)
+
+  @@unique([monsterId, reactionId])
+}
+
+model MonsterAura {
+  id        Int             @id @default(autoincrement())
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
+  auraId    Int
+  aura      AuraTemplate    @relation(fields: [auraId], references: [id])
+  level     Int             @default(1) // For scaling
+
+  @@unique([monsterId, auraId])
+}
+
+model MonsterSummon {
+  id        Int             @id @default(autoincrement())
+  monsterId Int
+  monster   MonsterTemplate @relation(fields: [monsterId], references: [id])
+  summonId  Int
+  summon    SummonTemplate  @relation(fields: [summonId], references: [id])
+  chance    Float           @default(1.0)
+  maxActive Int             @default(1)
+
+  @@unique([monsterId, summonId])
+}
+
+model MonsterImmunity {
+  id             Int                   @id @default(autoincrement())
+  monsterId      Int
+  monster        MonsterTemplate       @relation(fields: [monsterId], references: [id])
+  statusEffectId Int
+  statusEffect   StatusEffectTemplate  @relation(fields: [statusEffectId], references: [id])
+
+  @@unique([monsterId, statusEffectId])
+}
+
+model MonsterVulnerability {
+  id             Int                   @id @default(autoincrement())
+  monsterId      Int
+  monster        MonsterTemplate       @relation(fields: [monsterId], references: [id])
+  statusEffectId Int
+  statusEffect   StatusEffectTemplate  @relation(fields: [statusEffectId], references: [id])
+  multiplier     Float                 @default(1.5) // 1.5 = 50% more effective
+
+  @@unique([monsterId, statusEffectId])
+}
+
+model MonsterEnrage {
+  id              Int              @id @default(autoincrement())
+  monsterId       Int
+  monster         MonsterTemplate  @relation(fields: [monsterId], references: [id])
+  enrageId        Int
+  enrage          EnrageCondition  @relation(fields: [enrageId], references: [id])
+  stat_hp_bonus   Float            @default(0)
+  stat_dmg_bonus  Float            @default(0)
+  unlockSkillId   Int?
+
+  @@unique([monsterId, enrageId])
+}
+
+model MonsterCompanion {
+  id          Int             @id @default(autoincrement())
+  monsterId   Int
+  monster     MonsterTemplate @relation("ParentMonster", fields: [monsterId], references: [id])
+  companionId Int
+  companion   MonsterTemplate @relation("CompanionMonster", fields: [companionId], references: [id])
+  count       Int             @default(1)
+  spawnDelay  Int             @default(0) // Turns
+
+  @@unique([monsterId, companionId])
+}
+
+model MonsterPhase {
+  id         Int             @id @default(autoincrement())
+  monsterId  Int
+  monster    MonsterTemplate @relation(fields: [monsterId], references: [id])
+  phaseId    Int
+  phase      PhaseTemplate   @relation(fields: [phaseId], references: [id])
+  phaseOrder Int             @default(1)
+
+  @@unique([monsterId, phaseId])
+}
+
+model MonsterFormation {
+  id              Int             @id @default(autoincrement())
+  monsterId       Int             @unique
+  monster         MonsterTemplate @relation(fields: [monsterId], references: [id])
+  preferredRow    Int             @default(1) // 1=front, 2=mid, 3=back
+  preferredColumn Int             @default(2) // 1=left, 2=center, 3=right
+}
+
+model MonsterTerritoryBonus {
+  id              Int             @id @default(autoincrement())
+  monsterId       Int
+  monster         MonsterTemplate @relation(fields: [monsterId], references: [id])
+  regionTypeId    String
+  regionType      RegionType      @relation(fields: [regionTypeId], references: [id])
+  stat_multiplier Float           @default(1.0)
+  immune_effect   String? // Additional immunity when in territory
+  bonus_effect    String? // Additional effect when in territory
+
+  @@unique([monsterId, regionTypeId])
 }
