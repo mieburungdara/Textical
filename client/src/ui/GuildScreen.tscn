@@ -1,7 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://guild_screen"]
 
 [ext_resource type="Script" path="res://src/ui/GuildScreen.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="3_nav"]
 
 [sub_resource type="Gradient" id="Gradient_guild_bg"]
 offsets = PackedFloat32Array(0, 0.5, 1)

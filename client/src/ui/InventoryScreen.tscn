@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://c6vfk4w0ybfng" path="res://src/ui/InventoryScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 
 [sub_resource type="Gradient" id="Gradient_leather"]
 offsets = PackedFloat32Array(0, 0.5, 1)

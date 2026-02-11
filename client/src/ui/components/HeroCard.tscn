@@ -1,32 +1,32 @@
-[gd_scene load_steps=10 format=3 uid="uid://hero_card"]
+[gd_scene load_steps=9 format=3 uid="uid://nrg8pqqeeifp"]
 
-[ext_resource type="Script" path="res://src/ui/components/HeroCard.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dqdxhs6v2yuvd" path="res://src/ui/components/HeroCard.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
 bg_color = Color(0.12, 0.1, 0.08, 0.95)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.8, 0.8, 0.8, 0.4)
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
-bg_color = Color(0.22, 0.19, 0.16, 0.98)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
-bg_color = Color(0.16, 0.13, 0.1, 1.0)
+bg_color = Color(0.16, 0.13, 0.1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.22, 0.19, 0.16, 0.98)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
@@ -40,33 +40,25 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
-bg_color = Color(0.18, 0.15, 0.12, 1.0)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+bg_color = Color(0.18, 0.15, 0.12, 1)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-
-[sub_resource type="Gradient" id="Gradient_portrait"]
-offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0.2, 0.15, 0.12, 1, 0.25, 0.2, 0.15, 1, 0.18, 0.13, 0.1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [sub_resource type="LabelSettings" id="LabelSettings_name"]
 font_size = 14
-font_color = Color(1, 0.95, 0.9, 1.0)
+font_color = Color(1, 0.95, 0.9, 1)
 shadow_size = 2
 shadow_color = Color(0, 0, 0, 0.5)
 
 [sub_resource type="LabelSettings" id="LabelSettings_level"]
 font_size = 11
-font_color = Color(0.7, 0.65, 0.6, 1.0)
-
-[sub_resource type="LabelSettings" id="LabelSettings_rarity"]
-font_size = 10
-font_color = Color(0.8, 0.8, 0.8, 0.8)
+font_color = Color(0.7, 0.65, 0.6, 1)
 
 [node name="HeroCard" type="Button"]
 custom_minimum_size = Vector2(100, 140)
@@ -75,8 +67,8 @@ offset_bottom = 140.0
 size_flags_vertical = 4
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_bg")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
 theme_override_styles/focus = SubResource("StyleBoxFlat_selected")
 script = ExtResource("1_script")

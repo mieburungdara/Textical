@@ -10,20 +10,34 @@ signal close_requested()
 @onready var close_btn = $Margin/VBox/HBox/CloseBtn
 
 func _ready():
-	close_btn.pressed.connect(func(): close_requested.emit(); hide())
-	start_btn.pressed.connect(func(): action_requested.emit(_current_id))
+    close_btn.pressed.connect(func(): 
+        close_requested.emit();hide())    
+    start_btn.pressed.connect(func(): 
+            action_requested.emit(_current_id))
+    
+    # Debug: Log visibility changes
+    visibility_changed.connect(func():
+        print("[MapInfoPanel] Visibility changed | visible: ", visible)
+    )
 
 var _current_id = -1
 
 func display_region(region_data):
-	_current_id = int(str(region_data.id).to_float())
-	var local = DataManager.get_region(_current_id)
-	
-	name_label.text = local.get("name", "Unknown")
-	lore_label.text = local.get("lore", "...")
-	tips_label.text = "TIP: " + local.get("tips", ["Safe."])[0]
-	
-	var is_here = _current_id == int(str(GameState.current_user.currentRegion).to_float())
-	start_btn.text = "Enter" if is_here else "Start Journey"
-	start_btn.disabled = false
-	show()
+    _current_id = int(str(region_data.id).to_float())
+    var local = DataManager.get_region(_current_id)
+    
+    name_label.text = local.get("name", "Unknown")
+    lore_label.text = local.get("lore", "...")
+    tips_label.text = "TIP: " + local.get("tips", ["Safe."])[0]
+    
+    var is_here = false
+    if GameState.current_user:
+        var player_rid = int(str(GameState.current_user.get("currentRegion", 1)).to_float())
+        is_here = (_current_id == player_rid)
+    
+    start_btn.text = "Enter" if is_here else "Start Journey"
+    start_btn.disabled = false
+    start_btn.visible = true # Force visibility
+    
+    show()
+    # Bring to front if possible (already in CanvasLayer 120 now)

@@ -2,12 +2,11 @@ extends PanelContainer
 class_name BattleStatsPanel
 
 ## BattleStatsPanel - Component untuk menampilkan statistik unit dalam grid terpadu
-## Layout: 2 (Vitals), 3 (Combat), 3 (Elemental)
+## Layout: 2 (Stats), 3 (Elemental)
 
 # === NODE REFERENCES ===
 @onready var battle_stats_content: VBoxContainer = $BattleStatsContent
-@onready var vital_grid: GridContainer = $BattleStatsContent/VitalGrid
-@onready var combat_grid: GridContainer = $BattleStatsContent/CombatGrid
+@onready var stats_grid: GridContainer = $BattleStatsContent/StatsGrid
 @onready var elemental_grid: GridContainer = $BattleStatsContent/ElementSection/ElementalGrid
 
 # === PRIVATE VARIABLES ===
@@ -125,7 +124,7 @@ func _get_stat_row_references():
     _stat_rows.clear()
     
     # Search in all grids
-    var containers = [vital_grid, combat_grid, elemental_grid]
+    var containers = [stats_grid, elemental_grid]
     for container in containers:
         if not container: continue
         for child in container.get_children():

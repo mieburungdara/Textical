@@ -18,6 +18,11 @@ func _ready():
     
     # Initial visibility check on scene changes
     get_tree().node_added.connect(func(_n): _check_visibility())
+    
+    # Listen to UIManager for overlays
+    if UIManager:
+        UIManager.overlay_opened.connect(func(_n): _check_visibility())
+        UIManager.overlay_closed.connect(func(_n): _check_visibility())
 
 func _setup_ui_update_timer():
     _ui_update_timer = Timer.new()
@@ -45,15 +50,15 @@ func _do_check_visibility():
     if not current_scene: return
     
     var path = current_scene.scene_file_path
-    var hidden_screens = ["LoadingScreen", "LoginScreen", "AuthScreen"]
+    var hidden_screens = ["LoadingScreen", "LoginScreen", "AuthScreen", "CombatScreen", "WorldAtlas"]
     
-    var should_hide = false
+    var screen_should_hide = false
     for screen in hidden_screens:
         if screen in path:
-            should_hide = true
+            screen_should_hide = true
             break
-            
-    visible = !should_hide
+    
+    visible = !screen_should_hide
 
 # Compatibility method for external calls
 func refresh_stats():

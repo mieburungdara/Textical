@@ -9,7 +9,6 @@ extends Control
 ## Setup as overlay logic
 func setup_as_overlay(_data: Dictionary = {}):
     # Standard overlay setup
-    if has_node("SideHUD"): $SideHUD.visible = false
     
     # Position container correctly to clear sidebar
     if has_node("MarginContainer"):

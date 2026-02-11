@@ -40,6 +40,8 @@ func _on_request_completed(endpoint, data):
             current_region_data = data
         
         if current_region_data is Dictionary:
+            print("[WildernessBase] Updating GameState with region: ", current_region_data.get("name"))
+            GameState.current_region_data = current_region_data
             _update_ui()
         else:
             push_error("[WildernessBase] Invalid region data format")
@@ -102,8 +104,15 @@ func _update_ui():
     # 2. Add Hunting Card
     var hunt_card = _create_action_card("Battle Slime", "⚔️", "Hunt Monsters", func(_b): _on_hunt_pressed())
     resource_container.add_child(hunt_card)
+
+    # 3. Add Travel/Map Card (NEW: To allow exiting wilderness)
+    var map_card = _create_action_card("World Map", "🗺️", "Travel Elsewhere", func(_b): _on_map_pressed())
+    resource_container.add_child(map_card)
     
     _play_entry_animation()
+
+func _on_map_pressed():
+    get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
 
 func _create_action_card(title: String, icon: String, sub: String, callback: Callable) -> Button:
     var btn = Button.new()

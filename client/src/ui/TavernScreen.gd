@@ -10,7 +10,6 @@ var _time_acc = 0.0
 func setup_as_overlay(_data: Dictionary = {}):
     # Sembunyikan HUD internal agar tidak tumpang tindih
     if has_node("TopHUD"): $TopHUD.visible = false
-    if has_node("SideHUD"): $SideHUD.visible = false
     
     # Beri margin agar tidak menabrak SideHUD di kiri
     if has_node("MarginContainer"):

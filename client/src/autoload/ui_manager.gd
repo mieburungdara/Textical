@@ -57,6 +57,10 @@ func close_overlay(overlay_name: String):
 		print("[UI] Closing overlay: ", overlay_name)
 		var instance = active_overlays[overlay_name]
 		
+		# [FIX] Erase from dictionary IMMEDIATELY so logic like SideHUD visibility
+		# doesn't see stale overlay data during the 0.15s animation.
+		active_overlays.erase(overlay_name)
+		
 		var tw = create_tween()
 		tw.tween_property(instance, "modulate:a", 0.0, 0.15)
 		tw.tween_callback(func(): 
@@ -64,7 +68,6 @@ func close_overlay(overlay_name: String):
 				instance.queue_free()
 			
 			# Tampilkan kembali HUD dunia jika tidak ada overlay lain
-			active_overlays.erase(overlay_name)
 			if active_overlays.size() == 0 and _world_hud:
 				_world_hud.visible = true
 				

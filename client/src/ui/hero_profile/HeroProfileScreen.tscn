@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/ui/hero_profile/HeroProfileScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 [ext_resource type="PackedScene" uid="uid://b7gtungyt03pq" path="res://src/ui/components/HeroGridContainer.tscn" id="5_grid"]
 [ext_resource type="PackedScene" uid="uid://16ypmxfkqdh4" path="res://src/ui/components/ProfileOverlay.tscn" id="6_overlay"]
 

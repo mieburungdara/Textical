@@ -6,7 +6,6 @@ extends Control
 func setup_as_overlay(_data: Dictionary = {}):
     # Sembunyikan HUD internal agar tidak tumpang tindih
     if has_node("TopHUD"): $TopHUD.visible = false
-    if has_node("SideHUD"): $SideHUD.visible = false
     if has_node("TaskListHUD"): $TaskListHUD.visible = false
     
     # Beri margin agar tidak menabrak SideHUD di kiri

@@ -52,7 +52,6 @@ size_flags_horizontal = 3
 
 [node name="TabsContainer" parent="MainContainer/RightSection" instance=ExtResource("3_tabs")]
 layout_mode = 2
-size_flags_vertical = 3
 current_tab = 0
 
 [node name="LoadingLabel" type="Label" parent="MainContainer"]

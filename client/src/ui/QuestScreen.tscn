@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/ui/QuestScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 
 [node name="QuestScreen" type="Control"]
 layout_mode = 3

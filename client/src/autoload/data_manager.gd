@@ -112,14 +112,19 @@ func get_asset(category: String, id: int) -> Dictionary:
     if FileAccess.file_exists(path):
         var file = FileAccess.open(path, FileAccess.READ)
         var json = JSON.parse_string(file.get_as_text())
-        if json: return json
+        if json: 
+            if category == "regions": print("[DataManager] Returning User Region: ", json.get("name"))
+            return json
     
     # 2. Try Fallback Data (Bundled)
     if _fallback_data.has(category):
         var str_id = str(id)
         if _fallback_data[category].has(str_id):
-            return _fallback_data[category][str_id]
+            var data = _fallback_data[category][str_id]
+            if category == "regions": print("[DataManager] Returning Fallback Region: ", data.get("name"))
+            return data
             
+    print("[DataManager] Asset not found: ", category, " id: ", id)
     return {}
 
 func get_region(id): return get_asset("regions", id)

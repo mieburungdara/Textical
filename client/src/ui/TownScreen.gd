@@ -14,12 +14,13 @@ func _ready():
             get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
             return
 
+    # Fetch data to ensure sync (SideHUD, etc)
+    if GameState.current_user:
+        var rid = GameState.current_user.get("currentRegion", 1)
+        ServerConnector.get_region_details(int(rid))
+
     # Dynamic Title with BBCode Wave Effect
-    if GameState.current_region_data:
-        var raw_name = GameState.current_region_data.get("name", "UNNAMED TOWN").to_upper()
-        town_title.text = "[center][wave amp=30 freq=3]%s[/wave][/center]" % raw_name
-    else:
-        town_title.text = "[center][wave amp=30 freq=3]RIVERDALE VILLAGE[/wave][/center]"
+    _update_town_title()
 
     # Clean signal connections to prevent duplicates
     if ServerConnector.request_completed.is_connected(_on_request_completed):
@@ -35,7 +36,15 @@ func _ready():
     
     _play_entry_animation()
 
+func _update_town_title():
+    if GameState.current_region_data:
+        var raw_name = GameState.current_region_data.get("name", "UNNAMED TOWN").to_upper()
+        town_title.text = "[center][wave amp=30 freq=3]%s[/wave][/center]" % raw_name
+    else:
+        town_title.text = "[center][wave amp=30 freq=3]LOADING...[/wave][/center]"
+
 func _play_entry_animation():
+    # ... (rest of function)
     var delay = 0.0
     for child in action_grid.get_children():
         if child is Button:
@@ -49,9 +58,14 @@ func _play_entry_animation():
             tw.parallel().tween_property(child, "scale", Vector2(1, 1), 0.4)
             delay += 0.05
 
-func _on_request_completed(endpoint: String, _data):
+func _on_request_completed(endpoint: String, data):
     if endpoint.contains("tavern/enter"):
         get_tree().change_scene_to_file("res://src/ui/TavernScreen.tscn")
+    elif "region/" in endpoint:
+        var r_data = data.get("data", data)
+        if r_data is Dictionary:
+            GameState.current_region_data = r_data
+            _update_town_title()
 
 func _on_tavern_pressed(): 
     if GameState.current_user:

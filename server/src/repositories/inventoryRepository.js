@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db');
 
 class InventoryRepository {
     async addItem(userId, templateId, quantity = 1, uniqueData = {}) {

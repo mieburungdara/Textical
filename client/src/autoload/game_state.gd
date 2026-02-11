@@ -22,6 +22,7 @@ var active_task = null
 var current_region_type = "TOWN" 
 var current_region_data = null:
     set(val):
+        print("[STATE] Region Data Setting: ", "null" if not val else val.get("name", "Unknown"))
         current_region_data = val
         region_changed.emit(val)
 
@@ -156,6 +157,9 @@ func _on_global_task_completed(data):
         
         if current_user:
             current_user.currentRegion = int(data.get("targetRegionId", current_user.currentRegion))
+        
+        # Emit signal to notify UI components (SideHUD, etc.) that region has changed
+        region_changed.emit(current_region_data)
 
 func set_active_task(task_data):
     active_task = task_data

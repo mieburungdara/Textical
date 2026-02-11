@@ -42,6 +42,7 @@ func update_all():
 
 func _update_region_display():
 	var region = GameState.current_region_data
+	print("[SideHUD_Status:%d] Updating region display. Data: " % get_instance_id(), "null" if not region else region.get("name", "Unknown"))
 	if not region:
 		region_icon.text = "🏰"
 		region_name.text = "UNKNOWN"
@@ -51,6 +52,7 @@ func _update_region_display():
 	var r_type = region.get("visualType", region.get("type", "TOWN"))
 	region_icon.text = _get_region_type_icon(r_type)
 	region_name.text = region.get("name", "Unknown").to_upper()
+	print("[SideHUD_Status:%d] Set region name to: " % get_instance_id(), region_name.text)
 	
 	var x = region.get("x")
 	var y = region.get("y")

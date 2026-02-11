@@ -1,7 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://csy5gxdpf40by"]
+[gd_scene load_steps=6 format=3 uid="uid://csy5gxdpf40by"]
 
 [ext_resource type="Script" uid="uid://iaeb2nddramq" path="res://src/ui/components/BattleStatsPanel.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://cw6myyg7onniy" path="res://src/ui/components/StatRow.gd" id="3_433jy"]
 [ext_resource type="PackedScene" path="res://src/ui/components/StatRow.tscn" id="3_atk_row"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_padding"]
@@ -43,99 +42,80 @@ script = ExtResource("1_script")
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="VitalGrid" type="GridContainer" parent="BattleStatsContent"]
-layout_mode = 2
-theme_override_constants/h_separation = 12
-columns = 2
-
-[node name="HPStatRow" parent="BattleStatsContent/VitalGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MPStatRow" parent="BattleStatsContent/VitalGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CombatGrid" type="GridContainer" parent="BattleStatsContent"]
+[node name="StatsGrid" type="GridContainer" parent="BattleStatsContent"]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 3
 
-[node name="ATKStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="HPStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="DEFStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="MPStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MAGATKStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="ATKStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MAGDEFStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="DEFStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SPDStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="MAGATKStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="INITStatRow" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
+[node name="MAGDEFStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ACCStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="SPDStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="INITStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ACCStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="CRITStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="CRITStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="HPREGENStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="HPREGENStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="VITALITYStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="VITALITYStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="TENACITYStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="TENACITYStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="SVAMPStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="SVAMPStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
-[node name="ASPDStatRow" type="PanelContainer" parent="BattleStatsContent/CombatGrid" instance=ExtResource("3_atk_row")]
-custom_minimum_size = Vector2(0, 36)
+[node name="ASPDStatRow" parent="BattleStatsContent/StatsGrid" instance=ExtResource("3_atk_row")]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_bg")
-script = ExtResource("3_433jy")
 
 [node name="ElementSection" type="VBoxContainer" parent="BattleStatsContent"]
 layout_mode = 2

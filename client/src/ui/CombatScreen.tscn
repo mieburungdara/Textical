@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/ui/CombatScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
-[ext_resource type="PackedScene" path="res://src/ui/side_hud/SideHUD.tscn" id="3_nav"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_log"]
 bg_color = Color(0, 0, 0, 0.6)
@@ -91,8 +90,6 @@ bbcode_enabled = true
 text = "Tactical simulation ready..."
 scroll_following = true
 
-[node name="SideHUD" parent="." instance=ExtResource("3_nav")]
-layout_mode = 1
 
 [node name="ResultPopup" type="Panel" parent="."]
 visible = false

@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/ui/MarketScreen.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
-[ext_resource type="PackedScene" uid="uid://side_hud" path="res://src/ui/side_hud/SideHUD.tscn" id="4_nav"]
 
 [sub_resource type="Gradient" id="Gradient_medieval"]
 offsets = PackedFloat32Array(0, 0.7, 1)

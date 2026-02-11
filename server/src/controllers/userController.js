@@ -36,9 +36,31 @@ class UserController extends BaseController {
             if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
             const heroes = await prisma.hero.findMany({
                 where: { userId },
-                include: { combatClass: true, equipment: true }
+                include: { 
+                    combatClass: true, 
+                    equipment: true,
+                    skills: {
+                        where: { isActive: true },
+                        include: { skill: true }
+                    },
+                    // Also include passives from traits if needed, but for now skills
+                }
             });
-            this.sendSuccess(res, heroes);
+
+            // Transform heroes to flatten the skill structure if necessary, 
+            // or client needs to handle "skills": [{ "skill": {...} }]
+            // Let's flatten it to match client expectation: skills: [ {id, name...}, {id, name...} ]
+            const flattenedHeroes = heroes.map(hero => {
+                const flatSkills = hero.skills.map(hs => hs.skill);
+                // Merge with legacy skills string/json field if it exists and hasn't been migrated completely
+                // But for now, let's prioritize the relation data we just added.
+                return {
+                    ...hero,
+                    skills: flatSkills
+                };
+            });
+
+            this.sendSuccess(res, flattenedHeroes);
         });
     }
 

@@ -7,7 +7,6 @@ extends AtlasBase
 func setup_as_overlay(_data: Dictionary = {}):
     # Sembunyikan HUD internal saja, biarkan InfoPanel tetap bisa muncul
     if has_node("UI/TopHUD"): $UI/TopHUD.visible = false
-    if has_node("UI/SideHUD"): $UI/SideHUD.visible = false
     if has_node("UI/TaskListHUD"): $UI/TaskListHUD.visible = false
     
     # Map HARUS full screen (x=0), tidak boleh ada offset di root
@@ -26,12 +25,10 @@ func _ready():
     ui_panel.action_requested.connect(_on_action_requested)
     ui_panel.close_requested.connect(_on_close_panel_requested)
     travel_system.travel_finished.connect(_on_travel_finished)
+    ServerConnector.task_completed.connect(_on_task_completed)
     ServerConnector.request_completed.connect(_on_request_completed)
-    ServerConnector.task_completed.connect(func(d): 
-        if d.type == "TRAVEL": _on_travel_finished(int(d.targetRegionId), d.targetRegionType)
-    )
     
-    # 2. State Sync
+    # Cache references
     _spawn_map_elements()
     var is_busy = GameState.active_task and GameState.active_task.type == "TRAVEL"
     _update_player_position(is_busy)
@@ -70,8 +67,19 @@ func _on_request_completed(endpoint, data):
             print("[WorldAtlas] ERROR: Unknown data format for regions")
             push_error("[WorldAtlas] Unknown regions data format: " + str(data))
     elif endpoint.contains("/action/travel"): 
+        # [BUGFIX] Unwrap response wrapper standard (success, message, data)
+        var travel_data = data
+        if data is Dictionary and data.has("data"):
+            if data.get("success", true) == false:
+                # Handle Server Error logic (e.g. Not enough vitality)
+                push_error("[WorldAtlas] Travel Request Failed: " + str(data.get("message", "Unknown")))
+                ui_panel.start_btn.disabled = false
+                return
+            travel_data = data.get("data")
+            
+        print("[WorldAtlas] Starting Cinematic with Task Data: ", travel_data)
         player_marker.hide()
-        travel_system.start_cinematic(data)
+        travel_system.start_cinematic(travel_data)
 
 func _on_action_requested(rid):
     if rid == int(str(GameState.current_user.currentRegion).to_float()):
@@ -97,8 +105,19 @@ func _on_travel_finished(tid, t_type):
 func _route_to(r_type):
     get_tree().change_scene_to_file(GameState.get_region_scene(r_type))
 
+func _on_task_completed(d):
+    if d.type == "TRAVEL": 
+        _on_travel_finished(int(d.targetRegionId), d.targetRegionType)
+
 func _on_close_panel_requested():
     if UIManager.is_overlay_open("World"):
         UIManager.close_overlay("World")
     else:
         ui_panel.hide()
+
+func _exit_tree():
+    # Signal Cleanup penting untuk mencegah memory leak dan ghost calls
+    if ServerConnector.request_completed.is_connected(_on_request_completed):
+        ServerConnector.request_completed.disconnect(_on_request_completed)
+    if ServerConnector.task_completed.is_connected(_on_task_completed):
+        ServerConnector.task_completed.disconnect(_on_task_completed)

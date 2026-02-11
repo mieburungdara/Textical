@@ -2,11 +2,16 @@ extends VBoxContainer
 class_name SkillsTab
 
 ## SkillsTab - Component untuk menampilkan tab skills hero
-## Features: Active skills dan passive skills
+## Features: Active skills dan passive skills dengan visualisasi detail
+
+# === PRELOADS ===
+const SkillListItemScene = preload("res://src/ui/components/SkillListItem.tscn")
 
 # === NODE REFERENCES ===
-@onready var active_skills_content: VBoxContainer = $ActiveSkillsPanel/ActiveSkillsContent
-@onready var passive_skills_content: VBoxContainer = $PassiveSkillsPanel/PassiveSkillsContent
+@onready var active_list: VBoxContainer = $ScrollContainer/Content/ActiveSection/ActiveList
+@onready var passive_list: VBoxContainer = $ScrollContainer/Content/PassiveSection/PassiveList
+@onready var active_section: VBoxContainer = $ScrollContainer/Content/ActiveSection
+@onready var passive_section: VBoxContainer = $ScrollContainer/Content/PassiveSection
 
 # === PRIVATE VARIABLES ===
 var _current_hero: Dictionary = {}
@@ -21,67 +26,64 @@ func update_skills(hero_data: Dictionary):
 
 ## Clear semua content
 func clear_content():
-	_clear_active_skills()
-	_clear_passive_skills()
+	_clear_container(active_list)
+	_clear_container(passive_list)
 
 # === PRIVATE METHODS ===
 
 func _update_active_skills():
-	if not active_skills_content: return
+	if not active_list: return
 	
-	# Clear existing content
-	_clear_active_skills()
+	_clear_container(active_list)
 	
 	var skills = _current_hero.get("skills", [])
 	
 	if skills.is_empty():
 		var no_skills = Label.new()
-		no_skills.text = "No skills available"
+		no_skills.text = "No active skills learned."
 		no_skills.modulate = Color(0.5, 0.5, 0.5)
-		active_skills_content.add_child(no_skills)
+		no_skills.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		active_list.add_child(no_skills)
 	else:
 		for skill in skills:
-			var skill_name = ""
-			if skill is Dictionary:
-				skill_name = skill.get("name", "Unknown")
-			elif skill is String:
-				skill_name = skill
+			# Normalisasi data skill jika hanya string nama
+			var skill_data = {}
+			if skill is String:
+				skill_data = {"name": skill, "description": "Basic skill knowledge.", "element": "PHYSICAL"}
+			elif skill is Dictionary:
+				skill_data = skill
 			
-			var skill_label = Label.new()
-			skill_label.text = "• " + skill_name
-			active_skills_content.add_child(skill_label)
-
-func _clear_active_skills():
-	if not active_skills_content: return
-	for child in active_skills_content.get_children():
-		child.queue_free()
+			var item = SkillListItemScene.instantiate()
+			active_list.add_child(item)
+			item.setup(skill_data, false)
 
 func _update_passive_skills():
-	if not passive_skills_content: return
+	if not passive_list: return
 	
-	# Clear existing content
-	_clear_passive_skills()
+	_clear_container(passive_list)
 	
 	var passives = _current_hero.get("passives", [])
 	
 	if passives.is_empty():
 		var no_passives = Label.new()
-		no_passives.text = "No passive skills"
+		no_passives.text = "No passive traits."
 		no_passives.modulate = Color(0.5, 0.5, 0.5)
-		passive_skills_content.add_child(no_passives)
+		no_passives.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		passive_list.add_child(no_passives)
 	else:
 		for passive in passives:
-			var passive_name = ""
-			if passive is Dictionary:
-				passive_name = passive.get("name", "Unknown")
-			elif passive is String:
-				passive_name = passive
+			# Normalisasi
+			var passive_data = {}
+			if passive is String:
+				passive_data = {"name": passive, "description": "Inherent trait.", "category": "TRAIT"}
+			elif passive is Dictionary:
+				passive_data = passive
 			
-			var passive_item_label = Label.new()
-			passive_item_label.text = "• " + passive_name
-			passive_skills_content.add_child(passive_item_label)
+			var item = SkillListItemScene.instantiate()
+			passive_list.add_child(item)
+			item.setup(passive_data, true)
 
-func _clear_passive_skills():
-	if not passive_skills_content: return
-	for child in passive_skills_content.get_children():
+func _clear_container(container: Node):
+	if not container: return
+	for child in container.get_children():
 		child.queue_free()

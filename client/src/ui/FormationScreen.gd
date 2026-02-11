@@ -23,7 +23,6 @@ var heroes_loaded = false
 func setup_as_overlay(_data: Dictionary = {}):
     # Sembunyikan HUD internal
     if has_node("TopHUD"): $TopHUD.visible = false
-    if has_node("SideHUD"): $SideHUD.visible = false
     if has_node("TaskListHUD"): $TaskListHUD.visible = false
     
     if get_parent() is TabContainer:
