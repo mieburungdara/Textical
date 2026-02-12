@@ -16,8 +16,19 @@ class BattleController extends BaseController {
     async startBattle(req, res) {
         await this.execute(res, async () => {
             const { userId, monsterId } = req.body;
-            const result = await battleService.startBattle(parseInt(userId), parseInt(monsterId));
+            const result = await battleService.startAsyncBattle(parseInt(userId), parseInt(monsterId));
             this.sendSuccess(res, result);
+        });
+    }
+
+    /**
+     * Get current battle status (optional - for debugging/monitoring)
+     */
+    async getBattleStatus(req, res) {
+        await this.execute(res, async () => {
+            const { battleId } = req.params;
+            const status = battleService.getBattleStatus(battleId);
+            this.sendSuccess(res, status, "Battle status retrieved");
         });
     }
 

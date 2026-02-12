@@ -80,8 +80,9 @@ model User {
   // Social & Personalization
   settings     String            @default("{}") // JSON for user preferences (volume, graphics, etc.)
   friends      UserFriend[]      @relation("UserFriends")
-  friendedBy   UserFriend[]      @relation("FriendedBy")
+  friendedBy   UserFriend[]     @relation("FriendedBy")
   achievements UserAchievement[]
+  sessions     UserSession[]
 }
 
 model UserFriend {
@@ -1753,4 +1754,41 @@ model MonsterTerritoryBonus {
   bonus_effect    String? // Additional effect when in territory
 
   @@unique([monsterId, regionTypeId])
+}
+
+// === SINGLE-DEVICE LOGIN SECURITY MODELS ===
+
+model UserSession {
+  id            String    @id @default(uuid())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId      String    // Unique device identifier
+  deviceInfo    String    // Human-readable device info
+  deviceType    String    @default("DESKTOP") // DESKTOP, MOBILE, WEB
+  ipAddress     String
+  userAgent     String?
+  token         String    @unique // Session token
+  isActive      Boolean   @default(true)
+  lastHeartbeat DateTime @default(now())
+  createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+  expiresAt     DateTime
+
+  @@index([userId])
+  @@index([token])
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  username  String   // Even for failed attempts
+  ipAddress String
+  userAgent String?
+  success   Boolean
+  reason    String?  // Error reason for failed attempts
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([createdAt])
 }

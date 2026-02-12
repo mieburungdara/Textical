@@ -445,6 +445,17 @@ class GuildService {
     }
 
     /**
+     * Remove all members from a guild.
+     * Used internally by disbandGuild.
+     */
+    async removeMembersFromGuild(guildId) {
+        return await userRepository.updateManyUsers({
+            where: { guildId },
+            data: { guildId: null, guildRole: null }
+        });
+    }
+
+    /**
      * Disband the guild.
      */
     async disbandGuild(user) {
@@ -461,7 +472,7 @@ class GuildService {
         await prisma.guildPerk.deleteMany({ where: { guildId } });
         
         // Remove all members from guild
-        await userRepository.removeFromGuild(guildId);
+        await this.removeMembersFromGuild(guildId);
 
         // Delete guild
         await guildRepository.delete(guildId);

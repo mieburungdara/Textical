@@ -3,6 +3,14 @@ const router = express.Router();
 
 // Import Modular Controllers
 const userController = require('../controllers/userController');
+const sessionController = require('../controllers/SessionController');
+const heroController = require('../controllers/HeroController');
+const inventoryController = require('../controllers/InventoryController');
+const recipeController = require('../controllers/RecipeController');
+const formationController = require('../controllers/FormationController');
+const taskController = require('../controllers/TaskController');
+const socialController = require('../controllers/SocialController');
+const achievementController = require('../controllers/AchievementController');
 const assetController = require('../controllers/AssetController');
 const travelController = require('../controllers/TravelController');
 const gatheringController = require('../controllers/GatheringController');
@@ -11,7 +19,6 @@ const tavernController = require('../controllers/TavernController');
 const marketController = require('../controllers/MarketController');
 const questController = require('../controllers/QuestController');
 const battleController = require('../controllers/BattleController');
-const inventoryController = require('../controllers/InventoryController');
 const regionController = require('../controllers/RegionController');
 const equipmentController = require('../controllers/EquipmentController');
 const worldController = require('../controllers/WorldController');
@@ -25,19 +32,38 @@ router.get('/assets/manifest', (req, res) => assetController.getManifest(req, re
 router.get('/assets/templates/:category', (req, res) => assetController.getTemplates(req, res));
 router.get('/assets/raw/:category/:id', (req, res) => assetController.getRawAsset(req, res));
 
+// --- AUTH & SESSIONS ---
+router.post('/auth/login', (req, res) => sessionController.login(req, res));
+router.post('/auth/logout', (req, res) => sessionController.logout(req, res));
+router.get('/auth/sessions', (req, res) => sessionController.getActiveSessions(req, res));
+
 // --- USER ---
 router.use('/chat', chatRoutes);
 router.get('/world/state', (req, res) => worldController.getWorldState(req, res));
-router.post('/auth/login', (req, res) => userController.login(req, res));
 router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
-router.get('/user/:id/heroes', (req, res) => userController.getHeroes(req, res));
-router.get('/user/:id/inventory', (req, res) => userController.getInventory(req, res));
-router.get('/user/:id/recipes', (req, res) => userController.getRecipes(req, res));
-router.get('/user/:id/formation', (req, res) => userController.getFormation(req, res));
-router.get('/user/:id/task', (req, res) => userController.getActiveTask(req, res));
-router.get('/user/:id/friends', (req, res) => userController.getFriends(req, res));
-router.get('/user/:id/achievements', (req, res) => userController.getAchievements(req, res));
 router.post('/user/settings', (req, res) => userController.updateSettings(req, res));
+
+// --- HEROES ---
+router.get('/user/:id/heroes', (req, res) => heroController.getHeroes(req, res));
+router.get('/hero/:id/profile', (req, res) => heroController.getHeroProfile(req, res));
+
+// --- INVENTORY ---
+router.get('/user/:id/inventory', (req, res) => inventoryController.getInventory(req, res));
+
+// --- RECIPES ---
+router.get('/user/:id/recipes', (req, res) => recipeController.getRecipes(req, res));
+
+// --- FORMATION ---
+router.get('/user/:id/formation', (req, res) => formationController.getFormation(req, res));
+
+// --- TASKS ---
+router.get('/user/:id/task', (req, res) => taskController.getActiveTask(req, res));
+
+// --- SOCIAL ---
+router.get('/user/:id/friends', (req, res) => socialController.getFriends(req, res));
+
+// --- ACHIEVEMENTS ---
+router.get('/user/:id/achievements', (req, res) => achievementController.getAchievements(req, res));
 
 // --- REGIONS ---
 router.get('/regions', (req, res) => regionController.getAllRegions(req, res));
@@ -79,10 +105,12 @@ router.post('/quests/complete', (req, res) => questController.completeQuest(req,
 
 // --- BATTLE ---
 router.post('/battle/start', (req, res) => battleController.startBattle(req, res));
+router.post('/battle/start-async', (req, res) => battleController.startAsyncBattle(req, res));
+router.get('/battle/status/:battleId', (req, res) => battleController.getBattleStatus(req, res));
 router.get('/battle/replay/:battleId', (req, res) => battleController.getReplay(req, res));
 
 // --- HERO PROFILE ---
-router.get('/hero/:id/profile', (req, res) => userController.getHeroProfile(req, res));
+router.get('/hero/:id/profile', (req, res) => heroController.getHeroProfile(req, res));
 
 // --- STATS ---
 router.use('/stats', statRoutes);

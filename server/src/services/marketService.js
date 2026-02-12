@@ -33,16 +33,145 @@ class MarketService extends BaseService {
 
     /**
      * Purchase item from market.
+     * Buyer pays gold and receives the item.
      */
     async purchaseItem(userId, listingId) {
-        // TODO: Implement purchase logic
+        return await this.runTransaction(async (tx) => {
+            // 1. Get the listing
+            const listing = await tx.marketListing.findUnique({
+                where: { id: listingId },
+                include: { itemTemplate: true, seller: true }
+            });
+
+            if (!listing) {
+                throw new Error("Listing not found.");
+            }
+
+            if (listing.status !== 'ACTIVE') {
+                throw new Error("Listing is no longer available.");
+            }
+
+            if (listing.sellerId === userId) {
+                throw new Error("You cannot buy your own listing.");
+            }
+
+            // 2. Verify buyer has enough gold
+            const buyer = await tx.user.findUnique({ where: { id: userId } });
+            if (buyer.gold < listing.price) {
+                throw new Error(`Insufficient gold. Need ${listing.price}, have ${buyer.gold}`);
+            }
+
+            // 3. Transfer gold to seller
+            await tx.user.update({
+                where: { id: userId },
+                data: { gold: buyer.gold - listing.price }
+            });
+
+            await tx.user.update({
+                where: { id: listing.sellerId },
+                data: { gold: listing.seller.gold + listing.price }
+            });
+
+            // 4. Create item for buyer
+            const purchasedItem = await tx.inventoryItem.create({
+                data: {
+                    userId: userId,
+                    templateId: listing.itemTemplateId,
+                    quantity: listing.quantity,
+                    isEquipped: false
+                }
+            });
+
+            // 5. Update listing status
+            await tx.marketListing.update({
+                where: { id: listingId },
+                data: { status: 'SOLD' }
+            });
+
+            // 6. Log transaction
+            await tx.transactionLedger.create({
+                data: {
+                    userId,
+                    type: 'MARKET_BUY',
+                    currencyTier: 'GOLD',
+                    amountDelta: -listing.price,
+                    newBalance: buyer.gold - listing.price,
+                    metadata: JSON.stringify({
+                        listingId,
+                        itemId: listing.itemTemplateId,
+                        quantity: listing.quantity,
+                        sellerId: listing.sellerId
+                    })
+                }
+            });
+
+            this.log(`User ${userId} purchased ${listing.quantity}x ${listing.itemTemplate.name} for ${listing.price} gold from user ${listing.sellerId}`, "Market");
+
+            return { success: true, item: purchasedItem, cost: listing.price };
+        });
     }
 
     /**
      * Sell item to NPC.
+     * Instant sell with 90% penalty (10% of base value).
      */
     async npcSell(userId, itemId) {
-        // TODO: Implement NPC sell logic
+        return await this.runTransaction(async (tx) => {
+            // 1. Get the item
+            const item = await tx.inventoryItem.findUnique({
+                where: { id: itemId },
+                include: { template: true }
+            });
+
+            if (!item) {
+                throw new Error("Item not found in inventory.");
+            }
+
+            if (item.userId !== userId) {
+                throw new Error("Item does not belong to you.");
+            }
+
+            if (item.isEquipped) {
+                throw new Error("Cannot sell equipped items.");
+            }
+
+            // 2. Calculate NPC sell price (90% penalty)
+            const baseValue = item.template.baseValue || 1;
+            const sellPrice = Math.floor(baseValue * 0.9);
+
+            // 3. Update user gold
+            const user = await tx.user.findUnique({ where: { id: userId } });
+            await tx.user.update({
+                where: { id: userId },
+                data: { gold: user.gold + sellPrice }
+            });
+
+            // 4. Remove item from inventory
+            await tx.inventoryItem.delete({
+                where: { id: itemId }
+            });
+
+            // 5. Log transaction
+            await tx.transactionLedger.create({
+                data: {
+                    userId,
+                    type: 'NPC_SELL',
+                    currencyTier: 'GOLD',
+                    amountDelta: sellPrice,
+                    newBalance: user.gold + sellPrice,
+                    metadata: JSON.stringify({
+                        itemId,
+                        itemName: item.template.name,
+                        baseValue,
+                        sellPrice
+                    })
+                }
+            });
+
+            this.log(`User ${userId} sold ${item.template.name} to NPC for ${sellPrice} gold (base: ${baseValue})`, "Market");
+
+            return { success: true, itemName: item.template.name, sellPrice };
+        });
     }
 
     /**
@@ -91,8 +220,65 @@ class MarketService extends BaseService {
         });
     }
 
+    /**
+     * Cancel an order and refund escrow.
+     */
     async cancelOrder(userId, orderId) {
-        // Implement cancellation logic (refunding escrow or unlocking items)
+        return await this.runTransaction(async (tx) => {
+            // 1. Get the order
+            const order = await tx.marketOrder.findUnique({
+                where: { id: orderId }
+            });
+
+            if (!order) {
+                throw new Error("Order not found.");
+            }
+
+            if (order.creatorId !== userId) {
+                throw new Error("You can only cancel your own orders.");
+            }
+
+            if (order.status !== 'OPEN') {
+                throw new Error("Only open orders can be cancelled.");
+            }
+
+            // 2. Refund escrow
+            const user = await tx.user.findUnique({ where: { id: userId } });
+            const escrowRefund = order.quantity * order.pricePerUnit;
+
+            await tx.user.update({
+                where: { id: userId },
+                data: { gold: user.gold + escrowRefund }
+            });
+
+            // 3. Update order status
+            await tx.marketOrder.update({
+                where: { id: orderId },
+                data: { status: 'CANCELLED' }
+            });
+
+            // 4. Log transaction
+            await tx.transactionLedger.create({
+                data: {
+                    userId,
+                    type: 'ORDER_CANCEL',
+                    currencyTier: 'GOLD',
+                    amountDelta: escrowRefund,
+                    newBalance: user.gold + escrowRefund,
+                    metadata: JSON.stringify({
+                        orderId,
+                        orderType: order.type,
+                        itemTemplateId: order.itemTemplateId,
+                        quantity: order.quantity,
+                        pricePerUnit: order.pricePerUnit
+                    })
+                }
+            });
+
+            this.log(`User ${userId} cancelled order ${orderId}, refunded ${escrowRefund} gold`, "Market");
+
+            return { success: true, refundedAmount: escrowRefund };
+        });
     }
 }
 

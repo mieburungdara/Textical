@@ -1,56 +1,125 @@
 /**
- * ElementalResolver
+ * ElementalResolver (v2.0 - Enhanced DARK Element System)
  * Handles elemental damage calculations, resistances, and weakness interactions.
- * Supports the 6 elements: Fire, Water, Earth, Wind, Light, Dark
+ * Supports the 7 elements: Fire, Water, Earth, Wind, Lightning, Light, Dark + NEUTRAL
+ * 
+ * Element Relationships:
+ * - FIRE > NATURE (1.5x), FIRE < WATER (0.5x)
+ * - WATER > FIRE (1.5x), WATER < EARTH (0.5x)
+ * - NATURE > EARTH (1.5x), NATURE < FIRE (0.5x)
+ * - EARTH > LIGHTNING (1.5x), EARTH < WIND (none, 1.0x)
+ * - LIGHTNING > WATER (1.5x), LIGHTNING < EARTH (0.5x)
+ * - LIGHT: Strategic element - neutral vs DARK, excels at purification
+ * - DARK: Strong vs LIGHT (1.5x), excels at DoT and debuffs
  */
 class ElementalResolver {
     /**
-     * Element types enumeration
+     * Element types enumeration (aligned with combatRules.js)
      * @enum {string}
      */
     static Element = {
+        NEUTRAL: 'neutral',
         FIRE: 'fire',
         WATER: 'water',
         EARTH: 'earth',
         WIND: 'wind',
+        LIGHTNING: 'lightning',
         LIGHT: 'light',
         DARK: 'dark'
     };
 
     /**
+     * Element ID mapping (for database storage, aligned with combatRules.ELEMENTS)
+     */
+    static ElementId = {
+        neutral: 0,
+        fire: 1,
+        water: 2,
+        nature: 3,
+        earth: 4,
+        lightning: 5,
+        light: 6,
+        dark: 7
+    };
+
+    /**
+     * Element display names for UI
+     */
+    static ElementDisplay = {
+        neutral: 'Neutral',
+        fire: 'Fire',
+        water: 'Water',
+        earth: 'Earth',
+        wind: 'Wind',
+        lightning: 'Lightning',
+        light: 'Light',
+        dark: 'Dark'
+    };
+
+    /**
+     * Element colors for UI/Visual feedback
+     */
+    static ElementColor = {
+        neutral: '#808080',
+        fire: '#ff4444',
+        water: '#4444ff',
+        earth: '#8B4513',
+        wind: '#90EE90',
+        lightning: '#FFFF00',
+        light: '#FFD700',
+        dark: '#4a154b'
+    };
+
+    /**
      * Elemental interaction relationships (attacker -> target)
      * Each element has advantage/disadvantage against others
+     * Updated to align with combatRules.js ELEMENTAL_EFFECTIVENESS
      */
     static INTERACTIONS = {
         fire: {
             weakAgainst: 'water',
-            strongAgainst: 'wind',
-            neutral: ['earth', 'light', 'dark']
+            strongAgainst: 'nature',
+            neutral: ['earth', 'lightning', 'light', 'dark', 'neutral']
         },
         water: {
             weakAgainst: 'earth',
             strongAgainst: 'fire',
-            neutral: ['wind', 'light', 'dark']
+            neutral: ['wind', 'lightning', 'light', 'dark', 'neutral']
         },
         earth: {
             weakAgainst: 'wind',
-            strongAgainst: 'water',
-            neutral: ['fire', 'light', 'dark']
+            strongAgainst: 'lightning',
+            neutral: ['fire', 'water', 'nature', 'light', 'dark', 'neutral']
         },
         wind: {
+            weakAgainst: 'earth',
+            strongAgainst: 'fire',
+            neutral: ['water', 'nature', 'lightning', 'light', 'dark', 'neutral']
+        },
+        lightning: {
+            weakAgainst: 'earth',
+            strongAgainst: 'water',
+            neutral: ['fire', 'wind', 'nature', 'light', 'dark', 'neutral']
+        },
+        nature: {
             weakAgainst: 'fire',
             strongAgainst: 'earth',
-            neutral: ['water', 'light', 'dark']
+            neutral: ['water', 'wind', 'lightning', 'light', 'dark', 'neutral']
         },
         light: {
-            weakAgainst: 'dark',
-            strongAgainst: 'dark',
-            neutral: ['fire', 'water', 'earth', 'wind']
+            weakAgainst: 'dark',  // Light is weak against dark attacks
+            strongAgainst: [],     // Light wins through utility, not raw damage
+            neutral: ['fire', 'water', 'earth', 'wind', 'lightning', 'nature', 'neutral'],
+            // Light gets bonus vs Undead and Demon types
+            typeBonus: { undead: 1.5, demon: 1.5 }
         },
         dark: {
             weakAgainst: 'light',
-            strongAgainst: 'light',
-            neutral: ['fire', 'water', 'earth', 'wind']
+            strongAgainst: 'light',  // Dark has advantage vs light
+            neutral: ['fire', 'water', 'earth', 'wind', 'lightning', 'nature', 'neutral'],
+            // Dark excels at DoT and debuffs
+            isDoTElement: true,
+            debuffBonus: 0.25
         }
     };
 
@@ -61,7 +130,10 @@ class ElementalResolver {
         STRONG: 1.5,      // Advantage
         WEAK: 0.5,        // Disadvantage
         NEUTRAL: 1.0,     // No bonus/penalty
-        IMMUNE: 0.0       // Complete resistance
+        IMMUNE: 0.0,     // Complete resistance
+        TYPE_BONUS: 1.5,  // Bonus vs specific monster types (e.g., Light vs Undead)
+        NIGHT_BONUS: 1.25, // Environmental bonus at night
+        DAY_BONUS: 1.25    // Environmental bonus during day
     };
 
     /**

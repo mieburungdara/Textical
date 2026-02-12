@@ -11,7 +11,12 @@ signal world_state_updated(state)
 signal heroes_loaded(count: int)
 signal heroes_loading_failed(error: String)
 
+signal session_expired(reason: String)
+signal force_logout(reason: String)
+
 var current_user = null
+var session_token: String = ""
+var session_expires_at: int = 0
 var current_heroes = []
 var _heroes_loading = false
 var _heroes_loaded_from_server = false
@@ -129,6 +134,17 @@ func set_user(data):
     var user_data = data.get("data", data)
     current_user = user_data
     
+    # Handle session data if present (new login flow)
+    if data.has("session"):
+        var session_data = data.session
+        session_token = session_data.get("token", "")
+        # Parse expiresAt timestamp
+        var expires_at_str = session_data.get("expiresAt", "")
+        if expires_at_str and expires_at_str is String:
+            # Parse ISO8601 date string
+            var date = Time.parse_datetime(expires_at_str)
+            session_expires_at = Time.get_unix_time_from_datetime(date)
+    
     # Load settings if present
     if user_data.has("settings"):
         var settings_str = user_data.settings
@@ -145,6 +161,23 @@ func set_user(data):
         ServerConnector.fetch_achievements(user_id)
     
     set_active_task(user_data.get("activeTask"))
+
+func clear_session():
+    session_token = ""
+    session_expires_at = 0
+    
+func is_session_valid() -> bool:
+    if session_token.is_empty(): return false
+    if session_expires_at == 0: return true
+    return Time.get_unix_time() < session_expires_at
+
+func emit_session_expired(reason: String):
+    session_expired.emit(reason)
+    clear_session()
+
+func emit_force_logout(reason: String):
+    force_logout.emit(reason)
+    clear_session()
 
 func _on_global_task_completed(data):
     if data.type == "TRAVEL":

@@ -28,6 +28,12 @@ class BattleSimulation {
         this.unitDeeds = {};
         this.rewards = { gold: 0, exp: 0 };
         this.terrainEffects = []; 
+        
+        // AAA: Battle Registry Tracking
+        this.startTime = Date.now();
+        this.userId = null;  // Set when battle starts
+        this.battleType = "SOLO";  // SOLO, HORDE, PVP
+ 
 
         // Core Infrastructure
         this.grid = new BattleGrid(width, height);

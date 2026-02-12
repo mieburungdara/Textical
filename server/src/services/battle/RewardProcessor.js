@@ -1,15 +1,51 @@
 const BaseService = require('../BaseService');
 const progressionService = require('../progressionService');
 const inventoryService = require('../inventoryService');
+const consumableService = require('../consumableService');
 const koManager = require('../vitality/KOManager');
 const lootService = require('../logistics/LootService');
 const bountyService = require('../social/BountyService');
 const siegeService = require('../guild/SiegeService');
 
 class RewardProcessor extends BaseService {
+    /**
+     * AAA: Health Potion System - Calculate total potions used in battle
+     * @param {Array} units - Battle units (player team)
+     * @returns {number} Total potions used
+     */
+    _calculatePotionsUsed(units) {
+        if (!units) return 0;
+        return units.reduce((total, unit) => {
+            return total + (unit.potionUsedInBattle || 0);
+        }, 0);
+    }
+
+    /**
+     * AAA: Deduct potions from inventory after battle
+     * @param {number} userId 
+     * @param {number} totalUsed 
+     */
+    async _deductPotions(userId, totalUsed) {
+        if (totalUsed <= 0) return;
+        
+        try {
+            await consumableService.consumeItem(userId, consumableService.ITEM_IDS.HEALTH_POTION, totalUsed);
+            this.log(`Deducted ${totalUsed} Health Potion(s) from user ${userId}`, "POTION");
+        } catch (error) {
+            this.log(`Failed to deduct potions: ${error.message}`, "POTION_ERROR");
+            // Could trigger compensation or notification here if needed
+        }
+    }
+
     async process(userId, battleResult, monsterTemplate, partyCount) {
         let lootEarned = [];
         let heroResults = [];
+        let potionUsedTotal = 0;
+
+        // AAA: Calculate potions used (from initial units tracking)
+        if (battleResult.initialUnits) {
+            potionUsedTotal = this._calculatePotionsUsed(battleResult.initialUnits.filter(u => u.teamId === 0));
+        }
 
         const user = await this.db.user.findUnique({
             where: { id: userId },
@@ -140,7 +176,12 @@ class RewardProcessor extends BaseService {
             }
         }
 
-        return { lootEarned, heroResults };
+        // AAA: Deduct potions AFTER reward processing
+        if (potionUsedTotal > 0) {
+            await this._deductPotions(userId, potionUsedTotal);
+        }
+
+        return { lootEarned, heroResults, potionsUsed: potionUsedTotal };
     }
 
     async _executePermadeath(heroId) {

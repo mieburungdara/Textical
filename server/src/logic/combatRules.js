@@ -2,19 +2,89 @@ const traitService = require('../services/traitService');
 
 /**
  * AAA Combat Rules (v3.0 - Professional Standard)
+ * Updated v3.1: DARK Element System
+ * 
+ * Element System:
+ * - NEUTRAL: No elemental bonuses
+ * - FIRE: Strong vs NATURE, Weak vs WATER
+ * - WATER: Strong vs FIRE, Weak vs EARTH
+ * - NATURE: Strong vs EARTH, Weak vs FIRE
+ * - EARTH: Strong vs LIGHTNING, Weak vs WIND
+ * - LIGHTNING: Strong vs WATER, Weak vs EARTH
+ * - LIGHT: Strategic element - excels at healing/purification, neutral vs DARK
+ * - DARK: Strong vs LIGHT (1.5x), excels at DoT and debuffs
  */
 class CombatRules {
-    static ELEMENTS = { NEUTRAL: 0, FIRE: 1, WATER: 2, NATURE: 3, EARTH: 4, LIGHTNING: 5, HOLY: 6, VOID: 7 };
+    static ELEMENTS = { NEUTRAL: 0, FIRE: 1, WATER: 2, NATURE: 3, EARTH: 4, LIGHTNING: 5, LIGHT: 6, DARK: 7 };
 
     static ELEMENTAL_EFFECTIVENESS = {
-        [this.ELEMENTS.NEUTRAL]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.FIRE]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 0.5, [this.ELEMENTS.NATURE]: 1.5, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.WATER]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.5, [this.ELEMENTS.WATER]: 0.5, [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 0.5, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.NATURE]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 1.0, [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 1.5, [this.ELEMENTS.LIGHTNING]: 1.0, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.EARTH]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 1.5, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.LIGHTNING]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.5, [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 0.5, [this.ELEMENTS.HOLY]: 1.0, [this.ELEMENTS.VOID]: 1.0 },
-        [this.ELEMENTS.HOLY]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, [this.ELEMENTS.HOLY]: 0.5, [this.ELEMENTS.VOID]: 1.5 },
-        [this.ELEMENTS.VOID]: { [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, [this.ELEMENTS.HOLY]: 0.5, [this.ELEMENTS.VOID]: 0.5 }
+        // NEUTRAL: No bonuses or penalties against any element
+        [this.ELEMENTS.NEUTRAL]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
+            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // FIRE: Strong vs NATURE (1.5x), Weak vs WATER (0.5x)
+        [this.ELEMENTS.FIRE]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 0.5, 
+            [this.ELEMENTS.NATURE]: 1.5, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // WATER: Strong vs FIRE (1.5x), Weak vs EARTH (0.5x)
+        [this.ELEMENTS.WATER]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.5, [this.ELEMENTS.WATER]: 0.5, 
+            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 0.5, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // NATURE: Strong vs EARTH (1.5x), Weak vs FIRE (0.5x)
+        [this.ELEMENTS.NATURE]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 1.0, 
+            [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 1.5, [this.ELEMENTS.LIGHTNING]: 1.0, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // EARTH: Strong vs LIGHTNING (1.5x), Weak vs WIND (none, default 1.0)
+        [this.ELEMENTS.EARTH]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
+            [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 1.5, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // LIGHTNING: Strong vs WATER (1.5x), Weak vs EARTH (0.5x)
+        [this.ELEMENTS.LIGHTNING]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.5, 
+            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 0.5, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
+        },
+        // LIGHT: Strategic element - neutral vs DARK, but excels at purification
+        // Note: LIGHT gets bonus vs UNDEAD/DEMON types regardless of element
+        [this.ELEMENTS.LIGHT]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
+            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
+            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0  // Neutral - LIGHT wins through utility
+        },
+        // DARK: Strong vs LIGHT (1.5x), excels at DoT and debuffs
+        [this.ELEMENTS.DARK]: { 
+            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
+            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
+            [this.ELEMENTS.LIGHT]: 1.5, [this.ELEMENTS.DARK]: 1.0  // Strong advantage vs LIGHT
+        }
+    };
+
+    /**
+     * Environmental modifiers (Day/Night cycle)
+     */
+    static ENVIRONMENTAL_MODIFIERS = {
+        DAY: { LIGHT: 1.25, DARK: 0.75 },   // LIGHT stronger during day
+        NIGHT: { LIGHT: 0.75, DARK: 1.25 },  // DARK stronger during night
+        DUSK: { LIGHT: 0.9, DARK: 1.1 },     // Slight DARK bonus at dusk
+        DAWN: { LIGHT: 1.1, DARK: 0.9 }      // Slight LIGHT bonus at dawn
+    };
+
+    /**
+     * Bonus vs Undead/Demon types (for LIGHT element)
+     */
+    static TYPE_BONUSES = {
+        LIGHT: { UNDEAD: 1.5, DEMON: 1.5 },  // LIGHT purifies undead and demons
+        DARK: { UNDEAD: 1.0, DEMON: 1.0 }    // DARK has no special type bonus
     };
 
     static calculateDamage(attacker, defender, dmgMult = 1.0, element = 0, sim = null) {

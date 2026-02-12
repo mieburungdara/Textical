@@ -3,6 +3,8 @@ const heroRepository = require('../repositories/heroRepository');
 const inventoryRepository = require('../repositories/inventoryRepository');
 const evolutionService = require('./evolutionService');
 const lootService = require('./lootService');
+const LevelCalculator = require('../logic/progression/LevelCalculator');
+const permadeathService = require('./PermadeathService');
 
 class RewardService {
     async processPostBattle(user, result, mode) {
@@ -13,16 +15,14 @@ class RewardService {
         const alerts = { evolution: [], death: [] };
 
         for (let hero of user.heroes) {
-            // 1. Permadeath
+            // 1. Permadeath - delegated to PermadeathService
             if (deadHeroIds.includes(hero.id) && mode === "ADVENTURE") {
-                const isLegendary = hero.level >= 100 && hero.classTier >= 3;
-                if (isLegendary) await heroRepository.archiveToHallOfFame(hero, user.username, "Killed in Adventure");
-                await heroRepository.delete(hero.id);
-                alerts.death.push({ name: hero.name, isLegendary });
+                const deathResult = await permadeathService.processDeath(hero, user.username, "Killed in Adventure");
+                alerts.death.push(deathResult);
                 continue;
             }
 
-            // 2. Deeds & Evolution
+            // 2. Deeds & Evolution aggregation
             const simDeeds = result.unitDeeds[`p_hero_${hero.id}`] || {};
             const currentDeeds = JSON.parse(hero.deeds || "{}");
             Object.entries(simDeeds).forEach(([key, val]) => { currentDeeds[key] = (currentDeeds[key] || 0) + val; });
@@ -30,21 +30,19 @@ class RewardService {
             const update = evolutionService.processEvolution({ ...hero, deeds: JSON.stringify(currentDeeds) });
             if (update.newlyUnlocked.length > 0) alerts.evolution.push({ name: hero.name, unlocked: update.newlyUnlocked });
             
-            // Handle XP and Level Up (Logic moved here from progressionManager)
-            let currentExp = hero.exp + (result.rewards.exp || 0);
-            let currentLevel = hero.level;
-            while (currentExp >= currentLevel * 100) {
-                currentExp -= currentLevel * 100;
-                currentLevel++;
-            }
+            // 3. XP and Level Up - using LevelCalculator for SRP
+            const { newLevel, newExp } = LevelCalculator.calculateLevelUp(
+                hero.exp,
+                hero.level,
+                result.rewards.exp || 0
+            );
 
             // Save updates
             await heroRepository.updateProgression(hero.id, currentDeeds, update.acquiredTraits, update.unlockedBehaviors);
-            // Need a new method or use updateLineage for XP
-            await heroRepository.updateLineage(hero.id, { level: currentLevel, exp: currentExp });
+            await heroRepository.updateLineage(hero.id, { level: newLevel, exp: newExp });
         }
 
-        // 3. Gold & Items
+        // 4. Gold & Items
         const totalGold = user.gold + (result.rewards.gold || 0);
         await userRepository.updateGold(user.id, totalGold);
 

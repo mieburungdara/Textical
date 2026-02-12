@@ -41,14 +41,14 @@ async function main() {
     { id: 9409, name: "Venom Strike", category: "ACTIVE", type: "DAMAGE", description: "Poisoned strike that deals damage over time.", multiplier: 1.3, status_effect: { type: "POISON", power: 10, duration: 3 } },
     { id: 9410, name: "Poison Cloud", category: "ACTIVE", type: "DAMAGE", description: "Toxic gas poisons all enemies in area.", multiplier: 0.8, aoe_pattern: "RING", aoe_size: 3, status_effect: { type: "POISON", power: 15, duration: 3 }, element: 5 },
     { id: 9411, name: "Plague", category: "ACTIVE", type: "DAMAGE", description: "Deadly disease spreads to all enemies.", multiplier: 0.6, aoe_pattern: "CROSS", aoe_size: 4, status_effect: { type: "POISON", power: 20, duration: 5 }, element: 5 },
-    // Holy Element
+    // Holy Element (now LIGHT)
     { id: 9412, name: "Holy Light", category: "ACTIVE", type: "HEAL", description: "Divine light heals single target.", power: 35, element: 6 },
     { id: 9413, name: "Divine Beam", category: "ACTIVE", type: "DAMAGE", description: "Beam of holy energy strikes enemies.", multiplier: 2.0, aoe_pattern: "LINE", aoe_size: 5, element: 6 },
     { id: 9414, name: "Sanctuary", category: "ACTIVE", type: "HEAL", description: "Holy aura heals all allies in area.", power: 25, aoe_pattern: "RING", aoe_size: 3, element: 6 },
-    // Dark Element
-    { id: 9415, name: "Shadow Bolt", category: "ACTIVE", type: "DAMAGE", description: "Bolt of shadow energy strikes target.", multiplier: 1.8, element: 3 },
-    { id: 9416, name: "Dark Pulse", category: "ACTIVE", type: "DAMAGE", description: "Wave of dark energy damages all enemies.", multiplier: 1.3, aoe_pattern: "RING", aoe_size: 2, element: 3 },
-    { id: 9417, name: "Void", category: "ACTIVE", type: "DAMAGE", description: "Void energy tears through all enemies.", multiplier: 2.5, aoe_pattern: "SQUARE", aoe_size: 3, element: 3, mana_cost: 50 },
+    // Dark Element (replaces VOID)
+    { id: 9415, name: "Shadow Bolt", category: "ACTIVE", type: "DAMAGE", description: "Bolt of shadow energy strikes target.", multiplier: 1.8, element: 7 },
+    { id: 9416, name: "Dark Pulse", category: "ACTIVE", type: "DAMAGE", description: "Wave of dark energy damages all enemies.", multiplier: 1.3, aoe_pattern: "RING", aoe_size: 2, element: 7 },
+    { id: 9417, name: "Void", category: "ACTIVE", type: "DAMAGE", description: "Void energy tears through all enemies.", multiplier: 2.5, aoe_pattern: "SQUARE", aoe_size: 3, element: 7, mana_cost: 50 },
     // Buff/Debuff Skills (Phase 2)
     // Self-Buffs
     { id: 9601, name: "Rage Mode", category: "ACTIVE", type: "BUFF", description: "Enter rage: +50% ATK, -20% DEF.", duration: 5, statKey: "attack_damage_mult", statValue: 0.50, statKey2: "defense_mult", statValue2: -0.20 },

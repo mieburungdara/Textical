@@ -41,14 +41,14 @@ class UserRepository {
     async updateLocation(id, regionId) {
         const userId = parseInt(id);
         const rId = parseInt(regionId);
-        return await prisma.user.update({ where: { id: userId }, data: { currentRegion: rId } });
+        return await this.db.user.update({ where: { id: userId }, data: { currentRegion: rId } });
     }
 
-    async removeFromGuild(guildId) {
-        return await prisma.user.updateMany({
-            where: { guildId },
-            data: { guildId: null, guildRole: null }
-        });
+    /**
+     * Update many users at once (used by guildService for mass updates)
+     */
+    async updateManyUsers(args) {
+        return await this.db.user.updateMany(args);
     }
 }
 

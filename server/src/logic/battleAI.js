@@ -3,12 +3,29 @@ const traitService = require('../services/traitService');
 const btManager = require('./bt/BTManager');
 const AStarMovement = require('./movement/AStarMovement');
 const skillExecutor = require('./rules/skillExecutor');
+const PotionDecisionEngine = require('./ai/PotionDecisionEngine');
 
 class BattleAI {
     constructor(sim) {
         this.sim = sim;
         // Default Strategy
         this.defaultMovement = new AStarMovement(sim);
+        // AAA: Potion AI - extracted to separate class
+        this.potionEngine = new PotionDecisionEngine({ hpThreshold: 0.35 });
+    }
+
+    /**
+     * AAA: AI Decision to use health potion - delegated to PotionDecisionEngine
+     */
+    shouldUsePotion(actor) {
+        return this.potionEngine.shouldUsePotion(actor, this.sim);
+    }
+
+    /**
+     * AAA: Execute potion usage - delegated to PotionDecisionEngine
+     */
+    executePotionUse(actor) {
+        return this.potionEngine.executePotionUse(actor, this.sim);
     }
 
     decideAction(actor) {
@@ -20,6 +37,20 @@ class BattleAI {
             // Clear current target to force re-finding
             const blackboard = btManager.blackboards[actor.instanceId];
             if (blackboard) blackboard.set('target', null);
+        }
+
+        // AAA: Potion Decision - delegated to PotionDecisionEngine
+        if (this.shouldUsePotion(actor)) {
+            const actualHeal = this.executePotionUse(actor);
+            this.sim.logger.addEvent("AI", `[AI_POTION] ${actor.data.name} used potion (healed ${actualHeal} HP)`, {
+                unitId: actor.instanceId,
+                heroId: actor.heroId,
+                hpPercent: (actor.currentHealth / (actor.getStat("health_max") || actor.stats.health_max || 100)) * 100
+            });
+            // Potion use counts as an action - set delay
+            actor.setActionDelay(1, this.sim);
+            traitService.executeHook("onPostAction", actor, this.sim);
+            return true;
         }
 
         if (!actor.temporaryStats) {

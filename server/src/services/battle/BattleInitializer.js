@@ -3,6 +3,7 @@ const BattleSimulation = require('../../logic/battleSimulation');
 const formationService = require('../formationService');
 const vitalityService = require('../vitalityService');
 const worldSpawner = require('../worldSpawnerService');
+const consumableService = require('../consumableService');
 
 class BattleInitializer extends BaseService {
     constructor() {
@@ -10,6 +11,21 @@ class BattleInitializer extends BaseService {
         this.BATTLE_VITALITY_COST = 5;
         this.GRID_WIDTH = 50;
         this.GRID_HEIGHT = 50;
+    }
+
+    /**
+     * AAA: Snapshot inventory potions for a user before battle
+     * This allows AI to use potions during battle without database queries
+     */
+    async snapshotUserPotions(userId) {
+        const potions = await consumableService.getUserPotions(userId);
+        
+        return {
+            healthPotions: potions.healthPotions || 0,
+            healingPotions: potions.healingPotions || 0,
+            manaPotions: potions.manaPotions || 0,
+            snapshotAt: Date.now()
+        };
     }
 
     async setupHordeSimulation(userId, monsterTemplateIds) {
@@ -40,6 +56,9 @@ class BattleInitializer extends BaseService {
             }
         }
 
+        // AAA: Snapshot potions BEFORE setting up simulation
+        const potionSnapshot = await this.snapshotUserPotions(userId);
+
         // 2. Setup Simulation
         const regionTemplate = await this.db.regionTemplate.findUnique({
             where: { id: user.currentRegion },
@@ -51,6 +70,8 @@ class BattleInitializer extends BaseService {
         
         const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
         sim.terrainEffects = terrainEffects;
+        sim.potionSnapshot = potionSnapshot; // AAA: Store snapshot in simulation
+        sim.userId = userId; // AAA: Store userId for potion deduction
 
         // Add Heroes (Team 0)
         for (const p of party) {
@@ -81,6 +102,7 @@ class BattleInitializer extends BaseService {
             await sim.addUnit({
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 db_id: p.profile.id,
+                heroId: p.profile.id,  // AAA: Add heroId for potion tracking
                 isMain: p.profile.isMain,
                 name: p.profile.name,
                 bt_tree: "SimpleAI",
@@ -124,7 +146,7 @@ class BattleInitializer extends BaseService {
             }, 1, { x: 25, y: 5 }, monsterStats);
         }
 
-        return { sim };
+        return { sim, potionSnapshot };
     }
 
     async setupSimulation(userId, monsterTemplateId) {
@@ -175,6 +197,9 @@ class BattleInitializer extends BaseService {
             }
         }
 
+        // AAA: Snapshot potions BEFORE setting up simulation
+        const potionSnapshot = await this.snapshotUserPotions(userId);
+
         // 2. Resource Consumption
         await vitalityService.syncUserVitality(userId);
         await vitalityService.consumeVitality(userId, this.BATTLE_VITALITY_COST);
@@ -190,6 +215,8 @@ class BattleInitializer extends BaseService {
         
         const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
         sim.terrainEffects = terrainEffects;
+        sim.potionSnapshot = potionSnapshot; // AAA: Store snapshot in simulation
+        sim.userId = userId; // AAA: Store userId for potion deduction
 
         // Add Heroes
         for (const p of party) {
@@ -214,6 +241,7 @@ class BattleInitializer extends BaseService {
             await sim.addUnit({
                 instance_id: `hero_${p.profile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
                 db_id: p.profile.id, // Keep track of DB ID for persistence
+                heroId: p.profile.id, // AAA: Add heroId for potion tracking
                 isMain: p.profile.isMain, // AAA: Unit Utama Identification
                 name: p.profile.name,
                 bt_tree: "SimpleAI",
@@ -252,7 +280,7 @@ class BattleInitializer extends BaseService {
             ]
         }, 1, { x: 25, y: 5 }, monsterStats);
 
-        return { sim, monsterTemplate };
+        return { sim, monsterTemplate, potionSnapshot };
     }
 }
 

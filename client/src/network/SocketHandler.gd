@@ -10,6 +10,11 @@ signal chat_message(data)
 signal chat_typing(data)
 signal chat_error(data)
 
+# === SESSION SIGNALS ===
+signal session_disconnecting(reason: String, message: String)
+signal force_logout(reason: String)
+signal session_expired(reason: String)
+
 # === GUILD SIGNALS ===
 signal guild_created(guild_data)
 signal guild_left()
@@ -47,9 +52,20 @@ var socket: WebSocketPeer = WebSocketPeer.new()
 var is_socket_connected = false
 var is_authenticated = false
 var _pending_user_id = -1
+var _heartbeat_timer: Timer = null
+var _disconnect_countdown_timer: Timer = null
+var _disconnect_countdown_label: Label = null
 
 func _ready():
     set_process(true)
+    _setup_heartbeat_timer()
+
+func _setup_heartbeat_timer():
+    _heartbeat_timer = Timer.new()
+    _heartbeat_timer.name = "HeartbeatTimer"
+    _heartbeat_timer.wait_time = 25.0  # Send heartbeat every 25 seconds
+    _heartbeat_timer.timeout.connect(_send_heartbeat)
+    add_child(_heartbeat_timer)
 
 func connect_to_server():
     var state = socket.get_ready_state()
@@ -77,10 +93,21 @@ func _process(_delta):
             
     elif state == WebSocketPeer.STATE_CLOSED:
         if is_socket_connected:
-            is_socket_connected = false
-            is_authenticated = false
-            disconnected.emit()
-            print("[SOCKET] Connection Lost.")
+            _cleanup_connection()
+
+func _cleanup_connection():
+    is_socket_connected = false
+    is_authenticated = false
+    
+    # Stop heartbeat
+    if _heartbeat_timer and is_instance_valid(_heartbeat_timer): 
+        _heartbeat_timer.stop()
+    
+    # Stop countdown if running
+    _stop_disconnect_countdown()
+    
+    disconnected.emit()
+    print("[SOCKET] Connection Lost.")
 
 func _on_data(raw_data: String):
     if raw_data.begins_with("0"): 
@@ -91,7 +118,7 @@ func _on_data(raw_data: String):
         print("[SOCKET] Namespace Ready. Processing pending auth...")
         if _pending_user_id != -1:
             _send_auth(_pending_user_id)
-        
+            
     elif raw_data.begins_with("42"): 
         var payload = raw_data.substr(2)
         var json = JSON.parse_string(payload)
@@ -107,11 +134,18 @@ func _on_data(raw_data: String):
                 "chat:error": chat_error.emit(data)
                 "authenticated": 
                     is_authenticated = true
+                    # Start heartbeat after successful auth
+                    if _heartbeat_timer and is_instance_valid(_heartbeat_timer):
+                        _heartbeat_timer.start()
                     authenticated.emit()
                     print("[SOCKET] Auth Confirmed.")
+                # === SESSION EVENTS ===
+                "session_disconnecting": _on_session_disconnecting(data)
+                "force_logout": _on_force_logout(data)
+                "session_expired": _on_session_expired(data)
                 # === GUILD EVENTS ===
                 "guild:created": guild_created.emit(data)
-                "guild:joined": guild_created.emit(data)  # Reuse created signal for join
+                "guild:joined": guild_created.emit(data)
                 "guild:left": guild_left.emit()
                 "guild:disbanded": guild_disbanded.emit()
                 "guild:info": guild_info_received.emit(data)
@@ -142,13 +176,127 @@ func _on_data(raw_data: String):
         socket.send_text("3") # PONG
         print("[SOCKET] Pong sent.")
 
+# === SESSION EVENT HANDLERS ===
+
+func _on_session_disconnecting(data: Dictionary):
+    var reason = data.get("reason", "unknown")
+    var message = data.get("message", "New login detected on another device")
+    
+    print("[SOCKET] Session disconnecting: ", reason)
+    session_disconnecting.emit(reason, message)
+    
+    # Start countdown display
+    _start_disconnect_countdown(5)
+
+func _on_force_logout(data: Dictionary):
+    var reason = data.get("reason", "unknown")
+    
+    print("[SOCKET] Force logout: ", reason)
+    
+    # Stop heartbeat
+    if _heartbeat_timer and is_instance_valid(_heartbeat_timer):
+        _heartbeat_timer.stop()
+    
+    # Stop countdown if running
+    _stop_disconnect_countdown()
+    
+    # Emit to GameState
+    GameState.emit_force_logout(reason)
+    
+    # Emit signal
+    force_logout.emit(reason)
+    
+    # Disconnect socket
+    socket.close()
+
+func _on_session_expired(data: Dictionary):
+    var reason = data.get("reason", "timeout")
+    
+    print("[SOCKET] Session expired: ", reason)
+    
+    # Stop heartbeat
+    if _heartbeat_timer and is_instance_valid(_heartbeat_timer):
+        _heartbeat_timer.stop()
+    
+    # Emit to GameState
+    GameState.emit_session_expired(reason)
+    
+    # Emit signal
+    session_expired.emit(reason)
+
+func _start_disconnect_countdown(seconds: int):
+    _stop_disconnect_countdown()
+    
+    # Create countdown label
+    _disconnect_countdown_label = Label.new()
+    _disconnect_countdown_label.text = str(seconds)
+    _disconnect_countdown_label.set_anchors_preset(Control.PRESET_CENTER)
+    
+    # Style the label
+    var font = _disconnect_countdown_label.get_theme_default_font()
+    if font:
+        _disconnect_countdown_label.add_theme_font_size_override("font_size", 48)
+    _disconnect_countdown_label.add_theme_color_override("font_color", Color.RED)
+    
+    # Add to root to ensure visibility
+    var root = get_tree().root
+    if root:
+        root.add_child(_disconnect_countdown_label)
+    else:
+        add_child(_disconnect_countdown_label)
+    
+    # Create countdown timer
+    _disconnect_countdown_timer = Timer.new()
+    _disconnect_countdown_timer.wait_time = 1.0
+    _disconnect_countdown_timer.timeout.connect(func():
+        seconds -= 1
+        if seconds > 0:
+            if _disconnect_countdown_label and is_instance_valid(_disconnect_countdown_label):
+                _disconnect_countdown_label.text = str(seconds)
+        else:
+            _stop_disconnect_countdown()
+    )
+    add_child(_disconnect_countdown_timer)
+    _disconnect_countdown_timer.start()
+
+func _stop_disconnect_countdown():
+    if _disconnect_countdown_timer:
+        _disconnect_countdown_timer.stop()
+        _disconnect_countdown_timer.queue_free()
+        _disconnect_countdown_timer = null
+    
+    if _disconnect_countdown_label:
+        _disconnect_countdown_label.queue_free()
+        _disconnect_countdown_label = null
+
+func _send_heartbeat():
+    if GameState.session_token and is_socket_connected:
+        var msg = '42["heartbeat", {"token": "%s"}]' % GameState.session_token
+        socket.send_text(msg)
+        print("[SOCKET] Heartbeat sent")
+
+# === AUTHENTICATION ===
+
 func authenticate(user_id: int):
     _pending_user_id = user_id
     if is_socket_connected:
         _send_auth(user_id)
 
 func _send_auth(user_id: int):
-    var msg = '42["authenticate", %d]' % user_id
+    var token = GameState.session_token if GameState else ""
+    
+    var msg
+    if token and not token.is_empty():
+        # New format with session token
+        var auth_data = {
+            "userId": user_id,
+            "sessionToken": token
+        }
+        msg = '42["authenticate", %s]' % JSON.stringify(auth_data)
+    else:
+        # Legacy format without token
+        msg = '42["authenticate", %d]' % user_id
+    
     socket.send_text(msg)
     _pending_user_id = -1
     print("[SOCKET] Auth Request Sent for User: ", user_id)

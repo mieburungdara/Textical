@@ -1,15 +1,6 @@
 const guildService = require('../services/guildService');
 const userRepository = require('../repositories/userRepository');
-
-// Helper function to send Socket.IO event
-function emitGuildEvent(ws, event, data) {
-    ws.send('42' + JSON.stringify([event, data]));
-}
-
-// Helper function to send error
-function emitError(ws, message) {
-    ws.send('42' + JSON.stringify(["error", { message }]));
-}
+const { emitEvent, emitError } = require('./BaseSocketHandler');
 
 class GuildHandler {
     async handleCreateGuild(ws, request) {
@@ -19,7 +10,7 @@ class GuildHandler {
             
             // Sync user data
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:created", {
+            emitEvent(ws, "guild:created", {
                 user: updatedUser,
                 guild: guild,
                 message: `Guild '${guild.name}' established successfully!`
@@ -35,7 +26,7 @@ class GuildHandler {
             const guild = await guildService.joinGuild(user, request.guildId);
             
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:joined", {
+            emitEvent(ws, "guild:joined", {
                 user: updatedUser,
                 guild: guild,
                 message: "You have joined the guild."
@@ -51,7 +42,7 @@ class GuildHandler {
             await guildService.leaveGuild(user);
             
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:left", {
+            emitEvent(ws, "guild:left", {
                 user: updatedUser,
                 message: "You have left the guild."
             });
@@ -65,7 +56,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             await guildService.kickMember(user, request.targetUserId);
             
-            emitGuildEvent(ws, "guild:member_kicked", {
+            emitEvent(ws, "guild:member_kicked", {
                 targetUserId: request.targetUserId
             });
         } catch (e) {
@@ -78,7 +69,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             await guildService.promoteMember(user, request.targetUserId, request.newRole);
             
-            emitGuildEvent(ws, "guild:member_promoted", {
+            emitEvent(ws, "guild:member_promoted", {
                 userId: request.targetUserId,
                 newRole: request.newRole
             });
@@ -92,7 +83,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.demoteMember(user, request.targetUserId);
             
-            emitGuildEvent(ws, "guild:member_demoted", {
+            emitEvent(ws, "guild:member_demoted", {
                 userId: request.targetUserId,
                 newRole: result.newRole
             });
@@ -106,7 +97,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             await guildService.transferLeadership(user, request.targetUserId);
             
-            emitGuildEvent(ws, "guild:leadership_transferred", {
+            emitEvent(ws, "guild:leadership_transferred", {
                 newMasterId: request.targetUserId
             });
         } catch (e) {
@@ -119,7 +110,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.updateGuildSettings(user, request.settings);
             
-            emitGuildEvent(ws, "guild:settings_updated", {
+            emitEvent(ws, "guild:settings_updated", {
                 settings: result.settings
             });
         } catch (e) {
@@ -133,7 +124,7 @@ class GuildHandler {
             await guildService.depositTreasury(user, request.amount);
             
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:treasury_updated", {
+            emitEvent(ws, "guild:treasury_updated", {
                 gold: updatedUser.gold,
                 silver: updatedUser.silver
             });
@@ -147,7 +138,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.withdrawTreasury(user, request.amount);
             
-            emitGuildEvent(ws, "guild:treasury_updated", {
+            emitEvent(ws, "guild:treasury_updated", {
                 gold: Math.floor(result.remainingTreasury / 1000),
                 silver: result.remainingTreasury % 1000
             });
@@ -161,7 +152,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.buildFacility(user, request.templateId);
             
-            emitGuildEvent(ws, "guild:facility_built", {
+            emitEvent(ws, "guild:facility_built", {
                 facility: result.facility
             });
         } catch (e) {
@@ -174,7 +165,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.upgradeFacility(user, request.facilityId);
             
-            emitGuildEvent(ws, "guild:facility_upgraded", {
+            emitEvent(ws, "guild:facility_upgraded", {
                 facilityId: request.facilityId,
                 newLevel: result.newLevel
             });
@@ -188,7 +179,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             const result = await guildService.createInvite(user);
             
-            emitGuildEvent(ws, "guild:invite_created", {
+            emitEvent(ws, "guild:invite_created", {
                 inviteCode: result.inviteCode,
                 expiresAt: result.expiresAt.toISOString()
             });
@@ -203,7 +194,7 @@ class GuildHandler {
             const result = await guildService.acceptInvite(user, request.inviteCode);
             
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:invite_accepted", {
+            emitEvent(ws, "guild:invite_accepted", {
                 user: updatedUser,
                 guild: result.guild
             });
@@ -217,7 +208,7 @@ class GuildHandler {
             const user = await userRepository.findById(ws.userId);
             await guildService.cancelInvite(user, request.inviteId);
             
-            emitGuildEvent(ws, "guild:invite_cancelled", {
+            emitEvent(ws, "guild:invite_cancelled", {
                 inviteId: request.inviteId
             });
         } catch (e) {
@@ -228,7 +219,7 @@ class GuildHandler {
     async handleGetGuildInfo(ws, request) {
         try {
             const guild = await guildService.getGuildInfo(request.guildId);
-            emitGuildEvent(ws, "guild:info", { guild });
+            emitEvent(ws, "guild:info", { guild });
         } catch (e) {
             emitError(ws, e.message);
         }
@@ -238,7 +229,7 @@ class GuildHandler {
         try {
             const user = await userRepository.findById(ws.userId);
             const guild = await guildService.getMyGuild(user);
-            emitGuildEvent(ws, "guild:my_info", { guild });
+            emitEvent(ws, "guild:my_info", { guild });
         } catch (e) {
             emitError(ws, e.message);
         }
@@ -247,7 +238,7 @@ class GuildHandler {
     async handleSearchGuilds(ws, request) {
         try {
             const guilds = await guildService.searchGuilds(request.query, request.page, request.limit);
-            emitGuildEvent(ws, "guild:search_results", { guilds });
+            emitEvent(ws, "guild:search_results", { guilds });
         } catch (e) {
             emitError(ws, e.message);
         }
@@ -259,7 +250,7 @@ class GuildHandler {
             await guildService.disbandGuild(user);
             
             const updatedUser = await userRepository.findById(ws.userId);
-            emitGuildEvent(ws, "guild:disbanded", {
+            emitEvent(ws, "guild:disbanded", {
                 user: updatedUser,
                 message: "Guild has been disbanded."
             });

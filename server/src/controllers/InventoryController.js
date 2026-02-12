@@ -1,35 +1,18 @@
 const BaseController = require('./BaseController');
 const inventoryService = require('../services/inventoryService');
-const consumableService = require('../services/consumableService');
+const prisma = require('../db');
 
 class InventoryController extends BaseController {
-    async discardItem(req, res) {
+    async getInventory(req, res) {
         await this.execute(res, async () => {
-            const { userId, itemInstanceId, quantity } = req.body;
-            
-            if (!userId || !itemInstanceId) {
-                return this.sendError(res, "Missing required parameters.", 400);
-            }
-
-            const qty = parseInt(quantity) || 1;
-            const result = await inventoryService.removeItem(parseInt(userId), parseInt(itemInstanceId), qty);
-            
-            this.sendSuccess(res, result, "Item discarded successfully.");
-        });
-    }
-
-    async useItem(req, res) {
-        await this.execute(res, async () => {
-            const { userId, heroId, itemInstanceId } = req.body;
-            
-            if (!userId || !itemInstanceId) {
-                return this.sendError(res, "Missing required parameters.", 400);
-            }
-
-            // ConsumableService currently needs templateId, we need to get it from instanceId
-            const result = await consumableService.useItemInstance(parseInt(userId), parseInt(heroId || 0), parseInt(itemInstanceId));
-            
-            this.sendSuccess(res, result, "Item used successfully.");
+            const userId = parseInt(req.params.id);
+            if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
+            const items = await prisma.inventoryItem.findMany({
+                where: { userId },
+                include: { template: true }
+            });
+            const status = await inventoryService.getStatus(userId);
+            this.sendSuccess(res, { status, items });
         });
     }
 }
