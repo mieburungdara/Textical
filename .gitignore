@@ -8,3 +8,4 @@ client/src/ui/CombatScreen.gd
 replays/*
 node_modules/**
 node_modules/*
+godot-mcp/*
