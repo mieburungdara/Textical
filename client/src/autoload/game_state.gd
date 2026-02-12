@@ -142,8 +142,7 @@ func set_user(data):
         var expires_at_str = session_data.get("expiresAt", "")
         if expires_at_str and expires_at_str is String:
             # Parse ISO8601 date string
-            var date = Time.parse_datetime(expires_at_str)
-            session_expires_at = Time.get_unix_time_from_datetime(date)
+            session_expires_at = Time.get_unix_time_from_datetime_string(expires_at_str)
     
     # Load settings if present
     if user_data.has("settings"):
@@ -169,7 +168,7 @@ func clear_session():
 func is_session_valid() -> bool:
     if session_token.is_empty(): return false
     if session_expires_at == 0: return true
-    return Time.get_unix_time() < session_expires_at
+    return Time.get_unix_time_from_system() < session_expires_at
 
 func emit_session_expired(reason: String):
     session_expired.emit(reason)
