@@ -1,7 +1,7 @@
 const battleInitializer = require('./battle/BattleInitializer');
 const rewardProcessor = require('./battle/RewardProcessor');
 const replayService = require('./battle/ReplayService');
-const lootService = require('../logistics/LootService');
+const lootService = require('./logistics/LootService');
 const battleRegistry = require('../../logic/battle/BattleRegistry');
 
 /**

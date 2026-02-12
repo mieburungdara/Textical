@@ -1,0 +1,20 @@
+{
+  "id": 2221,
+  "version": 1,
+  "name": "Adamantite Ore",
+  "description": "Material: Adamantite Ore",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 10,
+  "minStr": 100,
+  "minToolTier": 4,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

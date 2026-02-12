@@ -1,0 +1,20 @@
+{
+  "id": 2213,
+  "version": 1,
+  "name": "Sulfur Stone",
+  "description": "Material: Sulfur Stone",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 2,
+  "minStr": 45,
+  "minToolTier": 2,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

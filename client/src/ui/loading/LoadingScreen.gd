@@ -42,10 +42,15 @@ func _setup_managers():
     particles.rune_dust_container = rune_dust
     particles.rune_particles_container = rune_particles
     
-    # Connect signals
+    # Connect sync signals
     sync.sync_progress.connect(_on_sync_progress)
     sync.sync_completed.connect(_on_sync_finished)
     sync.sync_error.connect(_on_sync_error)
+    
+    # Connect version check signals
+    sync.version_check_started.connect(_on_version_check_started)
+    sync.version_check_completed.connect(_on_version_check_completed)
+    sync.version_check_failed.connect(_on_version_check_failed)
 
 func _setup_accessibility():
     loading_bar.tooltip_text = LocalizationManager.translate("status_updating", [0, 100])
@@ -65,7 +70,35 @@ func _start_flow():
     await get_tree().create_timer(0.1).timeout
     if _is_exiting or _loading_cancelled: return
     
-    _start_patching()
+    _start_version_check()
+
+func _start_version_check():
+    status_label.text = "Checking for updates..."
+    
+    # Call DataManager's version check method
+    if DataManager and DataManager.has_method("check_server_versions"):
+        DataManager.check_server_versions()
+    else:
+        # Fallback to direct sync if version check not available
+        _start_patching()
+
+func _on_version_check_started():
+    status_label.text = "Checking for updates..."
+
+func _on_version_check_completed(needs_update: bool) -> void:
+    if needs_update:
+        status_label.text = "Updates available. Downloading..."
+        _start_patching()
+    else:
+        status_label.text = "Game is up to date."
+        await get_tree().create_timer(0.5).timeout
+        _transition_to_login()
+
+func _on_version_check_failed(error: String) -> void:
+    status_label.text = "Version check failed: " + error
+    # Proceed anyway - can use cached data
+    await get_tree().create_timer(1.0).timeout
+    _transition_to_login()
 
 func _start_patching():
     status_label.text = LocalizationManager.translate("status_checking")

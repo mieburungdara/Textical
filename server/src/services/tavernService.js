@@ -1,6 +1,8 @@
 const prisma = require('../db');
 
 const vitalityService = require('./vitalityService');
+const transactionManager = require('./economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 /**
  * TavernService
@@ -95,36 +97,28 @@ class TavernService {
         });
 
         if (!merc) throw new Error("Mercenary is no longer available.");
-        if (user.gold < merc.recruitmentCost) throw new Error("Insufficient gold for recruitment.");
+        
+        // 3. Verify user has enough funds (Silver-based)
+        const userTotalSilver = resolver.getTotalSilver(user);
+        if (userTotalSilver < BigInt(merc.recruitmentCost)) {
+            throw new Error(`Insufficient funds. Cost: ${merc.recruitmentCost} silver, have: ${userTotalSilver}`);
+        }
 
-        // 3. Atomic Recruitment
-        return await prisma.$transaction([
-            // Deduct Gold
-            prisma.user.update({
-                where: { id: userId },
-                data: { gold: user.gold - merc.recruitmentCost }
-            }),
-            // Transfer Ownership
-            prisma.hero.update({
-                where: { id: merc.heroId },
-                data: { userId: userId }
-            }),
-            // Remove from Tavern Listing
-            prisma.tavernMercenary.delete({
-                where: { id: mercenaryId }
-            }),
-            // Log Transaction
-            prisma.transactionLedger.create({
-                data: {
-                    userId,
-                    type: "RECRUITMENT",
-                    currencyTier: "GOLD",
-                    amountDelta: -merc.recruitmentCost,
-                    newBalance: user.gold - merc.recruitmentCost,
-                    metadata: JSON.stringify({ heroId: merc.heroId })
-                }
-            })
-        ]);
+        // 4. Atomic Recruitment using TransactionManager
+        await transactionManager.removeCurrency(prisma, userId, merc.recruitmentCost, "RECRUITMENT", merc.heroId, "TAVERN_MERCENARY");
+
+        // 5. Transfer Ownership
+        await prisma.hero.update({
+            where: { id: merc.heroId },
+            data: { userId: userId }
+        });
+
+        // 6. Remove from Tavern Listing
+        await prisma.tavernMercenary.delete({
+            where: { id: mercenaryId }
+        });
+
+        return { success: true, heroId: merc.heroId, name: merc.hero.name };
     }
 
     /**

@@ -3,6 +3,8 @@ const marketValidator = require('./market/MarketValidator');
 const orderManager = require('./market/MarketOrderManager');
 const orderMatcher = require('./market/OrderMatcher');
 const listingService = require('./market/MarketListingService');
+const transactionManager = require('./economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 /**
  * MarketService
@@ -55,22 +57,16 @@ class MarketService extends BaseService {
                 throw new Error("You cannot buy your own listing.");
             }
 
-            // 2. Verify buyer has enough gold
+            // 2. Verify buyer has enough funds (Silver-based)
             const buyer = await tx.user.findUnique({ where: { id: userId } });
-            if (buyer.gold < listing.price) {
-                throw new Error(`Insufficient gold. Need ${listing.price}, have ${buyer.gold}`);
+            const buyerTotalSilver = resolver.getTotalSilver(buyer);
+            if (buyerTotalSilver < BigInt(listing.price)) {
+                throw new Error(`Insufficient funds. Need ${listing.price} silver, have ${buyerTotalSilver}`);
             }
 
-            // 3. Transfer gold to seller
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: buyer.gold - listing.price }
-            });
-
-            await tx.user.update({
-                where: { id: listing.sellerId },
-                data: { gold: listing.seller.gold + listing.price }
-            });
+            // 3. Transfer silver to seller
+            await transactionManager.removeCurrency(tx, userId, listing.price, "MARKET_BUY", listing.id, "LISTING");
+            await transactionManager.addCurrency(tx, listing.sellerId, listing.price, "MARKET_SELL", listing.id, "LISTING");
 
             // 4. Create item for buyer
             const purchasedItem = await tx.inventoryItem.create({
@@ -88,24 +84,7 @@ class MarketService extends BaseService {
                 data: { status: 'SOLD' }
             });
 
-            // 6. Log transaction
-            await tx.transactionLedger.create({
-                data: {
-                    userId,
-                    type: 'MARKET_BUY',
-                    currencyTier: 'GOLD',
-                    amountDelta: -listing.price,
-                    newBalance: buyer.gold - listing.price,
-                    metadata: JSON.stringify({
-                        listingId,
-                        itemId: listing.itemTemplateId,
-                        quantity: listing.quantity,
-                        sellerId: listing.sellerId
-                    })
-                }
-            });
-
-            this.log(`User ${userId} purchased ${listing.quantity}x ${listing.itemTemplate.name} for ${listing.price} gold from user ${listing.sellerId}`, "Market");
+            this.log(`User ${userId} purchased ${listing.quantity}x ${listing.itemTemplate.name} for ${listing.price} silver from user ${listing.sellerId}`, "Market");
 
             return { success: true, item: purchasedItem, cost: listing.price };
         });
@@ -135,42 +114,21 @@ class MarketService extends BaseService {
                 throw new Error("Cannot sell equipped items.");
             }
 
-            // 2. Calculate NPC sell price (90% penalty)
+            // 3. Calculate NPC sell price (90% penalty) in Silver
             const baseValue = item.template.baseValue || 1;
-            const sellPrice = Math.floor(baseValue * 0.9);
+            const sellPriceSilver = BigInt(Math.floor(baseValue * 0.9));
 
-            // 3. Update user gold
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: user.gold + sellPrice }
-            });
+            // 4. Add silver to user via TransactionManager
+            await transactionManager.addCurrency(tx, userId, sellPriceSilver, "NPC_SELL", itemId, "INVENTORY_ITEM");
 
             // 4. Remove item from inventory
             await tx.inventoryItem.delete({
                 where: { id: itemId }
             });
 
-            // 5. Log transaction
-            await tx.transactionLedger.create({
-                data: {
-                    userId,
-                    type: 'NPC_SELL',
-                    currencyTier: 'GOLD',
-                    amountDelta: sellPrice,
-                    newBalance: user.gold + sellPrice,
-                    metadata: JSON.stringify({
-                        itemId,
-                        itemName: item.template.name,
-                        baseValue,
-                        sellPrice
-                    })
-                }
-            });
+            this.log(`User ${userId} sold ${item.template.name} to NPC for ${sellPriceSilver} silver (base: ${baseValue})`, "Market");
 
-            this.log(`User ${userId} sold ${item.template.name} to NPC for ${sellPrice} gold (base: ${baseValue})`, "Market");
-
-            return { success: true, itemName: item.template.name, sellPrice };
+            return { success: true, itemName: item.template.name, sellPrice: sellPriceSilver };
         });
     }
 
@@ -242,14 +200,9 @@ class MarketService extends BaseService {
                 throw new Error("Only open orders can be cancelled.");
             }
 
-            // 2. Refund escrow
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            const escrowRefund = order.quantity * order.pricePerUnit;
-
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: user.gold + escrowRefund }
-            });
+            // 2. Refund escrow to user
+            const escrowRefund = BigInt(order.quantity * order.pricePerUnit);
+            await transactionManager.addCurrency(tx, userId, escrowRefund, "ORDER_CANCEL", orderId, "MARKET_ORDER");
 
             // 3. Update order status
             await tx.marketOrder.update({
@@ -257,25 +210,7 @@ class MarketService extends BaseService {
                 data: { status: 'CANCELLED' }
             });
 
-            // 4. Log transaction
-            await tx.transactionLedger.create({
-                data: {
-                    userId,
-                    type: 'ORDER_CANCEL',
-                    currencyTier: 'GOLD',
-                    amountDelta: escrowRefund,
-                    newBalance: user.gold + escrowRefund,
-                    metadata: JSON.stringify({
-                        orderId,
-                        orderType: order.type,
-                        itemTemplateId: order.itemTemplateId,
-                        quantity: order.quantity,
-                        pricePerUnit: order.pricePerUnit
-                    })
-                }
-            });
-
-            this.log(`User ${userId} cancelled order ${orderId}, refunded ${escrowRefund} gold`, "Market");
+            this.log(`User ${userId} cancelled order ${orderId}, refunded ${escrowRefund} silver`, "Market");
 
             return { success: true, refundedAmount: escrowRefund };
         });

@@ -36,6 +36,23 @@ class AssetService extends BaseService {
                     include: { loot: true, traits: { include: { trait: true } } } 
                 });
                 break;
+            case "quests":
+                console.log('[AssetService.DEBUG] Querying questTemplate for id:', idInt);
+                data = await this.db.questTemplate.findUnique({ 
+                    where: { id: idInt },
+                    include: { 
+                        stages: { 
+                            include: { 
+                                objectives: true, 
+                                rewards: true 
+                            } 
+                        },
+                        questGiver: true,
+                        turnInNpc: true
+                    }
+                });
+                console.log('[AssetService.DEBUG] questTemplate result:', data ? 'found' : 'null');
+                break;
         }
 
         if (!data) throw new Error(`Asset ${category}/${id} not found.`);

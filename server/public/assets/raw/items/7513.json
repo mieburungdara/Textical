@@ -1,0 +1,39 @@
+{
+  "id": 7513,
+  "version": 1,
+  "name": "World-Tree Raiment",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 65000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 198,
+      "itemId": 7513,
+      "statKey": "defense",
+      "statValue": 80
+    },
+    {
+      "id": 199,
+      "itemId": 7513,
+      "statKey": "int",
+      "statValue": 60
+    },
+    {
+      "id": 200,
+      "itemId": 7513,
+      "statKey": "mana_regen",
+      "statValue": 15
+    }
+  ],
+  "traits": []
+}

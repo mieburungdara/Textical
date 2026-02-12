@@ -1,6 +1,7 @@
 const BaseService = require('../BaseService');
 const inventoryService = require('../inventoryService');
 const transactionManager = require('../economy/TransactionManager');
+const resolver = require('../../logic/economy/CurrencyResolver');
 
 /**
  * HaulingService
@@ -28,13 +29,17 @@ class HaulingService extends BaseService {
         if (user.currentRegion !== originId) throw new Error("You must be at the origin city to rent a wagon.");
 
         const config = this.TIERS[tier];
-        const cost = config.baseRate * path.length;
+        const costSilver = BigInt(config.baseRate * path.length);
 
-        if (user.gold < cost) throw new Error(`Insufficient gold. Cost: ${cost}`);
+        // Verify user has enough funds (Silver-based)
+        const userTotalSilver = resolver.getTotalSilver(user);
+        if (userTotalSilver < costSilver) {
+            throw new Error(`Insufficient funds. Need ${costSilver} silver, have: ${userTotalSilver}`);
+        }
 
         return await this.runTransaction(async (tx) => {
-            // Deduct Gold
-            await transactionManager.removeGold(tx, userId, cost, "WAGON_RENTAL");
+            // Deduct Silver
+            await transactionManager.removeCurrency(tx, userId, costSilver, "WAGON_RENTAL", null, null);
 
             // Create Wagon
             const wagon = await tx.wagon.create({
@@ -47,11 +52,11 @@ class HaulingService extends BaseService {
                     targetRegionId: targetId,
                     selectedPath: JSON.stringify(path),
                     currentPathIndex: 0,
-                    feePaid: cost
+                    feePaid: Number(costSilver)
                 }
             });
 
-            this.log(`Wagon Rented: User ${userId} rented ${tier} wagon for ${cost} gold.`, "Logistics");
+            this.log(`Wagon Rented: User ${userId} rented ${tier} wagon for ${costSilver} silver.`, "Logistics");
             return wagon;
         });
     }

@@ -1,0 +1,39 @@
+{
+  "id": 7313,
+  "version": 1,
+  "name": "Adamantite Cuirass",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 60000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 172,
+      "itemId": 7313,
+      "statKey": "defense",
+      "statValue": 300
+    },
+    {
+      "id": 173,
+      "itemId": 7313,
+      "statKey": "vit",
+      "statValue": 50
+    },
+    {
+      "id": 174,
+      "itemId": 7313,
+      "statKey": "tenacity",
+      "statValue": 20
+    }
+  ],
+  "traits": []
+}

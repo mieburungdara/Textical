@@ -1,6 +1,8 @@
 const prisma = require('../db');
 const guildRepository = require('../repositories/guildRepository');
 const userRepository = require('../repositories/userRepository');
+const transactionManager = require('./economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 class GuildService {
     /**
@@ -19,15 +21,18 @@ class GuildService {
         if (!template) throw new Error("Invalid guild template.");
 
         const reqs = JSON.parse(template.creationReqs || "{}");
+        const costSilver = BigInt(reqs.gold_cost || 0);
         
-        if (user.gold < (reqs.gold_cost || 0)) throw new Error("Insufficient Gold to create this guild.");
+        // Verify user has enough funds (Silver-based)
+        const userTotalSilver = resolver.getTotalSilver(user);
+        if (userTotalSilver < costSilver) throw new Error("Insufficient funds to create this guild.");
         if (!user.heroes || user.heroes.length < (reqs.min_heroes || 0)) throw new Error("You need more heroes to form a guild.");
 
         // 4. Creation & Transaction
         const guild = await guildRepository.create({ name, description, templateId });
 
-        // Deduct Gold and Link User as MASTER
-        await userRepository.updateGold(user.id, user.gold - (reqs.gold_cost || 0));
+        // Deduct Silver and Link User as MASTER
+        await transactionManager.removeCurrency(prisma, user.id, costSilver, "GUILD_CREATION", guild.id, "GUILD");
         await userRepository.update(user.id, { 
             guildId: guild.id, 
             guildRole: "MASTER" 
@@ -246,16 +251,20 @@ class GuildService {
     async depositTreasury(user, amount) {
         if (!user.guildId) throw new Error("You are not in a guild.");
         if (amount <= 0) throw new Error("Amount must be positive.");
-        if (user.gold < amount) throw new Error("Insufficient gold.");
+        
+        const amountSilver = BigInt(amount);
+        // Verify user has enough funds (Silver-based)
+        const userTotalSilver = resolver.getTotalSilver(user);
+        if (userTotalSilver < amountSilver) throw new Error(`Insufficient funds. Need ${amountSilver} silver, have: ${userTotalSilver}`);
 
-        await userRepository.updateGold(user.id, user.gold - amount);
+        await transactionManager.removeCurrency(prisma, user.id, amountSilver, "GUILD_TREASURY_DEPOSIT", user.guildId, "GUILD");
         const guild = await guildRepository.update(user.guildId, {
             treasury: { increment: amount }
         });
 
         // Add history
         await this.addHistory(user.guildId, "TREASURY_DEPOSIT", user.id, null, 
-            `${user.username} deposited ${amount} gold to treasury`);
+            `${user.username} deposited ${amount} silver to treasury`);
 
         return guild;
     }
@@ -275,11 +284,11 @@ class GuildService {
         await guildRepository.update(requester.guildId, {
             treasury: { decrement: amount }
         });
-        await userRepository.updateGold(requester.id, requester.gold + amount);
+        await transactionManager.addCurrency(prisma, requester.id, BigInt(amount), "GUILD_TREASURY_WITHDRAW", requester.guildId, "GUILD");
 
         // Add history
         await this.addHistory(requester.guildId, "TREASURY_WITHDRAW", requester.id, null, 
-            `${requester.username} withdrew ${amount} gold from treasury`);
+            `${requester.username} withdrew ${amount} silver from treasury`);
 
         return { success: true, remainingTreasury: guild.treasury - amount };
     }

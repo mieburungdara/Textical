@@ -1,0 +1,20 @@
+{
+  "id": 2209,
+  "version": 1,
+  "name": "Malachite",
+  "description": "Material: Malachite",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 3,
+  "minStr": 22,
+  "minToolTier": 1,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

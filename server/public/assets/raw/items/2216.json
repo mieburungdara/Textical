@@ -1,0 +1,20 @@
+{
+  "id": 2216,
+  "version": 1,
+  "name": "Sunstone",
+  "description": "Material: Sunstone",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 5,
+  "minStr": 65,
+  "minToolTier": 3,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

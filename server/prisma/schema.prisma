@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -99,6 +98,7 @@ model UserFriend {
 
 model AchievementTemplate {
   id          Int               @id
+  version     Int               @default(1)
   name        String
   description String
   icon        String            @default("🏆")
@@ -119,6 +119,7 @@ model UserAchievement {
 
 model MonsterTemplate {
   id          Int    @id
+  version     Int    @default(1)
   name        String
   hp_base     Int
   damage_base Int
@@ -253,6 +254,7 @@ model Notification {
 
 model ItemTemplate {
   id          Int     @id
+  version     Int     @default(1)
   name        String
   description String
   category    String  @default("EQUIPMENT")
@@ -292,6 +294,7 @@ model ItemTemplate {
 
 model RegionTemplate {
   id              Int     @id
+  version         Int     @default(1)
   name            String
   description     String
   visualType      String  @default("TOWN")
@@ -332,6 +335,7 @@ model RegionTemplate {
 
 model WorldEventTemplate {
   id          Int    @id
+  version     Int    @default(1)
   name        String
   description String
 
@@ -400,6 +404,7 @@ model RegionNPC {
 
 model NPCTemplate {
   id          Int    @id
+  version     Int    @default(1)
   name        String
   title       String
   description String
@@ -422,6 +427,10 @@ model NPCTemplate {
   schedules      NPCSchedule[]
   eventReactions NPCEventReaction[]
   currentStock   ShopStock[]
+  
+  // Quest Relations
+  questsGiven     QuestTemplate[] @relation("QuestGiverRelation")
+  questsTurnedIn QuestTemplate[] @relation("QuestTurnInRelation")
 }
 
 model ShopStock {
@@ -587,6 +596,7 @@ model ItemStat {
 
 model RecipeTemplate {
   id               Int                @id
+  version          Int                @default(1)
   name             String
   description      String
   resultItemId     Int
@@ -740,6 +750,7 @@ model HeroOrder {
 
 model SkillTemplate {
   id          Int    @id
+  version     Int    @default(1)
   name        String
   description String
   category    String // ACTIVE, PASSIVE
@@ -809,6 +820,7 @@ model HeroBuff {
 
 model ClassTemplate {
   id           Int    @id
+  version      Int    @default(1)
   name         String
   tier         Int    @default(1)
   resourceType String @default("MANA")
@@ -951,12 +963,20 @@ model MarketOrder {
 
 model QuestTemplate {
   id          Int    @id
+  version     Int    @default(1)
   name        String
   description String
 
   minReputation Int      @default(0)
   factionId     Int?
   faction       Faction? @relation(fields: [factionId], references: [id])
+
+  // Quest NPC Relations
+  questGiverId  Int?
+  questGiver    NPCTemplate?  @relation("QuestGiverRelation", fields: [questGiverId], references: [id])
+  
+  turnInNpcId   Int?
+  turnInNpc     NPCTemplate?  @relation("QuestTurnInRelation", fields: [turnInNpcId], references: [id])
 
   // AAA: Dynamic Questing
   isDynamic Boolean   @default(false)
@@ -1015,7 +1035,12 @@ model Mail {
   receiverId Int
   receiver   User     @relation("ReceiverRelation", fields: [receiverId], references: [id])
   subject    String
+  content    String   @default("")
+  silver     Int      @default(0) // Attached silver (1,000,000:1 with gold)
+  gold       Int      @default(0) // Attached gold
   expiresAt  DateTime
+  isClaimed  Boolean  @default(false)
+  isRead     Boolean  @default(false)
 }
 
 model HeroTrait {
@@ -1212,6 +1237,7 @@ model PremiumTierTemplate {
 
 model Faction {
   id              Int              @id
+  version         Int              @default(1)
   name            String
   description     String
   npcs            NPCTemplate[]
@@ -1291,7 +1317,8 @@ model UserReputation {
 }
 
 model DialogueNode {
-  id      Int              @id @default(autoincrement())
+  id      Int              @id
+  version Int              @default(1)
   npcId   Int
   npc     NPCTemplate      @relation(fields: [npcId], references: [id])
   text    String

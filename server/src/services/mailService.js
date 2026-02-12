@@ -1,5 +1,6 @@
 const prisma = new (require('@prisma/client').PrismaClient)();
-const math = require('mathjs');
+const transactionManager = require('./economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 class MailService {
     /**
@@ -7,17 +8,17 @@ class MailService {
      */
     async sendSystemMail(receiverId, subject, content, attachedWealth = {}, attachedItems = []) {
         const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 Days
-
+        
+        // Convert wealth to Silver-based total
+        const silverAmount = BigInt(attachedWealth.silver || 0) + BigInt((attachedWealth.gold || 0) * 1000000);
+        
         const mail = await prisma.mail.create({
             data: {
                 receiverId,
                 subject,
-                content,
-                copper: attachedWealth.copper || 0,
-                silver: attachedWealth.silver || 0,
-                gold: attachedWealth.gold || 0,
-                platinum: attachedWealth.platinum || 0,
-                mithril: attachedWealth.mithril || 0,
+                content: content || "",
+                silver: Number(silverAmount % BigInt(1000000)),
+                gold: Number(silverAmount / BigInt(1000000)),
                 expiresAt,
                 attachments: {
                     create: attachedItems.map(item => ({
@@ -54,21 +55,14 @@ class MailService {
         if (!mail || mail.receiverId !== userId) throw new Error("Mail not found.");
         if (mail.isClaimed) throw new Error("Attachments already claimed.");
 
-        // 1. Transfer Currencies
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                copper: { increment: mail.copper },
-                silver: { increment: mail.silver },
-                gold: { increment: mail.gold },
-                platinum: { increment: mail.platinum },
-                mithril: { increment: mail.mithril }
-            }
-        });
+        // 1. Transfer Silver via TransactionManager (automatically handles gold conversion)
+        const totalAttachedSilver = BigInt(mail.silver) + BigInt(mail.gold * 1000000);
+        if (totalAttachedSilver > 0) {
+            await transactionManager.addCurrency(prisma, userId, totalAttachedSilver, "MAIL_CLAIM", mailId, "MAIL");
+        }
 
         // 2. Transfer Items
         for (let att of mail.attachments) {
-            // Internal Helper or Inventory Repository can be used here
             await prisma.inventoryItem.create({
                 data: {
                     userId,

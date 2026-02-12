@@ -1,0 +1,33 @@
+{
+  "id": 7301,
+  "version": 1,
+  "name": "Iron Plate",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 200,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 166,
+      "itemId": 7301,
+      "statKey": "defense",
+      "statValue": 10
+    },
+    {
+      "id": 167,
+      "itemId": 7301,
+      "statKey": "vit",
+      "statValue": 2
+    }
+  ],
+  "traits": []
+}

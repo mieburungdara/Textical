@@ -1,0 +1,33 @@
+{
+  "id": 7005,
+  "version": 1,
+  "name": "Adamantite World-Breaker",
+  "description": "Forged from the heart of a dying star.",
+  "category": "WEAPON",
+  "baseValue": 50000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 144,
+      "itemId": 7005,
+      "statKey": "attack_damage",
+      "statValue": 800
+    },
+    {
+      "id": 145,
+      "itemId": 7005,
+      "statKey": "ar_pen_base",
+      "statValue": 50
+    }
+  ],
+  "traits": []
+}

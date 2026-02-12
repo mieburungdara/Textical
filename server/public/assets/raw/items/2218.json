@@ -1,0 +1,20 @@
+{
+  "id": 2218,
+  "version": 1,
+  "name": "Voidstone",
+  "description": "Material: Voidstone",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 7,
+  "minStr": 75,
+  "minToolTier": 3,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

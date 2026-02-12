@@ -10,6 +10,11 @@ signal sync_progress(current: int, total: int)
 signal sync_completed()
 signal sync_error(endpoint: String, message: String)
 
+# Version check signals
+signal version_check_started()
+signal version_check_completed(needs_update: bool)
+signal version_check_failed(error: String)
+
 # State tracking
 var _is_syncing: bool = false
 var _sync_error_count: int = 0
@@ -25,6 +30,16 @@ func _connect_signals() -> void:
 	
 	if DataManager and DataManager.has_signal("sync_finished"):
 		DataManager.sync_finished.connect(_on_sync_finished)
+	
+	# Version check signals
+	if DataManager and DataManager.has_signal("version_check_started"):
+		DataManager.version_check_started.connect(version_check_started)
+	
+	if DataManager and DataManager.has_signal("version_check_completed"):
+		DataManager.version_check_completed.connect(version_check_completed)
+	
+	if DataManager and DataManager.has_signal("version_check_failed"):
+		DataManager.version_check_failed.connect(version_check_failed)
 
 ## Start the synchronization process
 func start_sync() -> void:
@@ -83,5 +98,11 @@ func _exit_tree() -> void:
 			DataManager.sync_progress.disconnect(_on_sync_progress)
 		if DataManager.has_signal("sync_finished"):
 			DataManager.sync_finished.disconnect(_on_sync_finished)
+		if DataManager.has_signal("version_check_started"):
+			DataManager.version_check_started.disconnect(version_check_started)
+		if DataManager.has_signal("version_check_completed"):
+			DataManager.version_check_completed.disconnect(version_check_completed)
+		if DataManager.has_signal("version_check_failed"):
+			DataManager.version_check_failed.disconnect(version_check_failed)
 	
 	_is_syncing = false

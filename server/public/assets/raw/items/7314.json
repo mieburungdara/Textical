@@ -1,0 +1,33 @@
+{
+  "id": 7314,
+  "version": 1,
+  "name": "Adamantite Greaves",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 45000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 175,
+      "itemId": 7314,
+      "statKey": "defense",
+      "statValue": 200
+    },
+    {
+      "id": 176,
+      "itemId": 7314,
+      "statKey": "vit",
+      "statValue": 30
+    }
+  ],
+  "traits": []
+}

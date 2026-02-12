@@ -6,6 +6,8 @@ const behaviorService = require('./npc/NPCBehaviorService');
 const actionResolver = require('../logic/npc/NPCActionResolver');
 const factionWarService = require('./faction/FactionWarService');
 const koManager = require('./vitality/KOManager');
+const transactionManager = require('./economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 /**
  * NPCService
@@ -107,15 +109,15 @@ class NPCService extends BaseService {
         return await this.runTransaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
             
-            let cost = npc.travelCost || 200;
-            if (isHostile) cost *= 2; 
+            let costSilver = BigInt(npc.travelCost || 200);
+            if (isHostile) costSilver *= BigInt(2);
 
-            if (user.gold < cost) throw new Error(`Insufficient gold. Price: ${cost}`);
+            const userTotalSilver = resolver.getTotalSilver(user);
+            if (userTotalSilver < costSilver) {
+                throw new Error(`Insufficient funds. Need ${costSilver} silver, have: ${userTotalSilver}`);
+            }
 
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: { decrement: cost }, currentRegion: destId }
-            });
+            await transactionManager.removeCurrency(tx, userId, costSilver, "TELEPORT", destId, "NPC_ROUTE");
 
             return { success: true, message: `Teleported to Region ${destId}.` };
         });

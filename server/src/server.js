@@ -10,6 +10,7 @@ const socketService = require('./services/socketService');
 const apiRoutes = require('./routes/api');
 const debugRoutes = require('./routes/debugRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const assetsRoutes = require('./routes/assets');
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,6 +28,7 @@ taskProcessor.start();
 app.use('/api', apiRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/assets', assetsRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: "alive", engine: "Textical AAA Tactical Enabled" });

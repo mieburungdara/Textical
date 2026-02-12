@@ -1,34 +1,37 @@
 const prisma = require('../db');
 const transactionManager = require('../services/economy/TransactionManager');
+const resolver = require('../logic/economy/CurrencyResolver');
 
 async function runAudit() {
     console.log("--------------------------------------------------");
-    console.log("💰 STARTING TRANSACTION MANAGER AUDIT");
+    console.log("💰 STARTING TRANSACTION MANAGER AUDIT (SILVER-BASED)");
     console.log("--------------------------------------------------\n");
 
     const userId = 1;
 
-    // 1. Reset Gold
-    console.log("[1/3] Resetting gold to 1000...");
-    await prisma.user.update({ where: { id: userId }, data: { gold: 1000 } });
+    // 1. Reset to 1000 Silver
+    console.log("[1/3] Resetting balance to 1000 silver...");
+    await prisma.user.update({ where: { id: userId }, data: { silver: 1000, gold: 0 } });
 
-    // 2. Test addGold
-    console.log("[2/3] Adding 500 gold (Quest Reward)...");
+    // 2. Test addCurrency (Silver-based)
+    console.log("[2/3] Adding 500 silver (Quest Reward)...");
     await prisma.$transaction(async (tx) => {
-        await transactionManager.addGold(tx, userId, 500, "QUEST_REWARD", 10, "QUEST");
+        await transactionManager.addCurrency(tx, userId, 500, "QUEST_REWARD", 10, "QUEST");
     });
 
     const afterAdd = await prisma.user.findUnique({ where: { id: userId } });
-    console.log(`   Balance: ${afterAdd.gold} (Expected: 1500)`);
+    const totalAfterAdd = resolver.getTotalSilver(afterAdd);
+    console.log(`   Balance: ${totalAfterAdd} silver (Expected: 1500)`);
 
-    // 3. Test removeGold
-    console.log("[3/3] Removing 300 gold (Market Buy)...");
+    // 3. Test removeCurrency (Silver-based)
+    console.log("[3/3] Removing 300 silver (Market Buy)...");
     await prisma.$transaction(async (tx) => {
-        await transactionManager.removeGold(tx, userId, 300, "MARKET_BUY", 101, "MARKET");
+        await transactionManager.removeCurrency(tx, userId, 300, "MARKET_BUY", 101, "MARKET");
     });
 
     const final = await prisma.user.findUnique({ where: { id: userId } });
-    console.log(`   Final Balance: ${final.gold} (Expected: 1200)`);
+    const totalFinal = resolver.getTotalSilver(final);
+    console.log(`   Final Balance: ${totalFinal} silver (Expected: 1200)`);
 
     // 4. Verify Ledger
     const ledger = await prisma.transactionLedger.findMany({
@@ -39,10 +42,18 @@ async function runAudit() {
 
     console.log("\n📊 LEDGER CHECK:");
     ledger.forEach(entry => {
-        console.log(`   [${entry.type}] Delta: ${entry.amountDelta}, New Bal: ${entry.newBalance}, Source: ${entry.sourceType}#${entry.sourceId}`);
+        console.log(`   [${entry.type}] Delta: ${entry.silverDelta}, Balance: ${entry.silverBalance}, Source: ${entry.sourceType}#${entry.sourceId}`);
     });
 
-    if (final.gold === 1200 && ledger.length === 2) {
+    const expectedBalance = BigInt(1200);
+    const balancePass = String(totalFinal) === String(expectedBalance);
+    const ledgerPass = ledger.length >= 2;
+    
+    console.log(`   Expected: ${expectedBalance}, Actual: ${totalFinal}, Pass: ${balancePass}`);
+    console.log(`   Ledger entries: ${ledger.length}, Pass: ${ledgerPass}`);
+    
+    const pass = balancePass && ledgerPass;
+    if (pass) {
         console.log("\n🌟 FINAL VERDICT: TRANSACTION MANAGER FULLY OPERATIONAL.");
     } else {
         console.log("\n❌ FINAL VERDICT: AUDIT FAILURE.");

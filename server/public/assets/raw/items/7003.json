@@ -1,0 +1,33 @@
+{
+  "id": 7003,
+  "version": 1,
+  "name": "Mithril Rapier",
+  "description": "Light as a feather, sharp as a sting.",
+  "category": "WEAPON",
+  "baseValue": 4000,
+  "rarity": "RARE",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 140,
+      "itemId": 7003,
+      "statKey": "attack_damage",
+      "statValue": 120
+    },
+    {
+      "id": 141,
+      "itemId": 7003,
+      "statKey": "speed",
+      "statValue": 2
+    }
+  ],
+  "traits": []
+}

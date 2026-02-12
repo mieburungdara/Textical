@@ -5,6 +5,7 @@ const evolutionService = require('./evolutionService');
 const lootService = require('./lootService');
 const LevelCalculator = require('../logic/progression/LevelCalculator');
 const permadeathService = require('./PermadeathService');
+const transactionManager = require('./economy/TransactionManager');
 
 class RewardService {
     async processPostBattle(user, result, mode) {
@@ -42,9 +43,11 @@ class RewardService {
             await heroRepository.updateLineage(hero.id, { level: newLevel, exp: newExp });
         }
 
-        // 4. Gold & Items
-        const totalGold = user.gold + (result.rewards.gold || 0);
-        await userRepository.updateGold(user.id, totalGold);
+        // 4. Gold & Items (Silver-based)
+        const goldReward = BigInt(result.rewards.gold || 0);
+        if (goldReward > 0) {
+            await transactionManager.addCurrency(null, user.id, goldReward, "BATTLE_REWARD", null, null);
+        }
 
         const droppedItems = lootService.generateLoot(result.killed_monsters);
         for (let item of droppedItems) {

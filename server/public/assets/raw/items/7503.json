@@ -1,0 +1,33 @@
+{
+  "id": 7503,
+  "version": 1,
+  "name": "Green-Thread Circlet",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 80,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 196,
+      "itemId": 7503,
+      "statKey": "defense",
+      "statValue": 1
+    },
+    {
+      "id": 197,
+      "itemId": 7503,
+      "statKey": "int",
+      "statValue": 1
+    }
+  ],
+  "traits": []
+}

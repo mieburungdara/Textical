@@ -1,0 +1,20 @@
+{
+  "id": 2200,
+  "version": 1,
+  "name": "Oak Wood",
+  "description": "Standard wood used for handles and basic tools.",
+  "category": "MATERIAL",
+  "baseValue": 2,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

@@ -1,42 +1,50 @@
 /**
  * AAA InteractionHandler (Strict Relational)
- * Handles Buffs, Healing, and Gambling logic using explicit columns.
+ * Handles Buffs, Healing, and Gambling logic using TransactionManager.
  */
+const transactionManager = require('../economy/TransactionManager');
+const resolver = require('../../logic/economy/CurrencyResolver');
+
 class InteractionHandler {
     async handleGamble(prisma, userId, npc, bet) {
         // Gambling properties are now explicit on npc object
         const minBet = 100; // Hardcoded fallback or could be another column
         if (!bet || bet < minBet) throw new Error(`Minimum bet is ${minBet}.`);
 
+        const betSilver = BigInt(bet);
+
         return await prisma.$transaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
-            if (user.gold < bet) throw new Error("Insufficient gold.");
+            const userTotalSilver = resolver.getTotalSilver(user);
+            if (userTotalSilver < betSilver) throw new Error(`Insufficient funds. Need ${betSilver} silver, have: ${userTotalSilver}`);
 
             const won = Math.random() < (npc.betWinChance || 0.4);
-            const delta = won ? Math.floor(bet * ((npc.betMultiplier || 2.0) - 1)) : -bet;
+            const deltaSilver = won ? BigInt(Math.floor(bet * ((npc.betMultiplier || 2.0) - 1))) : -betSilver;
 
-            await tx.user.update({
-                where: { id: userId },
-                data: { gold: { increment: delta } }
-            });
+            if (won) {
+                await transactionManager.addCurrency(tx, userId, deltaSilver, "GAMBLE_WIN", npc.id, "NPC");
+            } else {
+                await transactionManager.removeCurrency(tx, userId, deltaSilver, "GAMBLE_LOSS", npc.id, "NPC");
+            }
 
             return {
                 success: won,
-                message: won ? `Fortune smiles! You won ${delta} gold!` : `Lost ${bet} gold.`,
-                newBalance: user.gold + delta
+                message: won ? `Fortune smiles! You won ${deltaSilver} silver!` : `Lost ${betSilver} silver.`,
+                newBalance: userTotalSilver + deltaSilver
             };
         });
     }
 
     async handleBuff(prisma, heroId, userId, npc) {
         // Buff properties (now we'd ideally have a sub-model, but for now we use columns)
-        const cost = 300; // Example fallback
+        const costSilver = BigInt(300); // Example fallback
         
         return await prisma.$transaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
-            if (user.gold < cost) throw new Error("Insufficient gold.");
+            const userTotalSilver = resolver.getTotalSilver(user);
+            if (userTotalSilver < costSilver) throw new Error(`Insufficient funds. Need ${costSilver} silver, have: ${userTotalSilver}`);
 
-            await tx.user.update({ where: { id: userId }, data: { gold: { decrement: cost } } });
+            await transactionManager.removeCurrency(tx, userId, costSilver, "BUFF", heroId, "HERO_BUFF");
 
             const expiresAt = new Date();
             expiresAt.setSeconds(expiresAt.getSeconds() + 1800); // 30 mins
@@ -53,14 +61,18 @@ class InteractionHandler {
     }
 
     async handleHeal(prisma, heroId, userId, npc) {
-        const cost = npc.healCost || 0;
+        const costSilver = BigInt(npc.healCost || 0);
 
         return await prisma.$transaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
-            if (cost > 0 && user.gold < cost) throw new Error("Insufficient gold.");
+            const userTotalSilver = resolver.getTotalSilver(user);
+            
+            if (costSilver > 0 && userTotalSilver < costSilver) {
+                throw new Error(`Insufficient funds. Need ${costSilver} silver, have: ${userTotalSilver}`);
+            }
 
-            if (cost > 0) {
-                await tx.user.update({ where: { id: userId }, data: { gold: { decrement: cost } } });
+            if (costSilver > 0) {
+                await transactionManager.removeCurrency(tx, userId, costSilver, "HEAL", heroId, "HERO");
             }
 
             await tx.hero.update({ where: { id: heroId }, data: { vitality: 100 } });
