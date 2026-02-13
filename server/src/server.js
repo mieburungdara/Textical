@@ -28,6 +28,10 @@ bossManager.init().catch(err => console.error('[BOSS-MANAGER] Init failed:', err
 // Start the Heartbeat
 taskProcessor.start();
 
+// Start Cron Scheduler (Daily Maintenance)
+const cronScheduler = require('./services/world/DailyScheduler');
+cronScheduler.start();
+
 // Mount API
 app.use('/api', apiRoutes);
 app.use('/api/debug', debugRoutes);

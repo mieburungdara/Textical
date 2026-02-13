@@ -69,9 +69,10 @@ Field di bawah ini merupakan rencana pengembangan untuk membuat dunia semakin di
     - *Fungsi:* Terimplementasi dengan akurasi lore; Menentukan ekosistem monster dominan.
 
 ### 🚩 Geopolitik & Guild
-- [ ] **`guildOwnershipId` (Int):** ID Guild yang menguasai wilayah.
-    - *Fungsi:* Mengizinkan Guild untuk menarik pajak tambahan atau memberikan akses khusus.
-- [ ] **`taxDistributionRate` (Float):** Rasio pembagian pajak antara Guild penguasa dan Faksi Kerajaan.
+- [x] **`guildOwnershipId` (Int):** ID Guild yang menguasai wilayah.
+    - *Fungsi:* Mengizinkan Guild untuk menarik pajak tambahan atau memberikan akses khusus. (FULLY OPERATIONAL)
+- [x] **`taxDistributionRate` (Float):** Rasio pembagian pajak antara Guild penguasa dan Faksi Kerajaan.
+    - *Fungsi:* Menentukan porsi pendapatan Silver yang masuk ke Treasury Guild. (FULLY OPERATIONAL)
 
 ### 🔍 Eksplorasi Lanjut
 - [ ] **`hiddenTreasureChance` (Float):** Peluang munculnya "Hidden Nodes" yang tidak terlihat di Map standar.

@@ -435,6 +435,9 @@ model RegionTemplate {
   regionType   RegionType? @relation(fields: [regionTypeId], references: [id])
   factionId    Int?
   faction      Faction?    @relation(fields: [factionId], references: [id])
+  
+  guildOwnershipId Int?
+  guildOwnership   Guild? @relation("RegionOwnership", fields: [guildOwnershipId], references: [id])
 
   territory              Territory?
   connections            RegionConnection[]        @relation("OriginRegion")
@@ -1214,8 +1217,9 @@ model Guild {
   faction   Faction? @relation(fields: [factionId], references: [id])
 
   // Guild System Relations
-  invites GuildInvite[]
-  history GuildHistory[]
+  invites      GuildInvite[]
+  history      GuildHistory[]
+  ownedRegions RegionTemplate[] @relation("RegionOwnership")
 }
 
 // ============================================
@@ -1282,6 +1286,13 @@ model Territory {
 
   capturedAt   DateTime @default(now())
   lastUpkeepAt DateTime @default(now())
+
+  // Monthly Maintenance (Absolute Ownership Requirement)
+  monthlyQuestProgress Int      @default(0)
+  monthlyQuestQuota    Int      @default(10)
+  maintenanceCost      Int      @default(1000) // Tax to system
+  taxDistributionRate  Float    @default(0.5)  // 0.0 to 1.0 (Guild's share of local activity taxes)
+  nextMaintenanceAt    DateTime @default(now())
 
   activeSieges Siege[]
 }
