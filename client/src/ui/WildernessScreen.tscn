@@ -1,7 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://dnjemrk303hej"]
+[gd_scene load_steps=12 format=3 uid="uid://dnjemrk303hej"]
 
-[ext_resource type="Script" path="res://src/ui/regions/WildernessBase.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/TopHUD.tscn" id="2_hud"]
+[ext_resource type="Script" uid="uid://bu0k0rixbq2rf" path="res://src/ui/regions/WildernessBase.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://caki0akpu8lal" path="res://src/ui/TaskListHUD.gd" id="3_7na7n"]
 [ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
 
 [sub_resource type="Gradient" id="Gradient_forest"]
@@ -156,5 +156,17 @@ theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 columns = 4
 
-[node name="TaskListHUD" parent="." instance=ExtResource("3_task")]
+[node name="TaskListHUD" type="Control" parent="." instance=ExtResource("3_task")]
 layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -213.0
+offset_top = -1205.0
+offset_right = -13.0
+offset_bottom = -1105.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("3_7na7n")

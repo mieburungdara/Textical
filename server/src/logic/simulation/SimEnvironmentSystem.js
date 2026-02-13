@@ -1,8 +1,46 @@
 const traitService = require('../../services/traitService');
+const environmentalResolver = require('../world/EnvironmentalResolver');
 
 class SimEnvironmentSystem {
     constructor(sim) {
         this.sim = sim;
+    }
+
+    /**
+     * AAA: Apply Global Environmental Modifiers (Night/Moon Phase)
+     */
+    applyEnvironmentalModifiers() {
+        const hour = this.sim.currentHour || 12;
+        const weather = this.sim.weather || "CLEAR";
+        const moonPhase = this.sim.moonPhase || "NEW";
+
+        const envMods = environmentalResolver.resolveModifiers(hour, weather, moonPhase);
+        
+        for (const unit of this.sim.units.filter(u => !u.isDead)) {
+            // Apply Combat Multipliers
+            unit.temporaryStats.attack_damage = (unit.temporaryStats.attack_damage || 0) + 
+                (unit.stats.attack_damage * (envMods.combat.atkMult - 1));
+            
+            unit.temporaryStats.defense = (unit.temporaryStats.defense || 0) + 
+                (unit.stats.defense * (envMods.combat.defMult - 1));
+
+            // AAA: Stealth Strike Bonus (Night Only, First 5 ticks)
+            const isNight = hour < 6 || hour >= 20;
+            if (isNight && unit.teamId === 0 && this.sim.currentTick < 5) {
+                // Initial ambush bonus
+                unit.temporaryStats.attack_damage += unit.stats.attack_damage * 0.25;
+                if (this.sim.currentTick === 0) {
+                    this.sim.logger.log(`[ENV] ${unit.data.name} benefits from Stealth Strike!`, "INFO");
+                }
+            }
+
+            // Apply Stat Modifiers from Environment
+            for (const mod of envMods.statModifiers) {
+                const baseValue = unit.stats[mod.statKey] || 0;
+                const bonus = mod.isPercent ? (baseValue * mod.value) : mod.value;
+                unit.temporaryStats[mod.statKey] = (unit.temporaryStats[mod.statKey] || 0) + bonus;
+            }
+        }
     }
 
     applyTerrainEffects() {

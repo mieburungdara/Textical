@@ -59,6 +59,7 @@ class LootService {
             const finalChance = entry.chance * chanceMultiplier;
             if (Math.random() < finalChance) {
                 lootResults.push({
+                    id: item.id, // Using 'id' to match RewardService expectation
                     itemId: item.id,
                     name: item.name,
                     quantity: Math.max(1, Math.floor(yieldMultiplier)) 
@@ -71,6 +72,27 @@ class LootService {
         // Let's stick to the loot table for now, but ensure we add meat to the tables in the next step.
 
         return lootResults;
+    }
+
+    /**
+     * Generate loot for multiple monsters, applying zone-specific rules
+     * @param {Array<number>} monsterIds - List of monster IDs
+     * @param {string} zoneType - Zone type (GREEN, BLUE, RED, BLACK)
+     * @returns {Array} List of loot items with options
+     */
+    async generateLoot(monsterIds, zoneType = "GREEN") {
+        const allLoot = [];
+        for (const monsterId of monsterIds) {
+            const drops = await this.generateMonsterLoot(monsterId);
+            allLoot.push(...drops);
+        }
+
+        // Apply Zone Rules
+        if (zoneType === 'BLACK') {
+            return allLoot.map(item => ({ ...item, isSoulbound: true }));
+        }
+
+        return allLoot;
     }
 }
 

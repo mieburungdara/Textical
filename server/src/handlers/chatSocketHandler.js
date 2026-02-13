@@ -36,7 +36,22 @@ class ChatSocketHandler {
                     message
                 });
 
-                // 2. Resolve Target Room
+                // 2. Resolve User Location for Masking
+                const sender = await require('../db').user.findUnique({
+                    where: { id: userId },
+                    include: { region: true }
+                });
+
+                if (sender && sender.region && sender.region.zoneType === 'BLACK') {
+                    // Mask Identity
+                    chatMsg.user = {
+                        id: 0, // Anonymized ID
+                        username: "Unknown Player"
+                    };
+                    chatMsg.isMasked = true;
+                }
+
+                // 3. Resolve Target Room
                 let targetRoom = 'chat:global';
                 if (channelType === 'GUILD') {
                     targetRoom = `chat:guild:${channelId}`;
@@ -45,7 +60,7 @@ class ChatSocketHandler {
                     targetRoom = `chat:private:${roomId}`;
                 }
 
-                // 3. Emit to Room
+                // 4. Emit to Room
                 io.to(targetRoom).emit('chat:message', chatMsg);
 
             } catch (e) {

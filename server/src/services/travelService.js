@@ -26,7 +26,10 @@ class TravelService {
                     orderBy: { id: 'desc' },
                     take: 1
                 },
-                premiumTier: true 
+                premiumTier: true,
+                _count: {
+                    select: { heroes: true }
+                }
             }
         });
 
@@ -41,10 +44,19 @@ class TravelService {
         }
 
         const connection = await prisma.regionConnection.findFirst({
-            where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId }
+            where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId },
+            include: { targetRegion: true }
         });
 
         if (!connection) throw new Error("No direct path exists from here.");
+
+        // AAA: Black Zone Entry Requirement
+        if (connection.targetRegion.zoneType === 'BLACK') {
+            const heroCount = user._count.heroes;
+            if (heroCount < 30) {
+                throw new Error(`Black Zone Danger: You need a minimum size of 30 units to survive here. Current: ${heroCount}`);
+            }
+        }
 
         await vitalityService.syncUserVitality(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });

@@ -21,6 +21,10 @@ app.use(express.static('public'));
 // Initialize Real-time Engine
 socketService.init(server);
 
+// Initialize Boss Manager (World Boss state tracking)
+const bossManager = require('./services/BossManager');
+bossManager.init().catch(err => console.error('[BOSS-MANAGER] Init failed:', err));
+
 // Start the Heartbeat
 taskProcessor.start();
 
@@ -29,6 +33,7 @@ app.use('/api', apiRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/assets', assetsRoutes);
+app.use('/api/assets', assetsRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: "alive", engine: "Textical AAA Tactical Enabled" });

@@ -44,15 +44,15 @@ class InventoryService {
     async addItem(userId, templateId, quantity = 1, tx = null, options = {}) {
         if (quantity <= 0) return;
         const client = tx || prisma;
-        const { traitId = null, quality = "COMMON", powerScale = 1.0 } = options;
+        const { traitId = null, quality = "COMMON", powerScale = 1.0, isCursed = false, isSoulbound = false } = options;
 
         const hasSpace = await this.hasSpace(userId, templateId, quantity);
         if (!hasSpace) {
             throw new Error("Inventory full! No more slots available.");
         }
 
-        if (traitId || quality !== "COMMON" || powerScale !== 1.0) {
-            // AAA: Specialized Instance with Quality/Traits - Bypasses Stacking
+        if (traitId || quality !== "COMMON" || powerScale !== 1.0 || isCursed || isSoulbound) {
+            // AAA: Specialized Instance with Quality/Traits/Curse/Soulbound - Bypasses Stacking
             const items = [];
             for (let i = 0; i < quantity; i++) {
                 const data = {
@@ -60,7 +60,9 @@ class InventoryService {
                     templateId,
                     quantity: 1, 
                     quality,
-                    powerScale
+                    powerScale,
+                    isCursed,
+                    isSoulbound
                 };
 
                 if (traitId) {

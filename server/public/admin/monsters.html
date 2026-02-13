@@ -206,9 +206,14 @@
                     <input type="text" class="form-control border-start-0 ps-0" id="monsterSearch" placeholder="Search monsters..." oninput="window.handleMonsterSearch()">
                 </div>
             </div>
-            <button class="btn btn-primary d-flex align-items-center gap-2" onclick="window.createMonster()">
-                <i class="bi bi-plus-lg"></i> New Monster
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="window.seedMonsters()">
+                    <i class="bi bi-database-add"></i> Seed
+                </button>
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="window.createMonster()">
+                    <i class="bi bi-plus-lg"></i> New Monster
+                </button>
+            </div>
         </header>
 
         <div class="monster-grid">
@@ -364,218 +369,323 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="common.js"></script>
 <script>
-    let state = {
-        categories: [],
-        monsters: [],
-        selectedCategoryId: null,
-        traits: []
-    };
+let state = {
+    categories: [],
+    monsters: [],
+    selectedCategoryId: null,
+    traits: []
+};
 
-    window.init = async function() {
-        try {
-            await Promise.all([
-                loadCategories(),
-                loadTraits()
-            ]);
-            await loadMonsters();
-        } catch (error) {
-            console.error('[Admin] Init failed:', error);
-            showAlert('Failed to initialize admin panel', 'danger');
-        }
-    };
+// Function declarations first - all with window. prefix
 
-    async function loadCategories() {
-        const response = await fetch('/api/raw/monsters/categories'); // Assume this endpoint exists or will be added
+window.loadCategories = async function() {
+    try {
+        const response = await fetch('/api/admin/monsters/categories');
         if (!response.ok) {
-            // Fallback: Get unique categories from monsters if endpoint fails
             state.categories = [{ id: 0, name: 'All' }];
         } else {
             state.categories = await response.json();
         }
-        renderCategories();
+        window.renderCategories();
         
         // Populate category dropdown in modal
         const select = document.getElementById('monsterCategory');
-        select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        if (select) {
+            select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('[Monsters] Failed to load categories:', error);
+        state.categories = [{ id: 0, name: 'All' }];
+        window.renderCategories();
     }
+};
 
-    async function loadTraits() {
-        try {
-            const response = await fetch('/api/raw/traits');
-            if (response.ok) state.traits = await response.json();
-        } catch (e) { console.warn('Could not load traits list'); }
+window.loadTraits = async function() {
+    try {
+        const response = await fetch('/api/admin/traits');
+        if (response.ok) state.traits = await response.json();
+    } catch (e) { 
+        console.warn('[Monsters] Could not load traits list:', e); 
     }
+};
 
-    async function loadMonsters() {
-        const listEl = document.getElementById('monsterList');
+window.loadMonsters = async function() {
+    const listEl = document.getElementById('monsterList');
+    if (listEl) {
         listEl.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-        
-        try {
-            const search = document.getElementById('monsterSearch').value;
-            const url = `/api/raw/monsters?category=${state.selectedCategoryId || ''}&q=${search || ''}`;
-            const response = await fetch(url);
-            state.monsters = await response.json();
-            renderMonsters();
-        } catch (error) {
-            listEl.innerHTML = '<div class="col-12 text-center text-danger">Failed to load monsters.</div>';
+    }
+    
+    try {
+        const search = document.getElementById('monsterSearch')?.value || '';
+        const url = `/api/admin/monsters?limit=100&search=${encodeURIComponent(search)}`;
+        if (state.selectedCategoryId) {
+            // Add category filter if needed
+        }
+        const response = await fetch(url);
+        if (response.ok) {
+            // API returns flat array, not object with 'monsters' property
+            const data = await response.json();
+            state.monsters = Array.isArray(data) ? data : (data.monsters || []);
+            console.log('[Monsters] Loaded:', state.monsters.length, 'monsters');
+            window.renderMonsters();
+        } else {
+            throw new Error('Failed to load monsters');
+        }
+    } catch (error) {
+        console.error('[Monsters] Failed to load monsters:', error);
+        if (listEl) {
+            listEl.innerHTML = '<div class="col-12 text-center text-danger py-4">Failed to load monsters. Check console for details.</div>';
         }
     }
+};
 
-    function renderCategories() {
-        const list = document.getElementById('categoryList');
-        list.innerHTML = `
-            <div class="category-item ${state.selectedCategoryId === null ? 'active' : ''}" onclick="window.selectCategory(null)">
-                <span>All Monsters</span>
+window.renderCategories = function() {
+    const list = document.getElementById('categoryList');
+    if (!list) return;
+    
+    list.innerHTML = `
+        <div class="category-item ${state.selectedCategoryId === null ? 'active' : ''}" onclick="window.selectCategory(null)">
+            <span>All Monsters</span>
+        </div>
+        ${state.categories.map(c => `
+            <div class="category-item ${state.selectedCategoryId === c.id ? 'active' : ''}" onclick="window.selectCategory(${c.id})">
+                <span>${c.name}</span>
             </div>
-            ${state.categories.map(c => `
-                <div class="category-item ${state.selectedCategoryId === c.id ? 'active' : ''}" onclick="window.selectCategory(${c.id})">
-                    <span>${c.name}</span>
-                </div>
-            `).join('')}
-        `;
+        `).join('')}
+    `;
+};
+
+window.selectCategory = function(id) {
+    state.selectedCategoryId = id;
+    const cat = state.categories.find(c => c.id === id);
+    const nameEl = document.getElementById('selectedCategoryName');
+    if (nameEl) {
+        nameEl.innerText = cat ? cat.name : 'All Monsters';
+    }
+    window.renderCategories();
+    window.loadMonsters();
+};
+
+window.renderMonsters = function() {
+    const list = document.getElementById('monsterList');
+    if (!list) return;
+    
+    if (state.monsters.length === 0) {
+        list.innerHTML = '<div class="col-12 text-center py-5 text-muted">No monsters found.</div>';
+        return;
     }
 
-    window.selectCategory = function(id) {
-        state.selectedCategoryId = id;
-        const cat = state.categories.find(c => c.id === id);
-        document.getElementById('selectedCategoryName').innerText = cat ? cat.name : 'All Monsters';
-        renderCategories();
-        loadMonsters();
-    };
-
-    function renderMonsters() {
-        const list = document.getElementById('monsterList');
-        if (state.monsters.length === 0) {
-            list.innerHTML = '<div class="col-12 text-center py-5 text-muted">No monsters found in this category.</div>';
-            return;
-        }
-
-        list.innerHTML = state.monsters.map(m => `
-            <div class="col-md-6 col-lg-4">
-                <div class="monster-card" onclick="window.editMonster(${m.id})">
-                    <div class="monster-icon">
-                        <i class="bi bi-bug"></i>
-                    </div>
-                    <div class="fw-bold mb-1">${m.name}</div>
-                    <div class="text-muted small mb-3">${m.category?.name || 'Uncategorized'}</div>
-                    <div class="monster-stats">
-                        <div class="stat-item"><i class="bi bi-heart-fill text-danger"></i> ${m.hp_base} HP</div>
-                        <div class="stat-item"><i class="bi bi-lightning-fill text-warning"></i> ${m.damage_base} ATK</div>
-                        <div class="stat-item"><i class="bi bi-shield-fill text-primary"></i> ${m.defense_base || 0} DEF</div>
-                        <div class="stat-item"><i class="bi bi-speedometer2 text-info"></i> ${m.speed_base || 5} SPD</div>
-                    </div>
+    list.innerHTML = state.monsters.map(m => `
+        <div class="col-md-6 col-lg-4">
+            <div class="monster-card" onclick="window.editMonster(${m.id})">
+                <div class="monster-icon">
+                    <i class="bi bi-bug"></i>
+                </div>
+                <div class="fw-bold mb-1">${m.name}</div>
+                <div class="text-muted small mb-3">${m.category?.name || 'Uncategorized'}</div>
+                <div class="monster-stats">
+                    <div class="stat-item"><i class="bi bi-heart-fill text-danger"></i> ${m.hp_base} HP</div>
+                    <div class="stat-item"><i class="bi bi-lightning-fill text-warning"></i> ${m.damage_base} ATK</div>
+                    <div class="stat-item"><i class="bi bi-shield-fill text-primary"></i> ${m.defense_base || 0} DEF</div>
+                    <div class="stat-item"><i class="bi bi-speedometer2 text-info"></i> ${m.speed_base || 5} SPD</div>
                 </div>
             </div>
-        `).join('');
+        </div>
+    `).join('');
+};
+
+window.handleMonsterSearch = function() {
+    clearTimeout(this.searchTimeout || window.monsterSearchTimeout);
+    window.monsterSearchTimeout = setTimeout(() => window.loadMonsters(), 300);
+};
+
+window.createMonster = function() {
+    const form = document.getElementById('monsterForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const traitsList = document.getElementById('monsterTraitsList');
+    
+    if (form) form.reset();
+    const idEl = document.getElementById('monsterId');
+    if (idEl) idEl.value = '';
+    if (modalTitle) modalTitle.innerText = 'New Monster';
+    if (traitsList) traitsList.innerHTML = '';
+    
+    const modalEl = document.getElementById('monsterModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        new bootstrap.Modal(modalEl).show();
+    }
+};
+
+window.editMonster = async function(id) {
+    const monster = state.monsters.find(m => m.id === id);
+    if (!monster) {
+        console.error('[Monsters] Monster not found:', id);
+        return;
     }
 
-    window.handleMonsterSearch = function() {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => loadMonsters(), 300);
-    };
+    document.getElementById('monsterId').value = monster.id;
+    document.getElementById('monsterName').value = monster.name;
+    document.getElementById('monsterCategory').value = monster.categoryId;
+    document.getElementById('monsterBT').value = monster.behaviorTree || 'SimpleAI';
+    
+    // Stats
+    document.getElementById('m_hp_base').value = monster.hp_base;
+    document.getElementById('m_damage_base').value = monster.damage_base;
+    document.getElementById('m_defense_base').value = monster.defense_base || 0;
+    document.getElementById('m_speed_base').value = monster.speed_base || 5;
+    document.getElementById('m_accuracy_base').value = monster.accuracy_base || 100;
+    document.getElementById('m_range_base').value = monster.range_base || 1;
+    document.getElementById('m_dodge_rate').value = monster.dodge_rate || 0.05;
+    document.getElementById('m_crit_chance').value = monster.crit_chance || 0.05;
+    document.getElementById('m_crit_damage').value = monster.crit_damage || 1.5;
+    document.getElementById('m_block_chance').value = monster.block_chance || 0;
+    document.getElementById('m_block_power_base').value = monster.block_power_base || 0.5;
+    document.getElementById('m_initiative_base').value = monster.initiative_base || 0;
+    document.getElementById('m_lifesteal_base').value = monster.lifesteal_base || 0;
+    document.getElementById('m_move_speed').value = monster.move_speed || 100;
+    document.getElementById('m_attack_speed').value = monster.attack_speed || 1.0;
+    document.getElementById('m_cooldown_reduction').value = monster.cooldown_reduction || 0;
 
-    window.createMonster = function() {
-        document.getElementById('monsterForm').reset();
-        document.getElementById('monsterId').value = '';
-        document.getElementById('modalTitle').innerText = 'New Monster';
-        document.getElementById('monsterTraitsList').innerHTML = '';
-        new bootstrap.Modal(document.getElementById('monsterModal')).show();
-    };
+    window.renderMonsterTraits(monster.traits);
+    
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.innerText = 'Edit Monster: ' + monster.name;
+    
+    const modalEl = document.getElementById('monsterModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        new bootstrap.Modal(modalEl).show();
+    }
+};
 
-    window.editMonster = async function(id) {
-        const monster = state.monsters.find(m => m.id === id);
-        if (!monster) return;
-
-        document.getElementById('monsterId').value = monster.id;
-        document.getElementById('monsterName').value = monster.name;
-        document.getElementById('monsterCategory').value = monster.categoryId;
-        document.getElementById('monsterBT').value = monster.behaviorTree || 'SimpleAI';
-        
-        // Stats
-        document.getElementById('m_hp_base').value = monster.hp_base;
-        document.getElementById('m_damage_base').value = monster.damage_base;
-        document.getElementById('m_defense_base').value = monster.defense_base || 0;
-        document.getElementById('m_speed_base').value = monster.speed_base || 5;
-        document.getElementById('m_accuracy_base').value = monster.accuracy_base || 100;
-        document.getElementById('m_range_base').value = monster.range_base || 1;
-        document.getElementById('m_dodge_rate').value = monster.dodge_rate || 0.05;
-        document.getElementById('m_crit_chance').value = monster.crit_chance || 0.05;
-        document.getElementById('m_crit_damage').value = monster.crit_damage || 1.5;
-        document.getElementById('m_block_chance').value = monster.block_chance || 0;
-        document.getElementById('m_block_power_base').value = monster.block_power_base || 0.5;
-        document.getElementById('m_initiative_base').value = monster.initiative_base || 0;
-        document.getElementById('m_lifesteal_base').value = monster.lifesteal_base || 0;
-        document.getElementById('m_move_speed').value = monster.move_speed || 100;
-        document.getElementById('m_attack_speed').value = monster.attack_speed || 1.0;
-        document.getElementById('m_cooldown_reduction').value = monster.cooldown_reduction || 0;
-
-        renderMonsterTraits(monster.traits);
-        
-        document.getElementById('modalTitle').innerText = 'Edit Monster: ' + monster.name;
-        new bootstrap.Modal(document.getElementById('monsterModal')).show();
-    };
-
-    function renderMonsterTraits(traits = []) {
-        const list = document.getElementById('monsterTraitsList');
-        list.innerHTML = traits.length === 0 ? '<div class="text-muted small italic">No traits assigned</div>' : traits.map(t => `
+window.renderMonsterTraits = function(traits = []) {
+    const list = document.getElementById('monsterTraitsList');
+    if (!list) return;
+    
+    list.innerHTML = traits.length === 0 
+        ? '<div class="text-muted small italic">No traits assigned</div>' 
+        : traits.map(t => `
             <div class="d-flex justify-content-between align-items-center bg-white border rounded p-2 mb-1">
                 <span class="small">${t.trait?.name || t.name || 'Unknown Trait'}</span>
                 <button type="button" class="btn btn-sm text-danger p-0" onclick="this.parentElement.remove()"><i class="bi bi-x-circle"></i></button>
             </div>
         `).join('');
-    }
+};
 
-    window.saveMonster = async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('monsterId').value;
-        const body = {
-            name: document.getElementById('monsterName').value,
-            categoryId: document.getElementById('monsterCategory').value,
-            behaviorTree: document.getElementById('monsterBT').value,
-            hp_base: document.getElementById('m_hp_base').value,
-            damage_base: document.getElementById('m_damage_base').value,
-            defense_base: document.getElementById('m_defense_base').value,
-            speed_base: document.getElementById('m_speed_base').value,
-            accuracy_base: document.getElementById('m_accuracy_base').value,
-            range_base: document.getElementById('m_range_base').value,
-            dodge_rate: document.getElementById('m_dodge_rate').value,
-            crit_chance: document.getElementById('m_crit_chance').value,
-            crit_damage: document.getElementById('m_crit_damage').value,
-            block_chance: document.getElementById('m_block_chance').value,
-            block_power_base: document.getElementById('m_block_power_base').value,
-            initiative_base: document.getElementById('m_initiative_base').value,
-            lifesteal_base: document.getElementById('m_lifesteal_base').value,
-            move_speed: document.getElementById('m_move_speed').value,
-            attack_speed: document.getElementById('m_attack_speed').value,
-            cooldown_reduction: document.getElementById('m_cooldown_reduction').value
-        };
-
-        try {
-            const method = id ? 'PUT' : 'POST';
-            const url = id ? `/api/raw/monsters/${id}` : '/api/raw/monsters';
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            
-            if (response.ok) {
-                showAlert('Monster saved successfully!', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('monsterModal')).hide();
-                loadMonsters();
-            } else {
-                const err = await response.json();
-                throw new Error(err.message || 'Save failed');
-            }
-        } catch (error) {
-            showAlert(error.message, 'danger');
-        }
+window.saveMonster = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('monsterId').value;
+    const body = {
+        name: document.getElementById('monsterName').value,
+        categoryId: document.getElementById('monsterCategory').value,
+        behaviorTree: document.getElementById('monsterBT').value,
+        hp_base: document.getElementById('m_hp_base').value,
+        damage_base: document.getElementById('m_damage_base').value,
+        defense_base: document.getElementById('m_defense_base').value,
+        speed_base: document.getElementById('m_speed_base').value,
+        accuracy_base: document.getElementById('m_accuracy_base').value,
+        range_base: document.getElementById('m_range_base').value,
+        dodge_rate: document.getElementById('m_dodge_rate').value,
+        crit_chance: document.getElementById('m_crit_chance').value,
+        crit_damage: document.getElementById('m_crit_damage').value,
+        block_chance: document.getElementById('m_block_chance').value,
+        block_power_base: document.getElementById('m_block_power_base').value,
+        initiative_base: document.getElementById('m_initiative_base').value,
+        lifesteal_base: document.getElementById('m_lifesteal_base').value,
+        move_speed: document.getElementById('m_move_speed').value,
+        attack_speed: document.getElementById('m_attack_speed').value,
+        cooldown_reduction: document.getElementById('m_cooldown_reduction').value
     };
 
+    try {
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/monsters/${id}` : '/api/admin/monsters';
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        
+        if (response.ok) {
+            showAlert('Monster saved successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('monsterModal'));
+            if (modal) modal.hide();
+            window.loadMonsters();
+        } else {
+            const err = await response.json();
+            throw new Error(err.message || 'Save failed');
+        }
+    } catch (error) {
+        console.error('[Monsters] Save failed:', error);
+        showAlert(error.message, 'danger');
+    }
+};
+
+window.addTrait = function() {
+    const list = document.getElementById('monsterTraitsList');
+    if (!list) return;
+    
+    // Simple trait selector - in production this would open a modal
+    const traitName = prompt('Enter trait name:');
+    if (traitName) {
+        list.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center bg-white border rounded p-2 mb-1">
+                <span class="small">${traitName}</span>
+                <button type="button" class="btn btn-sm text-danger p-0" onclick="this.parentElement.remove()"><i class="bi bi-x-circle"></i></button>
+            </div>
+        `;
+    }
+};
+
+window.seedMonsters = async function() {
+    if (!confirm('This will seed/reset monsters from JSON files. Continue?')) return;
+    
+    try {
+        showAlert('Seeding monsters...', 'info');
+        const response = await fetch('/api/admin/seed/monsters', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('[Monsters] Seed result:', result);
+            showAlert(`Seeded successfully! Monsters: ${result.data?.monsters || 0}, Regions: ${result.data?.regions || 0}, Items: ${result.data?.items || 0}`, 'success');
+            // Reload monsters
+            window.loadMonsters();
+        } else {
+            const err = await response.json();
+            throw new Error(err.error || 'Seed failed');
+        }
+    } catch (error) {
+        console.error('[Monsters] Seed failed:', error);
+        showAlert('Seed failed: ' + error.message, 'danger');
+    }
+};
+
+// Initialize - called by admin panel loader
+window.init = async function() {
+    try {
+        console.log('[Monsters] Initializing...');
+        await Promise.all([
+            window.loadCategories(),
+            window.loadTraits()
+        ]);
+        await window.loadMonsters();
+        console.log('[Monsters] Initialization complete');
+    } catch (error) {
+        console.error('[Monsters] Init failed:', error);
+        showAlert('Failed to initialize monsters panel', 'danger');
+    }
+};
+
+// Auto-init if DOM is already loaded (for standalone testing)
+if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.init);
+} else {
+    setTimeout(window.init, 0);
+}
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
 </html>

@@ -19,7 +19,8 @@ const ERROR_CODES = {
     INVALID_INPUT: 'INVALID_INPUT',
     HERO_NOT_FOUND: 'HERO_NOT_FOUND',
     INVALID_STAT_KEY: 'INVALID_STAT_KEY',
-    BUFF_DURATION_EXCEEDED: 'BUFF_DURATION_EXCEEDED'
+    BUFF_DURATION_EXCEEDED: 'BUFF_DURATION_EXCEEDED',
+    BLACK_ZONE_RESTRICTION: 'BLACK_ZONE_RESTRICTION'
 };
 
 // === Magic Number Constants ===
@@ -110,6 +111,19 @@ class ConsumableService {
                 success: false, 
                 error: ERROR_CODES.INVALID_INPUT,
                 message: "Invalid heroId"
+            };
+        }
+
+        // AAA: Black Zone Restriction
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { region: true }
+        });
+        if (user && user.region && user.region.zoneType === 'BLACK') {
+            return {
+                success: false,
+                error: ERROR_CODES.BLACK_ZONE_RESTRICTION,
+                message: "Consumption of potions is strictly prohibited in the Black Zone."
             };
         }
         
@@ -367,11 +381,19 @@ class ConsumableService {
         
         const inv = await prisma.inventoryItem.findUnique({
             where: { id: itemInstanceId },
-            include: { template: true }
+            include: { 
+                template: true,
+                user: { include: { region: true } }
+            }
         });
 
         if (!inv || inv.userId !== userId) {
             throw new Error(ERROR_CODES.ITEM_NOT_FOUND);
+        }
+
+        // AAA: Black Zone Restriction
+        if (inv.user && inv.user.region && inv.user.region.zoneType === 'BLACK') {
+            throw new Error(ERROR_CODES.BLACK_ZONE_RESTRICTION);
         }
         if (inv.template.category !== "CONSUMABLE") {
             throw new Error(ERROR_CODES.ITEM_NOT_CONSUMABLE);

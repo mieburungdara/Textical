@@ -107,6 +107,33 @@ class QuestService extends BaseService {
             include: { currentStage: { include: { objectives: true } }, quest: true }
         });
     }
+
+    async updateQuestProgress(userId, type, targetId, amount = 1) {
+        const activeQuests = await this.getActiveQuests(userId);
+        
+        for (const uQuest of activeQuests) {
+            const currentStage = uQuest.currentStage;
+            if (!currentStage) continue;
+
+            let updated = false;
+            const progress = JSON.parse(uQuest.progressData || "{}");
+
+            for (const obj of currentStage.objectives) {
+                if (obj.type === type && obj.targetId === targetId) {
+                    progress[targetId] = (progress[targetId] || 0) + amount;
+                    updated = true;
+                }
+            }
+
+            if (updated) {
+                await this.db.userQuest.update({
+                    where: { id: uQuest.id },
+                    data: { progressData: JSON.stringify(progress) }
+                });
+                this.log(`Updated quest ${uQuest.questId} progress for User ${userId}: ${type} ${targetId} -> ${progress[targetId]}`, "Quest");
+            }
+        }
+    }
 }
 
 module.exports = new QuestService();

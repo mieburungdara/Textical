@@ -28,6 +28,9 @@ class BattleSimulation {
         this.unitDeeds = {};
         this.rewards = { gold: 0, exp: 0 };
         this.terrainEffects = []; 
+        this.currentHour = 12;
+        this.weather = "CLEAR";
+        this.moonPhase = "NEW";
         
         // AAA: Battle Registry Tracking
         this.startTime = Date.now();

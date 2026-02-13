@@ -33,6 +33,7 @@ class SimLoopProcessor {
         s.grid.updateObstacles(s.units);
         s.logger.startTick(s.currentTick);
 
+        s.environment.applyEnvironmentalModifiers();
         s.environment.applyTerrainEffects();
         s.environment.applyAuras();
 

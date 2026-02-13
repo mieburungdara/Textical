@@ -133,6 +133,78 @@ class TavernService {
             include: { hero: { include: { combatClass: true } } }
         });
     }
+
+    /**
+     * Fast Travel between Royal Cities via Tavern/Inn Network.
+     */
+    async fastTravel(userId, targetRegionId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { region: true }
+        });
+
+        if (!user.isInTavern) throw new Error("You must be inside a Tavern or Inn to arrange Fast Travel.");
+
+        // 1. Verify Origin is Royal/Capital
+        // Assuming 'ROYAL' zoneType or 'ROYAL_CITY' visualType. 
+        // Summary said zoneType ROYAL is added.
+        if (user.region.zoneType !== 'ROYAL') {
+            throw new Error("Fast Travel is only available from Royal Cities.");
+        }
+
+        // 2. Verify Target is Royal
+        const target = await prisma.regionTemplate.findUnique({ where: { id: targetRegionId } });
+        if (!target || target.zoneType !== 'ROYAL') {
+            throw new Error("You can only Fast Travel to other Royal Cities.");
+        }
+
+        if (user.currentRegion === targetRegionId) {
+            throw new Error("You are already here.");
+        }
+
+        // 3. Cooldown Check (Using settings JSON to avoid schema migration)
+        const settings = user.settings ? JSON.parse(user.settings) : {};
+        const lastTravel = settings.lastFastTravelAt ? new Date(settings.lastFastTravelAt) : null;
+        const now = new Date();
+        const COOLDOWN_MINUTES = 60;
+        
+        if (lastTravel) {
+            const diffMinutes = (now - lastTravel) / 1000 / 60;
+            if (diffMinutes < COOLDOWN_MINUTES) {
+                const remaining = Math.ceil(COOLDOWN_MINUTES - diffMinutes);
+                throw new Error(`Fast Travel is on cooldown. Next caravan departs in ${remaining} minutes.`);
+            }
+        }
+
+        // 4. Cost Calculation (Distance based or Flat?)
+        const COST = 5000; // Flat fee for Royal Network
+        const userSilver = resolver.getTotalSilver(user);
+        
+        if (userSilver < BigInt(COST)) {
+            throw new Error(`Insufficient funds. Ticket costs ${COST} silver.`);
+        }
+
+        // 5. Execute
+        await transactionManager.removeCurrency(prisma, userId, COST, "FAST_TRAVEL", null, "TAVERN");
+        
+        settings.lastFastTravelAt = now.toISOString();
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                currentRegion: targetRegionId,
+                settings: JSON.stringify(settings),
+                isInTavern: false, // Eject on arrival
+                tavernEntryAt: null
+            }
+        });
+
+        return { 
+            success: true, 
+            message: `Arrived at ${target.name}. The journey was swift.`,
+            newRegionId: targetRegionId
+        };
+    }
 }
 
 module.exports = new TavernService();

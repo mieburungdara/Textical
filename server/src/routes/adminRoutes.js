@@ -30,6 +30,8 @@ router.get('/items', (req, res) => adminController.getItems(req, res));
 
 // --- Quests Management ---
 router.get('/quests', (req, res) => adminController.getQuests(req, res));
+router.get('/quests/categories', (req, res) => adminController.getQuestCategories(req, res));
+router.post('/quests/:id', (req, res) => adminController.saveQuest(req, res));
 
 // --- Skills Management ---
 router.get('/skills', (req, res) => adminController.getSkills(req, res));
@@ -55,6 +57,52 @@ router.get('/stats/export', (req, res) => adminController.exportStats(req, res))
 // --- Server Management ---
 router.get('/server/health', (req, res) => adminController.getServerHealth(req, res));
 router.get('/server/db-stats', (req, res) => adminController.getDatabaseStats(req, res));
+
+// --- Data Seeding ---
+router.post('/seed/monsters', async (req, res) => {
+    try {
+        const prisma = require('../db');
+        const monsterData = require('../data/monsters.json');
+        
+        let created = 0;
+        for (let id in monsterData) {
+            const m = monsterData[id];
+            // Convert string ID to integer if needed
+            const idInt = parseInt(id) || id;
+            
+            await prisma.monsterTemplate.upsert({
+                where: { id: idInt },
+                update: {
+                    name: m.name,
+                    hp_base: m.hp_base,
+                    damage_base: m.damage_base,
+                    defense_base: m.defense_base || 0,
+                    speed_base: m.speed_base || 5,
+                    range_base: m.range_base || 1,
+                    exp_reward: m.exp_reward || 0,
+                    image_path: m.image_path || ''
+                },
+                create: {
+                    id: idInt,
+                    name: m.name,
+                    hp_base: m.hp_base,
+                    damage_base: m.damage_base,
+                    defense_base: m.defense_base || 0,
+                    speed_base: m.speed_base || 5,
+                    range_base: m.range_base || 1,
+                    exp_reward: m.exp_reward || 0,
+                    image_path: m.image_path || ''
+                }
+            });
+            created++;
+        }
+        
+        res.json({ success: true, data: { monsters: created } });
+    } catch (error) {
+        console.error('[Seed] Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // --- Bulk Operations ---
 router.post('/bulk/items', (req, res) => adminController.bulkUpdateItems(req, res));

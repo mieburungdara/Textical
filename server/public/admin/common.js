@@ -3,7 +3,7 @@
 // API Helper
 const api = {
     baseUrl: '/api/admin',
-    token: 'admin-default-token',
+    token: 'textical-admin-2024',
 
     init() {
         // No authentication required for admin panel
@@ -60,7 +60,16 @@ const api = {
     },
 
     getHeroes(page = 1, search = '') {
-        return this.request(`/heroes?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
+        console.log('[Common] getHeroes called with page:', page, 'search:', search);
+        const url = `/heroes?page=${page}&limit=50&search=${encodeURIComponent(search)}`;
+        console.log('[Common] API URL:', this.baseUrl + url);
+        return this.request(url).then(data => {
+            console.log('[Common] API Response received:', data);
+            return data;
+        }).catch(error => {
+            console.error('[Common] API Error:', error);
+            throw error;
+        });
     },
 
     getHeroById(id) {
@@ -79,8 +88,12 @@ const api = {
         return this.request(`/items?page=${page}&limit=50&search=${encodeURIComponent(search)}&category=${category}`);
     },
 
-    getQuests(page = 1, search = '') {
-        return this.request(`/quests?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
+    getQuests(page = 1, search = '', category = 'ALL') {
+        return this.request(`/quests?page=${page}&limit=50&search=${encodeURIComponent(search)}&category=${category}`);
+    },
+
+    getQuestCategories() {
+        return this.request('/quests/categories');
     },
 
     getSkills(page = 1, search = '') {

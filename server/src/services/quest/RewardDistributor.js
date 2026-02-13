@@ -24,8 +24,22 @@ class RewardDistributor extends BaseService {
                         update: { quantity: { increment: r.amount } },
                         create: { userId, templateId: r.itemId, quantity: r.amount }
                     });
+                } else if (r.type === "XP") {
+                    // AAA: Award XP to all user's heroes or current active formation
+                    const user = await tx.user.findUnique({ where: { id: userId }, include: { heroes: true } });
+                    for (const hero of user.heroes) {
+                        await tx.hero.update({
+                            where: { id: hero.id },
+                            data: { unitXp: { increment: r.amount } }
+                        });
+                    }
+                } else if (r.type === "REPUTATION" && r.factionId) {
+                    await tx.userReputation.upsert({
+                        where: { userId_factionId: { userId, factionId: r.factionId } },
+                        update: { points: { increment: r.amount } },
+                        create: { userId, factionId: r.factionId, points: r.amount }
+                    });
                 }
-                // EXP rewarded separately or ignored for now
             }
 
             // 2. Handle Transition or Completion

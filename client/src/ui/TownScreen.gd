@@ -35,6 +35,20 @@ func _ready():
     GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
     
     _play_entry_animation()
+    _check_quest_markers()
+
+func _check_quest_markers():
+    # Remove existing markers
+    for child in quest_btn.get_children():
+        if child.name == "QuestMarker":
+            child.queue_free()
+    
+    # Logic to show marker if available (mocked for now, should check server)
+    var marker_packed = load("res://src/ui/QuestMarker.tscn")
+    var marker = marker_packed.instantiate()
+    marker.name = "QuestMarker"
+    marker.position = Vector2(130, 10) # Position on top right of 160x160 button
+    quest_btn.add_child(marker)
 
 func _update_town_title():
     if GameState.current_region_data:

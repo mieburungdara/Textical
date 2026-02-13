@@ -59,53 +59,70 @@ func _save_local_versions():
 
 ## === VERSION CHECK ===
 
-func check_server_versions():
+func check_server_versions(max_retries: int = -1): # -1 for infinite retries
     version_check_started.emit()
     
-    # DEBUG: Check if ServerConnector is available
-    print("[DataManager.DEBUG] Checking ServerConnector availability...")
-    if not ServerConnector:
-        print("[DataManager.ERROR] ServerConnector is null!")
-        version_check_failed.emit("ServerConnector not initialized")
-        return
+    var retry_count = 0
+    var success = false
     
-    print("[DataManager.DEBUG] ServerConnector found: " + str(ServerConnector))
-    
-    var result = await _fetch_json("/assets/versions")
-    
-    if not result:
-        print("[DataManager.ERROR] _fetch_json returned null")
-        version_check_failed.emit("Failed to connect to server")
-        return
-    
-    if not result.has("data"):
-        print("[DataManager.ERROR] Response missing 'data' key: " + str(result))
-        version_check_failed.emit("Invalid response format")
-        return
-    
-    # DEBUG: Log server response
-    print("[DataManager.DEBUG] Server response: " + str(result.data))
-    
-    _server_versions = result.data.versions if result.data.has("versions") else {}
-    
-    # Compare versions
-    var needs_update = false
-    
-    for cat in _server_versions.keys():
-        var local = _local_versions.get(cat, 0)
-        var server = _server_versions[cat]
+    while not success:
+        if max_retries != -1 and retry_count >= max_retries:
+            print("[DataManager.ERROR] Max retries reached for version check.")
+            version_check_failed.emit("Maximum connection attempts reached")
+            return
+
+        # Step 1: Check if ServerConnector is available
+        if not ServerConnector:
+            print("[DataManager.ERROR] ServerConnector is null!")
+            version_check_failed.emit("ServerConnector not initialized")
+            return
         
-        if server > local:
-            print("[DataManager] %s: %d → %d (UPDATE NEEDED)" % [cat, local, server])
-            needs_update = true
-        else:
-            print("[DataManager] %s: %d (UP TO DATE)" % [cat, server])
-    
-    if _server_versions.is_empty():
-        print("[DataManager.WARN] No versions received from server!")
-        needs_update = false # Default to no update if server error
-    
-    version_check_completed.emit(needs_update)
+        # Step 2: Test server connectivity first
+        print("[DataManager] Testing server connectivity (Attempt %d)..." % (retry_count + 1))
+        var conn_success = await ServerConnector.test_connection(5.0)
+        
+        if not conn_success:
+            print("[DataManager.WARN] Server unreachable. Retrying in 3 seconds...")
+            version_check_failed.emit("Retrying connection (%d)..." % (retry_count + 1))
+            retry_count += 1
+            await get_tree().create_timer(3.0).timeout
+            continue
+        
+        print("[DataManager] Server is reachable, fetching versions...")
+        
+        # Step 3: Fetch version data
+        var result = await _fetch_json("/assets/versions")
+        
+        if not result or not result.has("data"):
+            print("[DataManager.ERROR] Failed to fetch versions. Retrying in 3 seconds...")
+            version_check_failed.emit("Retrying data fetch (%d)..." % (retry_count + 1))
+            retry_count += 1
+            await get_tree().create_timer(3.0).timeout
+            continue
+        
+        success = true
+        print("[DataManager] Server response received: " + str(result.data))
+        
+        _server_versions = result.data.versions if result.data.has("versions") else {}
+        
+        # Step 4: Compare versions
+        var needs_update = false
+        
+        for cat in _server_versions.keys():
+            var local = _local_versions.get(cat, 0)
+            var server = _server_versions[cat]
+            
+            if server > local:
+                print("[DataManager] %s: %d → %d (UPDATE NEEDED)" % [cat, local, server])
+                needs_update = true
+            else:
+                print("[DataManager] %s: %d (UP TO DATE)" % [cat, server])
+        
+        if _server_versions.is_empty():
+            print("[DataManager.WARN] No versions received from server!")
+            needs_update = false
+        
+        version_check_completed.emit(needs_update)
 
 ## === DOWNLOAD ALL ===
 
@@ -116,24 +133,46 @@ func download_all_templates():
     var total_downloads = 0
     var completed_downloads = 0
     
-    # Count total entries from manifest
-    var manifest_result = await _fetch_json("/assets/manifest")
-    if manifest_result and manifest_result.has("data"):
-        for cat in categories:
-            var cat_data = manifest_result.data.get(cat, {})
+    # Count total entries from manifest (with retry)
+    var manifest_result = null
+    while not manifest_result:
+        manifest_result = await _fetch_json("/assets/manifest")
+        if not manifest_result or not manifest_result.has("data"):
+            print("[DataManager.ERROR] Failed to fetch manifest. Retrying in 2s...")
+            await get_tree().create_timer(2.0).timeout
+            manifest_result = null
+            continue
+    
+    for cat in categories:
+        if not manifest_result.data is Dictionary:
+            print("[DataManager.ERROR] manifest_result.data is not a Dictionary!")
+            break
+            
+        var cat_data = manifest_result.data.get(cat, {})
+        if cat_data is Dictionary:
             var entries = cat_data.get("entries", [])
             total_downloads += entries.size()
+        elif cat_data is Array:
+            total_downloads += cat_data.size()
     
     print("[DataManager] Total entries to download: %d" % total_downloads)
     
     # Download each category
     for cat in categories:
-        var result = await _fetch_json("/assets/" + cat)
+        var result = null
+        while not result:
+            result = await _fetch_json("/assets/" + cat)
+            if not result or not result.has("data"):
+                print("[DataManager.ERROR] Failed to fetch category %s. Retrying in 2s..." % cat)
+                await get_tree().create_timer(2.0).timeout
+                result = null
+                continue
         
-        if not result or not result.has("data"):
-            continue
-        
-        var entries = result.data.entries if result.data.has("entries") else []
+        var entries = []
+        if result.data is Dictionary:
+            entries = result.data.entries if result.data.has("entries") else []
+        elif result.data is Array:
+            entries = result.data
         
         for entry in entries:
             var entry_id = entry.id
@@ -159,90 +198,11 @@ func download_all_templates():
     print("[DataManager] Download complete: %d entries" % completed_downloads)
     sync_finished.emit()
 
-## === BACKWARD COMPATIBILITY (uses manifest) ===
+## === SYNC LOGIC ===
 
 func start_sync():
-    print("[SYNC] Checking for updates...")
-    
-    if ServerConnector and ServerConnector.has_signal("request_completed"):
-        if !ServerConnector.request_completed.is_connected(_on_manifest_received):
-            ServerConnector.request_completed.connect(_on_manifest_received)
-    
-    if ServerConnector:
-        ServerConnector._send_get("/assets/manifest")
-
-func _on_manifest_received(endpoint, manifest_response):
-    if !endpoint.contains("/assets/manifest"): return
-    
-    if ServerConnector and ServerConnector.request_completed.is_connected(_on_manifest_received):
-        ServerConnector.request_completed.disconnect(_on_manifest_received)
-    
-    if !manifest_response is Dictionary:
-        print("[SYNC] Error: Manifest response is not a dictionary.")
-        sync_finished.emit()
-        return
-    
-    var manifest = manifest_response.get("data")
-    if !manifest is Dictionary:
-        print("[SYNC] Error: Manifest 'data' key is not a dictionary.")
-        sync_finished.emit()
-        return
-    
-    _sync_queue = []
-    _total_to_sync = 0
-    
-    # Build sync queue from new manifest format
-    for category in manifest.keys():
-        var category_data = manifest[category]
-        
-        if typeof(category_data) == TYPE_DICTIONARY:
-            var entries = category_data.get("entries", [])
-            for entry in entries:
-                var entry_id = entry.id if typeof(entry) == TYPE_DICTIONARY else entry
-                var file_path = DATA_DIR + category + "/" + str(entry_id) + ".json"
-                if !FileAccess.file_exists(file_path):
-                    _sync_queue.append({"cat": category, "id": entry_id, "path": file_path})
-        elif typeof(category_data) == TYPE_ARRAY:
-            for id in category_data:
-                var file_path = DATA_DIR + category + "/" + str(id) + ".json"
-                if !FileAccess.file_exists(file_path):
-                    _sync_queue.append({"cat": category, "id": id, "path": file_path})
-    
-    _total_to_sync = _sync_queue.size()
-    if _total_to_sync == 0:
-        print("[SYNC] Everything up to date.")
-        sync_finished.emit()
-    else:
-        print("[SYNC] Found %d new assets. Starting download..." % _total_to_sync)
-        _process_next_in_queue()
-
-func _process_next_in_queue():
-    if _sync_queue.is_empty():
-        sync_finished.emit()
-        return
-    
-    var item = _sync_queue.pop_front()
-    sync_progress.emit(_total_to_sync - _sync_queue.size(), _total_to_sync)
-    
-    var http = HTTPRequest.new()
-    add_child(http)
-    http.request_completed.connect(func(result, code, _headers, body): 
-        _on_asset_downloaded(result, code, body, item.path)
-        http.queue_free()
-        _process_next_in_queue()
-    )
-    
-    var url = ""
-    if ServerConnector:
-        url = ServerConnector.base_url + "/assets/raw/" + item.cat + "/" + str(item.id)
-        http.request(url)
-
-func _on_asset_downloaded(result, code, body, save_path):
-    if result == OK and code == 200:
-        var file = FileAccess.open(save_path, FileAccess.WRITE)
-        if file:
-            file.store_string(body.get_string_from_utf8())
-            file.close()
+    print("[SYNC] Starting mandatory template update...")
+    download_all_templates()
 
 ## === HELPER ===
 

@@ -82,6 +82,31 @@ model User {
   friendedBy   UserFriend[]     @relation("FriendedBy")
   achievements UserAchievement[]
   sessions     UserSession[]
+
+  // AAA: Zone System Enhancements
+  moral Int @default(100)
+
+  // World Boss Slayer History
+  killedWorldBosses WorldBossState[]
+}
+
+model WorldBossState {
+  id          Int             @id @default(autoincrement())
+  monsterId   Int             @unique
+  monster     MonsterTemplate @relation(fields: [monsterId], references: [id])
+  regionId    Int
+  region      RegionTemplate  @relation(fields: [regionId], references: [id])
+  
+  isAlive     Boolean         @default(true)
+  currentHp   Int             @default(0)
+  
+  // Slayer Record (The "Eternal" Table)
+  killedAt       DateTime?
+  killedByUserId Int?
+  killedByUserName String?     // Snapshot of name at time of kill
+  killedByUser   User?         @relation(fields: [killedByUserId], references: [id])
+  
+  updatedAt   DateTime        @updatedAt
 }
 
 model UserFriend {
@@ -130,7 +155,7 @@ model MonsterTemplate {
   iconPath     String @default("")
   modelPath    String @default("")
   modelScale   Float  @default(1.0)
-  race         String @default("BEAST")
+  race         UnitRace @default(BEAST)
   
   // Rank & Size
   rank String @default("COMMON") // MINION, COMMON, UNCOMMON, RARE, UNIQUE, ELITE, CHAMPION, BOSS, WORLD_BOSS
@@ -219,6 +244,7 @@ model MonsterTemplate {
   formations     MonsterFormation[]
   territoryBonuses MonsterTerritoryBonus[]
   summonSpawns   SummonTemplate[]       @relation("SummonUnit")
+  worldBossState WorldBossState?
 }
 
 model MonsterTrait {
@@ -262,6 +288,7 @@ model ItemTemplate {
   rarity      String  @default("COMMON")
   isTwoHanded Boolean @default(false)
   maxStack    Int     @default(1)
+  isQuestItem Boolean @default(false)
 
   // Mining/Gathering Metadata (Normalized)
   hardness          Int @default(1)
@@ -292,17 +319,117 @@ model ItemTemplate {
   extractionStats  RegionalExtractionStats[]
 }
 
+enum ZoneColor {
+  VERDANT    // Green zones - lush forests
+  AZURE      // Blue zones - coastal/water themes
+  GOLDEN     // Yellow zones - desert/plains
+  CRIMSON    // Red zones - volcanic/danger
+  OBSIDIAN   // Black zones - death/darkness
+  NEUTRAL    // Default/Royal/Village zones
+}
+
+enum TraversalType {
+  WALK
+  BOAT
+  FLY
+}
+
+enum UnitRace {
+  HUMAN
+  VAMPIRE
+  SKELETON
+  ZOMBIE
+  BEAST
+  DEMON
+  HUMANOID
+  ELEMENTAL
+  INSECTOID
+  AQUATIC
+  DRAGON
+  CONSTRUCT
+  NEUTRAL
+}
+
+model RegionArea {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  regions     RegionTemplate[]
+}
+
+model HazardType {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique
+  description String?
+  hazards     RegionHazard[]
+}
+
+model RegionHazard {
+  id           Int            @id @default(autoincrement())
+  regionId     Int
+  region       RegionTemplate @relation(fields: [regionId], references: [id])
+  hazardTypeId Int
+  hazardType   HazardType     @relation(fields: [hazardTypeId], references: [id])
+  damage       Float          @default(10.0)
+  frequencySec Float          @default(5.0)
+}
+
 model RegionTemplate {
   id              Int     @id
   version         Int     @default(1)
   name            String
   description     String
   visualType      String  @default("TOWN")
-  zoneType        String  @default("GREEN") // GREEN, BLUE, RED
-  zoneLevel       Int     @default(1)
+  traversalType   TraversalType @default(WALK)
+  zoneType        String  @default("GREEN") // GREEN, BLUE, YELLOW, RED, BLACK, ROYAL, VILLAGE, WATER, CHASM, CITADEL, BRIDGE, BOSS
+  zoneLevel       Int        @default(1)
+  zoneColor       ZoneColor? // Visual theme for client rendering
+  isSafeZone      Boolean    @default(true)
   regionalTaxRate Float   @default(0.10)
   weatherOverride String? // Optional regional weather override
   specialization  String? // e.g., "BLACKSMITH_HUB", "ALCHEMIST_GARDEN", "CARPENTRY_MILL"
+
+  // AAA: Narrative & Mechanics
+  areaId                 Int?
+  area                   RegionArea? @relation(fields: [areaId], references: [id])
+  isDiscoveryPoint       Boolean     @default(true)
+  resourceModifier       Float       @default(1.0)
+  teleportCostMultiplier Float       @default(1.0)
+  maxPartyUnits          Int         @default(100)
+  minimapIcon            String?
+  ambientSfxPack         String?
+  requiredLevel          Int         @default(1)
+  respawnPenaltyMult     Float       @default(1.0)
+
+  // AAA: Advanced RPG Features
+  landmarkName           String?
+  flavorText             String?
+  discoveryXp            Int         @default(100)
+  spawnRateMultiplier    Float       @default(1.0)
+  eliteSpawnChance       Float       @default(0.05)
+  
+  // AAA: Access Requirements
+  minRequiredUnits       Int         @default(0)
+  minRequiredHeroLevel   Int         @default(1)
+  requiredAchievementId  Int?
+  reputationRequirement  Int         @default(0)
+  factionTributeRate     Float       @default(0.0)
+
+  // AAA: Tactical Combat & Recovery
+  elementalAffinity      String      @default("NEUTRAL") // NEUTRAL, FIRE, WATER, EARTH, AIR, DARK, LIGHT
+  terrainAttackMod       Float       @default(1.0)
+  terrainDefenseMod      Float       @default(1.0)
+  innRecoveryRate        Float       @default(1.0) // Boosts player vitality recovery (used for gathering)
+
+  // AAA: Micro-Economy & Blessings
+  resourceScarcity       Float       @default(1.0) // 1.0 = normal, increases with overfarming
+  marketDemandIndex      Float       @default(1.0) // 1.0 = normal, affects NPC buy/sell prices
+  blessingType           String?     // Optional regional buff (e.g., "Blessing of Speed")
+  sanctuaryPower         Float       @default(0.0) // -1.0 (Cursed) to 1.0 (Holy). Affects HP/MP regen and XP.
+  corruptionLevel        Float       @default(0.0) // 0.0 to 1.0 (Abyssal). Static intensity of corruption.
+  dominanCaste           UnitRace    @default(NEUTRAL)
+
+  hazards                RegionHazard[]
 
   regionTypeId String?
   regionType   RegionType? @relation(fields: [regionTypeId], references: [id])
@@ -331,6 +458,11 @@ model RegionTemplate {
   npcStocks              ShopStock[]
   extractionStats        RegionalExtractionStats[]
   bounties               Bounty[]
+  worldBosses            WorldBossState[]
+
+  // AAA: Map Positioning
+  gridX Int @default(0)
+  gridY Int @default(0)
 }
 
 model WorldEventTemplate {
@@ -409,6 +541,7 @@ model NPCTemplate {
   title       String
   description String
   type        String // JOB_CHANGER, QUEST_GIVER, TRADER, HEALER, GAMBLER, TELEPORTER
+  active_time String? // DAY, NIGHT, ANY
 
   // Normalized NPC Properties
   isWanderer    Boolean @default(false)
@@ -549,6 +682,7 @@ model RegionResource {
   itemId            Int
   item              ItemTemplate   @relation(fields: [itemId], references: [id])
   gatherTimeSeconds Int            @default(10)
+  active_time       String? // DAY, NIGHT, ANY
 }
 
 model ItemTrait {
@@ -630,6 +764,7 @@ model Hero {
   userId Int?
   user   User?  @relation(fields: [userId], references: [id])
   name   String
+  race   UnitRace @default(HUMAN)
 
   // AAA Dual-Level Architecture
   unitLevel  Int @default(1)
@@ -920,6 +1055,7 @@ model InventoryItem {
   currentDurability Int          @default(100)
   maxDurability     Int          @default(100)
   isTrash           Boolean      @default(false)
+  isCursed          Boolean      @default(false)
 
   // AAA: Quality Tiers
   quality    String @default("COMMON") // COMMON, RARE, MASTERWORK, LEGENDARY
@@ -928,6 +1064,9 @@ model InventoryItem {
   marketOrders   MarketOrder[]
   equippedIn     HeroEquipment?
   instanceTraits ItemInstanceTrait[]
+
+  // AAA: Zone System Enhancements
+  isSoulbound Boolean @default(false)
 }
 
 model ItemInstanceTrait {
@@ -966,6 +1105,7 @@ model QuestTemplate {
   version     Int    @default(1)
   name        String
   description String
+  category    String @default("MAIN")
 
   minReputation Int      @default(0)
   factionId     Int?
@@ -1017,6 +1157,7 @@ model QuestReward {
   type    String
   itemId  Int?
   amount  Int        @default(1)
+  factionId Int?
 }
 
 model UserQuest {
@@ -1028,6 +1169,7 @@ model UserQuest {
   currentStageId Int?
   currentStage   QuestStage?   @relation("CurrentStageRelation", fields: [currentStageId], references: [id])
   status         String        @default("ACTIVE")
+  progressData   String        @default("{}") // JSON for objective progress (e.g. kill counts)
 }
 
 model Mail {
@@ -1419,6 +1561,7 @@ model WorldState {
   id          Int      @id @default(1)
   currentHour Int      @default(12) // 0-23
   weatherType String   @default("CLEAR") // CLEAR, RAIN, STORM, HEATWAVE
+  moonPhase   String   @default("NEW") // NEW, WAXING, FULL, WANING
   lastTick    DateTime @default(now())
 }
 
@@ -1819,3 +1962,4 @@ model LoginAttempt {
   @@index([ipAddress])
   @@index([createdAt])
 }
+

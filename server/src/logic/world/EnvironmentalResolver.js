@@ -8,9 +8,10 @@ class EnvironmentalResolver {
      * Resolves comprehensive modifiers for a given world state.
      * @param {number} hour - 0-23
      * @param {string} weather - CLEAR, RAIN, STORM, HEATWAVE
+     * @param {string} moonPhase - NEW, WAXING, FULL, WANING
      * @returns {Object} { combat, gathering, travel, statModifiers }
      */
-    resolveModifiers(hour, weather) {
+    resolveModifiers(hour, weather, moonPhase = "NEW") {
         const mods = {
             combat: { atkMult: 1.0, defMult: 1.0, fireMult: 1.0, waterMult: 1.0 },
             gathering: { yieldMult: 1.0, speedMult: 1.0, fishingYieldMult: 1.0 },
@@ -25,6 +26,30 @@ class EnvironmentalResolver {
             mods.combat.atkMult = 1.1; // Night boost for monsters/stealth
             mods.gathering.speedMult = 0.8; // Slower gathering in dark
             
+            // --- AAA Moon Phase Effects ---
+            if (weather === "CLEAR" || weather === "HEATWAVE") {
+                switch (moonPhase) {
+                    case "FULL":
+                        mods.combat.atkMult *= 1.15; // Extra power under full moon
+                        mods.gathering.yieldMult *= 1.2; // Rare materials glow/abound
+                        mods.statModifiers.push({
+                            statKey: 'luck', value: 20, source: 'Full Moon', isPercent: false
+                        });
+                        break;
+                    case "NEW":
+                        mods.statModifiers.push({
+                            statKey: 'stealth_level', value: 25, source: 'New Moon (Darkness)', isPercent: false
+                        });
+                        break;
+                    case "WAXING":
+                    case "WANING":
+                        mods.statModifiers.push({
+                            statKey: 'mana_regen', value: 5, source: 'Moonlight', isPercent: false
+                        });
+                        break;
+                }
+            }
+
             // Stat modifiers for night
             mods.statModifiers.push({
                 statKey: 'stealth_level',
@@ -83,7 +108,6 @@ class EnvironmentalResolver {
                 break;
             case "CLEAR":
             default:
-                // Clear weather - no special modifiers
                 break;
         }
 
@@ -93,16 +117,16 @@ class EnvironmentalResolver {
     /**
      * Get combat-specific environmental modifiers.
      */
-    getCombatModifiers(hour, weather) {
-        const mods = this.resolveModifiers(hour, weather);
+    getCombatModifiers(hour, weather, moonPhase) {
+        const mods = this.resolveModifiers(hour, weather, moonPhase);
         return mods.combat;
     }
 
     /**
      * Get stat modifiers for the current environment.
      */
-    getStatModifiers(hour, weather) {
-        const mods = this.resolveModifiers(hour, weather);
+    getStatModifiers(hour, weather, moonPhase) {
+        const mods = this.resolveModifiers(hour, weather, moonPhase);
         return mods.statModifiers;
     }
 

@@ -1,19 +1,83 @@
 const frontlineSpawner = require('../../logic/npc/FrontlineSpawner');
+const worldCycleService = require('../world/WorldCycleService');
 
 /**
  * AAA SpawnResolver
  * Logic for merging permanent region spawns with dynamic world event spawns.
- * Enhanced with Frontline Skirmish support.
+ * Enhanced with Day/Night cycle filtering and caching.
  */
 class SpawnResolver {
+    constructor() {
+        this.cache = new Map(); // Key: `${type}_${regionId}_${hour}`, Value: { results: [], expiresAt: timestamp }
+        this.CACHE_TTL_MINUTES = 5;
+    }
+
+    /**
+     * Gets current world time cycle: DAY or NIGHT
+     */
+    getCurrentCycle(hour) {
+        if (hour === undefined) {
+            const state = worldCycleService.getWorldState();
+            hour = state.currentHour;
+        }
+        return (hour < 6 || hour >= 20) ? "NIGHT" : "DAY";
+    }
+
+    /**
+     * Clears cache if necessary (optional utility)
+     */
+    clearCache() {
+        this.cache.clear();
+    }
+
+    _getWithCache(type, regionId, hour) {
+        const key = `${type}_${regionId}_${hour}`;
+        const cached = this.cache.get(key);
+        if (cached && Date.now() < cached.expiresAt) {
+            return cached.results;
+        }
+        return null;
+    }
+
+    _setCache(type, regionId, hour, results) {
+        const key = `${type}_${regionId}_${hour}`;
+        this.cache.set(key, {
+            results,
+            expiresAt: Date.now() + (this.CACHE_TTL_MINUTES * 60 * 1000)
+        });
+        
+        // Cleanup old cache entries
+        if (this.cache.size > 500) {
+            const now = Date.now();
+            for (const [k, v] of this.cache.entries()) {
+                if (v.expiresAt < now) this.cache.delete(k);
+            }
+        }
+    }
+
     /**
      * Resolves all available resources in a region.
      */
     async resolveResources(prisma, regionId) {
+        const worldState = await worldCycleService.getWorldState();
+        const hour = worldState.currentHour;
+        const currentCycle = this.getCurrentCycle(hour);
+
+        const cached = this._getWithCache('resources', regionId, hour);
+        if (cached) return cached;
+
         const now = new Date();
         
+        // Filter based on active_time at database level for base spawns
         const baseSpawns = await prisma.regionResource.findMany({
-            where: { regionId },
+            where: { 
+                regionId,
+                OR: [
+                    { active_time: null },
+                    { active_time: currentCycle },
+                    { active_time: 'ANY' }
+                ]
+            },
             include: { item: true }
         });
 
@@ -24,7 +88,8 @@ class SpawnResolver {
 
         const results = baseSpawns.map(s => ({
             id: s.id, templateId: s.itemId, name: s.item.name, 
-            gatherTime: s.gatherTimeSeconds, source: "BASE"
+            gatherTime: s.gatherTimeSeconds, source: "BASE",
+            active_time: s.active_time
         }));
 
         for (const ae of activeEvents) {
@@ -38,17 +103,35 @@ class SpawnResolver {
             }
         }
 
+        this._setCache('resources', regionId, hour, results);
         return results;
     }
 
     /**
-     * Resolves all available monsters in a region, including event-exclusives and reinforcements.
+     * Resolves all available monsters in a region.
      */
     async resolveMonsters(prisma, regionId) {
+        const worldState = await worldCycleService.getWorldState();
+        const hour = worldState.currentHour;
+        const currentCycle = this.getCurrentCycle(hour);
+
+        const cached = this._getWithCache('monsters', regionId, hour);
+        if (cached) return cached;
+
         const now = new Date();
 
+        // Filter based on active_time at database level for base monsters
         const baseMonsters = await prisma.regionMonster.findMany({
-            where: { regionId },
+            where: { 
+                regionId,
+                monster: {
+                    OR: [
+                        { active_time: null },
+                        { active_time: currentCycle },
+                        { active_time: 'ANY' }
+                    ]
+                }
+            },
             include: { monster: true }
         });
 
@@ -58,7 +141,8 @@ class SpawnResolver {
         });
 
         const results = baseMonsters.map(m => ({
-            id: m.id, templateId: m.monsterId, name: m.monster.name, source: "BASE"
+            id: m.id, templateId: m.monsterId, name: m.monster.name, source: "BASE",
+            active_time: m.monster.active_time
         }));
 
         for (const ae of activeEvents) {
@@ -89,6 +173,7 @@ class SpawnResolver {
             }
         }
 
+        this._setCache('monsters', regionId, hour, results);
         return results;
     }
 }

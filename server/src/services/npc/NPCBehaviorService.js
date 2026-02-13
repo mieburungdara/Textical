@@ -62,9 +62,19 @@ class NPCBehaviorService extends BaseService {
      * Finds all NPCs currently present in a region, including reinforcements.
      */
     async getNPCsInRegion(regionId, hour = null) {
-        const currentHour = (hour !== null) ? hour : new Date().getHours();
+        const worldState = await this.db.worldState.findUnique({ where: { id: 1 } });
+        const currentHour = (hour !== null) ? hour : (worldState ? worldState.currentHour : new Date().getHours());
+        const isNight = currentHour < 6 || currentHour >= 20;
+        const currentCycle = isNight ? "NIGHT" : "DAY";
 
         const allPotentialNPCs = await this.db.nPCTemplate.findMany({
+            where: {
+                OR: [
+                    { active_time: null },
+                    { active_time: currentCycle },
+                    { active_time: 'ANY' }
+                ]
+            },
             include: { 
                 schedules: true, 
                 eventReactions: { include: { eventTemplate: { include: { activeEvents: true } } } }, 

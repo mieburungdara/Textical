@@ -24,6 +24,7 @@ var inventory = []
 var inventory_status = {"used": 0, "max": 20}
 var inventory_is_dirty = true
 var active_task = null
+var active_quests = []
 var current_region_type = "TOWN" 
 var current_region_data = null:
     set(val):
@@ -99,6 +100,9 @@ func _on_request_completed(endpoint: String, response):
         if data is Dictionary and data.has("settings"):
             user_settings = data.settings
             _apply_settings(user_settings)
+    
+    elif endpoint.contains("/quests"):
+        set_quests(data)
 
 func _apply_settings(settings: Dictionary):
     # Apply Audio settings
@@ -130,8 +134,11 @@ func _on_heroes_received(_endpoint: String, data):
 func set_user(data):
     if not data is Dictionary: return
     
-    # Extract user object from "data" wrapper if present
-    var user_data = data.get("data", data)
+    # Extract user object - check 'user' first, then 'data', then fallback to root
+    var user_data = data.get("user")
+    if user_data == null:
+        user_data = data.get("data", data)
+    
     current_user = user_data
     
     # Handle session data if present (new login flow)
@@ -267,6 +274,11 @@ func set_heroes(data):
 func update_vitality(new_vitality):
     if current_user:
         current_user.vitality = new_vitality
+
+func set_quests(data):
+    if data is Array:
+        active_quests = data
+        quest_updated.emit()
 
 func is_in_town():
     return current_user and current_user.get("currentRegion", 0) == 1

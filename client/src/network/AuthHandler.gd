@@ -56,8 +56,14 @@ func fetch_profile(id: int):
 
 func _handle_success(endpoint: String, json):
     if endpoint.contains("/auth/login"):
-        var user_data = json.get("data", json)
+        # Server now returns { "user": {...}, "session": {...} } or { "data": {...} }
+        var user_data = json.get("user")
+        if user_data == null:
+            user_data = json.get("data", json)
+            
         var session_data = json.get("session", {})
+        
+        print("[AuthHandler] Extracted user_data, ID: ", user_data.get("id") if user_data else "null")
         
         # Store session in GameState
         GameState.set_user(json)

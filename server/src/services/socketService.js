@@ -90,8 +90,15 @@ class SocketService {
             socket.on("disconnect", () => {
                 console.log(`[SOCKET] Disconnected: ${socket.id}`);
                 
-                // Cleanup stat handler subscriptions
-                statHandler.removeClient(socket);
+                // Lazy-load to avoid circular dependencies
+                try {
+                    const statHandler = require('../handlers/statHandler');
+                    if (statHandler && typeof statHandler.removeClient === 'function') {
+                        statHandler.removeClient(socket);
+                    }
+                } catch (e) {
+                    console.error("[SOCKET] Failed to cleanup statHandler:", e.message);
+                }
                 
                 // Get userId before cleanup
                 const userId = socket.userId;

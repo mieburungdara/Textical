@@ -106,9 +106,24 @@ class NPCService extends BaseService {
         const validRoute = npc.teleportRoutes.find(r => r.targetRegionId === destId);
         if (!validRoute) throw new Error("This NPC cannot teleport you there.");
         
+        // AAA: Royal City Restriction
+        const user = await this.db.user.findUnique({ 
+            where: { id: userId },
+            include: { region: true }
+        });
+
+        // 1. Origin must be ROYAL
+        if (user.region.zoneType !== 'ROYAL') {
+            throw new Error("Teleportation services are only available in Royal Cities.");
+        }
+
+        // 2. Target must be ROYAL
+        const targetRegion = await this.db.regionTemplate.findUnique({ where: { id: destId } });
+        if (!targetRegion || targetRegion.zoneType !== 'ROYAL') {
+            throw new Error("You can only teleport between Royal Cities.");
+        }
+
         return await this.runTransaction(async (tx) => {
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            
             let costSilver = BigInt(npc.travelCost || 200);
             if (isHostile) costSilver *= BigInt(2);
 
@@ -118,8 +133,9 @@ class NPCService extends BaseService {
             }
 
             await transactionManager.removeCurrency(tx, userId, costSilver, "TELEPORT", destId, "NPC_ROUTE");
+            await transactionManager.updateLocation(tx, userId, destId);
 
-            return { success: true, message: `Teleported to Region ${destId}.` };
+            return { success: true, message: `Teleported to ${targetRegion.name}.` };
         });
     }
 }

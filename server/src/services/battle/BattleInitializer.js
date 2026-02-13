@@ -4,6 +4,7 @@ const formationService = require('../formationService');
 const vitalityService = require('../vitalityService');
 const worldSpawner = require('../worldSpawnerService');
 const consumableService = require('../consumableService');
+const worldCycle = require('../world/WorldCycleService');
 
 class BattleInitializer extends BaseService {
     constructor() {
@@ -68,9 +69,13 @@ class BattleInitializer extends BaseService {
         const regionType = regionTemplate ? regionTemplate.visualType : "FOREST";
         const terrainEffects = regionTemplate && regionTemplate.regionType ? regionTemplate.regionType.effects : [];
         
-        const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
+        const worldState = await worldCycle.getWorldState();
+        sim.currentHour = worldState.currentHour;
+        sim.weather = worldState.weatherType;
+        sim.moonPhase = worldState.moonPhase;
+        
         sim.terrainEffects = terrainEffects;
-        sim.potionSnapshot = potionSnapshot; // AAA: Store snapshot in simulation
+        sim.potionSnapshot = potionSnapshot;
         sim.userId = userId; // AAA: Store userId for potion deduction
 
         // Add Heroes (Team 0)
@@ -213,7 +218,11 @@ class BattleInitializer extends BaseService {
         const regionType = regionTemplate ? regionTemplate.visualType : "FOREST";
         const terrainEffects = regionTemplate && regionTemplate.regionType ? regionTemplate.regionType.effects : [];
         
-        const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, regionType);
+        const worldState = await worldCycle.getWorldState();
+        sim.currentHour = worldState.currentHour;
+        sim.weather = worldState.weatherType;
+        sim.moonPhase = worldState.moonPhase;
+
         sim.terrainEffects = terrainEffects;
         sim.potionSnapshot = potionSnapshot; // AAA: Store snapshot in simulation
         sim.userId = userId; // AAA: Store userId for potion deduction

@@ -174,20 +174,9 @@
                     scripts.forEach((scriptContent, index) => {
                         if (scriptContent.trim()) {
                             try {
-                                // Use new Function and attach to window for global access
-                                const scriptFn = new Function(scriptContent);
-                                scriptFn();
-                                
-                                // Also try to extract and attach any function declarations to window
-                                const functionRegex = /function\s+(\w+)\s*\(/g;
-                                let match;
-                                while ((match = functionRegex.exec(scriptContent)) !== null) {
-                                    const funcName = match[1];
-                                    if (typeof window[funcName] === 'undefined' && typeof eval(funcName) === 'function') {
-                                        window[funcName] = eval(funcName);
-                                    }
-                                }
-                                
+                                // Execute script in global scope using eval
+                                // This properly hoists function declarations
+                                window.eval(scriptContent);
                                 console.log(`[Admin] Script ${index + 1} executed successfully`);
                             } catch (error) {
                                 console.error(`[Admin] Error executing script ${index + 1}:`, error);

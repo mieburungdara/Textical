@@ -28,7 +28,9 @@ signal stat_cap_reached(unit_id, stat_name, current_value, cap_value)
 signal elemental_affinity_updated(unit_id, affinities)
 signal set_bonus_updated(unit_id, bonuses)
 
-var base_url = "http://localhost:3000/api"
+var base_url = "http://127.0.0.1:3000/api"
+var _is_server_reachable: bool = false
+var _connection_tested: bool = false
 
 var auth
 var world
@@ -87,9 +89,15 @@ func _ready():
 func _on_handler_request_completed(endpoint: String, data):
     emit_signal("request_completed", endpoint, data)
 
-func _on_login_success(user):
-    # Extract actual user data from nested "data" key
-    var user_data = user.get("data", user)
+func _on_login_success(user, session):
+    print("[CONNECTOR] Login success received. User object type: ", typeof(user))
+    
+    # Extract actual user data - AuthHandler already extracts 'user' or 'data'
+    var user_data = user
+    if user_data.has("user"):
+        user_data = user_data.get("user")
+    elif user_data.has("data"):
+        user_data = user_data.get("data")
     
     # Get user ID from nested data (defensive check for different possible keys)
     var user_id = user_data.get("id")
@@ -97,7 +105,7 @@ func _on_login_success(user):
     if user_id == null: user_id = user_data.get("userId")
     if user_id == null: user_id = user_data.get("uid")
     
-    print("[CONNECTOR] user_id from nested data: ", user_id)
+    print("[CONNECTOR] Resolved user_id: ", user_id)
     
     # 1. Start Connection
     socket.connect_to_server()
@@ -185,9 +193,83 @@ func socket_unsubscribe_unit_stats(unit_id: int):
 # --- UTILITY (For Sync System) ---
 func _send_get(path): world._request(path, HTTPClient.METHOD_GET)
 
+func _send_get_raw(path) -> Dictionary:
+    return await world._request_async(path, HTTPClient.METHOD_GET)
+
 func is_socket_connected() -> bool:
     return socket.is_socket_connected if socket else false
 
 func get_last_ping() -> int:
     # Mock ping calculation or return from socket if available
     return randi_range(30, 60) if is_socket_connected() else 0
+
+## Test server connectivity with timeout
+func test_connection(timeout_sec: float = 10.0) -> bool:
+    print("[ServerConnector] Testing connection to: " + base_url)
+    
+    var http = HTTPRequest.new()
+    add_child(http)
+    
+    var test_url = base_url.replace("/api", "") + "/health"
+    print("[ServerConnector] Health check URL: " + test_url)
+    
+    # Connect signal using a callable for better safety
+    var status = {
+        "finished": false,
+        "result": -1,
+        "code": -1
+    }
+    
+    var on_completed = func(res, code, _headers, _body):
+        status.result = res
+        status.code = code
+        status.finished = true
+        print("[ServerConnector] request_completed signal fired! Result=%d, Code=%d" % [res, code])
+    
+    http.request_completed.connect(on_completed)
+    
+    print("[ServerConnector] Starting HTTP request...")
+    var err = http.request(test_url)
+    if (err != OK):
+        print("[ServerConnector] Failed to start request: " + str(err))
+        http.queue_free()
+        _is_server_reachable = false
+        return false
+    
+    # Wait for either completion or timeout
+    var start_time = Time.get_ticks_msec()
+    var success = false
+    
+    # Manual wait loop with safety break
+    while not status.finished:
+        if (Time.get_ticks_msec() - start_time) > (timeout_sec * 1000):
+            print("[ServerConnector] Connection test TIMED OUT after " + str(timeout_sec) + "s")
+            break
+        
+        # Yield to engine
+        await get_tree().process_frame
+        
+        # Extra safety: check if HTTPRequest is still in tree
+        if not is_instance_valid(http):
+            print("[ServerConnector] HTTPRequest became invalid during wait")
+            break
+    
+    if status.finished:
+        success = (status.result == OK and status.code == 200)
+        print("[ServerConnector] Response received: Result=%d (OK=0), HTTP=%d" % [status.result, status.code])
+    else:
+        print("[ServerConnector] Connection timed out or was interrupted. Waited %d ms" % (Time.get_ticks_msec() - start_time))
+    
+    print("[ServerConnector] Final connection result: " + ("SUCCESS" if success else "FAILED"))
+    
+    # Cleanup
+    if is_instance_valid(http):
+        http.queue_free()
+        
+    _is_server_reachable = success
+    _connection_tested = true
+    return success
+
+## Check if server is reachable (must call test_connection first)
+func is_server_reachable() -> bool:
+    return _is_server_reachable

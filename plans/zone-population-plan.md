@@ -252,7 +252,7 @@ graph TD
 ### Teleport System
 - **Purpose**: Fast travel between Royal Cities
 - **Mechanics**:
-  - Gold cost based on distance
+  - Silver cost based on distance
   - 30-minute cooldown between uses
   - Can only teleport from Royal Cities
   - Cannot teleport during combat or PvP flag

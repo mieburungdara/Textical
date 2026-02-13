@@ -1,47 +1,8 @@
 const userRepository = require('../repositories/userRepository');
 const heroRepository = require('../repositories/heroRepository');
-const inventoryRepository = require('../repositories/inventoryRepository');
-const evolutionService = require('./evolutionService');
-const lootService = require('./lootService');
-const LevelCalculator = require('../logic/progression/LevelCalculator');
-const permadeathService = require('./PermadeathService');
-const transactionManager = require('./economy/TransactionManager');
+const inventoryService = require('./inventoryService'); // Added import
 
-class RewardService {
-    async processPostBattle(user, result, mode) {
-        const deadHeroIds = result.logs
-            .filter(l => l.type === "DEATH" && l.data.target_id.startsWith("p_hero_"))
-            .map(l => l.data.target_id.replace("p_hero_", ""));
-
-        const alerts = { evolution: [], death: [] };
-
-        for (let hero of user.heroes) {
-            // 1. Permadeath - delegated to PermadeathService
-            if (deadHeroIds.includes(hero.id) && mode === "ADVENTURE") {
-                const deathResult = await permadeathService.processDeath(hero, user.username, "Killed in Adventure");
-                alerts.death.push(deathResult);
-                continue;
-            }
-
-            // 2. Deeds & Evolution aggregation
-            const simDeeds = result.unitDeeds[`p_hero_${hero.id}`] || {};
-            const currentDeeds = JSON.parse(hero.deeds || "{}");
-            Object.entries(simDeeds).forEach(([key, val]) => { currentDeeds[key] = (currentDeeds[key] || 0) + val; });
-
-            const update = evolutionService.processEvolution({ ...hero, deeds: JSON.stringify(currentDeeds) });
-            if (update.newlyUnlocked.length > 0) alerts.evolution.push({ name: hero.name, unlocked: update.newlyUnlocked });
-            
-            // 3. XP and Level Up - using LevelCalculator for SRP
-            const { newLevel, newExp } = LevelCalculator.calculateLevelUp(
-                hero.exp,
-                hero.level,
-                result.rewards.exp || 0
-            );
-
-            // Save updates
-            await heroRepository.updateProgression(hero.id, currentDeeds, update.acquiredTraits, update.unlockedBehaviors);
-            await heroRepository.updateLineage(hero.id, { level: newLevel, exp: newExp });
-        }
+// ... inside class ...
 
         // 4. Gold & Items (Silver-based)
         const goldReward = BigInt(result.rewards.gold || 0);
@@ -49,9 +10,26 @@ class RewardService {
             await transactionManager.addCurrency(null, user.id, goldReward, "BATTLE_REWARD", null, null);
         }
 
-        const droppedItems = lootService.generateLoot(result.killed_monsters);
+        // Fetch Zone Type again if not in scope (it was in the permadeath block)
+        // Optimization: Lift zoneType fetching to top of method
+        let zoneType = "GREEN";
+        if (user.region && user.region.zoneType) {
+            zoneType = user.region.zoneType;
+        }
+
+        const droppedItems = await lootService.generateLoot(result.killed_monsters, zoneType);
         for (let item of droppedItems) {
-            await inventoryRepository.addItem(user.id, item.id, 1, item.uniqueData || {});
+             const options = {
+                isSoulbound: item.isSoulbound || false
+            };
+            await inventoryService.addItem(user.id, item.itemId, item.quantity, null, options);
+        }
+
+        // 5. Update Quest Progress for Killed Monsters
+        if (result.killed_monsters) {
+            for (const monsterId of result.killed_monsters) {
+                await questService.updateQuestProgress(user.id, "KILL", monsterId, 1);
+            }
         }
 
         return { alerts, goldGained: result.rewards.gold, droppedItems };

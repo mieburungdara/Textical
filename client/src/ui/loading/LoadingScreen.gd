@@ -95,10 +95,14 @@ func _on_version_check_completed(needs_update: bool) -> void:
         _transition_to_login()
 
 func _on_version_check_failed(error: String) -> void:
-    status_label.text = "Version check failed: " + error
-    # Proceed anyway - can use cached data
-    await get_tree().create_timer(1.0).timeout
-    _transition_to_login()
+    print("[LoadingScreen] Version check status: " + error)
+    
+    # Update status label with retry info
+    status_label.text = "⚠ Connection: " + error
+    log_manager.add_custom_entry("[color=orange]" + error + "[/color]")
+    
+    # DO NOT transition to login. DataManager will keep retrying and emit version_check_completed on success.
+    # We stay on this screen to ensure data integrity.
 
 func _start_patching():
     status_label.text = LocalizationManager.translate("status_checking")

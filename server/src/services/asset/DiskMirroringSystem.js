@@ -13,7 +13,7 @@ class DiskMirroringSystem {
     }
 
     _ensureDirs() {
-        const cats = ["regions", "items", "monsters"];
+        const cats = ["regions", "items", "monsters", "quests"];
         cats.forEach(c => {
             const dir = path.join(ASSET_ROOT, c);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

@@ -75,7 +75,49 @@ class AssetService extends BaseService {
             const data = await this.getRawAsset("monsters", mid);
             diskMirroringSystem.writeAsset("monsters", mid, data);
         }
+        for (const qid of manifest.quests.entries.map(e => e.id)) {
+            const data = await this.getRawAsset("quests", qid);
+            diskMirroringSystem.writeAsset("quests", qid, data);
+        }
         console.log("[ASSET] Initial Sync Complete.");
+    }
+
+    async saveQuest(id, body) {
+        const idInt = parseInt(id);
+        const updated = await this.db.questTemplate.upsert({
+            where: { id: idInt },
+            update: {
+                name: body.name,
+                description: body.description,
+                category: body.category || "MAIN",
+                isDynamic: body.isDynamic === "true" || body.isDynamic === true,
+                questGiverId: body.questGiverId ? parseInt(body.questGiverId) : null,
+                turnInNpcId: body.turnInNpcId ? parseInt(body.turnInNpcId) : null,
+                factionId: body.factionId ? parseInt(body.factionId) : null,
+                minReputation: body.minReputation ? parseInt(body.minReputation) : 0,
+                version: { increment: 1 }
+            },
+            create: {
+                id: idInt,
+                name: body.name,
+                description: body.description,
+                category: body.category || "MAIN",
+                isDynamic: body.isDynamic === "true" || body.isDynamic === true,
+                questGiverId: body.questGiverId ? parseInt(body.questGiverId) : null,
+                turnInNpcId: body.turnInNpcId ? parseInt(body.turnInNpcId) : null,
+                factionId: body.factionId ? parseInt(body.factionId) : null,
+                minReputation: body.minReputation ? parseInt(body.minReputation) : 0,
+                version: 1
+            },
+            include: { 
+                stages: { include: { objectives: true, rewards: true } },
+                questGiver: true,
+                turnInNpc: true
+            }
+        });
+
+        diskMirroringSystem.writeAsset("quests", idInt, updated);
+        return updated;
     }
 
     async saveMonster(id, body) {
@@ -100,6 +142,7 @@ class AssetService extends BaseService {
                 cooldown_reduction: parseFloat(body.cooldown_reduction || 0),
                 move_speed: parseFloat(body.move_speed || 100),
                 attack_speed: parseFloat(body.attack_speed || 1.0),
+                active_time: body.active_time || "ANY",
                 categoryId: parseInt(body.categoryId)
             },
             create: {
@@ -121,6 +164,7 @@ class AssetService extends BaseService {
                 cooldown_reduction: parseFloat(body.cooldown_reduction || 0),
                 move_speed: parseFloat(body.move_speed || 100),
                 attack_speed: parseFloat(body.attack_speed || 1.0),
+                active_time: body.active_time || "ANY",
                 categoryId: parseInt(body.categoryId)
             },
             include: { loot: true, traits: { include: { trait: true } } }

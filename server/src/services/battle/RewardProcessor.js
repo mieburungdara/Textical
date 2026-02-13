@@ -37,10 +37,12 @@ class RewardProcessor extends BaseService {
         }
     }
 
-    async process(userId, battleResult, monsterTemplate, partyCount) {
+    async process(userId, battleResult, monsterTemplate, partyCount, hour = 12) {
         let lootEarned = [];
         let heroResults = [];
         let potionUsedTotal = 0;
+
+        const isNight = hour < 6 || hour >= 20;
 
         // AAA: Calculate potions used (from initial units tracking)
         if (battleResult.initialUnits) {
@@ -69,10 +71,10 @@ class RewardProcessor extends BaseService {
         }
 
         // --- 1. PROCESS INDIVIDUAL UNIT DEATHS (AAA: UNIVERSAL PERMADEATH) ---
-        if (zoneType === "RED" || isBountyKill) {
+        if (zoneType === "RED" || zoneType === "BLACK" || isBountyKill) {
             for (const unit of battleResult.initialUnits.filter(u => u.teamId === 0)) {
                 if (unit.isDead) {
-                    await this._executePermadeath(unit.data.db_id);
+                    await this._executePermadeath(unit.data.db_id, zoneType);
                 }
             }
         }
@@ -137,8 +139,20 @@ class RewardProcessor extends BaseService {
             for (const entry of monsterTemplate.loot) {
                 if (Math.random() < entry.chance) {
                     try {
-                        await inventoryService.addItem(userId, entry.itemId, 1);
-                        lootEarned.push({ templateId: entry.itemId, quantity: 1 });
+                        let options = {};
+                        if (isNight && Math.random() < 0.10) {
+                            options.isCursed = true;
+                        }
+                        if (zoneType === 'BLACK') {
+                            options.isSoulbound = true;
+                        }
+                        
+                        await inventoryService.addItem(userId, entry.itemId, 1, null, options);
+                        lootEarned.push({ 
+                            templateId: entry.itemId, 
+                            quantity: 1,
+                            isCursed: options.isCursed || false 
+                        });
                     } catch (e) { /* Inventory full */ }
                 }
             }
@@ -149,6 +163,19 @@ class RewardProcessor extends BaseService {
                 await this.runTransaction(async (tx) => {
                     await transactionManager.addCurrency(tx, userId, battleResult.rewards.gold, "BATTLE_REWARD");
                 });
+            }
+
+            // AAA: World Boss Persistence Link
+            // Check if any slain monster was a World Boss and trigger persistence update
+            if (battleResult.killed_monsters && battleResult.killed_monsters.length > 0) {
+                const bossManager = require('../BossManager');
+                // We need regionId, which might be in battleResult or user.region
+                const killRegionId = user.region ? user.region.id : 0;
+                
+                for (const mobId of battleResult.killed_monsters) {
+                    // Fire and forget, BossManager checks if it is actually a boss
+                    await bossManager.handleBossDeath(mobId, killRegionId, userId);
+                }
             }
 
             // AAA: Loot Session Creation (PvP Victory or Bounty)
@@ -184,19 +211,63 @@ class RewardProcessor extends BaseService {
         return { lootEarned, heroResults, potionsUsed: potionUsedTotal };
     }
 
-    async _executePermadeath(heroId) {
+    async _executePermadeath(heroId, zoneType = "GREEN") {
         const hero = await this.db.hero.findUnique({ where: { id: heroId } });
         if (!hero) return;
 
-        if (hero.isMain) {
+        // BLACK ZONE: Everybody dies (including Main)
+        if (zoneType === 'BLACK') {
+             // Handle Main Hero in Black Zone: Respawn Naked in Royal City
+             if (hero.isMain) {
+                await this.db.heroEquipment.deleteMany({ where: { heroId: hero.id } });
+                await this.db.inventoryItem.deleteMany({ 
+                    where: { 
+                        userId: hero.userId,
+                        isSoulbound: false 
+                    } 
+                });
+                
+                // Reset stats or apply major XP penalty?
+                // "Main unit respawns in a Royal City completely naked"
+                
+                // TODO: Teleport user to nearest Royal City?
+                // For now, just logging the event.
+                this.log(`BLACK ZONE DEATH: Main Hero ${hero.name} stripped and respawning.`, "Death");
+                return;
+             }
+        }
+
+        // RED ZONE: Main Hero Survives with Inventory Loss
+        if (zoneType === 'RED' && hero.isMain) {
             // Naked Immortality: Strip and Penalty
             await this.db.heroEquipment.deleteMany({ where: { heroId: hero.id } });
+            
+            // Wipe Inventory as per Red Zone rules
+            await this.db.inventoryItem.deleteMany({ 
+                where: { 
+                    userId: hero.userId,
+                    isSoulbound: false
+                } 
+            });
+
             const penalty = Math.floor(hero.unitXp * 0.10);
             await this.db.hero.update({
                 where: { id: hero.id },
                 data: { unitXp: { decrement: penalty } }
             });
-            this.log(`Naked Immortality Triggered: Hero ${hero.name} stripped and penalized.`, "Death");
+            this.log(`RED ZONE SURVIVAL: Main Hero ${hero.name} stripped and penalized.`, "Death");
+            return;
+        }
+
+        // Standard Permadeath for non-main units or if not in special survival mode
+        if (hero.isMain) {
+            // Fallback for Green/Blue/Yellow (Should be KO, but if here, something weird happened)
+            // Just apply XP penalty
+             const penalty = Math.floor(hero.unitXp * 0.05);
+             await this.db.hero.update({
+                where: { id: hero.id },
+                data: { unitXp: { decrement: penalty } }
+            });
         } else {
             // Permanent Deletion (Cleanup relations)
             await this.db.heroEquipment.deleteMany({ where: { heroId } });

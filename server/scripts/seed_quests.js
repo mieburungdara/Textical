@@ -250,13 +250,14 @@ async function seedQuests() {
                     data: {
                         name: questData.name,
                         description: questData.description,
+                        category: questData.category || "MAIN",
                         isDynamic: questData.isDynamic,
                         expiresAt: questData.expiresAt,
                         questGiverId: questData.questGiverId,
                         turnInNpcId: questData.turnInNpcId
                     }
                 });
-                console.log(`🔄 Updated quest ${questData.id}: ${questData.name} (Giver: NPC ${questData.questGiverId})`);
+                console.log(`🔄 Updated quest ${questData.id}: ${questData.name} (Category: ${questData.category || 'MAIN'})`);
                 updated++;
                 continue;
             }
@@ -268,6 +269,7 @@ async function seedQuests() {
                     version: 1,
                     name: questData.name,
                     description: questData.description,
+                    category: questData.category || "MAIN",
                     isDynamic: questData.isDynamic,
                     expiresAt: questData.expiresAt,
                     questGiverId: questData.questGiverId,
@@ -289,6 +291,7 @@ async function seedQuests() {
                                 create: stage.rewards.map(reward => ({
                                     type: reward.type,
                                     itemId: reward.itemId || null,
+                                    factionId: reward.factionId || null,
                                     amount: reward.amount
                                 }))
                             }

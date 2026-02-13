@@ -12,16 +12,16 @@ class ObjectiveValidator extends BaseService {
         for (const obj of currentStage.objectives) {
             switch (obj.type) {
                 case "GATHER":
-                    await this._validateGather(userId, obj);
+                    await this._validateGather(userId, obj, userQuest);
                     break;
                 case "TRAVEL":
-                    await this._validateTravel(userId, obj);
+                    await this._validateTravel(userId, obj, userQuest);
                     break;
                 case "KILL":
-                    await this._validateKill(userId, obj);
+                    await this._validateKill(userId, obj, userQuest);
                     break;
                 case "INTERACT":
-                    await this._validateInteract(userId, obj);
+                    await this._validateInteract(userId, obj, userQuest);
                     break;
                 default:
                     throw new Error(`Unsupported objective type: ${obj.type}`);
@@ -57,11 +57,13 @@ class ObjectiveValidator extends BaseService {
         }
     }
 
-    async _validateKill(userId, obj) {
-        // AAA: Check unit deeds / killed monsters in current session or global stats
-        // For audit simplicity, let's assume if it exists in killedMonsterIds, it's done.
-        // In real game, we'd track "current_quest_kills" in UserQuest metadata.
-        return true; 
+    async _validateKill(userId, obj, userQuest) {
+        const progress = JSON.parse(userQuest.progressData || "{}");
+        const currentKills = progress[obj.targetId] || 0;
+
+        if (currentKills < obj.amount) {
+            throw new Error(`Objective incomplete: Need to defeat ${obj.amount - currentKills}x more monsters (Current: ${currentKills}/${obj.amount}).`);
+        }
     }
 
     async _validateInteract(userId, obj) {

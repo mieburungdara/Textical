@@ -10,3 +10,7 @@ node_modules/**
 node_modules/*
 godot-mcp/*
 godot-mcp
+*.log
+server/prisma/dev.db
+server/prisma/dev.db-journal
+.kilocode

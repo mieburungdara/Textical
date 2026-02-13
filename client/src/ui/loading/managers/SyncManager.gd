@@ -33,13 +33,13 @@ func _connect_signals() -> void:
     
     # Version check signals
     if DataManager and DataManager.has_signal("version_check_started"):
-        DataManager.version_check_started.connect(version_check_started)
+        DataManager.version_check_started.connect(_on_version_check_started)
     
     if DataManager and DataManager.has_signal("version_check_completed"):
-        DataManager.version_check_completed.connect(version_check_completed)
+        DataManager.version_check_completed.connect(_on_version_check_completed)
     
     if DataManager and DataManager.has_signal("version_check_failed"):
-        DataManager.version_check_failed.connect(version_check_failed)
+        DataManager.version_check_failed.connect(_on_version_check_failed)
 
 ## Start the synchronization process
 func start_sync() -> void:
@@ -75,6 +75,15 @@ func _on_error(endpoint: String, message: String) -> void:
     _sync_error_count += 1
     sync_error.emit(endpoint, message)
 
+func _on_version_check_started() -> void:
+    version_check_started.emit()
+
+func _on_version_check_completed(needs_update: bool) -> void:
+    version_check_completed.emit(needs_update)
+
+func _on_version_check_failed(error: String) -> void:
+    version_check_failed.emit(error)
+
 ## Check if currently syncing
 func is_syncing() -> bool:
     return _is_syncing
@@ -99,10 +108,10 @@ func _exit_tree() -> void:
         if DataManager.has_signal("sync_finished"):
             DataManager.sync_finished.disconnect(_on_sync_finished)
         if DataManager.has_signal("version_check_started"):
-            DataManager.version_check_started.disconnect(version_check_started)
+            DataManager.version_check_started.disconnect(_on_version_check_started)
         if DataManager.has_signal("version_check_completed"):
-            DataManager.version_check_completed.disconnect(version_check_completed)
+            DataManager.version_check_completed.disconnect(_on_version_check_completed)
         if DataManager.has_signal("version_check_failed"):
-            DataManager.version_check_failed.disconnect(version_check_failed)
+            DataManager.version_check_failed.disconnect(_on_version_check_failed)
     
     _is_syncing = false

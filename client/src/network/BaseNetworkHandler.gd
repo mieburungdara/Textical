@@ -4,7 +4,7 @@ class_name BaseNetworkHandler
 signal request_completed(endpoint, data)
 signal error_occurred(endpoint, message)
 
-var base_url = "http://localhost:3000/api"
+var base_url = "http://127.0.0.1:3000/api"
 
 func _ready():
     # Support environment-based configuration
@@ -27,6 +27,38 @@ func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}
     if error != OK:
         emit_signal("error_occurred", endpoint, "Connection Error")
         http.queue_free()
+
+## Asynchronous request that returns data directly
+func _request_async(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}) -> Dictionary:
+    var url = base_url + endpoint
+    var headers = ["Content-Type: application/json"]
+    var json_str = JSON.stringify(body) if not body.is_empty() else ""
+    
+    var http = HTTPRequest.new()
+    add_child(http)
+    
+    var error = http.request(url, headers, method, json_str)
+    if error != OK:
+        http.queue_free()
+        return {}
+    
+    var response = await http.request_completed
+    var result = response[0]
+    var response_code = response[1]
+    var response_body = response[3]
+    
+    var response_text = response_body.get_string_from_utf8()
+    var json = JSON.parse_string(response_text)
+    
+    var final_result = {}
+    if result == OK and response_code < 400 and json != null:
+        final_result = json
+        _handle_success(endpoint, json)
+    else:
+        _handle_error(endpoint, "Request failed")
+        
+    http.queue_free()
+    return final_result
 
 func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, response_code, _headers, body):
     var response_text = body.get_string_from_utf8()

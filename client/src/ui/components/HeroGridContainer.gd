@@ -87,7 +87,7 @@ func _load_heroes():
     if heroes.is_empty() and GameState and GameState.current_user:
         print("[HeroGridContainer] No heroes loaded, fetching from server...")
         loading_label.text = "Loading heroes from server..."
-        GameState.fetch_heroes_from_server(GameState.current_user.id)
+        GameState.fetch_heroes_from_server(GameState.current_user.get("id"))
         return
     
     _continue_load_heroes(heroes)
