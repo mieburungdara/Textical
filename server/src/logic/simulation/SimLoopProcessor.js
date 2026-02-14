@@ -35,6 +35,8 @@ class SimLoopProcessor {
 
         s.environment.applyEnvironmentalModifiers();
         s.environment.applyTerrainEffects();
+        s.environment.applySpiritModifiers(); // AAA: Spirit Modifiers (v16.1)
+        s.environment.applyStaticDischarge(); // AAA: Static Discharge (v8.0)
         s.environment.applyAuras();
 
         _.forEach(s.units, (u) => { 

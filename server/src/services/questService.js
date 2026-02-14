@@ -104,7 +104,11 @@ class QuestService extends BaseService {
     async getActiveQuests(userId) {
         return await this.db.userQuest.findMany({
             where: { userId, status: "ACTIVE" },
-            include: { currentStage: { include: { objectives: true } }, quest: true }
+            include: { 
+                currentStage: { include: { objectives: true } }, 
+                quest: true,
+                variables: true // Include relational variables
+            }
         });
     }
 
@@ -116,11 +120,31 @@ class QuestService extends BaseService {
             if (!currentStage) continue;
 
             let updated = false;
+            // Legacy JSON support (read)
             const progress = JSON.parse(uQuest.progressData || "{}");
+            
+            // Relational Variables Map
+            const varMap = {};
+            if (uQuest.variables) {
+                uQuest.variables.forEach(v => varMap[v.key] = v.valInt || 0);
+            }
 
             for (const obj of currentStage.objectives) {
                 if (obj.type === type && obj.targetId === targetId) {
-                    progress[targetId] = (progress[targetId] || 0) + amount;
+                    const key = String(targetId);
+                    const currentVal = varMap[key] !== undefined ? varMap[key] : (progress[key] || 0);
+                    const newVal = currentVal + amount;
+                    
+                    // Update Relational DB
+                    await this.db.userQuestVariable.upsert({
+                        where: { userQuestId_key: { userQuestId: uQuest.id, key } },
+                        update: { valInt: newVal },
+                        create: { userQuestId: uQuest.id, key, valInt: newVal }
+                    });
+
+                    // Update Legacy JSON (Double Write)
+                    progress[key] = newVal;
+                    varMap[key] = newVal; // Update local map just in case
                     updated = true;
                 }
             }
@@ -130,7 +154,7 @@ class QuestService extends BaseService {
                     where: { id: uQuest.id },
                     data: { progressData: JSON.stringify(progress) }
                 });
-                this.log(`Updated quest ${uQuest.questId} progress for User ${userId}: ${type} ${targetId} -> ${progress[targetId]}`, "Quest");
+                this.log(`Updated quest ${uQuest.questId} progress for User ${userId}: ${type} ${targetId} -> (Relational Updated)`, "Quest");
             }
         }
     }

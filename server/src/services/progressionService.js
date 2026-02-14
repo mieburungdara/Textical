@@ -77,6 +77,15 @@ class ProgressionService extends BaseService {
             this.log(`Hero ${hero.name} processed +${amount} XP.`, "Progression");
             return { hero: updatedHero, unitLeveledUp, classLeveledUp, unlockedSkills };
         });
+
+        if (result.unitLeveledUp) {
+            // Lazy load to avoid circular usage if strictly coupled, though likely ok here
+            const statService = require('./statService'); 
+            // Fire and forget or await? Await to ensure consistency in tests.
+            await statService.saveStatSnapshot(heroId, 'LEVEL_UP');
+        }
+
+        return result;
     }
 }
 

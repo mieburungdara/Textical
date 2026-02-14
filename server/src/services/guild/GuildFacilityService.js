@@ -1,76 +1,67 @@
-const BaseService = require('../BaseService');
+const prisma = require('../../db');
+const guildRepository = require('../../repositories/guildRepository');
+const GuildUtils = require('./GuildUtils');
 
 /**
- * GuildFacilityService
- * Orchestrates construction and upgrades of guild structures.
+ * Service for handling guild facilities construction and upgrades.
  */
-class GuildFacilityService extends BaseService {
-    /**
-     * Calculates the cost for the next level of a facility.
-     */
-    calculateUpgradeCost(template, currentLevel) {
-        return Math.floor(template.costBase * Math.pow(template.costMult, currentLevel));
-    }
+class GuildFacilityService {
+    async buildFacility(user, templateId) {
+        if (!user.guildId) throw new Error("You are not in a guild.");
 
-    /**
-     * Constructs a new facility for a guild.
-     */
-    async constructFacility(userId, guildId, templateId) {
-        const template = await this.db.guildFacilityTemplate.findUnique({ where: { id: templateId } });
-        if (!template) throw new Error("Facility template not found.");
+        const template = await guildRepository.getFacilityTemplateById(templateId);
+        if (!template) throw new Error("Invalid facility template.");
 
+        const existingFacility = await prisma.guildFacility.findFirst({
+            where: { guildId: user.guildId, templateId: templateId }
+        });
+        
+        if (existingFacility) {
+            throw new Error("This facility already exists. Upgrade it instead.");
+        }
+
+        const guild = await guildRepository.findById(user.guildId);
         const cost = template.costBase;
+        if (guild.treasury < cost) throw new Error(`Insufficient treasury. Need ${cost} gold.`);
 
-        return await this.runTransaction(async (tx) => {
-            // 1. Check/Deduct Treasury (Logic handled in TreasuryService or manually)
-            const guild = await tx.guild.findUnique({ where: { id: guildId } });
-            if (guild.treasury < cost) throw new Error("Insufficient guild treasury.");
-
-            await tx.guild.update({
-                where: { id: guildId },
-                data: { treasury: { decrement: cost } }
-            });
-
-            // 2. Create Facility
-            const facility = await tx.guildFacility.create({
-                data: { guildId, templateId, level: 1 }
-            });
-
-            this.log(`Facility Constructed: Guild ${guildId} built ${template.name}`, "Guild");
-            return facility;
+        await guildRepository.update(user.guildId, {
+            treasury: { decrement: cost }
         });
+        
+        await guildRepository.addFacility(user.guildId, templateId, 1);
+
+        await GuildUtils.addHistory(user.guildId, "FACILITY_BUILT", user.id, null, 
+            `${user.username} built ${template.name}`);
+
+        return { success: true, facility: { templateId, name: template.name, level: 1 } };
     }
 
-    /**
-     * Upgrades an existing facility.
-     */
-    async upgradeFacility(userId, guildId, facilityId) {
-        const facility = await this.db.guildFacility.findUnique({
-            where: { id: facilityId },
-            include: { template: true }
+    async upgradeFacility(user, facilityId) {
+        if (!user.guildId) throw new Error("You are not in a guild.");
+        if (!["MASTER", "OFFICER"].includes(user.guildRole)) {
+            throw new Error("Only officers can upgrade facilities.");
+        }
+
+        const facility = await guildRepository.getFacilityById(facilityId);
+        if (!facility) throw new Error("Facility not found.");
+        if (facility.guildId !== user.guildId) throw new Error("Facility doesn't belong to your guild.");
+
+        const template = await guildRepository.getFacilityTemplateById(facility.templateId);
+        const upgradeCost = Math.floor(template.costBase * Math.pow(template.costMult, facility.level));
+        
+        const guild = await guildRepository.findById(user.guildId);
+        if (guild.treasury < upgradeCost) throw new Error(`Insufficient treasury. Need ${upgradeCost} gold.`);
+
+        await guildRepository.update(user.guildId, {
+            treasury: { decrement: upgradeCost }
         });
+        
+        await guildRepository.upgradeFacility(facilityId);
 
-        if (!facility || facility.guildId !== guildId) throw new Error("Facility not found.");
+        await GuildUtils.addHistory(user.guildId, "FACILITY_UPGRADED", user.id, null, 
+            `${user.username} upgraded ${template.name} to level ${facility.level + 1}`);
 
-        const cost = this.calculateUpgradeCost(facility.template, facility.level);
-
-        return await this.runTransaction(async (tx) => {
-            const guild = await tx.guild.findUnique({ where: { id: guildId } });
-            if (guild.treasury < cost) throw new Error("Insufficient guild treasury.");
-
-            await tx.guild.update({
-                where: { id: guildId },
-                data: { treasury: { decrement: cost } }
-            });
-
-            const updated = await tx.guildFacility.update({
-                where: { id: facilityId },
-                data: { level: { increment: 1 } }
-            });
-
-            this.log(`Facility Upgraded: Guild ${guildId} upgraded ${facility.template.name} to Level ${updated.level}`, "Guild");
-            return updated;
-        });
+        return { success: true, newLevel: facility.level + 1 };
     }
 }
 

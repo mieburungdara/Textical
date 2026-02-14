@@ -86,6 +86,50 @@ class SimEnvironmentSystem {
             }
         }
     }
+
+    /**
+     * AAA: Static Discharge (v8.0)
+     * High mana intensity causes random lightning strikes on units.
+     */
+    applyStaticDischarge() {
+        const intensity = this.sim.manaStaticIntensity || 1.0;
+        if (intensity < 1.8) return;
+        
+        // Every 50 ticks, chance to strike random units
+        if (this.sim.currentTick % 50 !== 0) return;
+        
+        const chance = (intensity - 1.5) * 0.1; // e.g. Intensity 2.5 -> 10% chance
+        
+        for (const unit of this.sim.units.filter(u => !u.isDead)) {
+            if (Math.random() < chance) {
+                const damage = Math.floor(10 * intensity);
+                unit.takeDamage(damage, this.sim);
+                
+                this.sim.logger.addEvent("ENVIRONMENT", `[STATIC_DISCHARGE] ${unit.data.name} struck by mana lightning!`, {
+                    targetId: unit.instanceId,
+                    damage: damage
+                });
+            }
+        }
+    }
+    /**
+     */
+    applySpiritModifiers() {
+        const spirit = this.sim.activeSpirit;
+        if (!spirit) return;
+
+        // Apply only to Player team (Team 0)
+        for (const unit of this.sim.units.filter(u => !u.isDead && u.teamId === 0)) {
+            const baseValue = unit.stats[spirit.statKey] || 0;
+            const bonus = spirit.effectType === "BUFF" ? (baseValue * (spirit.statValue - 1)) : -(baseValue * (1 - spirit.statValue));
+            
+            unit.temporaryStats[spirit.statKey] = (unit.temporaryStats[spirit.statKey] || 0) + bonus;
+            
+            if (this.sim.currentTick === 0) {
+                this.sim.logger.log(`[SPIRIT] ${unit.data.name} is under the influence of ${spirit.name}!`, "SUCCESS");
+            }
+        }
+    }
 }
 
 module.exports = SimEnvironmentSystem;

@@ -3,15 +3,52 @@ const rewardProcessor = require('./battle/RewardProcessor');
 const replayService = require('./battle/ReplayService');
 const lootService = require('./logistics/LootService');
 const battleRegistry = require('../../logic/battle/BattleRegistry');
+const pvpService = require('./battle/PvpService');
 
 /**
- * BattleService (v2.2 - Async Battle Support with Potion System)
- * Exports separate files for UI visualization and Engine debugging.
- * Supports Health Potion usage during combat via BattleRegistry.
+ * BattleService (v2.3 - PvP Support)
+ * ...
  */
 class BattleService {
     /**
-     * Start async battle - registers to BattleRegistry for potion support
+     * Start PvP Battle between two users
+     * @param {number} attackerId 
+     * @param {number} defenderId 
+     * @param {number} regionId 
+     */
+    async startPvpBattle(attackerId, defenderId, regionId) {
+        // 1. Validate PvP Permissions
+        const pvpCheck = await pvpService.canInitiatePvp(attackerId, defenderId, regionId);
+        if (!pvpCheck.allowed) {
+            throw new Error(pvpCheck.reason || "PvP not allowed here.");
+        }
+
+        // 2. Setup Simulation
+        const { sim } = await battleInitializer.setupPvpSimulation(attackerId, defenderId, regionId);
+        
+        sim.logger.setMetadata({
+            battle_type: "PVP",
+            attacker_id: attackerId,
+            defender_id: defenderId,
+            region_id: regionId
+        });
+
+        // 3. Register and Run
+        battleRegistry.register(sim.battleId, sim, attackerId);
+        // Also register for defender if we want them to see live updates
+        battleRegistry.register(sim.battleId, sim, defenderId);
+
+        this._runBattleAsync(sim);
+
+        return {
+            battleId: sim.battleId,
+            status: "IN_PROGRESS",
+            message: pvpCheck.note || "PvP Battle initiated."
+        };
+    }
+
+    /**
+     * Start async battle ...
      * @param {number} userId 
      * @param {string} monsterTemplateId 
      * @returns {Object} battleId and initial state

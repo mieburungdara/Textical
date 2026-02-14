@@ -4,11 +4,13 @@ const TacticalSensor = require('./rules/TacticalSensor');
 const SkillResolver = require('./rules/SkillResolver');
 const DeathResolver = require('./rules/DeathResolver');
 const skillExecutor = require('./rules/skillExecutor');
+const CombatFormulaResolver = require('./rules/CombatFormulaResolver');
+const CombatEventBroadcaster = require('./rules/CombatEventBroadcaster');
+const MovementResolver = require('./rules/MovementResolver');
 
 /**
- * BattleRules (v4.1 - Enhanced Combat System)
- * Delegates combat phases to specialized sub-systems.
- * Integrated with EnhancedStats for accuracy, dodge, crit, and block mechanics.
+ * BattleRules (v4.5 - SRP Optimized)
+ * Delegates combat phases and calculations to specialized sub-systems.
  */
 class BattleRules {
     constructor(sim) {
@@ -19,90 +21,6 @@ class BattleRules {
         this.death = new DeathResolver(sim);
     }
 
-    /**
-     * Calculate hit chance considering accuracy vs dodge
-     */
-    calculateHitChance(attacker, defender, directionalBonus = 0) {
-        const accuracy = attacker.getStat("accuracy") || 100;
-        const dodgeChance = defender.getStat("dodge_rate") || 0;
-        
-        // Stealth penalty - if defender is stealthed, attacker has reduced hit chance
-        let stealthPenalty = 0;
-        if (defender.isStealthed) {
-            const stealthLevel = defender.getStat("stealth_level") || 50;
-            stealthPenalty = Math.min(30, stealthLevel / 2);
-        }
-        
-        // Calculate final hit chance
-        const baseHitChance = accuracy - dodgeChance + directionalBonus - stealthPenalty;
-        
-        // Apply trait hooks
-        const atkMods = traitService.executeHook("onCalculateHitChance", attacker, defender) || {};
-        const defMods = traitService.executeHook("onCalculateDodgeChance", defender, attacker) || {};
-        
-        const finalHitChance = (baseHitChance + (atkMods.hitChanceMod || 0) - (defMods.dodgeChanceMod || 0));
-        
-        return Math.max(5, Math.min(100, finalHitChance));
-    }
-
-    /**
-     * Calculate critical hit chance and damage
-     */
-    calculateCriticalHit(attacker, defender, directionalBonus = 0) {
-        const critChance = attacker.getStat("crit_chance") || 0.05;
-        const critDamage = attacker.getStat("crit_damage") || 1.5;
-        
-        // Directional crit bonus
-        const critChanceBonus = directionalBonus > 0 ? (directionalBonus / 400) : 0; // Back attack gives crit bonus
-        
-        // Apply trait hooks
-        const mod = traitService.executeHook("onCalculateCrit", attacker, defender) || {};
-        
-        const finalCritChance = Math.min(1.0, critChance + critChanceBonus + (mod.critChanceMod || 0));
-        const finalCritDamage = critDamage + (mod.critDamageMod || 0);
-        
-        return {
-            chance: finalCritChance,
-            damageMult: finalCritDamage,
-            isCritical: Math.random() < finalCritChance
-        };
-    }
-
-    /**
-     * Calculate block/parry result
-     */
-    calculateBlockParry(defender, attacker, bypassBlock = false) {
-        if (bypassBlock) {
-            return { blocked: false, parried: false };
-        }
-        
-        const blockChance = defender.getStat("block_chance") || 0;
-        const parryChance = defender.getStat("parry_chance") || 0;
-        const blockPower = defender.getStat("block_power") || 0.5;
-        
-        // Apply trait hooks
-        const mod = traitService.executeHook("onCalculateBlock", defender, attacker) || {};
-        
-        const finalBlockChance = Math.min(0.75, blockChance + (mod.blockChanceMod || 0));
-        const finalParryChance = Math.min(0.50, parryChance + (mod.parryChanceMod || 0));
-        
-        const rolled = Math.random();
-        let result = { blocked: false, parried: false, damageMult: 1.0 };
-        
-        // Priority: Parry > Block
-        if (rolled < finalParryChance) {
-            result.parried = true;
-            result.damageMult = 0.25; // Parry reduces damage significantly
-            traitService.executeHook("onParry", defender, attacker, this.sim);
-        } else if (rolled < finalBlockChance + finalParryChance) {
-            result.blocked = true;
-            result.damageMult = 1.0 - (blockPower + (mod.blockPowerMod || 0));
-            traitService.executeHook("onBlock", defender, attacker, this.sim);
-        }
-        
-        return result;
-    }
-
     performAttack(attacker, defender, isReaction = false) {
         if (!isReaction && traitService.executeHook("onPreAction", attacker, this.sim) === false) return;
         attacker.reveal(this.sim);
@@ -110,7 +28,7 @@ class BattleRules {
         // AAA: Final Range Safeguard - Double check distance at moment of impact
         const actualDist = this.sim.grid.getDistance(attacker.gridPos, defender.gridPos);
         const baseRange = attacker.getStat("attack_range") || 1;
-        const maxRange = baseRange > 1 ? baseRange : 1.5; // Give 0.5 buffer for melee adjacency
+        const maxRange = baseRange > 1 ? baseRange : 1.5; 
         
         if (actualDist > (maxRange + 0.2)) {
             this.sim.logger.addEvent("ENGINE", `[ATTACK_CANCEL] ${attacker.data.name} target out of range (${actualDist.toFixed(1)} > ${maxRange}).`, { actorId: attacker.instanceId });
@@ -121,7 +39,6 @@ class BattleRules {
         const relPos = this.sensor.getRelativePosition(attacker, defender); 
         const hasCover = this.sensor.checkCover(attacker, defender);
         
-        // Directional bonuses
         let directionalDmgMult = 1.0;
         let directionalAccBonus = 0;
         let directionalCritBonus = 0;
@@ -131,7 +48,7 @@ class BattleRules {
             case "BACK":
                 directionalDmgMult = 1.5;
                 directionalAccBonus = 20;
-                directionalCritBonus = 0.25; // +25% crit chance from back
+                directionalCritBonus = 0.25; 
                 bypassBlock = true;
                 break;
             case "SIDE":
@@ -149,7 +66,6 @@ class BattleRules {
         
         let coverDefBonus = hasCover ? 15 : 0;
 
-        // Auto-face toward attacker
         if (!defender.isReady || defender.isReady()) {
             defender.facing = this.sensor.getDirection(defender.gridPos, attacker.gridPos);
         }
@@ -160,11 +76,10 @@ class BattleRules {
 
         if (atkMods.cancelAction || defMods.cancelAction) return;
 
-        // Weapon Durability Loss
         attacker.recordDurabilityLoss("MAIN_HAND");
 
-        // 3. Accuracy & Dodge Calculation
-        const hitChance = this.calculateHitChance(attacker, defender, directionalAccBonus);
+        // 3. Accuracy & Dodge Calculation (Delegated)
+        const hitChance = CombatFormulaResolver.calculateHitChance(attacker, defender, directionalAccBonus);
         const roll = Math.random() * 100;
         
         if (roll > hitChance) {
@@ -178,8 +93,8 @@ class BattleRules {
             return;
         }
 
-        // 4. Block/Parry Logic
-        const blockResult = this.calculateBlockParry(defender, attacker, bypassBlock);
+        // 4. Block/Parry Logic (Delegated)
+        const blockResult = CombatFormulaResolver.calculateBlockParry(defender, attacker, bypassBlock, this.sim);
         
         if (blockResult.parried) {
             this.sim.logger.addEvent("PARRY", `${defender.data.name} parried!`, { 
@@ -187,19 +102,16 @@ class BattleRules {
                 targetId: attacker.instanceId,
                 isReaction
             });
-            return; // Parry ends the attack
+            return; 
         }
 
-        // 5. Critical Hit Calculation
-        const critResult = this.calculateCriticalHit(attacker, defender, directionalCritBonus);
+        // 5. Critical Hit Calculation (Delegated)
+        const critResult = CombatFormulaResolver.calculateCriticalHit(attacker, defender, directionalCritBonus);
 
         // 6. Damage Calculation
-        const aTerrain = this.sim.grid.terrainGrid[attacker.gridPos.y][attacker.gridPos.x];
-        const dTerrain = this.sim.grid.terrainGrid[defender.gridPos.y][defender.gridPos.x];
         const finalDmgMult = (atkMods.dmgMult || 1.0) * directionalDmgMult * 
                            blockResult.damageMult * (critResult.isCritical ? critResult.damageMult : 1.0);
         
-        // Use consistent damage calculation with elemental support and debugging
         let result = CombatRules.calculateDamage(attacker, defender, finalDmgMult, 0, this.sim);
         
         if (critResult.isCritical) {
@@ -213,28 +125,26 @@ class BattleRules {
 
         defender.takeDamage(finalDamage, this.sim);
         
-        // Armor Durability Loss
         defender.recordDurabilityLoss("CHEST");
         defender.recordDurabilityLoss("LEGS");
         defender.recordDurabilityLoss("HEAD");
         defender.recordDurabilityLoss("ACCESSORY");
 
-        this._broadcastAllyEvent("onAllyDamage", defender, finalDamage);
+        CombatEventBroadcaster.broadcastAllyEvent(this.sim, "onAllyDamage", defender, finalDamage);
         this.sim.unitDeeds[attacker.instanceId] = (this.sim.unitDeeds[attacker.instanceId] || 0) + finalDamage;
 
         traitService.executeHook("onPostHit", defender, attacker, finalDamage, this.sim);
         traitService.executeHook("onPostAttack", attacker, defender, finalDamage, this.sim);
         traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
 
-        // 8. Knockback / Impact
-        this._handleKnockback(attacker, defender);
+        // 8. Knockback / Impact (Delegated)
+        MovementResolver.handleKnockback(this.sim, this.sensor, attacker, defender);
 
-        // Log with combat details
         this.sim.logger.addEvent("ATTACK", `${attacker.data.name} hit ${defender.data.name}`, {
             actorId: attacker.instanceId,
             targetId: defender.instanceId,
-            actorPos: { x: attacker.gridPos.x, y: attacker.gridPos.y }, // Snapshot current pos
-            targetPos: { x: defender.gridPos.x, y: defender.gridPos.y }, // Snapshot current pos
+            actorPos: { x: attacker.gridPos.x, y: attacker.gridPos.y },
+            targetPos: { x: defender.gridPos.x, y: defender.gridPos.y }, 
             damage: finalDamage,
             relPos: relPos,
             isCrit: critResult.isCritical,
@@ -247,80 +157,15 @@ class BattleRules {
 
         if (defender.currentHealth <= 0) {
             traitService.executeHook("onKill", attacker, defender, this.sim);
-            this._broadcastAllyEvent("onAllyKill", attacker, defender);
+            CombatEventBroadcaster.broadcastAllyEvent(this.sim, "onAllyKill", attacker, defender);
         }
         if (!isReaction) traitService.executeHook("onPostAction", attacker, this.sim);
     }
 
-    _handleKnockback(attacker, defender) {
-        if (Math.random() >= 0.15 || defender.isDead) return;
-        
-        const attackDir = this.sensor.getDirection(attacker.gridPos, defender.gridPos);
-        const dx = (attackDir === "EAST") ? 1 : (attackDir === "WEST" ? -1 : 0);
-        const dy = (attackDir === "SOUTH") ? 1 : (attackDir === "NORTH" ? -1 : 0);
-        const nextX = defender.gridPos.x + dx;
-        const nextY = defender.gridPos.y + dy;
-
-        if (nextX >= 0 && nextX < this.sim.width && nextY >= 0 && nextY < this.sim.height && !this.sim.grid.isTileOccupied(nextX, nextY)) {
-            this._broadcastAdjacencyLost(defender);
-            
-            // Update occupancy and obstacles
-            this.sim.grid.unitGrid[defender.gridPos.y][defender.gridPos.x] = null;
-            this.sim.grid.removeObstacle(defender.gridPos.x, defender.gridPos.y);
-            
-            const oldPos = { ...defender.gridPos };
-            defender.gridPos = { x: nextX, y: nextY };
-            this.sim.grid.unitGrid[nextY][nextX] = defender;
-            this.sim.grid.addObstacle(nextX, nextY);
-            
-            this.sim.logger.addEvent("KNOCKBACK", `${defender.data.name} was knocked back!`, {
-                targetId: defender.instanceId,
-                from: oldPos,
-                to: { x: nextX, y: nextY }
-            });
-            
-            this._broadcastAdjacencyGained(defender);
-        } else {
-            const obstacle = this.sim.grid.unitGrid[nextY]?.[nextX] || "WALL";
-            traitService.executeHook("onObstacleImpact", defender, obstacle, this.sim);
-        }
-    }
-
-    _broadcastAllyEvent(hookName, actor, ...args) {
-        const units = this.sim.units || [];
-        const allies = units.filter(u => u && u.teamId === actor.teamId && !u.isDead && u.instanceId !== actor.instanceId);
-        allies.forEach(ally => traitService.executeHook(hookName, ally, this.sim, actor, ...args));
-    }
-
-    _broadcastAdjacencyLost(unit) {
-        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
-        neighbors.forEach(pos => {
-            const neighbor = this.sim.grid.unitGrid[pos.y]?.[pos.x];
-            if (neighbor) {
-                traitService.executeHook("onAdjacencyLost", unit, neighbor, this.sim);
-                traitService.executeHook("onAdjacencyLost", neighbor, unit, this.sim);
-            }
-        });
-    }
-
-    _broadcastAdjacencyGained(unit) {
-        const neighbors = this.sim.grid.getNeighbors(unit.gridPos);
-        neighbors.forEach(pos => {
-            const neighbor = this.sim.grid.unitGrid[pos.y]?.[pos.x];
-            if (neighbor && !neighbor.isDead) {
-                traitService.executeHook("onAdjacencyGained", unit, neighbor, this.sim);
-                traitService.executeHook("onAdjacencyGained", neighbor, unit, this.sim);
-            }
-        });
-    }
-
     performSkill(actor, skill, targetPos) {
-        // AAA: Weapon Durability Loss (1 point per skill use)
         actor.recordDurabilityLoss("MAIN_HAND");
-
         const target = this.sim.grid.unitGrid[targetPos.y]?.[targetPos.x];
         
-        // AAA: Record Cooldown in the new Timeline System
         if (skill.cooldown) {
             actor.setSkillCooldown(skill.id, skill.cooldown, this.sim);
         }

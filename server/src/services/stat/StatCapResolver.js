@@ -106,12 +106,20 @@ class StatCapResolver {
             }
         }
 
-        // Apply class modifiers
+        // Apply class-level base caps (maxStatCap)
         if (classTemplate?.statAllocationTemplate) {
-            const statCaps = JSON.parse(classTemplate.statAllocationTemplate.statCaps || '{}');
-            Object.entries(statCaps).forEach(([statKey, cap]) => {
-                if (caps[statKey]) {
-                    caps[statKey].max = cap;
+            const maxCap = classTemplate.statAllocationTemplate.maxStatCap || 255;
+            // Apply to primary stats by default unless overridden
+            ['str', 'dex', 'int', 'vit', 'luk'].forEach(key => {
+                if (caps[key]) caps[key].max = maxCap;
+            });
+        }
+
+        // Apply Hero-specific Allocation overrides (Relational)
+        if (heroData?.statAllocation?.caps) {
+            heroData.statAllocation.caps.forEach(cap => {
+                if (caps[cap.statKey]) {
+                    caps[cap.statKey].max = cap.capValue;
                 }
             });
         }

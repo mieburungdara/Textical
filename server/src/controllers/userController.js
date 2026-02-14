@@ -20,7 +20,8 @@ class UserController extends BaseController {
                         include: { targetRegion: true }
                     },
                     premiumTier: true,
-                    region: true
+                    region: true,
+                    attributes: true // Fetch relational settings
                 }
             });
             
@@ -38,8 +39,28 @@ class UserController extends BaseController {
                 name: user.region.name 
             } : { type: "TOWN", name: "Unknown" };
 
+            // Transform attributes to settings object
+            const settingsObj = {};
+            if (user.attributes) {
+                user.attributes.forEach(attr => {
+                    if (attr.valBool !== null) settingsObj[attr.key] = attr.valBool;
+                    else if (attr.valInt !== null) settingsObj[attr.key] = attr.valInt;
+                    else if (attr.valFloat !== null) settingsObj[attr.key] = attr.valFloat;
+                    else settingsObj[attr.key] = attr.valStr;
+                });
+            } else {
+                // Fallback to legacy JSON if no attributes found (or during transition)
+                try {
+                    Object.assign(settingsObj, JSON.parse(user.settings || "{}"));
+                } catch (e) {}
+            }
+
+            // Mask the internal attributes array and legacy settings string
+            const { attributes, settings, ...userRest } = user;
+
             this.sendSuccess(res, { 
-                ...user, 
+                ...userRest, 
+                settings: settingsObj,
                 activeTask,
                 currentRegionData: regionMetadata
             });
@@ -52,12 +73,34 @@ class UserController extends BaseController {
             const { settings } = req.body;
             if (isNaN(userId)) return this.sendError(res, "Invalid User ID", 400);
 
-            const updatedUser = await prisma.user.update({
+            // Process settings one by one
+            const updatedSettings = {};
+            for (const [key, value] of Object.entries(settings)) {
+                let valStr = null, valInt = null, valFloat = null, valBool = null;
+                if (typeof value === 'boolean') valBool = value;
+                else if (typeof value === 'number') {
+                    if (Number.isInteger(value)) valInt = value;
+                    else valFloat = value;
+                } else {
+                    valStr = String(value);
+                }
+
+                await prisma.userAttribute.upsert({
+                    where: { userId_key: { userId, key } },
+                    update: { valStr, valInt, valFloat, valBool },
+                    create: { userId, key, valStr, valInt, valFloat, valBool }
+                });
+                updatedSettings[key] = value;
+            }
+
+            // Fallback for legacy clients: also update the JSON field for now (Double Write)
+            // until we fully remove it in Phase 2
+            await prisma.user.update({
                 where: { id: userId },
                 data: { settings: JSON.stringify(settings) }
             });
 
-            this.sendSuccess(res, { settings: JSON.parse(updatedUser.settings) });
+            this.sendSuccess(res, { settings: updatedSettings });
         });
     }
 }

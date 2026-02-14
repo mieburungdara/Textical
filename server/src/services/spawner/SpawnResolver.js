@@ -66,6 +66,11 @@ class SpawnResolver {
         const cached = this._getWithCache('resources', regionId, hour);
         if (cached) return cached;
 
+        const regionData = await prisma.regionTemplate.findUnique({
+            where: { id: regionId },
+            select: { rareHerbSpawnChance: true, manaStaticIntensity: true }
+        });
+
         const now = new Date();
         
         // Filter based on active_time at database level for base spawns
@@ -99,6 +104,20 @@ class SpawnResolver {
                         id: `event_${er.id}`, templateId: er.itemId, name: er.item.name,
                         gatherTime: er.gatherTime, source: `EVENT:${ae.template.name}`
                     });
+                }
+            }
+        }
+
+        // 4. AAA: Herb Transmutation (v8.0)
+        const intensity = regionData?.manaStaticIntensity ?? 1.0;
+        if (intensity > 1.5) {
+            for (let r of results) {
+                // 15% chance to rank up if intensity is high
+                if (r.source === "BASE" && Math.random() < (intensity - 1.5) * 0.2) {
+                    const originalName = r.name;
+                    r.name = `Resonating ${r.name}`;
+                    r.gatherTime *= 1.5;
+                    r.isTransmuted = true; // Flag for client/rewards
                 }
             }
         }
@@ -140,6 +159,11 @@ class SpawnResolver {
             include: { template: { include: { eventMonsters: { include: { monster: true } } } } }
         });
 
+        const regionData = await prisma.regionTemplate.findUnique({
+            where: { id: regionId },
+            select: { gridX: true, gridY: true, monsterMigrationStatus: true, manaStaticIntensity: true }
+        });
+
         const results = baseMonsters.map(m => ({
             id: m.id, templateId: m.monsterId, name: m.monster.name, source: "BASE",
             active_time: m.monster.active_time
@@ -171,6 +195,21 @@ class SpawnResolver {
                     results.push(...skirmishers);
                 }
             }
+        }
+
+        // 4. AAA: Magical Anomalies (v8.0)
+        const intensity = regionData?.manaStaticIntensity ?? 1.0;
+        if (intensity > 1.8 && Math.random() < (intensity - 1.7) * 0.3) {
+            // Spawn a random elemental or wisp
+            const anomalies = [
+                { id: "anom_wisp", templateId: 5001, name: "Mana Wisp" },
+                { id: "anom_ele", templateId: 5002, name: "Arcane Elemental" }
+            ];
+            const selected = anomalies[Math.floor(Math.random() * anomalies.length)];
+            results.push({
+                ...selected,
+                source: "MAGICAL_ANOMALY"
+            });
         }
 
         this._setCache('monsters', regionId, hour, results);

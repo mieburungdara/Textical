@@ -1,6 +1,8 @@
 const BaseService = require('./BaseService'); // FIXED PATH
 const vitalityCalculator = require('./vitality/VitalityCalculator');
 const tavernTracker = require('./vitality/TavernTracker');
+const tavernEventService = require('./TavernEventService');
+const infamyService = require('./InfamyService');
 
 /**
  * VitalityService (v2.0 - Modular Orchestrator)
@@ -11,7 +13,10 @@ class VitalityService extends BaseService {
     async syncUserVitality(userId) {
         const user = await this.db.user.findUnique({
             where: { id: userId },
-            include: { premiumTier: true }
+            include: { 
+                premiumTier: true
+                // region: true // Not needed if we only need ID
+            }
         });
 
         if (!user) throw new Error("User not found");
@@ -20,8 +25,9 @@ class VitalityService extends BaseService {
         const tavernState = tavernTracker.process(user);
 
         // 2. Process Vitality Regen (respecting possibly updated Tavern status)
+        const eventMult = await tavernEventService.getRegionMultiplier(user.currentRegion);
         const updatedUserForCalc = { ...user, isInTavern: tavernState.inTavern };
-        const { currentVit, lastUpdate } = vitalityCalculator.calculate(updatedUserForCalc);
+        const { currentVit, lastUpdate } = vitalityCalculator.calculate(updatedUserForCalc, eventMult);
 
         return await this.db.user.update({
             where: { id: userId },
@@ -33,7 +39,9 @@ class VitalityService extends BaseService {
                 isInTavern: tavernState.inTavern,
                 tavernEntryAt: tavernState.entryAt
             },
-            include: { premiumTier: true }
+            include: { 
+                premiumTier: true
+            }
         });
     }
 
@@ -51,6 +59,16 @@ class VitalityService extends BaseService {
 
     async enterTavern(userId) {
         const user = await this.syncUserVitality(userId);
+        if (!user.currentRegion?.hasInn) {
+            throw new Error(`This region does not have an Inn. You cannot enter the tavern here.`);
+        }
+
+        // AAA: Infamy Check
+        const access = await infamyService.canEnterInn(userId, user.currentRegionId);
+        if (!access.allowed) {
+            throw new Error(access.reason);
+        }
+
         const tavernState = tavernTracker.process(user);
 
         if (tavernState.dailySeconds >= tavernState.totalLimit) {

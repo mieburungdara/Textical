@@ -114,6 +114,16 @@ class MarketService extends BaseService {
                 throw new Error("Cannot sell equipped items.");
             }
 
+            // 2. Fence Logic (Stolen Goods)
+            const user = await tx.user.findUnique({ 
+                where: { id: userId }, 
+                include: { region: true } 
+            });
+
+            if (item.isStolen && !user.region.isBanditHideout) {
+                throw new Error("Penyelundup! Pedagang jujur tidak akan menerima barang curian ini. Cari penadah di sarang penjahat.");
+            }
+
             // 3. Calculate NPC sell price (90% penalty) in Silver
             const baseValue = item.template.baseValue || 1;
             const sellPriceSilver = BigInt(Math.floor(baseValue * 0.9));

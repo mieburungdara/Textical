@@ -1,0 +1,40 @@
+✦ 🏆 <b>Spirit Slot Synchronization: COMPLETED</b>
+
+💬 <b>Permintaan/Pertanyaan:</b>
+Pemain hanya bisa mendapatkan 1 effect spirit saja, tidak bisa lebih dari 1 dan tidak bisa di stack untuk effect-nya.
+
+🛠️ <b>Jawaban/Implementasi:</b>
+Telah diimplementasikan sistem **Single Spirit Slot Persistence**. 
+1. <b>Database:</b> Menambahkan field <code>activeSpiritId</code> pada model <code>User</code> (Prisma Schema).
+2. <b>Spirit Logic:</b> Memperbarui <code>SpiritService.applySpiritEffect</code> sehingga setiap pertemuan roh baru akan memperbarui <code>activeSpiritId</code> pemain.
+3. <b>Anti-Stacking:</b> Karena hanya ada satu ID roh yang disimpan di database per pemain, efek roh sebelumnya secara otomatis terhapus/digantikan oleh roh terbaru, memastikan tidak terjadi penumpukan (stacking).
+
+📜 <b>World Lore:</b>
+Kapasitas jiwa manusia dalam menampung esensi spiritual sangatlah terbatas. Sebagaimana satu wadah tidak dapat menampung dua jenis cairan tanpa mencampurnya secara kacau, demikian pula seorang petualang hanya dapat bernaung di bawah satu bayangan roh. Ketika roh baru membisikkan janji atau kutukannya, kehadiran entitas sebelumnya akan memudar, menyerahkan takhta kesadaran pada penguasa malam yang baru. Keseimbangan mistis ini menjaga kewarasan para musafir di tengah kegelapan Textical yang kian pekat.
+
+🌟 <b>Milestones Reached:</b>
+- ✅ Schema Synchronized: <code>activeSpiritId</code> linked to <code>SpiritTemplate</code>.
+- ✅ Slot Persistence: Efek roh kini tersimpan permanen di database pemain (sampai diganti).
+- ✅ Success Verification: [TEST 3] membuktikan Roh ID 2 menggantikan Roh ID 4 tanpa residu.
+- ✅ Logic Sealed: <code>SpiritService</code> kini menjadi penegak aturan slot tunggal.
+
+📊 <b>Technical Details:</b>
+- <b>Files:</b> Modified <code>schema.prisma</code>, Updated <code>SpiritService.js</code>.
+- <b>Registry:</b> 1 activeSpiritId per User.
+- <b>Audit:</b> Database constraints verified via <code>npx prisma db push</code>.
+
+⚠️ <b>Risk Assessment (Keamanan & Risiko):</b>
+- <b>Known Issues:</b> Durasi efek belum diimplementasikan; roh aktif akan bertahan selamanya hingga diganti oleh roh lain (bisa menjadi buff abadi jika pemain tidak travel malam lagi).
+- <b>Security Protocol:</b> Spiritual Integrity Check - Level 7.
+
+💬 <b>Quote of the Build:</b>
+<i>"Satu jiwa, satu bayangan. Jangan rakus akan berkat, atau kau akan hancur oleh beban kutukan."</i>
+
+🔗 <b>System Impact:</b>
+Memastikan balancing game tetap terjaga; pemain tidak bisa mengumpulkan semua buff roh untuk menjadi terlalu kuat (Overpowered).
+
+💡 <b>Architect's Insight:</b>
+Gunakan <code>activeSpiritId</code> ini nantinya untuk merender partikel roh yang berbeda di Godot Client berdasarkan ID yang aktif.
+
+🚀 <b>Next Up:</b>
+Implementasi sistem 'Decay' atau 'Expiration' untuk efek roh agar tidak bersifat permanen selamanya.

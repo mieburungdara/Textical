@@ -1,6 +1,8 @@
 const StatModifierType = require('./StatModifierType');
 const GrowthCurveType = require('./GrowthCurveType');
 const StatModifier = require('./StatModifier');
+const StatGrowthCalculator = require('./StatGrowthCalculator');
+const StatBreakdownBuilder = require('./StatBreakdownBuilder');
 
 /**
  * EnhancedStat - Enhanced stat with caps, curves, and chaining support
@@ -206,84 +208,7 @@ class EnhancedStat {
             return this._breakdownCache;
         }
 
-        const breakdown = {
-            statName: this.name,
-            baseValue: this.baseValue,
-            modifiers: {
-                flat: [],
-                percentAdd: [],
-                percentMult: []
-            },
-            activeConditionalModifiers: [],
-            inactiveConditionalModifiers: [],
-            intermediateValues: {},
-            finalValue: 0,
-            caps: {
-                min: this.minValue,
-                max: this.maxValue,
-                softCap: this.softCap,
-                isExempt: this.isExempt,
-                appliedSoftCap: false,
-                appliedHardCap: false
-            }
-        };
-
-        [...this.modifiers, ...this.conditionalModifiers].forEach(mod => {
-            const isActive = !mod.isConditional || mod.isConditionMet(context);
-            const targetArray = mod.isConditional 
-                ? (isActive ? breakdown.activeConditionalModifiers : breakdown.inactiveConditionalModifiers)
-                : breakdown.modifiers[mod.type === StatModifierType.FLAT ? 'flat' : 
-                    mod.type === StatModifierType.PERCENT_ADD ? 'percentAdd' : 'percentMult'];
-
-            targetArray.push({
-                id: mod.id,
-                source: mod.source,
-                value: mod.value,
-                type: Object.keys(StatModifierType)[mod.type],
-                priority: mod.priority,
-                condition: mod.condition,
-                isActive: isActive
-            });
-        });
-
-        let currentValue = this.baseValue;
-        const flatSum = breakdown.modifiers.flat.reduce((sum, m) => sum + m.value, 0);
-        const percentAddSum = breakdown.modifiers.percentAdd.reduce((sum, m) => sum + m.value, 0) +
-            breakdown.activeConditionalModifiers.filter(m => m.type === StatModifierType.PERCENT_ADD)
-                .reduce((sum, m) => sum + m.value, 0);
-        const percentMultProduct = [
-            ...breakdown.modifiers.percentMult,
-            ...breakdown.activeConditionalModifiers.filter(m => m.type === StatModifierType.PERCENT_MULT)
-        ].reduce((product, m) => product * m.value, 1.0);
-
-        breakdown.intermediateValues = {
-            afterFlat: currentValue + flatSum,
-            afterPercentAdd: (currentValue + flatSum) * (1 + percentAddSum),
-            afterPercentMult: (currentValue + flatSum) * (1 + percentAddSum) * percentMultProduct
-        };
-
-        currentValue = breakdown.intermediateValues.afterPercentMult;
-
-        if (this.softCap !== null && currentValue > this.softCap && !this.isExempt) {
-            const overThreshold = currentValue - this.softCap;
-            const reducedAmount = overThreshold * (1 - this.softCapFactor);
-            currentValue = this.softCap + reducedAmount;
-            breakdown.caps.appliedSoftCap = true;
-            breakdown.caps.softCapReducedBy = overThreshold * this.softCapFactor;
-        }
-
-        if (!this.isExempt) {
-            if (currentValue < this.minValue) {
-                breakdown.caps.appliedHardCap = 'min';
-                currentValue = this.minValue;
-            } else if (currentValue > this.maxValue) {
-                breakdown.caps.appliedHardCap = 'max';
-                currentValue = this.maxValue;
-            }
-        }
-
-        breakdown.finalValue = currentValue;
-
+        const breakdown = StatBreakdownBuilder.build(this, context);
         this._breakdownCache = breakdown;
         return breakdown;
     }
@@ -295,39 +220,14 @@ class EnhancedStat {
      * @returns {number} Value at the specified level
      */
     getValueAtLevel(level, options = {}) {
-        const baseLevel = options.baseLevel || 1;
-        const growthMultiplier = options.growthMultiplier || this.curveFactor;
-        
-        const levelDiff = level - baseLevel;
-        if (levelDiff <= 0) return this.getValue();
+        const config = {
+            curveType: this.curveType,
+            curveFactor: this.curveFactor,
+            curveMidpoint: this.curveMidpoint,
+            curveSteepness: this.curveSteepness
+        };
 
-        let growthValue = 0;
-
-        switch (this.curveType) {
-            case GrowthCurveType.LINEAR:
-                growthValue = this.baseValue + (this.curveFactor * levelDiff);
-                break;
-            
-            case GrowthCurveType.EXPONENTIAL:
-                growthValue = this.baseValue * Math.pow(this.curveFactor, levelDiff);
-                break;
-            
-            case GrowthCurveType.SIGMOID:
-                const sigmoidValue = 1 / (1 + Math.exp(-this.curveSteepness * (level - this.curveMidpoint)));
-                growthValue = this.baseValue * (1 + (this.curveFactor - 1) * sigmoidValue);
-                break;
-            
-            case GrowthCurveType.POLYNOMIAL:
-                growthValue = this.baseValue + (this.curveFactor * Math.pow(levelDiff, options.power || 2));
-                break;
-            
-            case GrowthCurveType.LOGARITHMIC:
-                growthValue = this.baseValue + (this.curveFactor * Math.log(levelDiff + 1));
-                break;
-            
-            default:
-                growthValue = this.baseValue + (this.curveFactor * levelDiff);
-        }
+        const growthValue = StatGrowthCalculator.calculateValueAtLevel(this.baseValue, level, config, options);
 
         const tempStat = new EnhancedStat(growthValue, {
             minValue: this.minValue,

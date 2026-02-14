@@ -1,0 +1,52 @@
+const ERROR_CODES = {
+    NO_ACTIVE_BATTLE: 'NO_ACTIVE_BATTLE',
+    HERO_NOT_IN_BATTLE: 'HERO_NOT_IN_BATTLE',
+    HERO_IS_DEAD: 'HERO_IS_DEAD',
+    POTION_COOLDOWN: 'POTION_COOLDOWN',
+    NO_POTIONS: 'NO_POTIONS',
+    NO_POTIONS_REMAINING: 'NO_POTIONS_REMAINING',
+    INVENTORY_ERROR: 'INVENTORY_ERROR',
+    ITEM_NOT_FOUND: 'ITEM_NOT_FOUND',
+    ITEM_NOT_CONSUMABLE: 'ITEM_NOT_CONSUMABLE',
+    NO_ITEM_EFFECT: 'NO_ITEM_EFFECT',
+    NO_HERO_SELECTED: 'NO_HERO_SELECTED',
+    INVALID_INPUT: 'INVALID_INPUT',
+    HERO_NOT_FOUND: 'HERO_NOT_FOUND',
+    INVALID_STAT_KEY: 'INVALID_STAT_KEY',
+    BUFF_DURATION_EXCEEDED: 'BUFF_DURATION_EXCEEDED',
+    BLACK_ZONE_RESTRICTION: 'BLACK_ZONE_RESTRICTION'
+};
+
+const CONSUMABLE_CONSTANTS = {
+    HEALTH_POTION_ID: 2001,
+    BASE_HEAL_AMOUNT: 50,
+    ALCHEMY_BONUS_PER_LEVEL: 0.03,
+    POTION_COOLDOWN_TICKS: 180,
+    TICKS_PER_SECOND: 60,
+    BUFF_DURATIONS_TICKS: {
+        BASIC_POTION: 18000,
+        DISH_BUFF: 36000,
+        ELIXIR_NORMAL: 72000,
+        ELIXIR_STRONG: 108000
+    },
+    MAX_BUFF_DURATION_TICKS: 5184000,
+    VALID_STAT_KEYS: [
+        'hp_regen', 'mana_regen', 'str', 'int', 'dex', 'vit', 
+        'health_max', 'mana_max', 'attack', 'defense', 'speed'
+    ]
+};
+
+const TICK_UTILS = {
+    secondsToTicks(seconds) {
+        return Math.round(seconds * CONSUMABLE_CONSTANTS.TICKS_PER_SECOND);
+    },
+    calculateExpiresTick(currentTick, durationTicks) {
+        return currentTick + durationTicks;
+    }
+};
+
+module.exports = {
+    ERROR_CODES,
+    CONSUMABLE_CONSTANTS,
+    TICK_UTILS
+};

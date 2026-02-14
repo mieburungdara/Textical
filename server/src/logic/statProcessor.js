@@ -1,4 +1,4 @@
-const { EnhancedStat, StatSet, StatModifierType } = require('./statSystem');
+const { EnhancedStat, StatSet, StatModifierType } = require('./stat');
 
 /**
  * Stat Processor - Calculates hero and monster stats from base values, jobs, and equipment

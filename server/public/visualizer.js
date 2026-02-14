@@ -1,4 +1,52 @@
-let socket = new WebSocket('ws://localhost:3000');
+// Use Socket.io client instead of raw WebSocket
+console.log('[VISUALIZER] Loading socket.io client...');
+let socket;
+try {
+    socket = io('http://localhost:3000', {
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 10
+    });
+    console.log('[VISUALIZER] Socket.io initialized');
+} catch(e) {
+    console.error('[VISUALIZER] Socket.io init error:', e);
+}
+
+// Socket connection status
+const devLoginBtn = document.getElementById('btn-dev-login');
+if(devLoginBtn) {
+    console.log('[VISUALIZER] Found btn-dev-login button');
+    devLoginBtn.disabled = true;
+    devLoginBtn.innerHTML = '🔴 Connecting...';
+}
+
+if(socket) {
+    socket.on('connect', () => {
+        console.log('[SOCKET] Connected:', socket.id);
+        const btn = document.getElementById('btn-dev-login');
+        if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = '🚀 QUICK DEV LOGIN (Connected)';
+            btn.style.background = '#28a745';
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('[SOCKET] Disconnected');
+        const btn = document.getElementById('btn-dev-login');
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '🔴 Connecting...';
+            btn.style.background = '#6c757d';
+        }
+    });
+    
+    socket.on('connect_error', (err) => {
+        console.error('[SOCKET] Connection error:', err.message);
+    });
+}
+
 let currentUser = null;
 let selectedImageData = null;
 
@@ -15,9 +63,24 @@ const monsterModal = document.getElementById('monster-modal');
 const regionModal = document.getElementById('region-modal');
 
 // --- AUTH ---
-document.getElementById('btn-dev-login').onclick = () => socket.send(JSON.stringify({ type: "admin_bypass_login" }));
+const devLoginBtn = document.getElementById('btn-dev-login');
+if(devLoginBtn) {
+    devLoginBtn.disabled = true; // Wait for socket connection
+    devLoginBtn.innerHTML = '🔴 Connecting...';
+    devLoginBtn.onclick = () => {
+        if(socket.connected) {
+            console.log('[AUTH] Emitting admin_bypass_login');
+            socket.emit("admin_bypass_login");
+        } else {
+            alert('Socket not connected. Please wait or refresh.');
+        }
+    };
+}
 document.getElementById('btn-login').onclick = () => {
-    socket.send(JSON.stringify({ type: "login", username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value }));
+    socket.emit("login", { 
+        username: document.getElementById('login-user').value, 
+        password: document.getElementById('login-pass').value 
+    });
 };
 
 // --- NAVIGATION ---
@@ -34,14 +97,14 @@ function showPage(pageId) {
 document.getElementById('btn-import').onclick = () => {
     if(confirm("IMPORT: Overwrite DB with JSON files? Current unsaved DB changes will be lost.")) {
         syncStatus.innerHTML = "<span style='color:#ffd700'>Processing Import... Please wait.</span>";
-        socket.send(JSON.stringify({ type: "admin_sync_import" }));
+        socket.emit("admin_sync_import");
     }
 };
 
 document.getElementById('btn-export').onclick = () => {
     if(confirm("EXPORT: Overwrite JSON files with DB data? Mesin game akan menggunakan data ini.")) {
         syncStatus.innerHTML = "<span style='color:#ffd700'>Processing Export... Please wait.</span>";
-        socket.send(JSON.stringify({ type: "admin_sync_export" }));
+        socket.emit("admin_sync_export");
     }
 };
 
@@ -65,7 +128,7 @@ document.getElementById('btn-save-monster').onclick = () => {
         hp: parseInt(document.getElementById('m-hp').value), dmg: parseInt(document.getElementById('m-dmg').value),
         spd: parseInt(document.getElementById('m-spd').value), exp: parseInt(document.getElementById('m-exp').value)
     };
-    socket.send(JSON.stringify({ type: "admin_save_monster", data }));
+    socket.emit("admin_save_monster", data);
     closeModal();
 };
 
@@ -88,7 +151,7 @@ document.getElementById('btn-save-region').onclick = () => {
         type: document.getElementById('r-type').value, description: document.getElementById('r-desc').value,
         connections: document.getElementById('r-conn').value
     };
-    socket.send(JSON.stringify({ type: "admin_save_region", data }));
+    socket.emit("admin_save_region", data);
     closeModal();
 };
 
@@ -112,7 +175,7 @@ document.getElementById('btn-save-all-races').onclick = () => {
         id: ta.id.replace('race-data-', ''),
         bonusData: JSON.stringify(JSON.parse(ta.value))
     }));
-    socket.send(JSON.stringify({ type: "admin_save_all_races", data }));
+    socket.emit("admin_save_all_races", data);
 };
 
 // --- VISUALIZER LOGIC ---
@@ -503,25 +566,31 @@ function closeModal() {
 }
 
 // --- SERVER MESSAGE HANDLER ---
-socket.onmessage = async (event) => {
-    const msg = JSON.parse(event.data);
-    if (msg.type === "login_success" && msg.user.username === "admin") {
-        authScreen.classList.add('hidden'); sidebar.classList.remove('hidden'); mainWrapper.classList.remove('hidden');
-        socket.send(JSON.stringify({ type: "admin_fetch_data" }));
+socket.on("login_success", (msg) => {
+    if (msg.user.username === "admin") {
+        authScreen.classList.add('hidden'); 
+        sidebar.classList.remove('hidden'); 
+        mainWrapper.classList.remove('hidden');
+        socket.emit("admin_fetch_data");
     } 
-    else if (msg.type === "admin_data_load") {
-        renderMonsters(msg.monsters); renderRegions(msg.regions); renderRaces(msg.races);
-    }
-    else if (msg.type === "sync_result") {
-        const s = msg.stats;
-        syncStatus.innerHTML = `<span style='color:#4caf50'>SUCCESS:</span> ${s.monsters} Monsters, ${s.regions} Regions, ${s.races} Races, ${s.items} Items synced.`;
-        setTimeout(() => syncStatus.innerText = "Ready.", 5000);
-    }
-    else if (msg.type === "success") {
-        syncStatus.innerText = msg.message;
-        setTimeout(() => syncStatus.innerText = "Ready.", 3000);
-    }
-};
+});
+
+socket.on("admin_data_load", (msg) => {
+    renderMonsters(msg.monsters); 
+    renderRegions(msg.regions); 
+    renderRaces(msg.races);
+});
+
+socket.on("sync_result", (msg) => {
+    const s = msg.stats;
+    syncStatus.innerHTML = `<span style='color:#4caf50'>SUCCESS:</span> ${s.monsters} Monsters, ${s.regions} Regions, ${s.races} Races, ${s.items} Items synced.`;
+    setTimeout(() => syncStatus.innerText = "Ready.", 5000);
+});
+
+socket.on("success", (msg) => {
+    syncStatus.innerText = msg.message;
+    setTimeout(() => syncStatus.innerText = "Ready.", 3000);
+});
 
 function renderMonsters(monsters) {
     monsterList.innerHTML = "";

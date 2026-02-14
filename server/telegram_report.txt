@@ -1,0 +1,39 @@
+✦ 🏆 <b>Bandit & Escort System: FULLY OPERATIONAL</b>
+
+💬 <b>Permintaan/Pertanyaan:</b>
+Resolusi bug sistem bandit, implementasi tebusan (ransom), barang curian (stolen goods), dan layanan pengawal perjalanan (escort).
+
+🛠️ <b>Jawaban/Implementasi:</b>
+Telah diimplementasikan ekosistem kriminal yang dinamis. Pemain kini menghadapi risiko penghadangan (ambush) di zona berbahaya berdasarkan Bandit Threat Level. Fitur mencakup negosiasi tebusan, reputasi bandit, layanan sewa pengawal (Safe-Passage Scout) di Penginapan, serta restriksi perdagangan barang haram di pasar resmi.
+
+📜 <b>World Lore:</b>
+Kekacauan melanda jalur-jalur perdagangan lama. Di celah-celah tebing *Bandit Peak* dan jembatan-jembatan yang terlupakan, bayang-bayang kini memiliki mata dan belati. Para musafir tak lagi bisa bernapas lega; setiap derap langkah kuda di zona merah adalah undangan bagi maut—atau setidaknya, bagi mereka yang rakus akan perak. Namun, di tengah keputusasaan ini, muncullah fajar baru. Di aula-aula Penginapan yang hangat, para *Safe-Passage Scout* menawarkan jasa mereka—ilmu tentang jalan pintas dan gertakan yang mampu menciutkan nyali para perampok. Dunia kini lebih berbahaya, namun bagi mereka yang memiliki koin dan nyali, jalan menuju kejayaan tetap terbuka lebar.
+
+🌟 <b>Milestones Reached:</b>
+- ✅ Resolusi total bug Prisma & sinkronisasi skema database.
+- ✅ Implementasi <code>BanditService</code> dengan kalkulasi ancaman dinamis.
+- ✅ Sistem <code>Ransom</code> & <code>Bad Reputation</code> yang terintegrasi.
+- ✅ Layanan <code>Escort Hiring</code> di Inn dengan kuota pergerakan grid.
+- ✅ Mekanik <code>Stolen Goods</code>: Barang curian kini diblokir oleh pedagang jujur.
+- ✅ Verifikasi fungsional 100% via <code>verifyBandit.js</code>.
+
+📊 <b>Technical Details:</b>
+- <b>Files:</b> 3 New Scripts (BanditService, EscortService, verifyBandit), 5 Modified (TravelService, MarketService, InventoryService, etc.)
+- <b>Registry:</b> Field BanditReputation, EscortGrids, IsStolen resmi aktif.
+- <b>Audit:</b> Database synchronized and tested.
+
+⚠️ <b>Risk Assessment (Keamanan & Risiko):</b>
+- <b>Known Issues:</b> Pemain di Bandit Hideout (Sarang Penjahat) belum memiliki UI khusus Penadah (Fence) sepenuhnya, baru sebatas bypass restriksi jual.
+- <b>Security Protocol:</b> Level 4 - Integritas Transaksi Terjamin.
+
+💬 <b>Quote of the Build:</b>
+<i>"Perak bisa dicari, namun nyawa hanya satu. Pilihlah jalanmu dengan bijak, atau bayarlah harganya."</i>
+
+🔗 <b>System Impact:</b>
+Membuka jalan bagi fitur kedaulatan wilayah (Fortification) dan ekonomi bawah tanah (Black Market).
+
+💡 <b>Architect's Insight:</b>
+Gunakan <code>banditThreatLevel</code> pada region untuk menciptakan area 'High Risk, High Reward' yang memaksa pemain berinvestasi pada pengawal atau reputasi.
+
+🚀 <b>Next Up:</b>
+Implementasi UI Godot untuk pemberitahuan Ambush dan menu penyewaan pengawal di Inn.

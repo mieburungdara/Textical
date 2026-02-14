@@ -117,7 +117,8 @@ class MonsterSyncService {
                         include: {
                             regionType: true
                         }
-                    }
+                    },
+                    behaviorParams: true // Fetch relational AI params
                 }
             });
 
@@ -127,9 +128,36 @@ class MonsterSyncService {
 
             // 2. Create individual files
             for (const monster of monsters) {
+                // Reconstruct aiConfig from relational behaviorParams
+                const aiSettings = {};
+                if (monster.behaviorParams) {
+                    monster.behaviorParams.forEach(param => {
+                         if (param.valBool !== null) aiSettings[param.key] = param.valBool;
+                        else if (param.valInt !== null) aiSettings[param.key] = param.valInt;
+                        else if (param.valFloat !== null) aiSettings[param.key] = param.valFloat;
+                        else aiSettings[param.key] = param.valStr;
+                    });
+                } else {
+                     try {
+                        Object.assign(aiSettings, JSON.parse(monster.aiConfig || "{}"));
+                    } catch (e) {}
+                }
+                
+                // Overwrite the flat aiConfig string with the reconstructed one (or original if no params)
+                // We keep it as a string because Client expects a stringified JSON here?
+                // Based on "aiConfig": "{}" in raw files, yes.
+                monster.aiConfig = JSON.stringify(aiSettings);
+
+                // Remove internal relational arrays to keep JSON clean
+                delete monster.behaviorParams;
+
                 const filePath = path.join(MONSTERS_DIR, `${monster.id}.json`);
                 fs.writeFileSync(filePath, JSON.stringify(monster, null, 2));
             }
+
+            // Sync modifications back to 'monsters' array for consolidated file
+            // Since we referenced objects, 'monsters' array is already updated with aiConfig change
+            // But we need to verify if 'delete monster.behaviorParams' affected it. Yes it does.
 
             // 3. Increment Version
             const currentVersion = await this.getSetting('monster_data_version', '0');

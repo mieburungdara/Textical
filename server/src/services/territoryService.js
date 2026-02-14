@@ -38,6 +38,23 @@ class TerritoryService {
             }
         });
     }
+
+    /**
+     * Gets the active guild buffs for a region.
+     */
+    async getRegionalGuildBuffs(regionId) {
+        const region = await prisma.regionTemplate.findUnique({
+            where: { id: regionId },
+            select: { ownerGuildId: true, guildBonusType: true }
+        });
+
+        if (!region || !region.ownerGuildId || !region.guildBonusType) return null;
+
+        return {
+            guildId: region.ownerGuildId,
+            buffType: region.guildBonusType
+        };
+    }
 }
 
 module.exports = new TerritoryService();

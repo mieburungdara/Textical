@@ -17,7 +17,15 @@ class SimUnitManager {
         // Scale unit stats before creation
         const scaledStats = { ...stats };
         scaledStats.attack_damage = Math.floor(scaledStats.attack_damage * envMods.combat.atkMult);
-        // Add more scaling here if needed (e.g. elemental)
+        
+        // AAA: Summoning Potency (v8.0)
+        const intensity = this.sim.manaStaticIntensity || 1.0;
+        if (data.isSummon && intensity > 1.0) {
+            const bonusMult = 1.0 + (intensity - 1.0) * 0.2; // e.g. Intensity 2.0 -> 20% bonus
+            scaledStats.health_max = Math.floor(scaledStats.health_max * bonusMult);
+            scaledStats.attack_damage = Math.floor(scaledStats.attack_damage * bonusMult);
+            scaledStats.speed = Math.floor(scaledStats.speed * bonusMult);
+        }
 
         // AAA: Tile Occupancy Check - Find nearest empty tile if spawn is occupied
         let targetX = _.clamp(pos.x, 0, this.sim.width - 1);

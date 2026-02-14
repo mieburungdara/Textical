@@ -1,170 +1,73 @@
-const traitService = require('../services/traitService');
+const CombatFormulaResolver = require('./rules/CombatFormulaResolver');
+const ElementalEffectivenessResolver = require('./rules/ElementalEffectivenessResolver');
 
 /**
- * AAA Combat Rules (v3.0 - Professional Standard)
- * Updated v3.1: DARK Element System
- * 
- * Element System:
- * - NEUTRAL: No elemental bonuses
- * - FIRE: Strong vs NATURE, Weak vs WATER
- * - WATER: Strong vs FIRE, Weak vs EARTH
- * - NATURE: Strong vs EARTH, Weak vs FIRE
- * - EARTH: Strong vs LIGHTNING, Weak vs WIND
- * - LIGHTNING: Strong vs WATER, Weak vs EARTH
- * - LIGHT: Strategic element - excels at healing/purification, neutral vs DARK
- * - DARK: Strong vs LIGHT (1.5x), excels at DoT and debuffs
+ * AAA Combat Rules (v3.2 - SRP Refactored)
+ * Orchestrates high-level combat flow and damage calculation.
  */
 class CombatRules {
-    static ELEMENTS = { NEUTRAL: 0, FIRE: 1, WATER: 2, NATURE: 3, EARTH: 4, LIGHTNING: 5, LIGHT: 6, DARK: 7 };
-
-    static ELEMENTAL_EFFECTIVENESS = {
-        // NEUTRAL: No bonuses or penalties against any element
-        [this.ELEMENTS.NEUTRAL]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
-            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // FIRE: Strong vs NATURE (1.5x), Weak vs WATER (0.5x)
-        [this.ELEMENTS.FIRE]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 0.5, 
-            [this.ELEMENTS.NATURE]: 1.5, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // WATER: Strong vs FIRE (1.5x), Weak vs EARTH (0.5x)
-        [this.ELEMENTS.WATER]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.5, [this.ELEMENTS.WATER]: 0.5, 
-            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 0.5, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // NATURE: Strong vs EARTH (1.5x), Weak vs FIRE (0.5x)
-        [this.ELEMENTS.NATURE]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 0.5, [this.ELEMENTS.WATER]: 1.0, 
-            [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 1.5, [this.ELEMENTS.LIGHTNING]: 1.0, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // EARTH: Strong vs LIGHTNING (1.5x), Weak vs WIND (none, default 1.0)
-        [this.ELEMENTS.EARTH]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
-            [this.ELEMENTS.NATURE]: 0.5, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 1.5, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // LIGHTNING: Strong vs WATER (1.5x), Weak vs EARTH (0.5x)
-        [this.ELEMENTS.LIGHTNING]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.5, 
-            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 0.5, [this.ELEMENTS.LIGHTNING]: 0.5, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0 
-        },
-        // LIGHT: Strategic element - neutral vs DARK, but excels at purification
-        // Note: LIGHT gets bonus vs UNDEAD/DEMON types regardless of element
-        [this.ELEMENTS.LIGHT]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
-            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
-            [this.ELEMENTS.LIGHT]: 1.0, [this.ELEMENTS.DARK]: 1.0  // Neutral - LIGHT wins through utility
-        },
-        // DARK: Strong vs LIGHT (1.5x), excels at DoT and debuffs
-        [this.ELEMENTS.DARK]: { 
-            [this.ELEMENTS.NEUTRAL]: 1.0, [this.ELEMENTS.FIRE]: 1.0, [this.ELEMENTS.WATER]: 1.0, 
-            [this.ELEMENTS.NATURE]: 1.0, [this.ELEMENTS.EARTH]: 1.0, [this.ELEMENTS.LIGHTNING]: 1.0, 
-            [this.ELEMENTS.LIGHT]: 1.5, [this.ELEMENTS.DARK]: 1.0  // Strong advantage vs LIGHT
-        }
-    };
+    static ELEMENTS = ElementalEffectivenessResolver.ELEMENTS;
 
     /**
-     * Environmental modifiers (Day/Night cycle)
+     * Standard damage calculation flow:
+     * 1. Resolve Elemental Effectiveness
+     * 2. Perform Accuracy/Hit Check
+     * 3. Apply Armor Penetration vs Defense
+     * 4. Resolve Critical Hits
+     * 5. Resolve Block/Parry Mitigation
+     * 
+     * @param {any} attacker - The unit attacking.
+     * @param {any} defender - The unit defending.
+     * @param {number} [dmgMult=1.0] - Skill damage multiplier.
+     * @param {number} [element=0] - Elemental ID of the attack.
+     * @param {any} [sim=null] - Global simulation context.
+     * @returns {Object} Damage calculation result.
      */
-    static ENVIRONMENTAL_MODIFIERS = {
-        DAY: { LIGHT: 1.25, DARK: 0.75 },   // LIGHT stronger during day
-        NIGHT: { LIGHT: 0.75, DARK: 1.25 },  // DARK stronger during night
-        DUSK: { LIGHT: 0.9, DARK: 1.1 },     // Slight DARK bonus at dusk
-        DAWN: { LIGHT: 1.1, DARK: 0.9 }      // Slight LIGHT bonus at dawn
-    };
-
-    /**
-     * Bonus vs Undead/Demon types (for LIGHT element)
-     */
-    static TYPE_BONUSES = {
-        LIGHT: { UNDEAD: 1.5, DEMON: 1.5 },  // LIGHT purifies undead and demons
-        DARK: { UNDEAD: 1.0, DEMON: 1.0 }    // DARK has no special type bonus
-    };
-
     static calculateDamage(attacker, defender, dmgMult = 1.0, element = 0, sim = null) {
-        // Debug logging
-        const debugInfo = {
-            attacker: {
-                name: attacker.data.name,
-                stats: {
-                    attack: attacker.getStat("attack_damage"),
-                    accuracy: attacker.getStat("accuracy"),
-                    critChance: attacker.getStat("crit_chance"),
-                    critDamage: attacker.getStat("crit_damage"),
-                    armorPen: attacker.getStat("armor_penetration")
-                }
-            },
-            defender: {
-                name: defender.data.name,
-                stats: {
-                    defense: defender.getStat("defense"),
-                    dodge: defender.getStat("dodge_rate"),
-                    blockChance: defender.getStat("block_chance"),
-                    blockPower: defender.getStat("block_power")
-                }
-            },
-            params: {
-                dmgMult,
-                element
-            },
-            calculations: []
-        };
+        // Initialize Debug Log
+        const debugInfo = this._initializeDebug(attacker, defender, dmgMult, element);
 
-        // 1. Elemental Effectiveness
-        let elementalMult = 1.0;
-        if (element !== this.ELEMENTS.NEUTRAL) {
-            const defenderElement = defender.getStat("elemental_type") || this.ELEMENTS.NEUTRAL;
-            elementalMult = this.ELEMENTAL_EFFECTIVENESS[element][defenderElement];
-            debugInfo.calculations.push(`Elemental effectiveness: ${element} vs ${defenderElement} = ${elementalMult}x`);
-        }
+        // 1. Resolve Elemental effectiveness using specialized resolver
+        const defenderElement = defender.getStat("elemental_type") || this.ELEMENTS.NEUTRAL;
+        const defenderType = defender.data.type || null; // e.g. UNDEAD
+        const environment = sim ? sim.getEnvironment() : null; // DAY/NIGHT
+        
+        const elementalMult = ElementalEffectivenessResolver.getEffectiveness(
+            element, 
+            defenderElement, 
+            defenderType, 
+            environment
+        );
+        debugInfo.calculations.push(`Elemental effectiveness: ${element} vs ${defenderElement} = ${elementalMult}x`);
 
-        // 2. Accuracy Check (DEX based)
-        const acc = attacker.getStat("accuracy");
-        const dodge = defender.getStat("dodge_rate");
-        const hitChance = Math.min(100, Math.max(5, acc - dodge));
-        
-        debugInfo.calculations.push(`Hit chance: ${acc} - ${dodge} = ${hitChance}%`);
-        
+        // 2. Perform Hit Check using CombatFormulaResolver
+        const hitChance = CombatFormulaResolver.calculateHitChance(attacker, defender);
+        debugInfo.calculations.push(`Hit chance: ${hitChance}%`);
+
         if (Math.random() * 100 > hitChance) {
-            debugInfo.result = "MISS";
-            if (sim) {
-                sim.logger.addEvent("DEBUG", `Damage Calculation: MISS`, { debug: debugInfo }, true);
-            }
-            return { damage: 0, isMiss: true, isCrit: false, isBlocked: false, debug: debugInfo };
+            return this._finalizeMiss(debugInfo, sim);
         }
 
-        // 3. Armor Penetration Logic
-        const rawDef = defender.getStat("defense");
-        const arPen = attacker.getStat("armor_penetration");
-        const effectiveDef = Math.max(0, rawDef - arPen);
-        debugInfo.calculations.push(`Defense: ${rawDef} - ${arPen} = ${effectiveDef}`);
+        // 3. Resolve Effective Defense (Armor Pen)
+        const effectiveDef = Math.max(0, defender.getStat("defense") - attacker.getStat("armor_penetration"));
+        debugInfo.calculations.push(`Effective Defense: ${effectiveDef}`);
 
-        // 4. Base Damage & Multipliers
-        const baseAtk = attacker.getStat("attack_damage");
-        let damage = Math.floor(Math.max(1, (baseAtk * dmgMult * elementalMult) - effectiveDef));
-        debugInfo.calculations.push(`Base damage: ${baseAtk} * ${dmgMult} * ${elementalMult} = ${baseAtk * dmgMult * elementalMult}`);
-        debugInfo.calculations.push(`After defense: ${damage}`);
+        // 4. Base Damage Calculation
+        let damage = Math.floor(Math.max(1, (attacker.getStat("attack_damage") * dmgMult * elementalMult) - effectiveDef));
+        debugInfo.calculations.push(`Base damage after defense: ${damage}`);
 
-        // 5. Critical Hit
-        const isCrit = Math.random() < attacker.getStat("crit_chance");
-        if (isCrit) {
-            const critMult = attacker.getStat("crit_damage");
-            damage = Math.floor(damage * critMult);
-            debugInfo.calculations.push(`Critical hit: ${damage} * ${critMult} = ${damage}`);
+        // 5. Critical Hit Resolving
+        const critResult = CombatFormulaResolver.calculateCriticalHit(attacker, defender);
+        if (critResult.isCritical) {
+            damage = Math.floor(damage * critResult.damageMult);
+            debugInfo.calculations.push(`Critical hit: ${damage} (mult: ${critResult.damageMult})`);
         }
 
-        // 6. Block Logic (STR based Block Power)
-        const isBlocked = Math.random() < defender.getStat("block_chance");
-        if (isBlocked) {
-            const blockMitigation = defender.getStat("block_power") || 0.5;
-            damage = Math.floor(damage * (1 - blockMitigation));
-            debugInfo.calculations.push(`Blocked: ${damage} * ${(1 - blockMitigation)} = ${damage}`);
+        // 6. Block/Parry Resolving
+        const blockResult = CombatFormulaResolver.calculateBlockParry(defender, attacker, false, sim);
+        if (blockResult.parried || blockResult.blocked) {
+            damage = Math.floor(damage * blockResult.damageMult);
+            debugInfo.calculations.push(`Mitigated (${blockResult.parried ? 'PARRY' : 'BLOCK'}): ${damage}`);
         }
 
         debugInfo.calculations.push(`Final damage: ${damage}`);
@@ -176,11 +79,55 @@ class CombatRules {
 
         return {
             damage,
-            isCrit,
+            isCrit: critResult.isCritical,
             isMiss: false,
-            isBlocked,
+            isBlocked: blockResult.blocked,
+            isParried: blockResult.parried,
             debug: debugInfo
         };
+    }
+
+    /**
+     * @private
+     * @param {any} attacker - Unit attacking.
+     * @param {any} defender - Unit defending.
+     * @param {number} dmgMult - Damage multiplier.
+     * @param {number} element - Element ID.
+     * @returns {Object} Initial debug object.
+     */
+    static _initializeDebug(attacker, defender, dmgMult, element) {
+        return {
+            attacker: {
+                name: attacker.data.name,
+                stats: {
+                    attack: attacker.getStat("attack_damage"),
+                    accuracy: attacker.getStat("accuracy")
+                }
+            },
+            defender: {
+                name: defender.data.name,
+                stats: {
+                    defense: defender.getStat("defense"),
+                    dodge: defender.getStat("dodge_rate")
+                }
+            },
+            params: { dmgMult, element },
+            calculations: []
+        };
+    }
+
+    /**
+     * @private
+     * @param {any} debugInfo - Debug info object.
+     * @param {any} sim - Simulation context.
+     * @returns {Object} Miss result.
+     */
+    static _finalizeMiss(debugInfo, sim) {
+        debugInfo.result = "MISS";
+        if (sim) {
+            sim.logger.addEvent("DEBUG", `Damage Calculation: MISS`, { debug: debugInfo }, true);
+        }
+        return { damage: 0, isMiss: true, isCrit: false, isBlocked: false, debug: debugInfo };
     }
 }
 

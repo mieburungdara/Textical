@@ -31,7 +31,18 @@ class SkillExecutor {
 
         // Consume resources if any
         if (meta.mana_cost) {
-            source.consumeMana(meta.mana_cost, sim);
+            // AAA: Arcane Efficiency (v8.0)
+            const intensity = sim.manaStaticIntensity || 1.0;
+            let finalManaCost = meta.mana_cost;
+            
+            if (intensity > 1.0) {
+                // Reduction formula: cost / (1 + (intensity - 1) * 0.4)
+                // e.g. Intensity 1.5 -> cost / 1.2 (~17% reduction)
+                // e.g. Intensity 3.0 -> cost / 1.8 (~44% reduction)
+                finalManaCost = Math.ceil(meta.mana_cost / (1 + (intensity - 1) * 0.4));
+            }
+            
+            source.consumeMana(finalManaCost, sim);
         }
     }
 

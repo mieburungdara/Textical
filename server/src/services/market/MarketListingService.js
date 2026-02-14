@@ -44,6 +44,11 @@ class MarketListingService extends BaseService {
 
         if (!item || item.userId !== userId) throw new Error("Item not found.");
         if (item.marketOrders.length > 0 || item.equippedIn) throw new Error("Item is locked.");
+
+        // --- Bandit Stolen Goods Check ---
+        if (item.isStolen) {
+            throw new Error("Penyelundup! Barang curian tidak bisa didaftarkan di pasar resmi. Jual ke penadah di sarang penjahat.");
+        }
         
         // --- AAA Guild Taxation Context ---
         const territory = await this.db.territory.findUnique({

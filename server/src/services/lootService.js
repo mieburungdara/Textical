@@ -58,11 +58,13 @@ class LootService {
             // 3. Roll for drop
             const finalChance = entry.chance * chanceMultiplier;
             if (Math.random() < finalChance) {
+                const isBandit = monster.race === 'HUMANOID' || monster.name.toLowerCase().includes('bandit');
                 lootResults.push({
                     id: item.id, // Using 'id' to match RewardService expectation
                     itemId: item.id,
                     name: item.name,
-                    quantity: Math.max(1, Math.floor(yieldMultiplier)) 
+                    quantity: Math.max(1, Math.floor(yieldMultiplier)),
+                    isStolen: isBandit
                 });
             }
         }

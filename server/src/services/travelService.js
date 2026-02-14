@@ -1,17 +1,26 @@
 const prisma = require('../db');
 const vitalityService = require('./vitalityService');
 const koManager = require('./vitality/KOManager');
+const TravelIncidentResolver = require('../logic/world/TravelIncidentResolver');
 
 class TravelService {
     constructor() {
+        /** @type {number} */
         this.BASE_TRAVEL_VITALITY_COST = 5;
     }
 
+    /**
+     * Start a travel journey for a user.
+     * @param {string|number} userIdRaw - ID of the user.
+     * @param {string|number} targetRegionIdRaw - ID of the target region.
+     * @param {string} [mode="NORMAL"] - Travel mode (NORMAL or HAULING).
+     * @returns {Promise<Object>} Task information or encounter result.
+     */
     async startTravel(userIdRaw, targetRegionIdRaw, mode = "NORMAL") {
-        const userId = parseInt(userIdRaw);
-        const targetRegionId = parseInt(targetRegionIdRaw);
+        const userId = parseInt(userIdRaw.toString());
+        const targetRegionId = parseInt(targetRegionIdRaw.toString());
 
-        // AAA: KO and Recovery Checks
+        // 1. Core Health & State Checks
         const isKO = await koManager.isKnockedOut(userId);
         if (isKO) throw new Error("You are unconscious and cannot travel.");
 
@@ -26,10 +35,8 @@ class TravelService {
                     orderBy: { id: 'desc' },
                     take: 1
                 },
-                premiumTier: true,
-                _count: {
-                    select: { heroes: true }
-                }
+                premiumTier: true, 
+                _count: { select: { heroes: true } }
             }
         });
 
@@ -45,98 +52,104 @@ class TravelService {
 
         const connection = await prisma.regionConnection.findFirst({
             where: { originRegionId: user.currentRegion, targetRegionId: targetRegionId },
-            include: { targetRegion: true }
+            include: { target: true }
         });
 
         if (!connection) throw new Error("No direct path exists from here.");
 
-        // AAA: Black Zone Entry Requirement
-        if (connection.targetRegion.zoneType === 'BLACK') {
+        // 2. Black Zone Entry Requirement
+        if (connection.target.zoneType === 'BLACK') {
             const heroCount = user._count.heroes;
             if (heroCount < 30) {
                 throw new Error(`Black Zone Danger: You need a minimum size of 30 units to survive here. Current: ${heroCount}`);
             }
         }
 
+        // 3. Vitality Management
         await vitalityService.syncUserVitality(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
         if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
 
-        const now = new Date();
-        
-        // AAA: Hauling Logic (Map-Stay)
+        // 4. Incident Resolution (Bandits, Spirits) - Delegated to Resolver
+        const incident = await TravelIncidentResolver.resolveIncidents(userId, connection, freshUser);
+        if (incident && incident.type === "AMBUSH") {
+            return {
+                status: "AMBUSHED",
+                message: incident.message,
+                ransomCost: incident.ransomCost,
+                regionId: incident.regionId
+            };
+        }
+
+        // 5. Per-Grid Deductions (Escort Quota)
+        /** @type {Object.<string, any>} */
+        let escortUpdate = {};
+        if (freshUser.escortGridsRemaining > 0) {
+            escortUpdate = {
+                escortGridsRemaining: { decrement: 1 }
+            };
+            if (freshUser.escortGridsRemaining === 1) {
+                escortUpdate.activeEscortName = null;
+            }
+        }
+
+        // 6. Task Orchestration (NORMAL vs HAULING)
         if (mode === "HAULING") {
-            // In Hauling, we move to the next region instantly, but we are "Loading" into it.
-            // The "Travel" task actually represents the "Stay" period in the target region.
-            // Wait... standard hauling means we are AT Region A, moving TO Region B.
-            // The 60s timer happens IN Region A (or B?).
-            // Spec: "Pemain wajib menetap di setiap region selama 60 detik sebelum otomatis berpindah ke region berikutnya."
-            // Meaning: If I am at A, going to B. I wait 60s at A? Or do I move to B and wait 60s there?
-            // "Mekanisne Perjalanan... Karakter bergerak secara otomatis antar region... Pemain wajib menetap di setiap region selama 60 detik"
-            // This implies the 60s timer is the "Travel Duration" effectively, but the player IS logically present in the region for ambushes.
-            // Implementation: We update currentRegion to targetRegionId IMMEDIATELY (so they can be ambushed there), but lock them with a task.
-            
-            const stayDuration = 60; // 60 seconds strict
-            const finishesAt = new Date(now.getTime() + (stayDuration * 1000));
-
-            const operations = [
-                prisma.user.update({
-                    where: { id: userId },
-                    data: { 
-                        vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
-                        isInTavern: false,
-                        tavernEntryAt: null,
-                        currentRegion: targetRegionId // Update location IMMEDIATELY
-                    }
-                }),
-                prisma.taskQueue.create({
-                    data: {
-                        userId: userId,
-                        type: "HAULING_STAY",
-                        originRegionId: user.currentRegion,
-                        targetRegionId: targetRegionId,
-                        status: "RUNNING",
-                        startedAt: now,
-                        finishesAt: finishesAt
-                    },
-                    include: { targetRegion: true } 
-                })
-            ];
-
-            const result = await prisma.$transaction(operations);
-            return { ...result[1], targetRegionType: result[1].targetRegion.visualType, message: "Hauling move initiated. Stand ground for 60s." };
+            return await this._executeTravelTask(userId, user.currentRegion, targetRegionId, "HAULING_STAY", 60, escortUpdate);
         }
 
         const duration = connection.travelTimeSeconds || 15; 
+        const task = await this._executeTravelTask(userId, user.currentRegion, targetRegionId, "TRAVEL", duration, escortUpdate);
+
+        return { 
+            ...task, 
+            targetRegionType: task.targetRegion ? task.targetRegion.visualType : "TOWN",
+            ambientSign: TravelIncidentResolver.getAmbientSigns(connection.target.banditThreatLevel),
+            spiritEncounter: incident && incident.type === "SPIRIT" ? incident.data : null
+        };
+    }
+
+    /**
+     * Internal helper to execute the travel transaction
+     * @private
+     * @param {number} userId - User ID.
+     * @param {number} originId - Origin region ID.
+     * @param {number} targetId - Target region ID.
+     * @param {string} type - Task type.
+     * @param {number} duration - Seconds to complete.
+     * @param {Object} escortUpdate - Escort quota changes.
+     * @returns {Promise<Object>} Created task.
+     */
+    async _executeTravelTask(userId, originId, targetId, type, duration, escortUpdate) {
+        const now = new Date();
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 
-        // Start Journey: Deduct Vitality & Create Task (DO NOT update currentRegion yet)
-        const operations = [
+        const result = await prisma.$transaction([
             prisma.user.update({
                 where: { id: userId },
                 data: { 
                     vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
                     isInTavern: false,
-                    tavernEntryAt: null
+                    tavernEntryAt: null,
+                    ...(type === "HAULING_STAY" ? { currentRegion: targetId } : {}),
+                    ...escortUpdate
                 }
             }),
             prisma.taskQueue.create({
                 data: {
-                    userId: userId,
-                    type: "TRAVEL",
-                    originRegionId: user.currentRegion,
-                    targetRegionId: targetRegionId,
+                    userId,
+                    type,
+                    originRegionId: originId,
+                    targetRegionId: targetId,
                     status: "RUNNING",
                     startedAt: now,
                     finishesAt: finishesAt
                 },
                 include: { targetRegion: true } 
             })
-        ];
+        ]);
 
-        const result = await prisma.$transaction(operations);
-        const task = result[1];
-        return { ...task, targetRegionType: task.targetRegion ? task.targetRegion.visualType : "TOWN" };
+        return result[1];
     }
 
     async completeTravel(userId, taskId) {
@@ -146,7 +159,6 @@ class TravelService {
 
         if (!task || task.status !== "RUNNING") return;
 
-        // Atomic Arrive: Update User Region and Complete Task
         return await prisma.$transaction([
             prisma.user.update({
                 where: { id: userId },
@@ -159,5 +171,7 @@ class TravelService {
         ]);
     }
 }
+
+module.exports = new TravelService();
 
 module.exports = new TravelService();

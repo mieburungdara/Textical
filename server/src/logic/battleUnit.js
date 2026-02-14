@@ -1,5 +1,6 @@
 const traitService = require('../services/traitService');
 const { EnhancedStat } = require('./statSystem');
+const UnitPotionHandler = require('./battle/UnitPotionHandler');
 
 class BattleUnit {
     constructor(data, teamId, pos, stats) {
@@ -45,8 +46,7 @@ class BattleUnit {
         this.isStealthed = false;
         
         // === AAA: Health Potion System ===
-        this.potionCooldownReadyAt = 0;      // Tick number when potion is ready (TICK-BASED)
-        this.potionUsedInBattle = 0;        // Number of potions used in this battle
+        this.potions = new UnitPotionHandler(this);
     }
 
     recordDurabilityLoss(slotKey, amount = 1) {
@@ -292,116 +292,16 @@ class BattleUnit {
         return 0;
     }
     
-    // === AAA: Health Potion System Methods ===
+    // === AAA: Health Potion System Proxies ===
     
-    /**
-     * Constants for potion configuration
-     */
-    get POTION_CONFIG() {
-        return {
-            HEALTH_POTION_ID: 2001,
-            BASE_HEAL_AMOUNT: 50,
-            COOLDOWN_TICKS: 10,
-            ALCHEMY_LAB_BONUS_PER_LEVEL: 0.03  // +3% per level
-        };
-    }
+    get potionUsedInBattle() { return this.potions.potionUsedInBattle; }
     
-    /**
-     * Check if potion is ready (cooldown expired)
-     * @param {BattleSimulation} sim - Battle simulation instance
-     * @returns {boolean}
-     */
-    isPotionReady(sim) {
-        if (!sim) return false;  // Fail-safe
-        return sim.currentTick >= this.potionCooldownReadyAt;
-    }
-    
-    /**
-     * Get remaining cooldown ticks
-     * @param {BattleSimulation} sim - Battle simulation instance
-     * @returns {number} Remaining ticks (0 if ready)
-     */
-    getCooldownRemaining(sim) {
-        if (!sim) return 0;
-        const remaining = this.potionCooldownReadyAt - sim.currentTick;
-        return remaining > 0 ? remaining : 0;
-    }
-    
-    /**
-     * Use potion - applies cooldown and increments usage
-     * @param {BattleSimulation} sim - Battle simulation instance
-     */
-    usePotion(sim) {
-        if (!sim) {
-            console.error(`[UNIT_ERR] usePotion called without sim for ${this.instanceId}`);
-            return;
-        }
-        this.potionCooldownReadyAt = sim.currentTick + this.POTION_CONFIG.COOLDOWN_TICKS;
-        this.potionUsedInBattle++;
-        
-        // Log potion usage
-        if (sim.logger) {
-            sim.logger.addEvent("POTION_USE", `${this.data.name} used Health Potion`, {
-                unitId: this.instanceId,
-                potionId: this.POTION_CONFIG.HEALTH_POTION_ID,
-                tick: sim.currentTick,
-                usesInBattle: this.potionUsedInBattle,
-                cooldownExpiresAt: this.potionCooldownReadyAt
-            });
-        }
-    }
-    
-    /**
-     * Apply burst heal from health potion
-     * @param {number} amount - Heal amount (after guild bonus)
-     * @param {BattleSimulation} sim - Battle simulation instance
-     * @returns {number} Actual heal amount
-     */
-    applyHeal(amount, sim) {
-        const maxHp = this.getStat("health_max") || this.stats.health_max || 100;
-        const oldHp = this.currentHealth;
-        this.currentHealth = Math.min(maxHp, this.currentHealth + amount);
-        const actualHeal = this.currentHealth - oldHp;
-        
-        // Log heal event
-        if (sim && sim.logger) {
-            sim.logger.addEvent("HEAL", `${this.data.name} healed for ${actualHeal} HP`, {
-                targetId: this.instanceId,
-                amount: actualHeal,
-                isPotion: true,
-                tick: sim.currentTick
-            });
-        }
-        
-        // Execute trait hooks
-        if (actualHeal > 0 && sim) {
-            traitService.executeHook("onHealthGain", this, actualHeal, sim);
-        }
-        
-        return actualHeal;
-    }
-    
-    /**
-     * Calculate heal amount with Guild Alchemy Lab bonus
-     * @param {number} alchemyLabLevel - Guild Alchemy Lab level (0 if no guild)
-     * @returns {number} Final heal amount
-     */
-    calculatePotionHeal(alchemyLabLevel = 0) {
-        const config = this.POTION_CONFIG;
-        const bonusMultiplier = alchemyLabLevel * config.ALCHEMY_LAB_BONUS_PER_LEVEL;
-        const finalAmount = Math.floor(config.BASE_HEAL_AMOUNT * (1 + bonusMultiplier));
-        return finalAmount;
-    }
-    
-    /**
-     * Get remaining potions for display
-     * @param {number} inventoryQuantity - Total potions in inventory
-     * @returns {number} Remaining potions available
-     */
-    getPotionsRemaining(inventoryQuantity) {
-        const used = this.potionUsedInBattle;
-        return Math.max(0, inventoryQuantity - used);
-    }
+    isPotionReady(sim) { return this.potions.isReady(sim); }
+    getCooldownRemaining(sim) { return this.potions.getCooldownRemaining(sim); }
+    usePotion(sim) { return this.potions.usePotion(sim); }
+    applyHeal(amount, sim) { return this.potions.applyHealToUnit(amount, sim); }
+    calculatePotionHeal(alchemyLabLevel = 0) { return this.potions.calculateHeal(alchemyLabLevel); }
+    getPotionsRemaining(inventoryQuantity) { return this.potions.getRemaining(inventoryQuantity); }
 }
 
 module.exports = BattleUnit;

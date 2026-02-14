@@ -8,6 +8,8 @@ const worldSpawner = require('./worldSpawnerService');
 const worldCycle = require('./world/WorldCycleService');
 const envResolver = require('../logic/world/EnvironmentalResolver');
 const extractionTracker = require('./economy/ExtractionTrackerService');
+const ecosystemService = require('./EcosystemService');
+const dailyTaskService = require('./DailyTaskService');
 
 /**
  * GatheringService
@@ -44,21 +46,49 @@ class GatheringService extends BaseService {
         // 2. Context Determination
         const { context, isToolRequired } = this._getHarvestContext(resource.templateId);
 
-        // 3. Fetch Contextual Stats
+        // 3. Fetch Contextual Stats & Region Data
         const heroStats = await statService.calculateHeroStats(heroId, context);
-        let duration = 0;
+        const region = await this.db.regionTemplate.findUnique({
+            where: { id: user.currentRegion },
+            include: { territory: true }
+        });
 
         // Fetch full template for hardness/requirements
         const template = await this.db.itemTemplate.findUnique({ where: { id: resource.templateId } });
+        
+        let duration = 0;
+        let toolTier = 0;
 
         if (!isToolRequired) {
-            duration = await this._handleManualHarvest(heroId, resource, heroStats, context);
+            const result = await this._handleManualHarvest(heroId, resource, heroStats, context);
+            duration = result.duration;
+            toolTier = result.toolTier;
         } else {
-            duration = await this._handleToolHarvest(heroId, resource, template, heroStats, context);
+            const result = await this._handleToolHarvest(heroId, resource, template, heroStats, context);
+            duration = result.duration;
+            toolTier = result.toolTier;
         }
 
-        // 4. Finalize Task
-        await vitalityService.consumeVitality(userId, this.BASE_VITALITY_COST);
+        // 4. Calculate Dynamic Vitality Cost
+        const regionMult = region?.gatheringStaminaCost || 1.0;
+        let totalDiscount = 0;
+        
+        // Tool Efficiency: -5% per tier above 0
+        totalDiscount += (toolTier * 0.05);
+
+        // Guild Bonus: -15% if guild-owned
+        if (region?.territory?.guildId && hero.guildId === region.territory.guildId) {
+            totalDiscount += 0.15;
+        }
+
+        // Mastery Placement: -1% per level (cap at 30%)
+        totalDiscount += Math.min(0.3, (hero.level || 1) * 0.01);
+
+        const rawCost = this.BASE_VITALITY_COST * regionMult;
+        const finalCost = Math.max(1, Math.ceil(rawCost * (1 - totalDiscount)));
+
+        // 5. Finalize Task
+        await vitalityService.consumeVitality(userId, finalCost);
         const now = new Date();
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 
@@ -79,11 +109,15 @@ class GatheringService extends BaseService {
             include: { itemInstance: { include: { template: true } } }
         });
 
+        const tier = tool ? (tool.itemInstance.template.toolTier || 0) : 0;
         if (tool) {
-            statValue = Math.floor(statValue * calculator.getToolMultiplier(tool.itemInstance.template.toolTier || 0));
+            statValue = Math.floor(statValue * calculator.getToolMultiplier(tier));
         }
 
-        return calculator.calculatePlantOrFishDuration(resource.gatherTime, statValue);
+        return {
+            duration: calculator.calculatePlantOrFishDuration(resource.gatherTime, statValue),
+            toolTier: tier
+        };
     }
 
     async _handleToolHarvest(heroId, resource, template, heroStats, context) {
@@ -91,13 +125,17 @@ class GatheringService extends BaseService {
         const requiredCategory = (context === "LUMBERING") ? "AXE" : "PICKAXE";
 
         validator.checkPhysicalRequirements(heroStats, template.minStr || 0);
-        await validator.checkToolRequirements(this.db, heroId, requiredCategory, minToolTier);
+        const tool = await validator.checkToolRequirements(this.db, heroId, requiredCategory, minToolTier);
+        const toolTier = tool ? (tool.itemInstance.template.toolTier || 0) : 0;
 
-        return calculator.calculateMiningOrLumberingDuration(
-            resource.gatherTime, 
-            template.hardness || 1, 
-            heroStats.attributes.str || 10
-        );
+        return {
+            duration: calculator.calculateMiningOrLumberingDuration(
+                resource.gatherTime, 
+                template.hardness || 1, 
+                heroStats.attributes.str || 10
+            ),
+            toolTier: toolTier
+        };
     }
 
     _getHarvestContext(itemId) {
@@ -146,11 +184,25 @@ class GatheringService extends BaseService {
             yieldQuantity = Math.floor(yieldQuantity * envMods.gathering.yieldMult);
         }
 
+        // --- AAA: Ecosystem Stress Modifiers ---
+        const region = await this.db.regionTemplate.findUnique({
+            where: { id: task.user.currentRegion },
+            select: { ecologicalStress: true }
+        });
+        const ecoMods = ecosystemService.getModifiers(region?.ecologicalStress || 0);
+        yieldQuantity = Math.floor(yieldQuantity * ecoMods.spawnRateMult); // Using spawnRateMult as a general "abundance" factor
+
         const finalYield = Math.max(1, yieldQuantity);
         await inventoryService.addItem(userId, task.targetItemId, finalYield);
 
+        // AAA: Daily Task Progress (GATHER type)
+        await dailyTaskService.reportProgress(userId, "GATHER", task.targetItemId, finalYield);
+
         // AAA: Record Extraction Volume for Dynamic Commodity Pricing
         await extractionTracker.recordExtraction(task.user.currentRegion, task.targetItemId, finalYield);
+
+        // AAA: Ecosystem Stress Reporting (Harvest)
+        await ecosystemService.reportActivity(task.user.currentRegion, 0.01); // Harvesting is slightly more stressful than a single kill
 
         // --- AAA Guild Gathering Taxation ---
         const territory = await this.db.territory.findUnique({

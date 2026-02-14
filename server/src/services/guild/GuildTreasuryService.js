@@ -1,72 +1,52 @@
-const BaseService = require('../BaseService');
+const prisma = require('../../db');
+const guildRepository = require('../../repositories/guildRepository');
 const transactionManager = require('../economy/TransactionManager');
+const resolver = require('../../logic/economy/CurrencyResolver');
+const GuildUtils = require('./GuildUtils');
 
 /**
- * GuildTreasuryService
- * Orchestrates guild wealth and territorial upkeep.
+ * Service for handling guild treasury deposits and withdrawals.
  */
-class GuildTreasuryService extends BaseService {
-    constructor() {
-        super();
-        this.BASE_TERRITORY_UPKEEP = 1000; // Gold per region per day
-    }
-
-    async deposit(userId, guildId, amount) {
-        return await this.runTransaction(async (tx) => {
-            // Deduct from user
-            await transactionManager.removeGold(tx, userId, amount, "GUILD_DEPOSIT", guildId, "GUILD");
-            // Add to guild
-            return await tx.guild.update({
-                where: { id: guildId },
-                data: { treasury: { increment: amount } }
-            });
-        });
-    }
-
-    async withdraw(userId, guildId, amount) {
-        // AAA: Permission Check (Leader only)
-        const guild = await this.db.guild.findUnique({
-            where: { id: guildId },
-            include: { members: { where: { id: userId } } }
-        });
-        if (!guild || guild.members.length === 0) throw new Error("Unauthorized.");
-        if (guild.treasury < amount) throw new Error("Insufficient guild treasury.");
-
-        return await this.runTransaction(async (tx) => {
-            await tx.guild.update({
-                where: { id: guildId },
-                data: { treasury: { decrement: amount } }
-            });
-            await transactionManager.addGold(tx, userId, amount, "GUILD_WITHDRAW", guildId, "GUILD");
-        });
-    }
-
-    /**
-     * Processes daily upkeep for all territories.
-     * Relinquishes control if a guild cannot pay.
-     */
-    async processDailyUpkeep() {
-        const territories = await this.db.territory.findMany({
-            include: { guild: true }
-        });
-
-        for (const t of territories) {
-            const cost = this.BASE_TERRITORY_UPKEEP;
-            
-            if (t.guild.treasury < cost) {
-                this.log(`Guild ${t.guild.name} failed upkeep for Region ${t.regionId}. Relinquishing.`, "Conquest");
-                await this.db.territory.delete({ where: { id: t.id } });
-            } else {
-                await this.db.guild.update({
-                    where: { id: t.guildId },
-                    data: { treasury: { decrement: cost } }
-                });
-                await this.db.territory.update({
-                    where: { id: t.id },
-                    data: { lastUpkeepAt: new Date() }
-                });
-            }
+class GuildTreasuryService {
+    async depositTreasury(user, amount) {
+        if (!user.guildId) throw new Error("You are not in a guild.");
+        if (amount <= 0) throw new Error("Amount must be positive.");
+        
+        const amountSilver = BigInt(amount);
+        const userTotalSilver = resolver.getTotalSilver(user);
+        if (userTotalSilver < amountSilver) {
+            throw new Error(`Insufficient funds. Need ${amountSilver} silver, have: ${userTotalSilver}`);
         }
+
+        await transactionManager.removeCurrency(prisma, user.id, amountSilver, "GUILD_TREASURY_DEPOSIT", user.guildId, "GUILD");
+        const guild = await guildRepository.update(user.guildId, {
+            treasury: { increment: amount }
+        });
+
+        await GuildUtils.addHistory(user.guildId, "TREASURY_DEPOSIT", user.id, null, 
+            `${user.username} deposited ${amount} silver to treasury`);
+
+        return guild;
+    }
+
+    async withdrawTreasury(requester, amount) {
+        if (!["MASTER", "OFFICER"].includes(requester.guildRole)) {
+            throw new Error("Only officers can withdraw from treasury.");
+        }
+        if (amount <= 0) throw new Error("Amount must be positive.");
+
+        const guild = await guildRepository.findById(requester.guildId);
+        if (guild.treasury < amount) throw new Error("Insufficient funds in treasury.");
+
+        await guildRepository.update(requester.guildId, {
+            treasury: { decrement: amount }
+        });
+        await transactionManager.addCurrency(prisma, requester.id, BigInt(amount), "GUILD_TREASURY_WITHDRAW", requester.guildId, "GUILD");
+
+        await GuildUtils.addHistory(requester.guildId, "TREASURY_WITHDRAW", requester.id, null, 
+            `${requester.username} withdrew ${amount} silver from treasury`);
+
+        return { success: true, remainingTreasury: guild.treasury - amount };
     }
 }
 
