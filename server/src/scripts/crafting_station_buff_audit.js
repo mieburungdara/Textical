@@ -34,7 +34,7 @@ async function runCraftingStationAudit() {
     await prisma.inventoryItem.create({
         data: { userId, templateId: ironIngotId, quantity: 10 }
     });
-    await prisma.user.update({ where: { id: userId }, data: { vitality: 100, currentRegion: regionId } });
+    await prisma.user.update({ where: { id: userId }, data: { energy: 100, currentRegion: regionId } });
 
     // Setup High Surplus (600 units)
     await prisma.regionalExtractionStats.create({

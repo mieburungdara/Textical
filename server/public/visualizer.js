@@ -2,7 +2,7 @@
 console.log('[VISUALIZER] Loading socket.io client...');
 let socket;
 try {
-    socket = io('http://localhost:3000', {
+    socket = io('http://localhost:5000', {
         transports: ['websocket'],
         reconnection: true,
         reconnectionDelay: 1000,

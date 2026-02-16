@@ -1,28 +1,38 @@
 const prisma = require('../../db');
 const guildRepository = require('../../repositories/guildRepository');
 const GuildUtils = require('./GuildUtils');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * Service for handling guild facilities construction and upgrades.
  */
 class GuildFacilityService {
     async buildFacility(user, templateId) {
-        if (!user.guildId) throw new Error("You are not in a guild.");
+        if (!user.guildId) {
+            throw new AppError(ErrorCodes.GUILD_NOT_IN_GUILD, 'You are not in a guild.');
+        }
 
         const template = await guildRepository.getFacilityTemplateById(templateId);
-        if (!template) throw new Error("Invalid facility template.");
+        if (!template) {
+            throw new AppError(ErrorCodes.GUILD_INVALID_FACILITY, 'Invalid facility template.');
+        }
 
         const existingFacility = await prisma.guildFacility.findFirst({
             where: { guildId: user.guildId, templateId: templateId }
         });
         
         if (existingFacility) {
-            throw new Error("This facility already exists. Upgrade it instead.");
+            throw new AppError(ErrorCodes.GUILD_FACILITY_EXISTS, 'This facility already exists. Upgrade it instead.');
         }
 
         const guild = await guildRepository.findById(user.guildId);
         const cost = template.costBase;
-        if (guild.treasury < cost) throw new Error(`Insufficient treasury. Need ${cost} gold.`);
+        if (guild.treasury < cost) {
+            throw new AppError(ErrorCodes.GUILD_TREASURY_INSUFFICIENT, `Insufficient treasury. Need ${cost} gold.`, {
+                context: { required: cost, available: guild.treasury }
+            });
+        }
 
         await guildRepository.update(user.guildId, {
             treasury: { decrement: cost }
@@ -37,20 +47,30 @@ class GuildFacilityService {
     }
 
     async upgradeFacility(user, facilityId) {
-        if (!user.guildId) throw new Error("You are not in a guild.");
+        if (!user.guildId) {
+            throw new AppError(ErrorCodes.GUILD_NOT_IN_GUILD, 'You are not in a guild.');
+        }
         if (!["MASTER", "OFFICER"].includes(user.guildRole)) {
-            throw new Error("Only officers can upgrade facilities.");
+            throw new AppError(ErrorCodes.GUILD_OFFICER_ONLY, 'Only officers can upgrade facilities.');
         }
 
         const facility = await guildRepository.getFacilityById(facilityId);
-        if (!facility) throw new Error("Facility not found.");
-        if (facility.guildId !== user.guildId) throw new Error("Facility doesn't belong to your guild.");
+        if (!facility) {
+            throw new AppError(ErrorCodes.GUILD_FACILITY_NOT_FOUND, 'Facility not found.');
+        }
+        if (facility.guildId !== user.guildId) {
+            throw new AppError(ErrorCodes.GUILD_FACILITY_NOT_YOURS, "Facility doesn't belong to your guild.");
+        }
 
         const template = await guildRepository.getFacilityTemplateById(facility.templateId);
         const upgradeCost = Math.floor(template.costBase * Math.pow(template.costMult, facility.level));
         
         const guild = await guildRepository.findById(user.guildId);
-        if (guild.treasury < upgradeCost) throw new Error(`Insufficient treasury. Need ${upgradeCost} gold.`);
+        if (guild.treasury < upgradeCost) {
+            throw new AppError(ErrorCodes.GUILD_TREASURY_INSUFFICIENT, `Insufficient treasury. Need ${upgradeCost} gold.`, {
+                context: { required: upgradeCost, available: guild.treasury }
+            });
+        }
 
         await guildRepository.update(user.guildId, {
             treasury: { decrement: upgradeCost }

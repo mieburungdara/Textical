@@ -50,7 +50,7 @@ class PvpBattleInitializer {
             const p = attackerParty[i];
             const unit = unitFactory.prepareHeroUnit(p.profile, envContext, { x: 10 + (i % 5) * 5, y: 40 + Math.floor(i / 5) * 5 });
             // Custom ID for PvP
-            unit.config.instance_id = `pvp_u0_h${p.profile.id}_${Math.random().toString(36).substr(2, 5)}`;
+            unit.config.instance_id = `pvp_u0_h${p.profile.id}_${Math.random().toString(36).slice(2, 7)}`;
             await sim.addUnit(unit.config, 0, unit.position, unit.stats);
         }
 
@@ -60,7 +60,7 @@ class PvpBattleInitializer {
             const p = defenderParty[i];
             const unit = unitFactory.prepareHeroUnit(p.profile, envContext, { x: 10 + (i % 5) * 5, y: 5 + Math.floor(i / 5) * 5 });
             // Custom ID for PvP
-            unit.config.instance_id = `pvp_u1_h${p.profile.id}_${Math.random().toString(36).substr(2, 5)}`;
+            unit.config.instance_id = `pvp_u1_h${p.profile.id}_${Math.random().toString(36).slice(2, 7)}`;
             await sim.addUnit(unit.config, 1, unit.position, unit.stats);
         }
 

@@ -18,8 +18,8 @@ async function testStatRecovery() {
         
         console.log('Recovery Stats:', JSON.stringify(recovery, null, 2));
 
-        if (!recovery.hp || !recovery.mana || !recovery.vitality) {
-            throw new Error('Missing recovery sections (hp, mana, vitality)');
+        if (!recovery.hp || !recovery.mana || !recovery.energy) {
+            throw new Error('Missing recovery sections (hp, mana, energy)');
         }
         
         if (typeof recovery.hp.regen !== 'number') {

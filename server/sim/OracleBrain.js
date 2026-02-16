@@ -8,13 +8,13 @@ const progressionResolver = require('./OracleProgressionResolver');
 class OracleBrain {
     /**
      * Context: { 
-     *   archetype, vitality, silver, inventoryCount, items, 
+     *   archetype, energy, silver, inventoryCount, items, 
      *   currentRegion, neighbors, unitLevel 
      * }
      */
     decideAction(ctx) {
-        // 0. Vitality & Maintenance (Highest Priority)
-        if (ctx.vitality < 15) return "IDLE"; 
+        // 0. Energy & Maintenance (Highest Priority)
+        if (ctx.energy < 15) return "IDLE"; 
         
         // 1. Resolve High-Level Goal
         const goal = progressionResolver.resolveGoal(ctx);
@@ -35,7 +35,7 @@ class OracleBrain {
 
     _noviceBehavior(ctx) {
         // Novices need to HUNT to level up!
-        if (ctx.vitality > 40) return "HUNT";
+        if (ctx.energy > 40) return "HUNT";
 
         // Gather resources to sell or craft
         if (ctx.inventoryCount > 10) return "SELL";
@@ -47,7 +47,7 @@ class OracleBrain {
     }
 
     _adventurerBehavior(ctx) {
-        if (ctx.vitality > 60) return "HUNT"; 
+        if (ctx.energy > 60) return "HUNT"; 
         if (ctx.inventoryCount > 12) return "SELL";
 
         const materials = ctx.items.filter(i => i.template.category === "MATERIAL");
@@ -57,15 +57,15 @@ class OracleBrain {
     }
 
     _eliteBehavior(ctx) {
-        if (ctx.currentRegion.zoneType === "RED" && ctx.vitality > 50) {
+        if (ctx.currentRegion.zoneType === "RED" && ctx.energy > 50) {
             return "PVP"; 
         }
 
-        if (ctx.silver >= 2000 && ctx.vitality > 70) {
+        if (ctx.silver >= 2000 && ctx.energy > 70) {
             return "CARAVAN";
         }
 
-        if (ctx.vitality > 40) return "HUNT";
+        if (ctx.energy > 40) return "HUNT";
 
         return "SELL";
     }

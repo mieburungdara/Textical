@@ -23,7 +23,7 @@ class AdminAnalyticsController {
                     username: true,
                     silver: true,
                     gold: true,
-                    vitality: true,
+                    energy: true,
                     isKnockedOut: true
                 }
             });

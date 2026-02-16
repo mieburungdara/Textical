@@ -21,13 +21,13 @@ func update_display():
 	var user = GameState.current_user
 	if not user: return
 	
-	# Update Vitality
-	var vit = user.get("vitality", 0)
-	var max_vit = user.get("maxVitality", 100)
-	if vit_label: vit_label.text = "%d / %d" % [vit, max_vit]
+	# Update Energy
+	var energy = user.get("energy", 0)
+	var max_energy = user.get("maxEnergy", 100)
+	if vit_label: vit_label.text = "%d / %d" % [energy, max_energy]
 	if vit_bar:
-		vit_bar.max_value = max_vit
-		vit_bar.value = vit
+		vit_bar.max_value = max_energy
+		vit_bar.value = energy
 	
 	# Update Currencies
 	if silver_label: silver_label.text = _format_number(user.get("silver", 0))

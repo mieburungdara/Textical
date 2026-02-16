@@ -1,7 +1,7 @@
 extends Control
 
 ## InventoryScreen - "The Grand Archive" Redesign
-## Optimized for 1300x600 resolution with category filtering and enhanced visual detail.
+## Optimized for 1300x600 resolution with category filtering, sorting, search, and enhanced visual detail.
 
 # === NODE REFERENCES ===
 @onready var grid = %Grid
@@ -22,6 +22,11 @@ extends Control
 @onready var actions_container = %Actions
 @onready var right_panel = %RightPanel
 
+# Search and Sort UI (dynamically created)
+var _search_input: LineEdit
+var _sort_dropdown: OptionButton
+var _search_panel: HBoxContainer
+
 # === PRIVATE VARIABLES ===
 var _inventory_data = []
 var _filtered_data = []
@@ -29,14 +34,27 @@ var _current_max_slots = 20
 var _selected_item = null
 var _selected_slot = null
 var _current_category = "All"
+var _current_sort = "name_asc"
+var _search_text = ""
 
 var _style_tab_normal: StyleBoxFlat
 var _style_tab_active: StyleBoxFlat
+
+# Rarity sort order
+var _rarity_order = {
+	"COMMON": 0,
+	"UNCOMMON": 1,
+	"RARE": 2,
+	"EPIC": 3,
+	"LEGENDARY": 4,
+	"MYTHIC": 5
+}
 
 # === Lifecycle Methods ===
 
 func _ready():
     _setup_styles()
+    _setup_search_sort_ui()
     _connect_signals()
     _show_initial_state()
     refresh()
@@ -64,6 +82,91 @@ func _setup_styles():
     _style_tab_active.content_margin_top = 6
     _style_tab_active.content_margin_right = 12
     _style_tab_active.content_margin_bottom = 6
+
+func _setup_search_sort_ui():
+    # Create search and sort panel
+    _search_panel = HBoxContainer.new()
+    _search_panel.add_theme_constant_override("separation", 10)
+    
+    # Search input
+    _search_input = LineEdit.new()
+    _search_input.placeholder_text = "Search items..."
+    _search_input.custom_minimum_size = Vector2(200, 32)
+    _search_input.text_changed.connect(_on_search_text_changed)
+    
+    var search_style = StyleBoxFlat.new()
+    search_style.bg_color = Color(0.1, 0.08, 0.06, 0.8)
+    search_style.border_width_left = 1
+    search_style.border_width_top = 1
+    search_style.border_width_right = 1
+    search_style.border_width_bottom = 1
+    search_style.border_color = Color(0.5, 0.4, 0.3, 0.3)
+    search_style.corner_radius_top_left = 6
+    search_style.corner_radius_top_right = 6
+    search_style.corner_radius_bottom_right = 6
+    search_style.corner_radius_bottom_left = 6
+    _search_input.add_theme_stylebox_override("normal", search_style)
+    _search_input.add_theme_color_override("font_color", Color(0.9, 0.85, 0.75))
+    _search_input.add_theme_color_override("font_placeholder_color", Color(0.5, 0.45, 0.4))
+    
+    # Sort dropdown
+    _sort_dropdown = OptionButton.new()
+    _sort_dropdown.custom_minimum_size = Vector2(150, 32)
+    _sort_dropdown.item_selected.connect(_on_sort_changed)
+    
+    var sort_style = StyleBoxFlat.new()
+    sort_style.bg_color = Color(0.1, 0.08, 0.06, 0.8)
+    sort_style.border_width_left = 1
+    sort_style.border_width_top = 1
+    sort_style.border_width_right = 1
+    sort_style.border_width_bottom = 1
+    sort_style.border_color = Color(0.5, 0.4, 0.3, 0.3)
+    sort_style.corner_radius_top_left = 6
+    sort_style.corner_radius_top_right = 6
+    sort_style.corner_radius_bottom_right = 6
+    sort_style.corner_radius_bottom_left = 6
+    _sort_dropdown.add_theme_stylebox_override("normal", sort_style)
+    _sort_dropdown.add_theme_color_override("font_color", Color(0.9, 0.85, 0.75))
+    
+    # Add sort options
+    _sort_dropdown.add_item("Name (A-Z)", 0)
+    _sort_dropdown.add_item("Name (Z-A)", 1)
+    _sort_dropdown.add_item("Rarity (High)", 2)
+    _sort_dropdown.add_item("Rarity (Low)", 3)
+    _sort_dropdown.add_item("Quality (High)", 4)
+    _sort_dropdown.add_item("Quality (Low)", 5)
+    _sort_dropdown.add_item("Type", 6)
+    _sort_dropdown.select(0)
+    
+    # Add spacer
+    var spacer = Control.new()
+    spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    
+    _search_panel.add_child(_search_input)
+    _search_panel.add_child(spacer)
+    _search_panel.add_child(_sort_dropdown)
+    
+    # Add to CategoryHeader (after the category buttons)
+    if category_header and category_header.get_parent():
+        var parent = category_header.get_parent()
+        var index = parent.get_child_index(category_header)
+        parent.add_child(_search_panel)
+        parent.move_child(_search_panel, index + 1)
+
+func _on_search_text_changed(text: String):
+    _search_text = text.to_lower()
+    _apply_filter()
+
+func _on_sort_changed(index: int):
+    match index:
+        0: _current_sort = "name_asc"
+        1: _current_sort = "name_desc"
+        2: _current_sort = "rarity_desc"
+        3: _current_sort = "rarity_asc"
+        4: _current_sort = "quality_desc"
+        5: _current_sort = "quality_asc"
+        6: _current_sort = "type"
+    _apply_filter()
 
 func _connect_signals():
     ServerConnector.request_completed.connect(_on_request_completed)
@@ -161,8 +264,9 @@ func _on_category_pressed(category: String):
     _apply_filter()
 
 func _apply_filter():
+    # First filter by category
     if _current_category == "All":
-        _filtered_data = _inventory_data
+        _filtered_data = _inventory_data.duplicate()
     else:
         _filtered_data = []
         for item in _inventory_data:
@@ -174,8 +278,77 @@ func _apply_filter():
             elif target == "EQUIPMENT" and type in ["WEAPON", "ARMOR", "HELMET", "ACCESSORY"]: _filtered_data.append(item)
             elif target == "MATERIAL" and type == "MATERIAL": _filtered_data.append(item)
             elif target == type: _filtered_data.append(item)
-            
+    
+    # Apply search filter
+    if _search_text != "":
+        var search_results = []
+        for item in _filtered_data:
+            var template = item.get("template", {})
+            var name = template.get("name", "").to_lower()
+            if _search_text in name:
+                search_results.append(item)
+        _filtered_data = search_results
+    
+    # Apply sorting
+    _filtered_data = _sort_items(_filtered_data)
+    
     _populate_grid()
+
+func _sort_items(items: Array) -> Array:
+    if items.is_empty():
+        return items
+    
+    var sorted_items = items.duplicate()
+    
+    match _current_sort:
+        "name_asc":
+            sorted_items.sort_custom(func(a, b):
+                var name_a = a.get("template", {}).get("name", "").to_lower()
+                var name_b = b.get("template", {}).get("name", "").to_lower()
+                return name_a < name_b
+            )
+        "name_desc":
+            sorted_items.sort_custom(func(a, b):
+                var name_a = a.get("template", {}).get("name", "").to_lower()
+                var name_b = b.get("template", {}).get("name", "").to_lower()
+                return name_a > name_b
+            )
+        "rarity_desc":
+            sorted_items.sort_custom(func(a, b):
+                var rarity_a = _rarity_order.get(a.get("template", {}).get("rarity", "COMMON"), 0)
+                var rarity_b = _rarity_order.get(b.get("template", {}).get("rarity", "COMMON"), 0)
+                return rarity_a > rarity_b
+            )
+        "rarity_asc":
+            sorted_items.sort_custom(func(a, b):
+                var rarity_a = _rarity_order.get(a.get("template", {}).get("rarity", "COMMON"), 0)
+                var rarity_b = _rarity_order.get(b.get("template", {}).get("rarity", "COMMON"), 0)
+                return rarity_a < rarity_b
+            )
+        "quality_desc":
+            sorted_items.sort_custom(func(a, b):
+                var quality_a = a.get("quality", 100)
+                var quality_b = b.get("quality", 100)
+                return quality_a > quality_b
+            )
+        "quality_asc":
+            sorted_items.sort_custom(func(a, b):
+                var quality_a = a.get("quality", 100)
+                var quality_b = b.get("quality", 100)
+                return quality_a < quality_b
+            )
+        "type":
+            sorted_items.sort_custom(func(a, b):
+                var type_a = a.get("template", {}).get("category", "MISC").to_lower()
+                var type_b = b.get("template", {}).get("category", "MISC").to_lower()
+                if type_a == type_b:
+                    var name_a = a.get("template", {}).get("name", "").to_lower()
+                    var name_b = b.get("template", {}).get("name", "").to_lower()
+                    return name_a < name_b
+                return type_a < type_b
+            )
+    
+    return sorted_items
 
 func _populate_grid():
     for child in grid.get_children(): child.queue_free()
@@ -260,6 +433,20 @@ func _fill_slot(slot: Control, item):
         q_lbl.offset_top = -20
         btn.add_child(q_lbl)
     
+    # Quality indicator (shown as small badge in top-left)
+    var quality = item.get("quality", 100)
+    if quality > 100:
+        var quality_lbl = Label.new()
+        quality_lbl.text = "+" + str(quality - 100)
+        quality_lbl.add_theme_font_size_override("font_size", 10)
+        quality_lbl.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
+        quality_lbl.add_theme_constant_override("outline_size", 2)
+        quality_lbl.add_theme_color_override("outline_color", Color(0.2, 0.15, 0.05))
+        quality_lbl.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+        quality_lbl.offset_left = 4
+        quality_lbl.offset_top = 4
+        btn.add_child(quality_lbl)
+    
     btn.pressed.connect(func(): _show_details(item, btn))
     btn.mouse_entered.connect(func(): _animate_hover(btn, true, rarity_color))
     btn.mouse_exited.connect(func(): _animate_hover(btn, false, rarity_color))
@@ -308,6 +495,9 @@ func _show_details(item, btn):
         stats = "NO MAGICAL PROPERTIES IDENTIFIED"
     stats_label.text = stats
     
+    # Add quality and durability info to the detail panel
+    _add_item_details_to_panel(item)
+    
     # Selection animation
     var tw = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
     tw.tween_property(btn, "scale", Vector2(0.9, 0.9), 0.05)
@@ -322,6 +512,12 @@ func _on_close_details_pressed():
         if grid: grid.columns = 12
     _selected_item = null
     _selected_slot = null
+    
+    # Clear ItemDetails label when closing
+    if main_vbox and main_vbox.has_node("Scroll/Content"):
+        var content = main_vbox.get_node("Scroll/Content")
+        if content.has_node("ItemDetails"):
+            content.get_node("ItemDetails").queue_free()
 
 func _update_action_buttons(item: Dictionary):
     var template = item.get("template", {})
@@ -363,6 +559,44 @@ func _get_rarity_color(rarity) -> Color:
         "EPIC": return Color(0.7, 0.3, 1.0)
         "LEGENDARY": return Color(1.0, 0.6, 0.1)
         _: return Color(0.7, 0.7, 0.7)
+
+func _add_item_details_to_panel(item):
+    # Add quality and durability info as a label below stats
+    var template = item.get("template", {})
+    var cat = template.get("category", "MISC").to_upper()
+    
+    # Only show for equipment items
+    if cat in ["WEAPON", "ARMOR", "HELMET", "ACCESSORY"]:
+        var quality = item.get("quality", 100)
+        var durability = item.get("durability", -1)
+        var max_durability = item.get("maxDurability", -1)
+        
+        var details_text = ""
+        
+        # Quality display
+        if quality > 100:
+            details_text += "[color=#ffcc00]★ +%d QUALITY[/color]\n" % (quality - 100)
+        elif quality < 100:
+            details_text += "[color=#888888]★ %d QUALITY[/color]\n" % quality
+        
+        # Durability display
+        if durability >= 0 and max_durability > 0:
+            var durability_pct = (float(durability) / float(max_durability)) * 100.0
+            var dur_color = "#44ff44" if durability_pct > 50 else "#ffaa00" if durability_pct > 25 else "#ff4444"
+            details_text += "[color=%s] durability: %d / %d[/color]" % [dur_color, durability, max_durability]
+        
+        if details_text != "":
+            # Add to the content VBox if there's a place for extra details
+            if main_vbox and main_vbox.has_node("Scroll/Content"):
+                var content = main_vbox.get_node("Scroll/Content")
+                # Check if we've already added details
+                if not content.has_node("ItemDetails"):
+                    var details_label = Label.new()
+                    details_label.name = "ItemDetails"
+                    details_label.text = details_text
+                    details_label.add_theme_font_size_override("font_size", 12)
+                    details_label.modulate = Color(0.8, 0.8, 0.7)
+                    content.add_child(details_label)
 
 func _get_item_emoji(p_item_name: String) -> String:
     var name_lower = p_item_name.to_lower()

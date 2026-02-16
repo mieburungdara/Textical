@@ -283,3 +283,6 @@ Field untuk elemen supranatural yang lebih halus.
 
 ---
 *Terakhir diupdate: 14 Februari 2026 - Textical Architect Agent*
+### 🔄 API Updates & Refactoring
+- [x] **UserController Audit Fixes:** Comprehensive security and safety fixes for profile and settings.
+- [ ] **Contract Change:** `POST /user/settings` has been moved to `PUT /user/:id/settings`. Client needs update.

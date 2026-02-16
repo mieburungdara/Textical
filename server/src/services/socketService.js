@@ -77,30 +77,38 @@ class SocketService {
                 }
             });
 
-            // Admin bypass login handler (development mode)
-            socket.on("admin_bypass_login", async () => {
-                try {
-                    // Use dev user ID 1 for bypass login
-                    const devUserId = 1;
-                    
-                    // Store user mapping
-                    this.userSockets.set(devUserId, socket.id);
-                    this.socketToUser.set(socket.id, devUserId);
-                    socket.userId = devUserId;
-                    socket.sessionToken = null;
-                    socket.isDevAdmin = true;
-                    
-                    // Register handlers via SocketRouter
-                    socketRouter.registerHandlers(this.io, socket, devUserId);
+            // Admin bypass login handler (DEVELOPMENT MODE ONLY)
+            if (process.env.NODE_ENV === 'development') {
+                socket.on("admin_bypass_login", async () => {
+                    try {
+                        // Use dev user ID 1 for bypass login
+                        const devUserId = 1;
+                        
+                        // Store user mapping
+                        this.userSockets.set(devUserId, socket.id);
+                        this.socketToUser.set(socket.id, devUserId);
+                        socket.userId = devUserId;
+                        socket.sessionToken = null;
+                        socket.isDevAdmin = true;
+                        
+                        // Register handlers via SocketRouter
+                        socketRouter.registerHandlers(this.io, socket, devUserId);
 
-                    console.log(`[SOCKET] Dev admin bypass login: User ${devUserId} authenticated on socket ${socket.id}`);
-                    socket.emit("authenticated", { userId: devUserId, devMode: true });
-                    
-                } catch (error) {
-                    console.error(`[SOCKET] Admin bypass login error: ${error.message}`);
-                    socket.emit("error", { message: "Admin bypass login failed" });
-                }
-            });
+                        console.log(`[SOCKET] Dev admin bypass login: User ${devUserId} authenticated on socket ${socket.id}`);
+                        socket.emit("authenticated", { userId: devUserId, devMode: true });
+                        
+                    } catch (error) {
+                        console.error(`[SOCKET] Admin bypass login error: ${error.message}`);
+                        socket.emit("error", { message: "Admin bypass login failed" });
+                    }
+                });
+            } else {
+                // Production mode: log warning and ignore bypass attempts
+                socket.on("admin_bypass_login", () => {
+                    console.warn(`[SECURITY] Admin bypass login attempt blocked in ${process.env.NODE_ENV} mode`);
+                    socket.emit("error", { message: "Admin bypass not available in production" });
+                });
+            }
 
             // Heartbeat handler
             socket.on("heartbeat", async (data) => {

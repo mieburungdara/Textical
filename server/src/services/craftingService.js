@@ -1,10 +1,12 @@
 const BaseService = require('./BaseService');
 const validator = require('./crafting/CraftingValidator');
 const inventoryService = require('./inventoryService');
-const vitalityService = require('./vitalityService');
+const energyService = require('./energyService');
 const affixResolver = require('../logic/crafting/AffixResolver');
 const stationBuffResolver = require('../logic/crafting/StationBuffResolver');
 const qualityResolver = require('../logic/crafting/QualityResolver');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * CraftingService
@@ -14,7 +16,7 @@ const qualityResolver = require('../logic/crafting/QualityResolver');
 class CraftingService extends BaseService {
     constructor() {
         super();
-        this.BASE_VITALITY_COST = 10;
+        this.BASE_ENERGY_COST = 10;
     }
 
     async startCrafting(userId, recipeId, affixMaterialId = null) {
@@ -32,14 +34,18 @@ class CraftingService extends BaseService {
             } 
         });
 
-        if (!user || !recipe) throw new Error("Invalid crafting request.");
+        if (!user || !recipe) {
+            throw new AppError(ErrorCodes.CRAFTING_INVALID_REQUEST, 'Invalid crafting request.');
+        }
 
         // 1. Validations
         validator.validateAvailability(user);
         validator.validateLocation(region);
         
         const hasSpace = await inventoryService.hasSpace(userId, recipe.resultItemId);
-        if (!hasSpace) throw new Error("Inventory full.");
+        if (!hasSpace) {
+            throw new AppError(ErrorCodes.INVENTORY_FULL, 'Inventory full.');
+        }
 
         await validator.checkMaterials(this.db, userId, recipe.ingredients);
 
@@ -48,7 +54,9 @@ class CraftingService extends BaseService {
             const hasAffix = await this.db.inventoryItem.findFirst({
                 where: { userId, templateId: affixMaterialId, quantity: { gte: 1 } }
             });
-            if (!hasAffix) throw new Error("Affix material not found in inventory.");
+            if (!hasAffix) {
+                throw new AppError(ErrorCodes.CRAFTING_AFFIX_MATERIAL_NOT_FOUND, 'Affix material not found in inventory.');
+            }
         }
 
         // --- AAA: Regional Station Buffs ---
@@ -69,7 +77,7 @@ class CraftingService extends BaseService {
 
         // 2. Resource Consumption
         return await this.runTransaction(async (tx) => {
-            await vitalityService.consumeVitality(userId, this.BASE_VITALITY_COST);
+            await energyService.consumeEnergy(userId, this.BASE_ENERGY_COST);
 
             // Consume Recipe Ingredients
             for (const ing of recipe.ingredients) {

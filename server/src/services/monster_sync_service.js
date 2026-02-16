@@ -124,7 +124,7 @@ class MonsterSyncService {
 
             // 1. Create the consolidated 'all.json'
             const consolidatedPath = path.join(MONSTERS_DIR, 'all.json');
-            fs.writeFileSync(consolidatedPath, JSON.stringify(monsters, null, 2));
+            await fs.promises.writeFile(consolidatedPath, JSON.stringify(monsters, null, 2));
 
             // 2. Create individual files
             for (const monster of monsters) {
@@ -152,7 +152,7 @@ class MonsterSyncService {
                 delete monster.behaviorParams;
 
                 const filePath = path.join(MONSTERS_DIR, `${monster.id}.json`);
-                fs.writeFileSync(filePath, JSON.stringify(monster, null, 2));
+                await fs.promises.writeFile(filePath, JSON.stringify(monster, null, 2));
             }
 
             // Sync modifications back to 'monsters' array for consolidated file

@@ -47,7 +47,7 @@ async function runRedZoneDeathAudit() {
 
     // Ensure region is RED
     await prisma.regionTemplate.update({ where: { id: regionId }, data: { zoneType: "RED" } });
-    await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId, vitality: 100 } });
+    await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId, energy: 100 } });
 
     // Ensure monster is GOD-LIKE
     await prisma.monsterTemplate.update({

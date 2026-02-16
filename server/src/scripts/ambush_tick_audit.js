@@ -18,7 +18,7 @@ async function runAmbushAudit() {
         await prisma.regionConnection.create({
             data: { originRegionId: 1, targetRegionId: targetId }
         });
-        await prisma.user.update({ where: { id: userId }, data: { currentRegion: 1, vitality: 100 } });
+        await prisma.user.update({ where: { id: userId }, data: { currentRegion: 1, energy: 100 } });
         await travelService.startTravel(userId, targetId, "HAULING");
     };
 

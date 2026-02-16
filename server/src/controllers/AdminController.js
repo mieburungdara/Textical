@@ -21,7 +21,7 @@ class AdminController {
                     username: true,
                     silver: true,
                     gold: true,
-                    vitality: true,
+                    energy: true,
                     isKnockedOut: true
                 }
             });
@@ -61,7 +61,7 @@ class AdminController {
             const orderBy = {};
             
             // Valid sort fields
-            const validSortFields = ['id', 'silver', 'gold', 'vitality', 'username'];
+            const validSortFields = ['id', 'silver', 'gold', 'energy', 'username'];
             if (validSortFields.includes(sortField)) {
                 orderBy[sortField] = sortOrder === 'asc' ? 'asc' : 'desc';
             } else {
@@ -85,8 +85,8 @@ class AdminController {
                         username: true,
                         silver: true,
                         gold: true,
-                        vitality: true,
-                        maxVitality: true,
+                        energy: true,
+                        maxEnergy: true,
                         currentRegion: true,
                         isInTavern: true,
                         premiumTierId: true,
@@ -174,8 +174,8 @@ class AdminController {
             const updateData = {};
             if (data.silver !== undefined) updateData.silver = Math.max(0, data.silver);
             if (data.gold !== undefined) updateData.gold = Math.max(0, data.gold);
-            if (data.vitality !== undefined) updateData.vitality = Math.max(0, data.vitality);
-            if (data.maxVitality !== undefined) updateData.maxVitality = Math.max(1, data.maxVitality);
+            if (data.energy !== undefined) updateData.energy = Math.max(0, data.energy);
+            if (data.maxEnergy !== undefined) updateData.maxEnergy = Math.max(1, data.maxEnergy);
             if (data.currentRegion !== undefined) updateData.currentRegion = Math.max(1, data.currentRegion);
             if (data.isInTavern !== undefined) updateData.isInTavern = data.isInTavern;
             if (data.isKnockedOut !== undefined) updateData.isKnockedOut = data.isKnockedOut;
@@ -191,8 +191,8 @@ class AdminController {
                     username: true,
                     silver: true,
                     gold: true,
-                    vitality: true,
-                    maxVitality: true,
+                    energy: true,
+                    maxEnergy: true,
                     currentRegion: true,
                     isInTavern: true,
                     isKnockedOut: true,

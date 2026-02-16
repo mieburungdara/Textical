@@ -50,7 +50,7 @@ class BattleUnitFactory {
 
         return {
             config: {
-                instance_id: `hero_${heroProfile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).substr(2, 5)}`,
+                instance_id: `hero_${heroProfile.name.replace(/\s+/g, '_')}_${Math.random().toString(36).slice(2, 7)}`,
                 db_id: heroProfile.id,
                 heroId: heroProfile.id,
                 isMain: heroProfile.isMain,
@@ -91,7 +91,7 @@ class BattleUnitFactory {
 
         return {
             config: {
-                instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).substr(2, 5)}`,
+                instance_id: `monster_${monsterTemplate.id}_${Math.random().toString(36).slice(2, 7)}`,
                 id: monsterTemplate.id,
                 name: monsterTemplate.name,
                 bt_tree: monsterTemplate.behaviorTree, 

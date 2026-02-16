@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const SERVER_URL = 'ws://localhost:3000';
+const SERVER_URL = 'ws://localhost:5000';
 const NUM_CLIENTS = 50; // Jumlah pemain simulasi
 
 console.log(`Starting Stress Test: Spawning ${NUM_CLIENTS} virtual players...`);

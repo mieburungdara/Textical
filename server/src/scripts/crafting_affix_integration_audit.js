@@ -35,7 +35,7 @@ async function runCraftingAffixAudit() {
     await prisma.taskQueue.deleteMany({ where: { userId } });
 
     await inventoryService.addItem(userId, fireEssenceId, 1);
-    await prisma.user.update({ where: { id: userId }, data: { vitality: 100, currentRegion: 1 } });
+    await prisma.user.update({ where: { id: userId }, data: { energy: 100, currentRegion: 1 } });
 
     // 1. Start Crafting with Affix
     console.log("[1/3] Starting crafting with Fire Essence...");

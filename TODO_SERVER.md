@@ -9,3 +9,7 @@
 ## Maintenance
 - [ ] Periodic cache invalidation strategy for long-duration global buffs.
 - [ ] Optimization of complex scaling calculations in `StatProcessor`.
+## Security & Middlewares
+- [ ] Implement Auth Middleware for `UserController.updateSettings` (Fix #11 audit).
+- [ ] Implement Rate Limiting for `UserController.updateSettings` to prevent storage DoS (Fix #15 audit).
+- [ ] Add JSDoc type checking for all controllers.

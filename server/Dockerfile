@@ -18,7 +18,7 @@ RUN npx prisma generate
 COPY . .
 
 # Expose the API port
-EXPOSE 3000
+EXPOSE 5000
 
 # Set production environment
 ENV NODE_ENV=production

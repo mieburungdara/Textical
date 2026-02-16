@@ -1,4 +1,6 @@
 const prisma = require('../db');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * EquipmentService
@@ -16,18 +18,24 @@ class EquipmentService {
             }
         });
 
-        if (!item || item.userId !== userId) throw new Error("Item not found in inventory.");
-        if (item.marketOrders.length > 0) throw new Error("Cannot equip an item that is listed on the market.");
+        if (!item || item.userId !== userId) {
+            throw new AppError(ErrorCodes.INVENTORY_ITEM_NOT_FOUND, 'Item not found in inventory.');
+        }
+        if (item.marketOrders.length > 0) {
+            throw new AppError(ErrorCodes.EQUIP_ITEM_LISTED, 'Cannot equip an item that is listed on the market.');
+        }
 
         const hero = await prisma.hero.findUnique({
             where: { id: heroId }
         });
-        if (!hero || hero.userId !== userId) throw new Error("Hero not found.");
+        if (!hero || hero.userId !== userId) {
+            throw new AppError(ErrorCodes.HERO_NOT_FOUND, 'Hero not found.');
+        }
 
         // 2. Slot Validation
         const validSlots = item.template.equipSlots.map(s => s.slotKey);
         if (!validSlots.includes(slotKey)) {
-            throw new Error(`Item cannot be equipped in slot: ${slotKey}. Valid slots: ${validSlots.join(", ")}`);
+            throw new AppError(ErrorCodes.EQUIP_WRONG_SLOT, `Item cannot be equipped in slot: ${slotKey}. Valid slots: ${validSlots.join(", ")}`);
         }
 
         // 3. Atomic Transaction: Unequip old -> Equip new
@@ -59,13 +67,17 @@ class EquipmentService {
 
     async unequipItem(userId, heroId, slotKey) {
         const hero = await prisma.hero.findUnique({ where: { id: heroId } });
-        if (!hero || hero.userId !== userId) throw new Error("Hero not found.");
+        if (!hero || hero.userId !== userId) {
+            throw new AppError(ErrorCodes.HERO_NOT_FOUND, 'Hero not found.');
+        }
 
         const existing = await prisma.heroEquipment.findUnique({
             where: { heroId_slotKey: { heroId, slotKey } }
         });
 
-        if (!existing) throw new Error("No item equipped in that slot.");
+        if (!existing) {
+            throw new AppError(ErrorCodes.EQUIP_SLOT_EMPTY, 'No item equipped in that slot.');
+        }
 
         return await prisma.heroEquipment.delete({
             where: { id: existing.id }

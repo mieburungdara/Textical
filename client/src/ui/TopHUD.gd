@@ -17,8 +17,8 @@ class_name TopHUD
 # === NODE REFERENCES ===
 @onready var main_container = $MarginContainer/HBoxContainer if has_node("MarginContainer/HBoxContainer") else null
 @onready var gold_label = $MarginContainer/HBoxContainer/GoldGroup/Label if has_node("MarginContainer/HBoxContainer/GoldGroup/Label") else null
-@onready var vitality_bar = $MarginContainer/HBoxContainer/VitalityGroup/ProgressBar if has_node("MarginContainer/HBoxContainer/VitalityGroup/ProgressBar") else null
-@onready var vitality_label = $MarginContainer/HBoxContainer/VitalityGroup/Label if has_node("MarginContainer/HBoxContainer/VitalityGroup/Label") else null
+@onready var energy_bar = $MarginContainer/HBoxContainer/EnergyGroup/ProgressBar if has_node("MarginContainer/HBoxContainer/EnergyGroup/ProgressBar") else null
+@onready var energy_label = $MarginContainer/HBoxContainer/EnergyGroup/Label if has_node("MarginContainer/HBoxContainer/EnergyGroup/Label") else null
 @onready var resource_bars_container = $MarginContainer/HBoxContainer/ResourceBars if has_node("MarginContainer/HBoxContainer/ResourceBars") else null
 @onready var stat_summary_container = $MarginContainer/HBoxContainer/StatSummary if has_node("MarginContainer/HBoxContainer/StatSummary") else null
 @onready var buffs_container = $MarginContainer/HBoxContainer/BuffsContainer if has_node("MarginContainer/HBoxContainer/BuffsContainer") else null
@@ -85,11 +85,11 @@ func _on_data_updated(user):
     if gold_label:
         gold_label.text = str(user.get("gold", 0))
     
-    # Update vitality bar
-    if vitality_bar and vitality_label:
-        vitality_bar.max_value = user.get("maxVitality", 100)
-        vitality_bar.value = user.get("vitality", 100)
-        vitality_label.text = "%d / %d" % [user.get("vitality", 100), user.get("maxVitality", 100)]
+    # Update energy bar
+    if energy_bar and energy_label:
+        energy_bar.max_value = user.get("maxEnergy", 100)
+        energy_bar.value = user.get("energy", 100)
+        energy_label.text = "%d / %d" % [user.get("energy", 100), user.get("maxEnergy", 100)]
 
 func _on_request_completed(endpoint, data):
     if "/stat/" in endpoint:

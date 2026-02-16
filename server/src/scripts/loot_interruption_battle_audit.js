@@ -31,7 +31,7 @@ async function runBattleInterruptionAudit() {
     // Ensure monster is there
     await prisma.regionMonster.deleteMany({ where: { regionId: 1, monsterId } });
     await prisma.regionMonster.create({ data: { regionId: 1, monsterId } });
-    await prisma.user.update({ where: { id: userId }, data: { vitality: 100, currentRegion: 1 } });
+    await prisma.user.update({ where: { id: userId }, data: { energy: 100, currentRegion: 1 } });
 
     await battleService.startBattle(userId, monsterId);
 

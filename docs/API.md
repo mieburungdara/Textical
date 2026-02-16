@@ -83,7 +83,7 @@ Authenticates a user and returns user session data.
     "id": 1,
     "username": "player1",
     "gold": 1500,
-    "vitality": 100,
+    "energy": 100,
     "currentRegion": 1,
     "isInTavern": false,
     "settings": {}
@@ -149,7 +149,7 @@ All errors follow a consistent JSON format.
 |------|---------|-------------|
 | `INVALID_USER_ID` | Invalid User ID | User ID must be a valid integer |
 | `INVALID_HERO_ID` | Invalid Hero ID | Hero ID must be a valid integer |
-| `INSUFFICIENT_VITALITY` | Not enough vitality | Action requires more vitality |
+| `INSUFFICIENT_ENERGY` | Not enough energy | Action requires more energy |
 | `INVENTORY_FULL` | Inventory is full | No space for new items |
 | `NOT_IN_TAVERN` | User not in tavern | Action requires tavern context |
 | `NOT_IN_TOWN` | User must be in town | Action requires town region |
@@ -160,7 +160,7 @@ All errors follow a consistent JSON format.
 
 ### Get User Profile
 
-Retrieves comprehensive user profile with vitality sync.
+Retrieves comprehensive user profile with energy sync.
 
 - **Endpoint:** `GET /user/:id`
 - **Version:** v1.0+
@@ -175,8 +175,8 @@ Retrieves comprehensive user profile with vitality sync.
     "id": 1,
     "username": "player1",
     "gold": 1500,
-    "vitality": 100,
-    "maxVitality": 100,
+    "energy": 100,
+    "maxEnergy": 100,
     "currentRegion": 1,
     "isInTavern": false,
     "activeTask": null,
@@ -258,7 +258,7 @@ Retrieves all recipes known by the user.
       "materials": [
         { "templateId": 4001, "quantity": 2 }
       ],
-      "vitalityCost": 10,
+      "energyCost": 10,
       "duration": 30
     }
   ]
@@ -544,7 +544,7 @@ Initiates travel to a target region.
 ```
 
 - **Rules:**
-  - Cost: 5 Vitality
+  - Cost: 5 Energy
   - Duration: 15 seconds
   - User must be idle (no active task)
   - Cannot travel from WILDERNESS
@@ -585,7 +585,7 @@ Initiates resource gathering action.
 ```
 
 - **Rules:**
-  - Cost: 3 Vitality
+  - Cost: 3 Energy
   - Duration: 10 seconds
   - Requires hero with GATHERING skill
   - Checks inventory space
@@ -626,7 +626,7 @@ Initiates crafting action.
 ```
 
 - **Rules:**
-  - Cost: 10 Vitality
+  - Cost: 10 Energy
   - Duration: 30 seconds
   - Consumes materials from inventory
   - **Town Only** - User must be in TOWN region
@@ -1270,7 +1270,7 @@ Retrieves stat allocation history.
 
 ### Get Recovery Stats
 
-Retrieves HP/Mana/Vitality recovery stats.
+Retrieves HP/Mana/Energy recovery stats.
 
 - **Endpoint:** `GET /stats/:heroId/recovery`
 - **Version:** v2.0+
@@ -1284,7 +1284,7 @@ Retrieves HP/Mana/Vitality recovery stats.
   "data": {
     "healthRecovery": 5,
     "manaRecovery": 2,
-    "vitalityRecovery": 1,
+    "energyRecovery": 1,
     "timeToFullHealth": 30,
     "timeToFullMana": 25
   }
@@ -1468,7 +1468,7 @@ Predicts hero stats at a target level.
 
 ### Enter Tavern
 
-Enters the tavern for rest and vitality regeneration.
+Enters the tavern for rest and energy regeneration.
 
 - **Endpoint:** `POST /tavern/enter`
 - **Version:** v1.0+
@@ -1500,7 +1500,7 @@ Enters the tavern for rest and vitality regeneration.
 
 - **Rules:**
   - Checks 24-minute daily limit
-  - 10x Vitality regeneration starts
+  - 10x Energy regeneration starts
   - Cannot enter if already in tavern
 
 ### Exit Tavern
@@ -1530,7 +1530,7 @@ Exits the tavern and stops regeneration.
       "tavernTimeSpent": 15
     },
     "regenActive": false,
-    "vitalityGained": 150
+    "energyGained": 150
   }
 }
 ```
@@ -1985,7 +1985,7 @@ Initiates battle with a monster.
 ```
 
 - **Rules:**
-  - Cost: 5 Vitality
+  - Cost: 5 Energy
   - Requires formation with at least 1 hero
   - Loot requires inventory space
   - Zero gold dropped on defeat

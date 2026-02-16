@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -13,9 +14,9 @@ model User {
   isPvpFlagged           Boolean                   @default(false)
   silver                 Int                       @default(0)
   gold                   Int                       @default(0)
-  vitality               Int                       @default(100)
-  maxVitality            Int                       @default(100)
-  lastVitalityUpdate     DateTime                  @default(now())
+  energy                 Int                       @default(100)
+  maxEnergy              Int                       @default(100)
+  lastEnergyUpdate       DateTime                  @default(now())
   maxInventorySlots      Int                       @default(20)
   currentRegion          Int                       @default(1)
   tavernTimeSecondsToday Int                       @default(0)
@@ -1278,6 +1279,7 @@ model Guild {
   id               Int              @id @default(autoincrement())
   name             String           @unique
   templateId       Int
+  color            String           @default("#f59e0b")
   vaultGold        Int              @default(0)
   treasury         Int              @default(0)
   marketTaxRate    Float            @default(0.0)
@@ -1436,13 +1438,13 @@ model TransactionLedger {
 }
 
 model PremiumTierTemplate {
-  id                Int    @id @default(autoincrement())
-  name              String
-  queueSlots        Int    @default(0)
-  speedBonus        Float  @default(0.0)
-  vitalityRegenMult Float  @default(1.0)
-  maxVitalityBonus  Int    @default(0)
-  users             User[]
+  id              Int    @id @default(autoincrement())
+  name            String
+  queueSlots      Int    @default(0)
+  speedBonus      Float  @default(0.0)
+  energyRegenMult Float  @default(1.0)
+  maxEnergyBonus  Int    @default(0)
+  users           User[]
 }
 
 model Faction {
@@ -1450,6 +1452,7 @@ model Faction {
   version         Int                 @default(1)
   name            String
   description     String
+  color           String              @default("#64748b")
   ranks           FactionRank[]
   relationsB      FactionRelation[]   @relation("FactionBRelation")
   relationsA      FactionRelation[]   @relation("FactionARelation")

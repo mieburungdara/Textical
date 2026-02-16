@@ -16,7 +16,7 @@ async function runHaulingTravelAudit() {
     await prisma.taskQueue.deleteMany({ where: { userId } });
     await prisma.user.update({
         where: { id: userId },
-        data: { currentRegion: originId, vitality: 100, isKnockedOut: false, recoveryUntil: null }
+        data: { currentRegion: originId, energy: 100, isKnockedOut: false, recoveryUntil: null }
     });
 
     // Ensure connection

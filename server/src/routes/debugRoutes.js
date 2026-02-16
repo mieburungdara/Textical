@@ -10,7 +10,7 @@ router.post('/run-test', async (req, res) => {
         if (customUnits && customUnits.length > 0) {
             customUnits.forEach(u => {
                 sim.addUnit({
-                    instance_id: u.id || `unit_${Math.random().toString(36).substr(2, 5)}`,
+                    instance_id: u.id || `unit_${Math.random().toString(36).slice(2, 7)}`,
                     name: u.name || "Custom Unit",
                     race: u.race || "human",
                     traits: u.traits || [],

@@ -12,12 +12,12 @@ async function test() {
     
     await prisma.user.update({
         where: { id: user.id },
-        data: { currentRegion: resource.regionId, vitality: 100 }
+        data: { currentRegion: resource.regionId, energy: 100 }
     });
 
     const hero = await prisma.hero.findFirst({ where: { userId: user.id } });
 
-    console.log(`Initial Vitality: 100`);
+    console.log(`Initial Energy: 100`);
     console.log(`Location: Region ${resource.regionId} | Targeting Item: ${resource.itemId}`);
 
     // 2. Start Gathering
@@ -25,7 +25,7 @@ async function test() {
     await gatheringService.startGathering(user.id, hero.id, resource.id);
     
     const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
-    console.log(`Vitality after start: ${updatedUser.vitality} (Expected 97)`);
+    console.log(`Energy after start: ${updatedUser.energy} (Expected 97)`);
 
     // 3. Wait for Heartbeat
     console.log("2. Waiting for 12 seconds (10s Timer + Heartbeat)...");

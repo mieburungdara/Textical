@@ -1,12 +1,12 @@
 const BaseController = require('./BaseController');
 const tavernService = require('../services/tavernService');
-const vitalityService = require('../services/vitalityService');
+const energyService = require('../services/energyService');
 
 class TavernController extends BaseController {
     async enterTavern(req, res) {
         await this.execute(res, async () => {
             const { userId } = req.body;
-            const user = await vitalityService.enterTavern(parseInt(userId));
+            const user = await energyService.enterTavern(parseInt(userId));
             this.sendSuccess(res, user, "Entered Tavern");
         });
     }
@@ -14,7 +14,7 @@ class TavernController extends BaseController {
     async exitTavern(req, res) {
         await this.execute(res, async () => {
             const { userId } = req.body;
-            const user = await vitalityService.exitTavern(parseInt(userId));
+            const user = await energyService.exitTavern(parseInt(userId));
             this.sendSuccess(res, user, "Exited Tavern");
         });
     }

@@ -3,6 +3,8 @@ const objectiveValidator = require('./quest/ObjectiveValidator');
 const rewardDistributor = require('./quest/RewardDistributor');
 const dialogueResolver = require('../logic/quest/DialogueResolver');
 const reputationService = require('./reputationService');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * QuestService (Narrative-Enhanced)
@@ -20,7 +22,9 @@ class QuestService extends BaseService {
             include: { choices: true }
         });
 
-        if (!rootNode) throw new Error("This NPC has nothing to say.");
+        if (!rootNode) {
+            throw new AppError(ErrorCodes.QUEST_DIALOGUE_NOT_FOUND, 'This NPC has nothing to say.');
+        }
         return rootNode;
     }
 
@@ -65,11 +69,15 @@ class QuestService extends BaseService {
             include: { stages: { orderBy: { order: 'asc' } } }
         });
 
-        if (!quest || quest.stages.length === 0) throw new Error("Quest template invalid.");
+        if (!quest || quest.stages.length === 0) {
+            throw new AppError(ErrorCodes.QUEST_INVALID_TEMPLATE, 'Quest template invalid.');
+        }
 
         // Check Reputation Requirement
         const hasRep = await reputationService.checkReputationRequirement(userId, quest.factionId, quest.minReputation);
-        if (!hasRep) throw new Error("You lack the reputation required for this task.");
+        if (!hasRep) {
+            throw new AppError(ErrorCodes.QUEST_LOW_REPUTATION, 'You lack the reputation required for this task.');
+        }
 
         return await client.userQuest.create({
             data: {
@@ -89,8 +97,12 @@ class QuestService extends BaseService {
             }
         });
 
-        if (!uQuest || uQuest.userId !== userId) throw new Error("User quest record not found.");
-        if (uQuest.status === "COMPLETED") throw new Error("Quest already fully finished.");
+        if (!uQuest || uQuest.userId !== userId) {
+            throw new AppError(ErrorCodes.QUEST_USER_QUEST_NOT_FOUND, 'User quest record not found.');
+        }
+        if (uQuest.status === "COMPLETED") {
+            throw new AppError(ErrorCodes.QUEST_ALREADY_COMPLETED, 'Quest already fully finished.');
+        }
 
         this.log(`Hero attempting to complete stage: ${uQuest.currentStage.name}`, "Quest");
 

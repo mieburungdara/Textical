@@ -1,6 +1,6 @@
 const BattleSimulation = require('../../../logic/battleSimulation');
 const formationService = require('../../formationService');
-const vitalityService = require('../../vitalityService');
+const energyService = require('../../energyService');
 const worldSpawner = require('../../worldSpawnerService');
 const spiritService = require('../../SpiritService');
 const contextService = require('../BattleContextService');
@@ -9,7 +9,7 @@ const unitFactory = require('../BattleUnitFactory');
 class StandardBattleInitializer {
     constructor(db) {
         this.db = db;
-        this.BATTLE_VITALITY_COST = 5;
+        this.BATTLE_ENERGY_COST = 5;
         this.GRID_WIDTH = 50;
         this.GRID_HEIGHT = 50;
     }
@@ -36,8 +36,8 @@ class StandardBattleInitializer {
         const potionSnapshot = await snapshotUserPotions(userId);
 
         // 2. Resource Consumption
-        await vitalityService.syncUserVitality(userId);
-        await vitalityService.consumeVitality(userId, this.BATTLE_VITALITY_COST);
+        await energyService.syncUserEnergy(userId);
+        await energyService.consumeEnergy(userId, this.BATTLE_ENERGY_COST);
 
         // 3. Setup Simulation
         const sim = new BattleSimulation({

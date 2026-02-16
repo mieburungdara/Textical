@@ -15,7 +15,8 @@ async function test() {
     }
 
     console.log(`Battle Start: ${user.username} vs ${monster.name}`);
-    console.log(`Initial Vitality: ${initialVitality}`);
+    const initialEnergy = user.energy;
+    console.log(`Initial Energy: ${initialEnergy}`);
 
     try {
         const battle = await battleService.startBattle(user.id, monster.id);
@@ -27,11 +28,11 @@ async function test() {
         console.log("LOOT EARNED:", JSON.stringify(battle.loot));
 
         const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
-        console.log(`Vitality after battle: ${updatedUser.vitality} (Expected reduction by 5)`);
+        console.log(`Energy after battle: ${updatedUser.energy} (Expected reduction by 5)`);
 
-        const expectedVitality = initialVitality - 5;
-        if (updatedUser.vitality === expectedVitality) {
-            console.log("✅ SUCCESS: Vitality consumed correctly.");
+        const expectedEnergy = initialEnergy - 5;
+        if (updatedUser.energy === expectedEnergy) {
+            console.log("✅ SUCCESS: Energy consumed correctly.");
         }
     } catch (e) {
         console.log("❌ BATTLE ERROR:", e.message);

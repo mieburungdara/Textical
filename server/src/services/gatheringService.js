@@ -3,13 +3,15 @@ const validator = require('./gathering/GatheringValidator');
 const calculator = require('./gathering/DurationCalculator');
 const inventoryService = require('./inventoryService');
 const statService = require('./statService');
-const vitalityService = require('./vitalityService');
+const energyService = require('./energyService');
 const worldSpawner = require('./worldSpawnerService');
 const worldCycle = require('./world/WorldCycleService');
 const envResolver = require('../logic/world/EnvironmentalResolver');
 const extractionTracker = require('./economy/ExtractionTrackerService');
 const ecosystemService = require('./EcosystemService');
 const dailyTaskService = require('./DailyTaskService');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * GatheringService
@@ -19,7 +21,7 @@ const dailyTaskService = require('./DailyTaskService');
 class GatheringService extends BaseService {
     constructor() {
         super();
-        this.BASE_VITALITY_COST = 3;
+        this.BASE_ENERGY_COST = 3;
     }
 
     async startGathering(userId, heroId, regionResourceId) {
@@ -34,14 +36,18 @@ class GatheringService extends BaseService {
         const availableResources = await worldSpawner.getAvailableResources(user.currentRegion);
         const resource = availableResources.find(r => r.id === regionResourceId || `event_${r.id}` === regionResourceId);
 
-        if (!user || !hero || !resource) throw new Error("Resource not available in this region.");
+        if (!user || !hero || !resource) {
+            throw new AppError(ErrorCodes.GATHER_RESOURCE_NOT_FOUND, 'Resource not available in this region.');
+        }
 
         // 1. Core Validations
         validator.validateOwnership(hero, userId);
         validator.validateAvailability(user);
         
         const hasSpace = await inventoryService.hasSpace(userId, resource.templateId);
-        if (!hasSpace) throw new Error("Inventory full.");
+        if (!hasSpace) {
+            throw new AppError(ErrorCodes.GATHER_INVENTORY_FULL, 'Inventory full.');
+        }
 
         // 2. Context Determination
         const { context, isToolRequired } = this._getHarvestContext(resource.templateId);
@@ -84,11 +90,11 @@ class GatheringService extends BaseService {
         // Mastery Placement: -1% per level (cap at 30%)
         totalDiscount += Math.min(0.3, (hero.level || 1) * 0.01);
 
-        const rawCost = this.BASE_VITALITY_COST * regionMult;
+        const rawCost = this.BASE_ENERGY_COST * regionMult;
         const finalCost = Math.max(1, Math.ceil(rawCost * (1 - totalDiscount)));
 
         // 5. Finalize Task
-        await vitalityService.consumeVitality(userId, finalCost);
+        await energyService.consumeEnergy(userId, finalCost);
         const now = new Date();
         const finishesAt = new Date(now.getTime() + (duration * 1000));
 

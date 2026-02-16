@@ -1,5 +1,7 @@
 const prisma = require('../db');
 const manager = require('./inventory/InventoryManager');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * InventoryService
@@ -48,7 +50,7 @@ class InventoryService {
 
         const hasSpace = await this.hasSpace(userId, templateId, quantity);
         if (!hasSpace) {
-            throw new Error("Inventory full! No more slots available.");
+            throw new AppError(ErrorCodes.INVENTORY_FULL, 'Inventory full! No more slots available.');
         }
 
         if (traitId || quality !== "COMMON" || powerScale !== 1.0 || isCursed || isSoulbound) {
@@ -107,7 +109,9 @@ class InventoryService {
 
     async removeItem(userId, itemInstanceId, quantity = 1) {
         const item = await prisma.inventoryItem.findUnique({ where: { id: itemInstanceId } });
-        if (!item || item.userId !== userId) throw new Error("Item not found.");
+        if (!item || item.userId !== userId) {
+            throw new AppError(ErrorCodes.INVENTORY_ITEM_NOT_FOUND, 'Item not found.');
+        }
 
         if (item.quantity <= quantity) {
             return await prisma.inventoryItem.delete({ where: { id: itemInstanceId } });

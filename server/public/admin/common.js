@@ -83,6 +83,14 @@ const api = {
     getRegions(page = 1, search = '') {
         return this.request(`/regions?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
     },
+    
+    getMapRegions() {
+        return this.request('/regions/map');
+    },
+
+    getRegionById(id) {
+        return this.request(`/regions/${id}`);
+    },
 
     getItems(page = 1, search = '', category = '') {
         return this.request(`/items?page=${page}&limit=50&search=${encodeURIComponent(search)}&category=${category}`);
@@ -106,6 +114,22 @@ const api = {
 
     getFactions(page = 1, search = '') {
         return this.request(`/factions?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
+    },
+
+    getWeatherSnapshot() {
+        return this.request('/regions/weather-snapshot');
+    },
+
+    getNPCSnapshot() {
+        return this.request('/regions/npc-snapshot');
+    },
+
+    getEliteBossSnapshot() {
+        return this.request('/regions/elite-boss-snapshot');
+    },
+
+    getPlayerDensity() {
+        return this.request('/regions/player-density');
     }
 };
 

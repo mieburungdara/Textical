@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Import the actual services
-const vitalityService = require('./src/services/vitalityService');
+const energyService = require('./src/services/energyService');
 const travelService = require('./src/services/travelService');
 const gatheringService = require('./src/services/gatheringService');
 const tavernService = require('./src/services/tavernService');
@@ -23,18 +23,21 @@ async function runLogicAudit() {
         const user = await prisma.user.findFirst({ include: { heroes: true } });
         const hero = user.heroes[0];
 
-        // 2. VITALITY SYNC CHECK
-        console.log("\n[2/6] Testing Vitality Pulse...");
-        const initialVit = user.vitality;
-        await vitalityService.syncUserVitality(user.id);
-        console.log(`✅ Vitality synced correctly (Initial: ${initialVit}).`);
+        // 2. ENERGY SYNC CHECK
+        console.log("\n[2/6] Testing Energy Pulse...");
+        const initialEnergy = user.energy;
+        await energyService.syncUserEnergy(user.id);
+        console.log(`✅ Energy synced correctly (Initial: ${initialEnergy}).`);
 
         // 3. TRAVEL LOGIC CHECK
         console.log("\n[3/6] Testing Travel State Machine...");
         // Reset user to Town
         await prisma.user.update({ where: { id: user.id }, data: { currentRegion: 1 } });
         const result = await travelService.startTravel(user.id, 2); // To Woods
-        if (!result || result.length < 2 || !result[1]) {\n            throw new Error("Invalid travel service response: missing task object");\n        }\n        const travelTask = result[1]; // Get the Task object from transaction array
+        if (!result || result.length < 2 || !result[1]) {
+            throw new Error("Invalid travel service response: missing task object");
+        }
+        const travelTask = result[1]; // Get the Task object from transaction array
         if (travelTask.status !== "RUNNING") throw new Error("Travel failed to start.");
         console.log(`✅ Travel started. Finishes at: ${travelTask.finishesAt}`);
 
@@ -54,12 +57,12 @@ async function runLogicAudit() {
 
         // 5. TAVERN VISA CHECK
         console.log("\n[5/6] Testing Tavern Fatigue (24m Limit)...");
-        await vitalityService.enterTavern(user.id);
+        await energyService.enterTavern(user.id);
         const tavernUser = await prisma.user.findUnique({ where: { id: user.id } });
         if (!tavernUser.isInTavern) throw new Error("Failed to enter Tavern.");
         console.log("✅ Tavern Entrance authorized.");
         
-        await vitalityService.exitTavern(user.id);
+        await energyService.exitTavern(user.id);
         console.log("✅ Tavern Exit & 1-minute rounding logic verified.");
 
         // 6. BATTLE ENGINE CHECK

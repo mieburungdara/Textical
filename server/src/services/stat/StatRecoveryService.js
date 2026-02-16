@@ -1,7 +1,10 @@
 /**
  * StatRecoveryService
- * Handles recovery stats (HP/MP/Vitality regeneration) and Time-To-Full calculations.
+ * Handles recovery stats (HP/MP/Energy regeneration) and Time-To-Full calculations.
  * Single Responsibility: Recovery logic and detailed regen breakdown.
+ * 
+ * Note: "energy" refers to User.energy (player action points for travel/gathering/crafting).
+ *       Hero.vitality is a separate core stat that affects max HP and is NOT handled here.
  */
 const BaseService = require('../BaseService');
 
@@ -51,11 +54,12 @@ class StatRecoveryService extends BaseService {
         // Actually hero.health should be set.
         const currentHp = hero.health ?? stats.health_max;
         const currentMana = hero.mana ?? stats.mana_max;
-        const currentVitality = hero.vitality ?? hero.user?.vitality ?? 100;
-        const maxVitality = hero.user?.maxVitality ?? stats.vitality_max ?? 100;
+        // User.energy (formerly vitality) - player action points for travel/gathering/crafting
+        const currentEnergy = hero.user?.energy ?? 100;
+        const maxEnergy = hero.user?.maxEnergy ?? 100;
 
-        // Vitality regen default to 5 if not in stats? 
-        // Original code: stats.vitality_regen || 5
+        // Energy regen default to 5 if not in stats? 
+        // Original code: stats.energy_regen || 5
         
         return {
             hp: {
@@ -70,11 +74,11 @@ class StatRecoveryService extends BaseService {
                 regen: stats.mana_regen,
                 ttf: calculateTTF(currentMana, stats.mana_max, stats.mana_regen)
             },
-            vitality: {
-                current: currentVitality,
-                max: maxVitality,
-                regen: stats.vitality_regen || 5, // Default base regen for vitality
-                ttf: calculateTTF(currentVitality, maxVitality, stats.vitality_regen || 5)
+            energy: {
+                current: currentEnergy,
+                max: maxEnergy,
+                regen: stats.energy_regen || 5, // Default base regen for energy
+                ttf: calculateTTF(currentEnergy, maxEnergy, stats.energy_regen || 5)
             }
         };
     }

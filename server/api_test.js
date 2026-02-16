@@ -5,7 +5,7 @@ async function testApi() {
     
     const options = {
         hostname: 'localhost',
-        port: 3000,
+        port: 5000,
         path: '/api/assets/manifest',
         method: 'GET'
     };

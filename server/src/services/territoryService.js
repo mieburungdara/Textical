@@ -1,18 +1,24 @@
 const prisma = require('../db');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 class TerritoryService {
     /**
      * Allows a Guild Master to set the regional tax rate.
      */
     async setRegionalTax(userId, regionId, newRate) {
-        if (newRate < 0 || newRate > 0.1) throw new Error("Tax rate must be between 0% and 10%.");
+        if (newRate < 0 || newRate > 0.1) {
+            throw new AppError(ErrorCodes.TERRITORY_TAX_INVALID, 'Tax rate must be between 0% and 10%.');
+        }
 
         const region = await prisma.regionTemplate.findUnique({ where: { id: regionId } });
-        if (!region) throw new Error("Region not found.");
+        if (!region) {
+            throw new AppError(ErrorCodes.TERRITORY_NOT_FOUND, 'Region not found.');
+        }
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user.guildId || user.guildId !== region.ownerGuildId || user.guildRole !== "MASTER") {
-            throw new Error("Only the Guild Master of the owning guild can set tax rates.");
+            throw new AppError(ErrorCodes.TERRITORY_TAX_UNAUTHORIZED, 'Only the Guild Master of the owning guild can set tax rates.');
         }
 
         return await prisma.regionTemplate.update({

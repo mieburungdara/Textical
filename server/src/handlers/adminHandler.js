@@ -23,6 +23,15 @@ class AdminHandler {
 
         this.app.get('/api/admin/:resource', async (req, res) => {
             const { resource } = req.params;
+            const validResources = ['monsters', 'regions', 'items'];
+            
+            // Validate resource parameter
+            if (!validResources.includes(resource)) {
+                return res.status(400).json({ 
+                    error: `Invalid resource: ${resource}. Valid options: ${validResources.join(', ')}` 
+                });
+            }
+            
             try {
                 let data;
                 if (resource === 'monsters') data = await prisma.monsterTemplate.findMany();
@@ -37,6 +46,14 @@ class AdminHandler {
             const { resource } = req.params;
             const body = req.body;
             const id = body.id;
+            const validResources = ['monsters', 'regions', 'items'];
+            
+            // Validate resource parameter
+            if (!validResources.includes(resource)) {
+                return res.status(400).json({ 
+                    error: `Invalid resource: ${resource}. Valid options: ${validResources.join(', ')}` 
+                });
+            }
             
             if (!id) return res.status(400).json({ error: "ID is required" });
 

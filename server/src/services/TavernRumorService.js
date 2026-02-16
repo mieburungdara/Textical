@@ -1,4 +1,6 @@
 const BaseService = require('./BaseService');
+const AppError = require('../utils/AppError');
+const ErrorCodes = require('../constants/ErrorCodes');
 
 /**
  * TavernRumorService

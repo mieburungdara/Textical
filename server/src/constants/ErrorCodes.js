@@ -1,0 +1,495 @@
+/**
+ * Textical Error Codes Registry
+ * 
+ * Centralized error code constants for the entire server.
+ * All error codes follow the naming convention: MODULE_ENTITY_STATUS
+ * 
+ * @see docs/ERROR_CODES.md for full documentation
+ */
+
+const ErrorCodes = {
+    // ===========================================
+    // Authentication Errors (AUTH_*)
+    // ===========================================
+    AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+    AUTH_USER_NOT_FOUND: 'AUTH_USER_NOT_FOUND',
+    AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+    AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+    AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+
+    // ===========================================
+    // User Errors (USER_*)
+    // ===========================================
+    USER_NOT_FOUND: 'USER_NOT_FOUND',
+    USER_INVALID_ID: 'USER_INVALID_ID',
+    USER_BUSY: 'USER_BUSY',
+    USER_UNCONSCIOUS: 'USER_UNCONSCIOUS',
+    USER_IN_RECOVERY: 'USER_IN_RECOVERY',
+
+    // ===========================================
+    // Hero Errors (HERO_*)
+    // ===========================================
+    HERO_NOT_FOUND: 'HERO_NOT_FOUND',
+    HERO_INVALID_ID: 'HERO_INVALID_ID',
+    HERO_UNAUTHORIZED: 'HERO_UNAUTHORIZED',
+    HERO_BUSY: 'HERO_BUSY',
+    HERO_DEAD: 'HERO_DEAD',
+    HERO_LOW_LEVEL: 'HERO_LOW_LEVEL',
+    HERO_WRONG_CLASS: 'HERO_WRONG_CLASS',
+    HERO_ALREADY_SPECIALIZED: 'HERO_ALREADY_SPECIALIZED',
+    HERO_NO_JOB: 'HERO_NO_JOB',
+    HERO_OFFSPRING_LIMIT: 'HERO_OFFSPRING_LIMIT',
+    HERO_NOT_IN_FORMATION: 'HERO_NOT_IN_FORMATION',
+    HERO_LISTED_MARKET: 'HERO_LISTED_MARKET',
+    HERO_ALREADY_REPRODUCED: 'HERO_ALREADY_REPRODUCED',
+    HERO_INVALID_GENDER: 'HERO_INVALID_GENDER',
+    HERO_PROMOTION_LEVEL_LOW: 'HERO_PROMOTION_LEVEL_LOW',
+    HERO_CLASS_BRANCH_INVALID: 'HERO_CLASS_BRANCH_INVALID',
+
+    // ===========================================
+    // Energy Errors (ENERGY_*)
+    // ===========================================
+    ENERGY_INSUFFICIENT: 'ENERGY_INSUFFICIENT',
+    ENERGY_ZERO: 'ENERGY_ZERO',
+
+    // ===========================================
+    // Inventory Errors (INVENTORY_*)
+    // ===========================================
+    INVENTORY_FULL: 'INVENTORY_FULL',
+    INVENTORY_ITEM_NOT_FOUND: 'INVENTORY_ITEM_NOT_FOUND',
+    INVENTORY_ITEM_EQUIPPED: 'INVENTORY_ITEM_EQUIPPED',
+    INVENTORY_ITEM_LOCKED: 'INVENTORY_ITEM_LOCKED',
+    INVENTORY_ITEM_STOLEN: 'INVENTORY_ITEM_STOLEN',
+    INVENTORY_WRONG_TYPE: 'INVENTORY_WRONG_TYPE',
+
+    // ===========================================
+    // Equipment Errors (EQUIP_*)
+    // ===========================================
+    EQUIP_INVALID_SLOT: 'EQUIP_INVALID_SLOT',
+    EQUIP_WRONG_SLOT: 'EQUIP_WRONG_SLOT',
+    EQUIP_LEVEL_REQUIREMENT: 'EQUIP_LEVEL_REQUIREMENT',
+    EQUIP_CLASS_REQUIREMENT: 'EQUIP_CLASS_REQUIREMENT',
+    EQUIP_ALREADY_EQUIPPED: 'EQUIP_ALREADY_EQUIPPED',
+    EQUIP_SLOT_EMPTY: 'EQUIP_SLOT_EMPTY',
+    EQUIP_ITEM_LISTED: 'EQUIP_ITEM_LISTED',
+
+    // ===========================================
+    // Travel Errors (TRAVEL_*)
+    // ===========================================
+    TRAVEL_NO_PATH: 'TRAVEL_NO_PATH',
+    TRAVEL_UNCONSCIOUS: 'TRAVEL_UNCONSCIOUS',
+    TRAVEL_IN_RECOVERY: 'TRAVEL_IN_RECOVERY',
+    TRAVEL_BUSY: 'TRAVEL_BUSY',
+    TRAVEL_BLACK_ZONE_MIN_UNITS: 'TRAVEL_BLACK_ZONE_MIN_UNITS',
+    TRAVEL_ENERGY_COST: 'TRAVEL_ENERGY_COST',
+    TRAVEL_ALREADY_THERE: 'TRAVEL_ALREADY_THERE',
+    TRAVEL_INVALID_REGION: 'TRAVEL_INVALID_REGION',
+
+    // ===========================================
+    // Tavern Errors (TAVERN_*)
+    // ===========================================
+    TAVERN_NOT_IN_TAVERN: 'TAVERN_NOT_IN_TAVERN',
+    TAVERN_NO_INN: 'TAVERN_NO_INN',
+    TAVERN_DAILY_LIMIT: 'TAVERN_DAILY_LIMIT',
+    TAVERN_MERCENARY_GONE: 'TAVERN_MERCENARY_GONE',
+    TAVERN_INSUFFICIENT_FUNDS: 'TAVERN_INSUFFICIENT_FUNDS',
+    TAVERN_BUSY: 'TAVERN_BUSY',
+    TAVERN_FAST_TRAVEL_COOLDOWN: 'TAVERN_FAST_TRAVEL_COOLDOWN',
+    TAVERN_FAST_TRAVEL_WRONG_ZONE: 'TAVERN_FAST_TRAVEL_WRONG_ZONE',
+
+    // ===========================================
+    // Market Errors (MARKET_*)
+    // ===========================================
+    MARKET_NOT_IN_TOWN: 'MARKET_NOT_IN_TOWN',
+    MARKET_LISTING_NOT_FOUND: 'MARKET_LISTING_NOT_FOUND',
+    MARKET_LISTING_EXPIRED: 'MARKET_LISTING_EXPIRED',
+    MARKET_LISTING_SOLD: 'MARKET_LISTING_SOLD',
+    MARKET_LISTING_INACTIVE: 'MARKET_LISTING_INACTIVE',
+    MARKET_OWN_ITEM: 'MARKET_OWN_ITEM',
+    MARKET_SELF_PURCHASE: 'MARKET_SELF_PURCHASE',
+    MARKET_INSUFFICIENT_FUNDS: 'MARKET_INSUFFICIENT_FUNDS',
+    MARKET_ITEM_EQUIPPED: 'MARKET_ITEM_EQUIPPED',
+    MARKET_EQUIPPED_ITEM: 'MARKET_EQUIPPED_ITEM',
+    MARKET_ITEM_STOLEN: 'MARKET_ITEM_STOLEN',
+    MARKET_STOLEN_GOODS: 'MARKET_STOLEN_GOODS',
+    MARKET_PRICE_TOO_LOW: 'MARKET_PRICE_TOO_LOW',
+    MARKET_BUSY: 'MARKET_BUSY',
+    MARKET_ITEM_NOT_FOUND: 'MARKET_ITEM_NOT_FOUND',
+    MARKET_ITEM_NOT_OWNED: 'MARKET_ITEM_NOT_OWNED',
+    MARKET_ORDER_NOT_FOUND: 'MARKET_ORDER_NOT_FOUND',
+    MARKET_ORDER_NOT_YOURS: 'MARKET_ORDER_NOT_YOURS',
+    MARKET_NOT_ORDER_OWNER: 'MARKET_NOT_ORDER_OWNER',
+    MARKET_ORDER_CLOSED: 'MARKET_ORDER_CLOSED',
+    MARKET_ORDER_NOT_OPEN: 'MARKET_ORDER_NOT_OPEN',
+    MARKET_ITEM_LOCKED: 'MARKET_ITEM_LOCKED',
+    MARKET_INSUFFICIENT_QUANTITY: 'MARKET_INSUFFICIENT_QUANTITY',
+
+    // ===========================================
+    // Formation Errors (FORMATION_*)
+    // ===========================================
+    FORMATION_MAX_UNITS: 'FORMATION_MAX_UNITS',
+    FORMATION_INVALID_POSITION: 'FORMATION_INVALID_POSITION',
+    FORMATION_OVERLAP: 'FORMATION_OVERLAP',
+    FORMATION_HERO_DUPLICATE: 'FORMATION_HERO_DUPLICATE',
+    FORMATION_HERO_NOT_OWNED: 'FORMATION_HERO_NOT_OWNED',
+    FORMATION_HERO_LISTED: 'FORMATION_HERO_LISTED',
+    FORMATION_SWAP_FAILED: 'FORMATION_SWAP_FAILED',
+
+    // ===========================================
+    // Combat Errors (COMBAT_*)
+    // ===========================================
+    COMBAT_NO_ACTIVE_BATTLE: 'COMBAT_NO_ACTIVE_BATTLE',
+    COMBAT_HERO_NOT_IN_BATTLE: 'COMBAT_HERO_NOT_IN_BATTLE',
+    COMBAT_HERO_DEAD: 'COMBAT_HERO_DEAD',
+    COMBAT_POTION_COOLDOWN: 'COMBAT_POTION_COOLDOWN',
+    COMBAT_NO_POTIONS: 'COMBAT_NO_POTIONS',
+    COMBAT_NO_POTIONS_REMAINING: 'COMBAT_NO_POTIONS_REMAINING',
+    COMBAT_PVP_NOT_ALLOWED: 'COMBAT_PVP_NOT_ALLOWED',
+    COMBAT_NO_FORMATION: 'COMBAT_NO_FORMATION',
+    COMBAT_MONSTER_NOT_FOUND: 'COMBAT_MONSTER_NOT_FOUND',
+    COMBAT_MONSTER_UNAVAILABLE: 'COMBAT_MONSTER_UNAVAILABLE',
+    COMBAT_BUSY: 'COMBAT_BUSY',
+    COMBAT_ATTACKER_NOT_FOUND: 'COMBAT_ATTACKER_NOT_FOUND',
+    COMBAT_DEFENDER_NOT_FOUND: 'COMBAT_DEFENDER_NOT_FOUND',
+    COMBAT_PRESET_MISSING: 'COMBAT_PRESET_MISSING',
+
+    // ===========================================
+    // Consumable Errors (CONSUMABLE_*)
+    // ===========================================
+    CONSUMABLE_ITEM_NOT_FOUND: 'CONSUMABLE_ITEM_NOT_FOUND',
+    CONSUMABLE_NOT_CONSUMABLE: 'CONSUMABLE_NOT_CONSUMABLE',
+    CONSUMABLE_NO_EFFECT: 'CONSUMABLE_NO_EFFECT',
+    CONSUMABLE_NO_HERO_SELECTED: 'CONSUMABLE_NO_HERO_SELECTED',
+    CONSUMABLE_INVALID_STAT: 'CONSUMABLE_INVALID_STAT',
+    CONSUMABLE_BUFF_DURATION_EXCEEDED: 'CONSUMABLE_BUFF_DURATION_EXCEEDED',
+    CONSUMABLE_BLACK_ZONE_RESTRICTION: 'CONSUMABLE_BLACK_ZONE_RESTRICTION',
+    CONSUMABLE_INVALID_INPUT: 'CONSUMABLE_INVALID_INPUT',
+
+    // ===========================================
+    // Crafting Errors (CRAFT_*)
+    // ===========================================
+    CRAFT_NOT_IN_TOWN: 'CRAFT_NOT_IN_TOWN',
+    CRAFT_RECIPE_NOT_FOUND: 'CRAFT_RECIPE_NOT_FOUND',
+    CRAFT_MISSING_MATERIAL: 'CRAFT_MISSING_MATERIAL',
+    CRAFT_INVENTORY_FULL: 'CRAFT_INVENTORY_FULL',
+    CRAFT_AFFIX_MISSING: 'CRAFT_AFFIX_MISSING',
+    CRAFT_BUSY: 'CRAFT_BUSY',
+    CRAFT_SALVAGE_NO_ITEMS: 'CRAFT_SALVAGE_NO_ITEMS',
+    CRAFT_SALVAGE_INVALID: 'CRAFT_SALVAGE_INVALID',
+    CRAFTING_INVALID_REQUEST: 'CRAFTING_INVALID_REQUEST',
+    CRAFTING_AFFIX_MATERIAL_NOT_FOUND: 'CRAFTING_AFFIX_MATERIAL_NOT_FOUND',
+
+    // ===========================================
+    // Gathering Errors (GATHER_*)
+    // ===========================================
+    GATHER_RESOURCE_NOT_FOUND: 'GATHER_RESOURCE_NOT_FOUND',
+    GATHER_WRONG_REGION: 'GATHER_WRONG_REGION',
+    GATHER_INVENTORY_FULL: 'GATHER_INVENTORY_FULL',
+    GATHER_LOW_STRENGTH: 'GATHER_LOW_STRENGTH',
+    GATHER_WRONG_TOOL: 'GATHER_WRONG_TOOL',
+    GATHER_BUSY: 'GATHER_BUSY',
+    GATHER_UNAUTHORIZED: 'GATHER_UNAUTHORIZED',
+
+    // ===========================================
+    // Quest Errors (QUEST_*)
+    // ===========================================
+    QUEST_NOT_FOUND: 'QUEST_NOT_FOUND',
+    QUEST_INVALID_TEMPLATE: 'QUEST_INVALID_TEMPLATE',
+    QUEST_LOW_REPUTATION: 'QUEST_LOW_REPUTATION',
+    QUEST_USER_QUEST_NOT_FOUND: 'QUEST_USER_QUEST_NOT_FOUND',
+    QUEST_ALREADY_COMPLETED: 'QUEST_ALREADY_COMPLETED',
+    QUEST_STAGE_INCOMPLETE: 'QUEST_STAGE_INCOMPLETE',
+    QUEST_NO_ACTIVE_STAGE: 'QUEST_NO_ACTIVE_STAGE',
+    QUEST_OBJECTIVE_INCOMPLETE: 'QUEST_OBJECTIVE_INCOMPLETE',
+    QUEST_DIALOGUE_NOT_FOUND: 'QUEST_DIALOGUE_NOT_FOUND',
+    QUEST_WRONG_REGION: 'QUEST_WRONG_REGION',
+    QUEST_KILLS_INSUFFICIENT: 'QUEST_KILLS_INSUFFICIENT',
+    QUEST_NO_DIALOGUE: 'QUEST_NO_DIALOGUE',
+    QUEST_INVALID_DIALOGUE: 'QUEST_INVALID_DIALOGUE',
+    QUEST_UNSUPPORTED_OBJECTIVE: 'QUEST_UNSUPPORTED_OBJECTIVE',
+
+    // ===========================================
+    // Guild Errors (GUILD_*)
+    // ===========================================
+    GUILD_NOT_IN_GUILD: 'GUILD_NOT_IN_GUILD',
+    GUILD_NOT_MEMBER: 'GUILD_NOT_MEMBER',
+    GUILD_ALREADY_IN_GUILD: 'GUILD_ALREADY_IN_GUILD',
+    GUILD_ALREADY_MEMBER: 'GUILD_ALREADY_MEMBER',
+    GUILD_NOT_FOUND: 'GUILD_NOT_FOUND',
+    GUILD_NAME_TAKEN: 'GUILD_NAME_TAKEN',
+    GUILD_INVALID_TEMPLATE: 'GUILD_INVALID_TEMPLATE',
+    GUILD_INSUFFICIENT_FUNDS: 'GUILD_INSUFFICIENT_FUNDS',
+    GUILD_NOT_ENOUGH_HEROES: 'GUILD_NOT_ENOUGH_HEROES',
+    GUILD_NO_PERMISSION: 'GUILD_NO_PERMISSION',
+    GUILD_MASTER_LEAVE: 'GUILD_MASTER_LEAVE',
+    GUILD_CANNOT_KICK_MASTER: 'GUILD_CANNOT_KICK_MASTER',
+    GUILD_CANNOT_KICK_SELF: 'GUILD_CANNOT_KICK_SELF',
+    GUILD_USER_NOT_MEMBER: 'GUILD_USER_NOT_MEMBER',
+    GUILD_CANNOT_PROMOTE_MASTER: 'GUILD_CANNOT_PROMOTE_MASTER',
+    GUILD_INVALID_PROMOTION: 'GUILD_INVALID_PROMOTION',
+    GUILD_CANNOT_DEMOTE_MASTER: 'GUILD_CANNOT_DEMOTE_MASTER',
+    GUILD_CANNOT_DEMOTE_SELF: 'GUILD_CANNOT_DEMOTE_SELF',
+    GUILD_CANNOT_DEMOTE_RECRUIT: 'GUILD_CANNOT_DEMOTE_RECRUIT',
+    GUILD_MIN_RANK_REACHED: 'GUILD_MIN_RANK_REACHED',
+    GUILD_MASTER_ONLY: 'GUILD_MASTER_ONLY',
+    GUILD_OFFICER_ONLY: 'GUILD_OFFICER_ONLY',
+    GUILD_ALREADY_MASTER: 'GUILD_ALREADY_MASTER',
+    GUILD_INVITE_INVALID: 'GUILD_INVITE_INVALID',
+    GUILD_INVITE_EXPIRED: 'GUILD_INVITE_EXPIRED',
+    GUILD_INVITE_NOT_PENDING: 'GUILD_INVITE_NOT_PENDING',
+    GUILD_INVITE_NOT_YOURS: 'GUILD_INVITE_NOT_YOURS',
+    GUILD_INVITE_NOT_FOUND: 'GUILD_INVITE_NOT_FOUND',
+    GUILD_TREASURY_INSUFFICIENT: 'GUILD_TREASURY_INSUFFICIENT',
+    GUILD_ONLY_MASTER: 'GUILD_ONLY_MASTER',
+    GUILD_ONLY_OFFICER: 'GUILD_ONLY_OFFICER',
+    GUILD_FACILITY_EXISTS: 'GUILD_FACILITY_EXISTS',
+    GUILD_FACILITY_NOT_FOUND: 'GUILD_FACILITY_NOT_FOUND',
+    GUILD_FACILITY_NOT_YOURS: 'GUILD_FACILITY_NOT_YOURS',
+    GUILD_INVALID_FACILITY: 'GUILD_INVALID_FACILITY',
+    GUILD_AMOUNT_POSITIVE: 'GUILD_AMOUNT_POSITIVE',
+
+    // ===========================================
+    // Territory Errors (TERRITORY_*)
+    // ===========================================
+    TERRITORY_NOT_FOUND: 'TERRITORY_NOT_FOUND',
+    TERRITORY_NOT_CLAIMABLE: 'TERRITORY_NOT_CLAIMABLE',
+    TERRITORY_ALREADY_OWNED: 'TERRITORY_ALREADY_OWNED',
+    TERRITORY_UNDER_SIEGE: 'TERRITORY_UNDER_SIEGE',
+    TERRITORY_SIEGE_NOT_ACTIVE: 'TERRITORY_SIEGE_NOT_ACTIVE',
+    TERRITORY_TAX_INVALID: 'TERRITORY_TAX_INVALID',
+    TERRITORY_TAX_UNAUTHORIZED: 'TERRITORY_TAX_UNAUTHORIZED',
+    TERRITORY_SIEGE_COST: 'TERRITORY_SIEGE_COST',
+
+    // ===========================================
+    // Property Errors (PROPERTY_*)
+    // ===========================================
+    PROPERTY_NO_PLOTS: 'PROPERTY_NO_PLOTS',
+    PROPERTY_INSUFFICIENT_FUNDS: 'PROPERTY_INSUFFICIENT_FUNDS',
+    PROPERTY_NOT_FOUND: 'PROPERTY_NOT_FOUND',
+    PROPERTY_ACCESS_DENIED: 'PROPERTY_ACCESS_DENIED',
+    PROPERTY_MAX_TIER: 'PROPERTY_MAX_TIER',
+    PROPERTY_NAME_INVALID: 'PROPERTY_NAME_INVALID',
+    PROPERTY_MESSAGE_TOO_LONG: 'PROPERTY_MESSAGE_TOO_LONG',
+
+    // ===========================================
+    // NPC Errors (NPC_*)
+    // ===========================================
+    NPC_NOT_FOUND: 'NPC_NOT_FOUND',
+    NPC_NO_DIALOGUE: 'NPC_NO_DIALOGUE',
+    NPC_FACTION_ENEMY: 'NPC_FACTION_ENEMY',
+    NPC_ACTION_UNSUPPORTED: 'NPC_ACTION_UNSUPPORTED',
+    NPC_TELEPORT_INVALID: 'NPC_TELEPORT_INVALID',
+    NPC_TELEPORT_WRONG_ZONE: 'NPC_TELEPORT_WRONG_ZONE',
+    NPC_INSUFFICIENT_FUNDS: 'NPC_INSUFFICIENT_FUNDS',
+    NPC_SHOP_OUT_OF_STOCK: 'NPC_SHOP_OUT_OF_STOCK',
+    NPC_ITEM_NOT_AVAILABLE: 'NPC_ITEM_NOT_AVAILABLE',
+
+    // ===========================================
+    // Chat Errors (CHAT_*)
+    // ===========================================
+    CHAT_EMPTY_MESSAGE: 'CHAT_EMPTY_MESSAGE',
+    CHAT_TOO_LONG: 'CHAT_TOO_LONG',
+    CHAT_SPAM_DETECTED: 'CHAT_SPAM_DETECTED',
+
+    // ===========================================
+    // Mail Errors (MAIL_*)
+    // ===========================================
+    MAIL_NOT_FOUND: 'MAIL_NOT_FOUND',
+    MAIL_ACCESS_DENIED: 'MAIL_ACCESS_DENIED',
+    MAIL_ALREADY_CLAIMED: 'MAIL_ALREADY_CLAIMED',
+
+    // ===========================================
+    // Inn Errors (INN_*)
+    // ===========================================
+    INN_NO_INN: 'INN_NO_INN',
+    INN_INSUFFICIENT_FUNDS: 'INN_INSUFFICIENT_FUNDS',
+    INN_CANNOT_STORE_EQUIPPED: 'INN_CANNOT_STORE_EQUIPPED',
+    INN_ITEM_NOT_IN_VAULT: 'INN_ITEM_NOT_IN_VAULT',
+    INN_ITEM_NOT_IN_INVENTORY: 'INN_ITEM_NOT_IN_INVENTORY',
+
+    // ===========================================
+    // Gambling Errors (GAMBLE_*)
+    // ===========================================
+    GAMBLE_INVALID_GUESS: 'GAMBLE_INVALID_GUESS',
+    GAMBLE_INVALID_BET: 'GAMBLE_INVALID_BET',
+    GAMBLE_NOT_IN_INN: 'GAMBLE_NOT_IN_INN',
+    GAMBLE_INSUFFICIENT_FUNDS: 'GAMBLE_INSUFFICIENT_FUNDS',
+
+    // ===========================================
+    // Faction Errors (FACTION_*)
+    // ===========================================
+    FACTION_ALREADY_JOINED: 'FACTION_ALREADY_JOINED',
+    FACTION_NOT_FOUND: 'FACTION_NOT_FOUND',
+
+    // ===========================================
+    // Bounty Errors (BOUNTY_*)
+    // ===========================================
+    BOUNTY_SELF_TARGET: 'BOUNTY_SELF_TARGET',
+    BOUNTY_BELOW_MINIMUM: 'BOUNTY_BELOW_MINIMUM',
+    BOUNTY_ISSUER_NOT_FOUND: 'BOUNTY_ISSUER_NOT_FOUND',
+    BOUNTY_TARGET_NOT_FOUND: 'BOUNTY_TARGET_NOT_FOUND',
+    BOUNTY_INSUFFICIENT_FUNDS: 'BOUNTY_INSUFFICIENT_FUNDS',
+
+    // ===========================================
+    // Siege Errors (SIEGE_*)
+    // ===========================================
+    SIEGE_NOT_ACTIVE: 'SIEGE_NOT_ACTIVE',
+    SIEGE_OWN_TERRITORY: 'SIEGE_OWN_TERRITORY',
+
+    // ===========================================
+    // Black Zone Errors (BLACKZONE_*)
+    // ===========================================
+    BLACKZONE_MIN_UNITS: 'BLACKZONE_MIN_UNITS',
+    BLACKZONE_POTION_BANNED: 'BLACKZONE_POTION_BANNED',
+    BLACKZONE_DEATH_PENALTY: 'BLACKZONE_DEATH_PENALTY',
+
+    // ===========================================
+    // Fast Travel Errors (FASTTRAVEL_*)
+    // ===========================================
+    FASTTRAVEL_NOT_IN_TAVERN: 'FASTTRAVEL_NOT_IN_TAVERN',
+    FASTTRAVEL_WRONG_ZONE: 'FASTTRAVEL_WRONG_ZONE',
+    FASTTRAVEL_INVALID_DESTINATION: 'FASTTRAVEL_INVALID_DESTINATION',
+    FASTTRAVEL_ALREADY_THERE: 'FASTTRAVEL_ALREADY_THERE',
+    FASTTRAVEL_COOLDOWN: 'FASTTRAVEL_COOLDOWN',
+    FASTTRAVEL_INSUFFICIENT_FUNDS: 'FASTTRAVEL_INSUFFICIENT_FUNDS',
+
+    // ===========================================
+    // Rumor Errors (RUMOR_*)
+    // ===========================================
+    RUMOR_NOT_FOUND: 'RUMOR_NOT_FOUND',
+    RUMOR_NOT_IN_INN: 'RUMOR_NOT_IN_INN',
+    RUMOR_INSUFFICIENT_FUNDS: 'RUMOR_INSUFFICIENT_FUNDS',
+    RUMOR_INVALID_PURCHASE: 'RUMOR_INVALID_PURCHASE',
+    RUMOR_ALREADY_RATED: 'RUMOR_ALREADY_RATED',
+    RUMOR_RATING_INVALID: 'RUMOR_RATING_INVALID',
+    RUMOR_TOO_SHORT: 'RUMOR_TOO_SHORT',
+
+    // ===========================================
+    // Daily Task Errors (DAILY_*)
+    // ===========================================
+    DAILY_TASK_NOT_FOUND: 'DAILY_TASK_NOT_FOUND',
+    DAILY_ALREADY_ACCEPTED: 'DAILY_ALREADY_ACCEPTED',
+    DAILY_INVALID_PROGRESS: 'DAILY_INVALID_PROGRESS',
+    DAILY_NOT_COMPLETED: 'DAILY_NOT_COMPLETED',
+
+    // ===========================================
+    // Treasure Errors (TREASURE_*)
+    // ===========================================
+    TREASURE_NOT_FOUND: 'TREASURE_NOT_FOUND',
+
+    // ===========================================
+    // Repair Errors (REPAIR_*)
+    // ===========================================
+    REPAIR_INSUFFICIENT_FUNDS: 'REPAIR_INSUFFICIENT_FUNDS',
+    REPAIR_ITEM_NOT_FOUND: 'REPAIR_ITEM_NOT_FOUND',
+    REPAIR_ALREADY_FULL: 'REPAIR_ALREADY_FULL',
+
+    // ===========================================
+    // Breeding Errors (BREED_*)
+    // ===========================================
+    BREED_PARENTS_NOT_FOUND: 'BREED_PARENTS_NOT_FOUND',
+    BREED_UNAUTHORIZED: 'BREED_UNAUTHORIZED',
+    BREED_OFFSPRING_LIMIT: 'BREED_OFFSPRING_LIMIT',
+    BREED_WRONG_GENDER: 'BREED_WRONG_GENDER',
+    BREED_INVALID_PARENTS: 'BREED_INVALID_PARENTS',
+
+    // ===========================================
+    // Hero Auction Errors (AUCTION_*)
+    // ===========================================
+    AUCTION_LISTING_NOT_FOUND: 'AUCTION_LISTING_NOT_FOUND',
+    AUCTION_OWN_HERO: 'AUCTION_OWN_HERO',
+    AUCTION_ORDER_NOT_FOUND: 'AUCTION_ORDER_NOT_FOUND',
+    AUCTION_ORDER_NOT_YOURS: 'AUCTION_ORDER_NOT_YOURS',
+    AUCTION_ORDER_CLOSED: 'AUCTION_ORDER_CLOSED',
+
+    // ===========================================
+    // Mastery Extraction Errors (MASTERY_*)
+    // ===========================================
+    MASTERY_HERO_NOT_FOUND: 'MASTERY_HERO_NOT_FOUND',
+    MASTERY_LEVEL_TOO_LOW: 'MASTERY_LEVEL_TOO_LOW',
+    MASTERY_UNAUTHORIZED: 'MASTERY_UNAUTHORIZED',
+
+    // ===========================================
+    // Escort Errors (ESCORT_*)
+    // ===========================================
+    ESCORT_ALREADY_ACTIVE: 'ESCORT_ALREADY_ACTIVE',
+    ESCORT_USER_NOT_FOUND: 'ESCORT_USER_NOT_FOUND',
+
+    // ===========================================
+    // Wagon/Hauling Errors (WAGON_*)
+    // ===========================================
+    WAGON_INVALID_TIER: 'WAGON_INVALID_TIER',
+    WAGON_ALREADY_ACTIVE: 'WAGON_ALREADY_ACTIVE',
+    WAGON_NOT_AT_ORIGIN: 'WAGON_NOT_AT_ORIGIN',
+    WAGON_NOT_FOUND: 'WAGON_NOT_FOUND',
+    WAGON_NOT_LOADING: 'WAGON_NOT_LOADING',
+    WAGON_FULL: 'WAGON_FULL',
+    WAGON_CARGO_NOT_FOUND: 'WAGON_CARGO_NOT_FOUND',
+    WAGON_PERSONAL_INVENTORY_FULL: 'WAGON_PERSONAL_INVENTORY_FULL',
+
+    // ===========================================
+    // Mana Charging Errors (MANA_*)
+    // ===========================================
+    MANA_INTENSITY_LOW: 'MANA_INTENSITY_LOW',
+    MANA_ITEM_NOT_FOUND: 'MANA_ITEM_NOT_FOUND',
+    MANA_CANNOT_CHARGE: 'MANA_CANNOT_CHARGE',
+    MANA_TEMPLATE_MISSING: 'MANA_TEMPLATE_MISSING',
+
+    // ===========================================
+    // Event Errors (EVENT_*)
+    // ===========================================
+    EVENT_TEMPLATE_NOT_FOUND: 'EVENT_TEMPLATE_NOT_FOUND',
+
+    // ===========================================
+    // Promotion Errors (PROMO_*)
+    // ===========================================
+    PROMO_LEVEL_REQUIREMENT: 'PROMO_LEVEL_REQUIREMENT',
+    PROMO_INVALID_CLASS: 'PROMO_INVALID_CLASS',
+    PROMO_WRONG_BRANCH: 'PROMO_WRONG_BRANCH',
+
+    // ===========================================
+    // Replay Errors (REPLAY_*)
+    // ===========================================
+    REPLAY_NOT_FOUND: 'REPLAY_NOT_FOUND',
+
+    // ===========================================
+    // Leaderboard Errors (LEADERBOARD_*)
+    // ===========================================
+    LEADERBOARD_INVALID_CATEGORY: 'LEADERBOARD_INVALID_CATEGORY',
+
+    // ===========================================
+    // Building Errors (BUILDING_*)
+    // ===========================================
+    BUILDING_RECIPE_NOT_FOUND: 'BUILDING_RECIPE_NOT_FOUND',
+    BUILDING_FACILITY_MISSING: 'BUILDING_FACILITY_MISSING',
+
+    // ===========================================
+    // Stat Errors (STAT_*)
+    // ===========================================
+    STAT_HERO_NOT_FOUND: 'STAT_HERO_NOT_FOUND',
+    STAT_INSUFFICIENT_POINTS: 'STAT_INSUFFICIENT_POINTS',
+    STAT_CAP_EXCEEDED: 'STAT_CAP_EXCEEDED',
+
+    // ===========================================
+    // Economy Errors (ECONOMY_*)
+    // ===========================================
+    ECONOMY_INSUFFICIENT_TOTAL: 'ECONOMY_INSUFFICIENT_TOTAL',
+
+    // ===========================================
+    // Promotion Errors (PROMOTION_*)
+    // ===========================================
+    PROMOTION_TARGET_CLASS_NOT_FOUND: 'PROMOTION_TARGET_CLASS_NOT_FOUND',
+
+    // ===========================================
+    // Asset Errors (ASSET_*)
+    // ===========================================
+    ASSET_NOT_FOUND: 'ASSET_NOT_FOUND',
+
+    // ===========================================
+    // Generic Errors (GENERIC_*)
+    // ===========================================
+    GENERIC_NOT_IMPLEMENTED: 'GENERIC_NOT_IMPLEMENTED',
+    GENERIC_INVALID_INPUT: 'GENERIC_INVALID_INPUT',
+};
+
+module.exports = ErrorCodes;

@@ -1,12 +1,13 @@
 const prisma = require('../db');
-const vitalityService = require('./vitalityService');
-const koManager = require('./vitality/KOManager');
+const energyService = require('./energyService');
+const koManager = require('./energy/KOManager');
 const TravelIncidentResolver = require('../logic/world/TravelIncidentResolver');
+const { AppError, ErrorCodes } = require('../utils/AppError');
 
 class TravelService {
     constructor() {
         /** @type {number} */
-        this.BASE_TRAVEL_VITALITY_COST = 5;
+        this.BASE_TRAVEL_ENERGY_COST = 5;
     }
 
     /**
@@ -22,10 +23,10 @@ class TravelService {
 
         // 1. Core Health & State Checks
         const isKO = await koManager.isKnockedOut(userId);
-        if (isKO) throw new Error("You are unconscious and cannot travel.");
+        if (isKO) throw new AppError(ErrorCodes.TRAVEL_UNCONSCIOUS, 'You are unconscious and cannot travel.');
 
         const isInRecovery = await koManager.isInRecovery(userId);
-        if (isInRecovery) throw new Error("You must wait for your recovery window to end before moving (1 minute peace required).");
+        if (isInRecovery) throw new AppError(ErrorCodes.TRAVEL_IN_RECOVERY, 'You must wait for your recovery window to end before moving (1 minute peace required).');
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -40,14 +41,14 @@ class TravelService {
             }
         });
 
-        if (!user) throw new Error("User not found");
+        if (!user) throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found');
         
         const totalActiveTasks = await prisma.taskQueue.count({
             where: { userId, status: { in: ["RUNNING", "PENDING"] } }
         });
 
         if (totalActiveTasks > 0) {
-            throw new Error("You cannot start a journey while busy with other actions.");
+            throw new AppError(ErrorCodes.TRAVEL_BUSY, 'You cannot start a journey while busy with other actions.');
         }
 
         const connection = await prisma.regionConnection.findFirst({
@@ -55,20 +56,25 @@ class TravelService {
             include: { target: true }
         });
 
-        if (!connection) throw new Error("No direct path exists from here.");
+        if (!connection) throw new AppError(ErrorCodes.TRAVEL_NO_PATH, 'No direct path exists from here.');
 
         // 2. Black Zone Entry Requirement
         if (connection.target.zoneType === 'BLACK') {
             const heroCount = user._count.heroes;
             if (heroCount < 30) {
-                throw new Error(`Black Zone Danger: You need a minimum size of 30 units to survive here. Current: ${heroCount}`);
+                throw new AppError(ErrorCodes.TRAVEL_BLACK_ZONE_MIN_UNITS, 
+                    `Black Zone Danger: You need a minimum size of 30 units to survive here. Current: ${heroCount}`,
+                    { context: { required: 30, current: heroCount } }
+                );
             }
         }
 
-        // 3. Vitality Management
-        await vitalityService.syncUserVitality(userId);
+        // 3. Energy Management
+        await energyService.syncUserEnergy(userId);
         const freshUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (freshUser.vitality < this.BASE_TRAVEL_VITALITY_COST) throw new Error("Not enough Vitality.");
+        if (freshUser.energy < this.BASE_TRAVEL_ENERGY_COST) {
+            throw new AppError(ErrorCodes.TRAVEL_ENERGY_COST, 'Not enough Energy.');
+        }
 
         // 4. Incident Resolution (Bandits, Spirits) - Delegated to Resolver
         const incident = await TravelIncidentResolver.resolveIncidents(userId, connection, freshUser);
@@ -118,7 +124,7 @@ class TravelService {
      * @param {string} type - Task type.
      * @param {number} duration - Seconds to complete.
      * @param {Object} escortUpdate - Escort quota changes.
-     * @returns {Promise<Object>} Created task.
+     * @returns {Promise<Object>} Created task with UNIX timestamps.
      */
     async _executeTravelTask(userId, originId, targetId, type, duration, escortUpdate) {
         const now = new Date();
@@ -128,7 +134,7 @@ class TravelService {
             prisma.user.update({
                 where: { id: userId },
                 data: { 
-                    vitality: { decrement: this.BASE_TRAVEL_VITALITY_COST },
+                    energy: { decrement: this.BASE_TRAVEL_ENERGY_COST },
                     isInTavern: false,
                     tavernEntryAt: null,
                     ...(type === "HAULING_STAY" ? { currentRegion: targetId } : {}),
@@ -149,7 +155,13 @@ class TravelService {
             })
         ]);
 
-        return result[1];
+        // Convert to UNIX timestamps (milliseconds) for API response
+        const task = result[1];
+        return {
+            ...task,
+            startedAt: task.startedAt.getTime(),
+            finishesAt: task.finishesAt.getTime()
+        };
     }
 
     async completeTravel(userId, taskId) {
@@ -171,7 +183,5 @@ class TravelService {
         ]);
     }
 }
-
-module.exports = new TravelService();
 
 module.exports = new TravelService();

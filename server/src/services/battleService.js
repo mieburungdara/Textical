@@ -4,6 +4,7 @@ const replayService = require('./battle/ReplayService');
 const lootService = require('./logistics/LootService');
 const battleRegistry = require('../../logic/battle/BattleRegistry');
 const pvpService = require('./battle/PvpService');
+const { AppError, ErrorCodes } = require('../utils/AppError');
 
 /**
  * BattleService (v2.3 - PvP Support)
@@ -20,7 +21,7 @@ class BattleService {
         // 1. Validate PvP Permissions
         const pvpCheck = await pvpService.canInitiatePvp(attackerId, defenderId, regionId);
         if (!pvpCheck.allowed) {
-            throw new Error(pvpCheck.reason || "PvP not allowed here.");
+            throw new AppError(ErrorCodes.COMBAT_PVP_NOT_ALLOWED, pvpCheck.reason || 'PvP not allowed here.');
         }
 
         // 2. Setup Simulation

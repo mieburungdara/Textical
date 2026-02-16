@@ -1,4 +1,6 @@
 const BaseService = require('../BaseService');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 class MarketValidator extends BaseService {
     /**
@@ -10,8 +12,12 @@ class MarketValidator extends BaseService {
             include: { taskQueue: { where: { status: "RUNNING" } } }
         });
         
-        if (!user) throw new Error("User not found.");
-        if (user.taskQueue.length > 0) throw new Error("You are too busy to use the market right now.");
+        if (!user) {
+            throw new AppError(ErrorCodes.USER_NOT_FOUND, 'User not found.');
+        }
+        if (user.taskQueue.length > 0) {
+            throw new AppError(ErrorCodes.MARKET_BUSY, 'You are too busy to use the market right now.');
+        }
 
         // Find current region template
         const region = await this.db.regionTemplate.findUnique({
@@ -19,7 +25,7 @@ class MarketValidator extends BaseService {
         });
 
         if (!region || region.visualType !== "TOWN") {
-            throw new Error(`Market actions are forbidden in ${region ? region.name : 'the wilderness'}. Return to a Town.`);
+            throw new AppError(ErrorCodes.MARKET_NOT_IN_TOWN, `Market actions are forbidden in ${region ? region.name : 'the wilderness'}. Return to a Town.`);
         }
         return user;
     }

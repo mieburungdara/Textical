@@ -15,7 +15,7 @@ async function runMasterSinkAudit() {
     console.log("[0/4] Preparing environment...");
     await prisma.inventoryItem.deleteMany({ where: { userId } });
     await prisma.taskQueue.deleteMany({ where: { userId } });
-    await prisma.user.update({ where: { id: userId }, data: { silver: 10000, currentRegion: 1, vitality: 100 } });
+    await prisma.user.update({ where: { id: userId }, data: { silver: 10000, currentRegion: 1, energy: 100 } });
     
     // Ensure Hero exists
     await prisma.hero.upsert({

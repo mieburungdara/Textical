@@ -243,7 +243,7 @@ class SessionService {
     _generateDeviceId(userId, ipAddress, userAgent) {
         const crypto = require('crypto');
         const data = `${userId}-${ipAddress}-${userAgent || 'unknown'}`;
-        return crypto.createHash('md5').update(data).digest('hex').substring(0, 16);
+        return crypto.createHash('sha256').update(data).digest('hex').substring(0, 16);
     }
 }
 

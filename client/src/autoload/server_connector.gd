@@ -28,7 +28,7 @@ signal stat_cap_reached(unit_id, stat_name, current_value, cap_value)
 signal elemental_affinity_updated(unit_id, affinities)
 signal set_bonus_updated(unit_id, bonuses)
 
-var base_url = "http://127.0.0.1:3000/api"
+var base_url = "http://127.0.0.1:5000/api"
 var _is_server_reachable: bool = false
 var _connection_tested: bool = false
 

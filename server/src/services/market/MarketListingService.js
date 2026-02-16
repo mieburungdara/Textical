@@ -3,6 +3,8 @@ const marketValidator = require('./MarketValidator');
 const transactionManager = require('../economy/TransactionManager');
 const marketFee = require('../economy/MarketFeeComponent');
 const priceResolver = require('../../logic/economy/CommodityPriceResolver');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * MarketListingService
@@ -33,7 +35,9 @@ class MarketListingService extends BaseService {
     }
 
     async listItem(userId, itemInstanceId, pricePerUnit) {
-        if (!pricePerUnit || pricePerUnit < 1) throw new Error("Price must be at least 1 Gold.");
+        if (!pricePerUnit || pricePerUnit < 1) {
+            throw new AppError(ErrorCodes.MARKET_PRICE_TOO_LOW, 'Price must be at least 1 Gold.');
+        }
         
         const user = await marketValidator.verifyInTown(userId);
         
@@ -42,12 +46,16 @@ class MarketListingService extends BaseService {
             include: { template: true, marketOrders: true, equippedIn: true }
         });
 
-        if (!item || item.userId !== userId) throw new Error("Item not found.");
-        if (item.marketOrders.length > 0 || item.equippedIn) throw new Error("Item is locked.");
+        if (!item || item.userId !== userId) {
+            throw new AppError(ErrorCodes.MARKET_ITEM_NOT_FOUND, 'Item not found.');
+        }
+        if (item.marketOrders.length > 0 || item.equippedIn) {
+            throw new AppError(ErrorCodes.MARKET_ITEM_LOCKED, 'Item is locked.');
+        }
 
         // --- Bandit Stolen Goods Check ---
         if (item.isStolen) {
-            throw new Error("Penyelundup! Barang curian tidak bisa didaftarkan di pasar resmi. Jual ke penadah di sarang penjahat.");
+            throw new AppError(ErrorCodes.MARKET_STOLEN_GOODS, 'Penyelundup! Barang curian tidak bisa didaftarkan di pasar resmi. Jual ke penadah di sarang penjahat.');
         }
         
         // --- AAA Guild Taxation Context ---

@@ -51,7 +51,7 @@ async function runMasterLootAudit() {
     await prisma.formationSlot.deleteMany({ where: { presetId: presetB.id } });
     await prisma.formationSlot.create({ data: { presetId: presetB.id, heroId: heroB.id, gridX: 25, gridY: 40 } });
 
-    await prisma.user.update({ where: { id: winnerB }, data: { vitality: 100, currentRegion: 1 } });
+    await prisma.user.update({ where: { id: winnerB }, data: { energy: 100, currentRegion: 1 } });
     
     // This call inside startBattle(winnerB) will trigger the interruption
     await battleService.startBattle(winnerB, monsterId);

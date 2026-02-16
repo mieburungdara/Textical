@@ -6,6 +6,7 @@
 const chatHandler = require('../handlers/chatSocketHandler');
 const statHandler = require('../handlers/statHandler');
 const guildHandler = require('../handlers/guildHandler');
+const mapHandler = require('../handlers/MapRealtimeHandler');
 
 /**
  * Register all socket event handlers to a socket connection
@@ -47,6 +48,10 @@ function registerHandlers(io, socket, userId) {
     socket.on("guild:search", (request) => guildHandler.handleSearchGuilds(socket, request));
     socket.on("guild:disband", (request) => guildHandler.handleDisbandGuild(socket, request));
     console.log(`[SOCKET_ROUTER] Guild handlers registered for user ${userId}`);
+
+    // Register Map Realtime Handlers
+    mapHandler.register(io, socket, userId);
+    console.log(`[SOCKET_ROUTER] Map realtime handlers registered for user ${userId}`);
 }
 
 /**

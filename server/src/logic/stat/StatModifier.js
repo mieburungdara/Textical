@@ -20,7 +20,7 @@ class StatModifier {
         this.priority = config.priority || 0;
         this.condition = config.condition || null;
         this.isConditional = config.isConditional || false;
-        this.id = config.id || `${this.source}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.id = config.id || `${this.source}_${Math.random().toString(36).slice(2, 11)}`;
     }
 
     /**

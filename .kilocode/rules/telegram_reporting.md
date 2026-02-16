@@ -1,3 +1,20 @@
+# 🚨 MANDATORY ENFORCEMENT 🚨
+
+⚠️ **ATURAN INI WAJIB DITAATI - TIDAK ADA PENGECUALIAN**
+
+## Kewajiban Mutlak
+- AI **WAJIB** mengeksekusi notify script SETELAH `attempt_completion`
+- **TIDAK BOLEH** hanya print ke console tanpa menjalankan script
+- **TIDAK BOLEH** lanjut ke task berikutnya sebelum script berhasil dieksekusi
+- GAGAL menjalankan notify = task **TIDAK SELESAI**
+
+## Penalty
+- Task dianggap **BELUM SELESAI** jika report tidak dikirim
+- Proses dianggap **GAGAL** jika tidak ada konfirmasi berhasil
+- Wajib kirim ulang sebelum lanjut task berikutnya
+
+---
+
 # Telegram Reporting Rule
 
 ## Core Rule
@@ -5,7 +22,7 @@ Setiap laporan hasil pekerjaan WAJIB dikirim ke Telegram menggunakan:
 .kilocode/notify.js
 
 Eksekusi harus melalui Git Bash dengan:
-node .kilocode/notify.js last_report.txt.txt
+node .kilocode/notify.js last_report.txt
 
 **Larangan:**
 - Dilarang hanya print ke console tanpa menjalankan script notify.
@@ -14,8 +31,9 @@ node .kilocode/notify.js last_report.txt.txt
 ---
 
 ## Report Trigger
-Laporan WAJIB dikirim ketika:
+Laporan WAJIB dikirim ketika (tanpa kecuali):
 - Task selesai
+- Task Completed
 - Refactor besar selesai
 - Error fatal terjadi
 - Build / test selesai
@@ -161,7 +179,14 @@ Sebelum dikirim:
 
 ## Enforcement
 
-Jika laporan tidak dikirim:
-- Task dianggap BELUM SELESAI
-- Proses dianggap GAGAL
+⚠️ **JIKA TIDAK IKUTI ATURAN INI:**
+- Task dianggap **BELUM SELESAI**
+- Proses dianggap **GAGAL**
 - Wajib kirim ulang sebelum lanjut task berikutnya
+
+### Checklist Wajib Sebelum attempt_completion:
+- [ ] Buat last_report.txt dengan format yang benar
+- [ ] Eksekusi: `node .kilocode/notify.js last_report.txt`
+- [ ] Verifikasi message terkirim ke Telegram
+- [ ] Jika gagal → retry minimal 1x
+- [ ] Jika masih gagal → exit dengan error code ≠ 0

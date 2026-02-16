@@ -74,9 +74,9 @@ class BTManager {
         const btDir = __dirname;
         try {
             const files = fs.readdirSync(btDir).filter(f => f.endsWith('.json'));
-            files.forEach(file => {
+            files.forEach(async file => {
                 const name = path.basename(file, '.json');
-                const data = JSON.parse(fs.readFileSync(path.join(btDir, file), 'utf8'));
+                const data = JSON.parse(await fs.promises.readFile(path.join(btDir, file), 'utf8'));
                 this.loadTree(name, data);
             });
             logger.info(`Loaded ${Object.keys(this.trees).length} behavior trees`);
@@ -95,7 +95,7 @@ class BTManager {
     _formatDataForB3(jsonData) {
         const formattedNodes = {};
         
-        for (let id in jsonData.nodes) {
+        for (const id of Object.keys(jsonData.nodes)) {
             const node = jsonData.nodes[id];
             
             // Validate node structure

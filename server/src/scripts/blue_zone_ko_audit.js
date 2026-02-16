@@ -33,7 +33,7 @@ async function runBlueZoneKOAudit() {
     await prisma.user.update({
         where: { id: userId },
         data: { 
-            currentRegion: regionId, vitality: 100, 
+            currentRegion: regionId, energy: 100, 
             isKnockedOut: false, knockedOutUntil: null, recoveryUntil: null 
         }
     });

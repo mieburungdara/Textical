@@ -1,4 +1,6 @@
 const transactionManager = require('../economy/TransactionManager');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * AAA MarketOrderManager
@@ -14,8 +16,12 @@ class MarketOrderManager {
             include: { template: true }
         });
 
-        if (!item || item.userId !== userId) throw new Error("Item not found.");
-        if (item.quantity < quantity) throw new Error("Insufficient quantity.");
+        if (!item || item.userId !== userId) {
+            throw new AppError(ErrorCodes.MARKET_ITEM_NOT_FOUND, 'Item not found.');
+        }
+        if (item.quantity < quantity) {
+            throw new AppError(ErrorCodes.MARKET_INSUFFICIENT_QUANTITY, 'Insufficient quantity.');
+        }
 
         // Create Order
         const expiry = new Date();

@@ -26,7 +26,7 @@ class InventoryMerger {
             groups[item.templateId].push(item);
         });
 
-        for (const templateId in groups) {
+        for (const templateId of Object.keys(groups)) {
             const stackGroup = groups[templateId];
             const maxStack = stackGroup[0].template.maxStack || 1;
 

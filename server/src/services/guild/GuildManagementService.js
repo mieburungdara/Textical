@@ -4,27 +4,37 @@ const userRepository = require('../../repositories/userRepository');
 const transactionManager = require('../economy/TransactionManager');
 const resolver = require('../../logic/economy/CurrencyResolver');
 const GuildUtils = require('./GuildUtils');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * Service for core guild management (creation, leveling, settings).
  */
 class GuildManagementService {
     async createGuild(user, templateId, name, description) {
-        if (user.guildId) throw new Error("You are already a member of a guild.");
+        if (user.guildId) {
+            throw new AppError(ErrorCodes.GUILD_ALREADY_IN_GUILD, 'You are already a member of a guild.');
+        }
 
         const existing = await guildRepository.findByName(name);
-        if (existing) throw new Error("Guild name is already taken.");
+        if (existing) {
+            throw new AppError(ErrorCodes.GUILD_NAME_TAKEN, 'Guild name is already taken.');
+        }
 
         const template = await guildRepository.getTemplateById(templateId);
-        if (!template) throw new Error("Invalid guild template.");
+        if (!template) {
+            throw new AppError(ErrorCodes.GUILD_INVALID_TEMPLATE, 'Invalid guild template.');
+        }
 
         const reqs = JSON.parse(template.creationReqs || "{}");
         const costSilver = BigInt(reqs.gold_cost || 0);
         
         const userTotalSilver = resolver.getTotalSilver(user);
-        if (userTotalSilver < costSilver) throw new Error("Insufficient funds to create this guild.");
+        if (userTotalSilver < costSilver) {
+            throw new AppError(ErrorCodes.GUILD_INSUFFICIENT_FUNDS, 'Insufficient funds to create this guild.');
+        }
         if (!user.heroes || user.heroes.length < (reqs.min_heroes || 0)) {
-            throw new Error("You need more heroes to form a guild.");
+            throw new AppError(ErrorCodes.GUILD_NOT_ENOUGH_HEROES, 'You need more heroes to form a guild.');
         }
 
         const guild = await guildRepository.create({ name, description, templateId });
@@ -57,7 +67,7 @@ class GuildManagementService {
 
     async updateGuildSettings(requester, settings) {
         if (requester.guildRole !== "MASTER") {
-            throw new Error("Only the guild master can update settings.");
+            throw new AppError(ErrorCodes.GUILD_MASTER_ONLY, 'Only the guild master can update settings.');
         }
 
         const updateData = {};
@@ -75,7 +85,9 @@ class GuildManagementService {
 
     async getGuildInfo(guildId) {
         const guild = await guildRepository.findById(guildId);
-        if (!guild) throw new Error("Guild not found.");
+        if (!guild) {
+            throw new AppError(ErrorCodes.GUILD_NOT_FOUND, 'Guild not found.');
+        }
         return guild;
     }
 
@@ -97,7 +109,7 @@ class GuildManagementService {
 
     async disbandGuild(user) {
         if (user.guildRole !== "MASTER") {
-            throw new Error("Only the guild master can disband.");
+            throw new AppError(ErrorCodes.GUILD_MASTER_ONLY, 'Only the guild master can disband.');
         }
 
         const guildId = user.guildId;

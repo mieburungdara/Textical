@@ -1,15 +1,15 @@
-const vitalityService = require('./src/services/vitalityService');
+const energyService = require('./src/services/energyService');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function test() {
-    console.log("--- TESTING VITALITY SERVICE ---");
+    console.log("--- TESTING ENERGY SERVICE ---");
     const user = await prisma.user.findFirst();
     if (!user) return console.log("No user found. Run seed first.");
 
     // 1. Enter Tavern
     console.log("1. Entering Tavern...");
-    await vitalityService.enterTavern(user.id);
+    await energyService.enterTavern(user.id);
     
     // 2. Wait 2 seconds
     console.log("2. Waiting 2 seconds (Simulating short visit)...");
@@ -17,7 +17,7 @@ async function test() {
 
     // 3. Exit Tavern (Should round to 60s)
     console.log("3. Exiting Tavern...");
-    const updated = await vitalityService.exitTavern(user.id);
+    const updated = await energyService.exitTavern(user.id);
     
     console.log(`Initial Tavern Time: ${user.tavernTimeSecondsToday}s`);
     console.log(`Updated Tavern Time: ${updated.tavernTimeSecondsToday}s (Expected increase of 60s)`);

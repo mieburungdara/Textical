@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api/admin';
+const API_URL = 'http://localhost:5000/api/admin';
 let currentTab = 'monsters';
 let currentData = [];
 let monsterCategories = [];

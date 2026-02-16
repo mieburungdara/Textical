@@ -12,7 +12,7 @@ async function runMasterDeathAudit() {
     // Helper to setup a region
     const setupZone = async (regionId, type) => {
         await prisma.regionTemplate.update({ where: { id: regionId }, data: { zoneType: type } });
-        await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId, vitality: 100, isKnockedOut: false, recoveryUntil: null } });
+        await prisma.user.update({ where: { id: userId }, data: { currentRegion: regionId, energy: 100, isKnockedOut: false, recoveryUntil: null } });
         await prisma.regionMonster.deleteMany({ where: { regionId, monsterId } });
         await prisma.regionMonster.create({ data: { regionId, monsterId } });
     };

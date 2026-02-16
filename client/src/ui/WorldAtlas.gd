@@ -71,7 +71,7 @@ func _on_request_completed(endpoint, data):
         var travel_data = data
         if data is Dictionary and data.has("data"):
             if data.get("success", true) == false:
-                # Handle Server Error logic (e.g. Not enough vitality)
+                # Handle Server Error logic (e.g. Not enough energy)
                 push_error("[WorldAtlas] Travel Request Failed: " + str(data.get("message", "Unknown")))
                 ui_panel.start_btn.disabled = false
                 return

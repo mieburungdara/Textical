@@ -1,5 +1,9 @@
 /**
  * VitalityCalculator
+ * @deprecated Use EnergyCalculator from '../energy/EnergyCalculator.js' instead.
+ * This file is kept for backward compatibility but uses the old User.vitality field names.
+ * The new system uses User.energy, User.maxEnergy, and User.lastEnergyUpdate.
+ * 
  * Pure logic for determining current vitality based on elapsed time and modifiers.
  */
 class VitalityCalculator {

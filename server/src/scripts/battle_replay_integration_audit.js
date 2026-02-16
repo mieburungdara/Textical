@@ -21,7 +21,7 @@ async function runIntegrationAudit() {
         const preset = await prisma.formationPreset.findFirst({ where: { userId } });
         await prisma.formationSlot.create({ data: { presetId: preset.id, heroId: newHero.id, gridX: 25, gridY: 40 } });
     }
-    await prisma.user.update({ where: { id: userId }, data: { currentRegion: 1, vitality: 100 } });
+    await prisma.user.update({ where: { id: userId }, data: { currentRegion: 1, energy: 100 } });
     
     // Ensure monster is available
     await prisma.regionMonster.deleteMany({ where: { regionId: 1, monsterId } });

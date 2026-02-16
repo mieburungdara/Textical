@@ -117,12 +117,18 @@ router.get('/raw/:category/:id', async (req, res) => {
         const filePath = path.join(ASSET_ROOT, category, `${id}.json`);
         console.log(`[AssetsRoute.DEBUG] Checking disk: ${filePath}`);
         
-        if (fs.existsSync(filePath)) {
-            const content = fs.readFileSync(filePath, 'utf8');
+        try {
+            await fs.promises.access(filePath);
+            const content = await fs.promises.readFile(filePath, 'utf8');
             console.log(`[AssetsRoute.DEBUG] Serving from disk: ${filePath}`);
             res.setHeader('Content-Type', 'application/json');
             res.setHeader('Cache-Control', 'public, max-age=3600');
             return res.send(content);
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                console.error(`[AssetsRoute.DEBUG] Error reading file: ${err.message}`);
+            }
+            // Fall through to database fallback
         }
         
         console.log(`[AssetsRoute.DEBUG] File not on disk, querying database...`);

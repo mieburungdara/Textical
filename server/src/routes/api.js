@@ -40,8 +40,8 @@ router.get('/auth/sessions', (req, res) => sessionController.getActiveSessions(r
 // --- USER ---
 router.use('/chat', chatRoutes);
 router.get('/world/state', (req, res) => worldController.getWorldState(req, res));
-router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
-router.post('/user/settings', (req, res) => userController.updateSettings(req, res));
+    router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
+    router.put('/user/:id/settings', (req, res) => userController.updateSettings(req, res));
 
 // --- HEROES ---
 router.get('/user/:id/heroes', (req, res) => heroController.getHeroes(req, res));
@@ -109,10 +109,7 @@ router.post('/battle/start-async', (req, res) => battleController.startAsyncBatt
 router.get('/battle/status/:battleId', (req, res) => battleController.getBattleStatus(req, res));
 router.get('/battle/replay/:battleId', (req, res) => battleController.getReplay(req, res));
 
-// --- HERO PROFILE ---
-router.get('/hero/:id/profile', (req, res) => heroController.getHeroProfile(req, res));
-
-// --- STATS ---
+// --- STREAMS ---
 router.use('/stats', statRoutes);
 
 module.exports = router;

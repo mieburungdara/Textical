@@ -366,17 +366,17 @@ class StatCalculationEngine extends BaseService {
                 case 'parry': baseValue = heroData.parry_base || 0; break;
                 case 'parry_chance': baseValue = heroData.parry_chance || 0; options = { max: 0.5, type: 'percent' }; break;
                 case 'accuracy': baseValue = heroData.accuracy_base || 100; options = { max: 100, type: 'percent' }; break;
-                case 'armor_penetration': baseValue = heroData.ar_pen_base || 0; break;
+                case 'armor_penetration': baseValue = heroData.armor_penetration || 0; break;
                 case 'skill_power': baseValue = heroData.skill_power_base || 10; options = { max: 99999 }; break;
                 case 'tenacity': baseValue = heroData.tenacity_base || 0; options = { max: 1.0, type: 'percent' }; break;
-                case 'spell_vamp': baseValue = heroData.spell_vamp_base || 0; options = { max: 1.0, type: 'percent' }; break;
+                case 'spell_vamp': baseValue = heroData.spell_vamp || 0; options = { max: 1.0, type: 'percent' }; break;
                 case 'block_power': baseValue = heroData.block_power_base || 0.5; break;
                 case 'initiative': baseValue = heroData.initiative_base || 0; break;
                 case 'lifesteal_rate': baseValue = heroData.lifesteal_base || 0; options = { max: 1.0, type: 'percent' }; break;
                 case 'item_find_chance': baseValue = 0; options = { max: 5.0, type: 'percent' }; break;
                 case 'vitality_max': baseValue = heroData.vitality_base || 100; break;
-                case 'move_speed': baseValue = heroData.move_speed_base || 5; break;
-                case 'attack_speed': baseValue = heroData.attack_speed_base || 1.0; break;
+                case 'move_speed': baseValue = heroData.move_speed || 100; break;
+                case 'attack_speed': baseValue = heroData.attack_speed || 1.0; break;
                 // Elemental damage stats
                 case 'fire_damage': options = { isExempt: true }; break;
                 case 'water_damage': options = { isExempt: true }; break;

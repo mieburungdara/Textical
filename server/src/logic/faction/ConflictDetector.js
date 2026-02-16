@@ -16,7 +16,7 @@ class ConflictDetector {
         const potentialHotspots = [];
 
         // influenceMap is grouped by regionId: { regionId: [{factionId, points}, ...] }
-        for (const regionId in influenceMap) {
+        for (const regionId of Object.keys(influenceMap)) {
             const regionInfluence = influenceMap[regionId];
             if (regionInfluence.length < 2) continue;
 

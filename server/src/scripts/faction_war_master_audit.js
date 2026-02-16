@@ -57,7 +57,7 @@ async function runFactionWarAudit() {
     // Manually set region culture
     await prisma.regionTemplate.update({ where: { id: regionId }, data: { factionId: empireId } });
     const costs = await territoryService.calculateSiegeCosts(guildId, regionId);
-    console.log(`   Siege Vitality Cost: ${costs.vitality} (Expected: 40 - 20% off 50)`);
+    console.log(`   Siege Energy Cost: ${costs.energy} (Expected: 40 - 20% off 50)`);
 
     // 3. Test Faction War NPC Reactivity
     console.log("[3/4] Testing War Status (Empire vs Rebels)...");
@@ -70,7 +70,7 @@ async function runFactionWarAudit() {
 
     // VERDICT
     const taxPass = (initialGold - finalGold) === 150;
-    const siegePass = costs.vitality === 40;
+    const siegePass = costs.energy === 40;
     const warPass = relation === "WAR";
 
     if (taxPass && siegePass && warPass) {

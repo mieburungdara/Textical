@@ -23,7 +23,7 @@ async function runHaulingMasterAudit() {
     await prisma.inventoryItem.deleteMany({ where: { userId } });
     await prisma.taskQueue.deleteMany({ where: { userId } });
 
-    await prisma.user.update({ where: { id: userId }, data: { gold: 1000, currentRegion: originId, vitality: 100, isKnockedOut: false, recoveryUntil: null } });
+    await prisma.user.update({ where: { id: userId }, data: { gold: 1000, currentRegion: originId, energy: 100, isKnockedOut: false, recoveryUntil: null } });
     await inventoryService.addItem(userId, graniteId, 5);
 
     // Ensure connection

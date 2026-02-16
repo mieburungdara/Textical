@@ -271,9 +271,9 @@ func set_heroes(data):
         current_heroes = data
         _heroes_loaded_from_server = true
 
-func update_vitality(new_vitality):
+func update_energy(new_energy):
     if current_user:
-        current_user.vitality = new_vitality
+        current_user.energy = new_energy
 
 func set_quests(data):
     if data is Array:

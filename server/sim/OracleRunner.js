@@ -58,7 +58,7 @@ class OracleRunner {
 
             const ctx = {
                 archetype: bot.archetype,
-                vitality: user.vitality,
+                energy: user.energy,
                 silver: user.silver,
                 inventoryCount: user.inventory.length,
                 items: user.inventory,
@@ -135,7 +135,7 @@ class OracleRunner {
                         where: { id: user.id },
                         data: { 
                             currentRegion: targetId,
-                            vitality: { decrement: 5 } 
+                            energy: { decrement: 5 } 
                         }
                     });
                     console.log(`   ✈️ [Bot ${user.username}] Migrated to Region ${targetId}.`);
@@ -219,7 +219,7 @@ class OracleRunner {
                                 data: { 
                                     currentRegion: destination.id,
                                     silver: { increment: profit },
-                                    vitality: { decrement: 30 }
+                                    energy: { decrement: 30 }
                                 }
                             });
 
@@ -322,7 +322,7 @@ class OracleRunner {
                     break;
 
                 case "IDLE":
-                    await prisma.user.update({ where: { id: user.id }, data: { vitality: { increment: 20 } } });
+                    await prisma.user.update({ where: { id: user.id }, data: { energy: { increment: 20 } } });
                     break;
             }
         } catch (e) {

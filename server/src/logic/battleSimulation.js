@@ -33,7 +33,7 @@ class BattleSimulation {
         this.moonPhase = "NEW";
         
         // AAA: Battle Registry Tracking
-        this.startTime = Date.now();
+        this.startTick = 0; // Set when battle starts
         this.userId = null;  // Set when battle starts
         this.battleType = "SOLO";  // SOLO, HORDE, PVP
  

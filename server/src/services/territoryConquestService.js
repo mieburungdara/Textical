@@ -8,7 +8,7 @@ const BaseService = require('./BaseService');
 class TerritoryConquestService extends BaseService {
     constructor() {
         super();
-        this.BASE_SIEGE_VITALITY_COST = 50;
+        this.BASE_SIEGE_ENERGY_COST = 50;
         this.FACTION_SIEGE_BONUS_MULT = 0.80; // 20% Discount
     }
 
@@ -19,14 +19,14 @@ class TerritoryConquestService extends BaseService {
         const guild = await this.db.guild.findUnique({ where: { id: guildId } });
         const region = await this.db.regionTemplate.findUnique({ where: { id: regionId } });
 
-        let cost = this.BASE_SIEGE_VITALITY_COST;
+        let cost = this.BASE_SIEGE_ENERGY_COST;
 
         // AAA: Faction Siege Support - If guild faction matches region faction
         if (guild.factionId && region.factionId && guild.factionId === region.factionId) {
             cost = Math.floor(cost * this.FACTION_SIEGE_BONUS_MULT);
         }
 
-        return { vitality: cost };
+        return { energy: cost };
     }
 
     /**

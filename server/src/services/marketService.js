@@ -5,6 +5,7 @@ const orderMatcher = require('./market/OrderMatcher');
 const listingService = require('./market/MarketListingService');
 const transactionManager = require('./economy/TransactionManager');
 const resolver = require('../logic/economy/CurrencyResolver');
+const { AppError, ErrorCodes } = require('../utils/AppError');
 
 /**
  * MarketService
@@ -46,22 +47,25 @@ class MarketService extends BaseService {
             });
 
             if (!listing) {
-                throw new Error("Listing not found.");
+                throw new AppError(ErrorCodes.MARKET_LISTING_NOT_FOUND, 'Listing not found.');
             }
 
             if (listing.status !== 'ACTIVE') {
-                throw new Error("Listing is no longer available.");
+                throw new AppError(ErrorCodes.MARKET_LISTING_INACTIVE, 'Listing is no longer available.');
             }
 
             if (listing.sellerId === userId) {
-                throw new Error("You cannot buy your own listing.");
+                throw new AppError(ErrorCodes.MARKET_SELF_PURCHASE, 'You cannot buy your own listing.');
             }
 
             // 2. Verify buyer has enough funds (Silver-based)
             const buyer = await tx.user.findUnique({ where: { id: userId } });
             const buyerTotalSilver = resolver.getTotalSilver(buyer);
             if (buyerTotalSilver < BigInt(listing.price)) {
-                throw new Error(`Insufficient funds. Need ${listing.price} silver, have ${buyerTotalSilver}`);
+                throw new AppError(ErrorCodes.MARKET_INSUFFICIENT_FUNDS, 
+                    `Insufficient funds. Need ${listing.price} silver, have ${buyerTotalSilver}`,
+                    { context: { required: listing.price, available: buyerTotalSilver.toString() } }
+                );
             }
 
             // 3. Transfer silver to seller
@@ -103,15 +107,15 @@ class MarketService extends BaseService {
             });
 
             if (!item) {
-                throw new Error("Item not found in inventory.");
+                throw new AppError(ErrorCodes.MARKET_ITEM_NOT_FOUND, 'Item not found in inventory.');
             }
 
             if (item.userId !== userId) {
-                throw new Error("Item does not belong to you.");
+                throw new AppError(ErrorCodes.MARKET_ITEM_NOT_OWNED, 'Item does not belong to you.');
             }
 
             if (item.isEquipped) {
-                throw new Error("Cannot sell equipped items.");
+                throw new AppError(ErrorCodes.MARKET_EQUIPPED_ITEM, 'Cannot sell equipped items.');
             }
 
             // 2. Fence Logic (Stolen Goods)
@@ -121,7 +125,8 @@ class MarketService extends BaseService {
             });
 
             if (item.isStolen && !user.region.isBanditHideout) {
-                throw new Error("Penyelundup! Pedagang jujur tidak akan menerima barang curian ini. Cari penadah di sarang penjahat.");
+                throw new AppError(ErrorCodes.MARKET_STOLEN_GOODS, 
+                    'Penyelundup! Pedagang jujur tidak akan menerima barang curian ini. Cari penadah di sarang penjahat.');
             }
 
             // 3. Calculate NPC sell price (90% penalty) in Silver
@@ -199,15 +204,15 @@ class MarketService extends BaseService {
             });
 
             if (!order) {
-                throw new Error("Order not found.");
+                throw new AppError(ErrorCodes.MARKET_ORDER_NOT_FOUND, 'Order not found.');
             }
 
             if (order.creatorId !== userId) {
-                throw new Error("You can only cancel your own orders.");
+                throw new AppError(ErrorCodes.MARKET_NOT_ORDER_OWNER, 'You can only cancel your own orders.');
             }
 
             if (order.status !== 'OPEN') {
-                throw new Error("Only open orders can be cancelled.");
+                throw new AppError(ErrorCodes.MARKET_ORDER_NOT_OPEN, 'Only open orders can be cancelled.');
             }
 
             // 2. Refund escrow to user

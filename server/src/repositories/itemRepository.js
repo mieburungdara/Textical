@@ -9,7 +9,7 @@ class ItemRepository {
     _initialize() {
         const templates = stonesData.TEMPLATES;
         const items = stonesData.ITEMS;
-        for (let id in items) {
+        for (const id of Object.keys(items)) {
             const rawItem = items[id];
             const template = templates[rawItem.template] || {};
             this.cache.set(id, { id, ...template, ...rawItem });

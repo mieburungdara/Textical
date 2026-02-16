@@ -1,8 +1,9 @@
 const prisma = require('../db');
 
-const vitalityService = require('./vitalityService');
+const energyService = require('./energyService');
 const transactionManager = require('./economy/TransactionManager');
 const resolver = require('../logic/economy/CurrencyResolver');
+const { AppError, ErrorCodes } = require('../utils/AppError');
 
 /**
  * TavernService
@@ -87,8 +88,8 @@ class TavernService {
             }
         });
 
-        if (user.taskQueue.length > 0) throw new Error("You are too busy to recruit right now.");
-        if (!user.isInTavern) throw new Error("You must be inside the Tavern to recruit.");
+        if (user.taskQueue.length > 0) throw new AppError(ErrorCodes.TAVERN_BUSY, 'You are too busy to recruit right now.');
+        if (!user.isInTavern) throw new AppError(ErrorCodes.TAVERN_NOT_IN_TAVERN, 'You must be inside the Tavern to recruit.');
 
         // 2. Fetch Mercenary
         const merc = await prisma.tavernMercenary.findUnique({
@@ -96,12 +97,15 @@ class TavernService {
             include: { hero: true }
         });
 
-        if (!merc) throw new Error("Mercenary is no longer available.");
+        if (!merc) throw new AppError(ErrorCodes.TAVERN_MERCENARY_GONE, 'Mercenary is no longer available.');
         
         // 3. Verify user has enough funds (Silver-based)
         const userTotalSilver = resolver.getTotalSilver(user);
         if (userTotalSilver < BigInt(merc.recruitmentCost)) {
-            throw new Error(`Insufficient funds. Cost: ${merc.recruitmentCost} silver, have: ${userTotalSilver}`);
+            throw new AppError(ErrorCodes.TAVERN_INSUFFICIENT_FUNDS, 
+                `Insufficient funds. Cost: ${merc.recruitmentCost} silver, have: ${userTotalSilver}`,
+                { context: { required: merc.recruitmentCost.toString(), available: userTotalSilver.toString() } }
+            );
         }
 
         // 4. Atomic Recruitment using TransactionManager
@@ -143,23 +147,23 @@ class TavernService {
             include: { region: true }
         });
 
-        if (!user.isInTavern) throw new Error("You must be inside a Tavern or Inn to arrange Fast Travel.");
+        if (!user.isInTavern) throw new AppError(ErrorCodes.TAVERN_NOT_IN_TAVERN, 'You must be inside a Tavern or Inn to arrange Fast Travel.');
 
         // 1. Verify Origin is Royal/Capital
         // Assuming 'ROYAL' zoneType or 'ROYAL_CITY' visualType. 
         // Summary said zoneType ROYAL is added.
         if (user.region.zoneType !== 'ROYAL') {
-            throw new Error("Fast Travel is only available from Royal Cities.");
+            throw new AppError(ErrorCodes.TAVERN_FAST_TRAVEL_WRONG_ZONE, 'Fast Travel is only available from Royal Cities.');
         }
 
         // 2. Verify Target is Royal
         const target = await prisma.regionTemplate.findUnique({ where: { id: targetRegionId } });
         if (!target || target.zoneType !== 'ROYAL') {
-            throw new Error("You can only Fast Travel to other Royal Cities.");
+            throw new AppError(ErrorCodes.TAVERN_FAST_TRAVEL_WRONG_ZONE, 'You can only Fast Travel to other Royal Cities.');
         }
 
         if (user.currentRegion === targetRegionId) {
-            throw new Error("You are already here.");
+            throw new AppError(ErrorCodes.TRAVEL_ALREADY_THERE, 'You are already here.');
         }
 
         // 3. Cooldown Check (Using settings JSON to avoid schema migration)
@@ -172,7 +176,10 @@ class TavernService {
             const diffMinutes = (now - lastTravel) / 1000 / 60;
             if (diffMinutes < COOLDOWN_MINUTES) {
                 const remaining = Math.ceil(COOLDOWN_MINUTES - diffMinutes);
-                throw new Error(`Fast Travel is on cooldown. Next caravan departs in ${remaining} minutes.`);
+                throw new AppError(ErrorCodes.TAVERN_FAST_TRAVEL_COOLDOWN, 
+                    `Fast Travel is on cooldown. Next caravan departs in ${remaining} minutes.`,
+                    { context: { remainingMinutes: remaining } }
+                );
             }
         }
 
@@ -181,7 +188,10 @@ class TavernService {
         const userSilver = resolver.getTotalSilver(user);
         
         if (userSilver < BigInt(COST)) {
-            throw new Error(`Insufficient funds. Ticket costs ${COST} silver.`);
+            throw new AppError(ErrorCodes.TAVERN_INSUFFICIENT_FUNDS, 
+                `Insufficient funds. Ticket costs ${COST} silver.`,
+                { context: { required: COST, available: userSilver.toString() } }
+            );
         }
 
         // 5. Execute
@@ -199,11 +209,7 @@ class TavernService {
             }
         });
 
-        return { 
-            success: true, 
-            message: `Arrived at ${target.name}. The journey was swift.`,
-            newRegionId: targetRegionId
-        };
+        return { success: true, newRegion: targetRegionId };
     }
 }
 

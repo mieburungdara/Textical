@@ -84,7 +84,6 @@ class WorldConsumableService {
             
             const worldTick = await this._getCurrentWorldTick();
             const expiresTick = worldTick + buffData.durationTicks;
-            const estimatedExpiresAt = new Date(Date.now() + (buffData.durationTicks / CONSUMABLE_CONSTANTS.TICKS_PER_SECOND * 1000));
 
             if (!this._isValidStatKey(buffData.statKey)) {
                 throw new Error(ERROR_CODES.INVALID_STAT_KEY);
@@ -98,7 +97,6 @@ class WorldConsumableService {
                     statKey: buffData.statKey,
                     statValue: buffData.statValue,
                     isPercent: buffData.isPercent || false,
-                    expiresAt: estimatedExpiresAt,
                     expiresTick: expiresTick
                 }
             });

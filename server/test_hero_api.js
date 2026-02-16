@@ -19,7 +19,7 @@ async function test() {
     
     console.log('\n=== Testing API Endpoint ===');
     try {
-        const response = await axios.get('http://localhost:3000/api/admin/heroes', {
+        const response = await axios.get('http://localhost:5000/api/admin/heroes', {
             headers: {
                 'x-admin-token': 'textical-admin-2024'
             }

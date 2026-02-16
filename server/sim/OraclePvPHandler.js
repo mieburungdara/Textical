@@ -1,7 +1,7 @@
 const prisma = require('../src/db');
 const BattleSimulation = require('../src/logic/battleSimulation');
 const formationService = require('../src/services/formationService');
-const vitalityService = require('../src/services/vitalityService');
+const energyService = require('../src/services/energyService');
 const rewardProcessor = require('../src/services/battle/RewardProcessor');
 const replayService = require('../src/services/battle/ReplayService');
 
@@ -11,7 +11,7 @@ const replayService = require('../src/services/battle/ReplayService');
  */
 class OraclePvPHandler {
     constructor() {
-        this.BATTLE_VITALITY_COST = 10;
+        this.BATTLE_ENERGY_COST = 10;
         this.GRID_WIDTH = 50;
         this.GRID_HEIGHT = 50;
     }
@@ -24,8 +24,8 @@ class OraclePvPHandler {
 
         if (!attacker || !defender) return;
 
-        // 1. Consume Vitality
-        await vitalityService.consumeVitality(attackerId, this.BATTLE_VITALITY_COST);
+        // 1. Consume Energy
+        await energyService.consumeEnergy(attackerId, this.BATTLE_ENERGY_COST);
 
         // 2. Setup Simulation
         const sim = new BattleSimulation(this.GRID_WIDTH, this.GRID_HEIGHT, "ARENA");

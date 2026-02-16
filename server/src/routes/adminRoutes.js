@@ -36,7 +36,13 @@ router.put('/monsters/:id', (req, res) => monsterController.updateMonsterTemplat
 router.post('/monsters', (req, res) => monsterController.createMonsterTemplate(req, res));
 
 // --- Regions Management ---
+router.get('/regions/map', (req, res) => regionController.getMapRegions(req, res));
+router.get('/regions/weather-snapshot', (req, res) => regionController.getWeatherSnapshot(req, res));
+router.get('/regions/npc-snapshot', (req, res) => regionController.getNPCSnapshot(req, res));
+router.get('/regions/elite-boss-snapshot', (req, res) => regionController.getEliteBossSnapshot(req, res));
+router.get('/regions/player-density', (req, res) => regionController.getPlayerDensity(req, res));
 router.get('/regions', (req, res) => regionController.getRegions(req, res));
+router.get('/regions/:id', (req, res) => regionController.getRegionById(req, res));
 
 // --- Items Management ---
 router.get('/items', (req, res) => itemController.getItems(req, res));

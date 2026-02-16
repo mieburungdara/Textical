@@ -1,4 +1,4 @@
-const socket = new WebSocket('ws://' + window.location.hostname + ':3000');
+const socket = new WebSocket('ws://' + window.location.hostname + ':5000');
 
 socket.onopen = () => {
     console.log("Admin connection established.");

@@ -2,6 +2,8 @@ const BaseService = require('../BaseService');
 const marketValidator = require('./MarketValidator');
 const transactionManager = require('../economy/TransactionManager');
 const marketFee = require('../economy/MarketFeeComponent');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * MarketTransactionService
@@ -22,8 +24,12 @@ class MarketTransactionService extends BaseService {
             include: { itemInstance: true, seller: true }
         });
 
-        if (!listing) throw new Error("Listing not found or expired.");
-        if (listing.sellerId === buyerId) throw new Error("You cannot buy your own item.");
+        if (!listing) {
+            throw new AppError(ErrorCodes.MARKET_LISTING_NOT_FOUND, 'Listing not found or expired.');
+        }
+        if (listing.sellerId === buyerId) {
+            throw new AppError(ErrorCodes.MARKET_SELF_PURCHASE, 'You cannot buy your own item.');
+        }
 
         const totalPrice = listing.pricePerUnit * listing.itemInstance.quantity;
         const sellerNetProfit = marketFee.calculateSellerNet(totalPrice);
@@ -69,8 +75,12 @@ class MarketTransactionService extends BaseService {
             include: { template: true, marketListing: true, equippedIn: true }
         });
 
-        if (!item || item.userId !== userId) throw new Error("Item not found.");
-        if (item.marketListing || item.equippedIn) throw new Error("Item is currently locked (Market/Equipped).");
+        if (!item || item.userId !== userId) {
+            throw new AppError(ErrorCodes.MARKET_ITEM_NOT_FOUND, 'Item not found.');
+        }
+        if (item.marketListing || item.equippedIn) {
+            throw new AppError(ErrorCodes.MARKET_ITEM_LOCKED, 'Item is currently locked (Market/Equipped).');
+        }
 
         const totalPayout = Math.floor(item.template.baseValue * this.NPC_BUY_RATE) * item.quantity;
 

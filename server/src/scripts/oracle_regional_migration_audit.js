@@ -40,7 +40,7 @@ async function runRegionalMigrationAudit() {
         const username = `Audit_Crafter_${i}`;
         const user = await prisma.user.upsert({
             where: { username },
-            update: { currentRegion: 1, vitality: 100 },
+            update: { currentRegion: 1, energy: 100 },
             create: { username, password: "pw", currentRegion: 1, silver: 5000 }
         });
         await prisma.hero.upsert({

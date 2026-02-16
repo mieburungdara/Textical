@@ -27,7 +27,7 @@ async function runSkillCombatAudit() {
     });
 
     // 3. Clear other tasks and verify energy
-    await prisma.user.update({ where: { id: userId }, data: { vitality: 100 } });
+    await prisma.user.update({ where: { id: userId }, data: { energy: 100 } });
     await prisma.taskQueue.deleteMany({ where: { userId, status: "RUNNING" } });
 
     // 4. Start Battle

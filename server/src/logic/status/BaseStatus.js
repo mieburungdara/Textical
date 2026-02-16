@@ -42,7 +42,7 @@ class BaseStatus {
      * Called when status is applied to a unit
      */
     onApply(unit, sim) {
-        this.appliedAt = Date.now();
+        this.appliedAtTick = sim.currentTick;
         
         // Apply stat modifiers
         if (this.statModifiers.length > 0) {

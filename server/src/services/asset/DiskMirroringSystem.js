@@ -14,15 +14,19 @@ class DiskMirroringSystem {
 
     _ensureDirs() {
         const cats = ["regions", "items", "monsters", "quests"];
-        cats.forEach(c => {
+        cats.forEach(async c => {
             const dir = path.join(ASSET_ROOT, c);
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            try {
+                await fs.promises.access(dir);
+            } catch {
+                await fs.promises.mkdir(dir, { recursive: true });
+            }
         });
     }
 
-    writeAsset(category, id, data) {
+    async writeAsset(category, id, data) {
         const filePath = path.join(ASSET_ROOT, category, `${id}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2));
         console.log(`[ASSET] Mirrored: ${category}/${id}.json`);
     }
 }

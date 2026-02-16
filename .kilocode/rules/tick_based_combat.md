@@ -2,33 +2,30 @@
 
 ## Core Principle
 Sistem combat menggunakan Tick Engine, BUKAN waktu real-time.
+Berdasarkan arsitektur Textical:
 
-DILARANG menggunakan:
-- DateTime
+Tick-based system HANYA berlaku untuk:
+- Combat logic
+- Battle simulation
+- Turn-based mechanics
+
+Boleh menggunakan:
 - Date.now()
+- DateTime
 - performance.now()
 - System.currentTimeMillis()
 - setTimeout berbasis real-time
 - Thread.sleep berbasis milidetik
+- etc.
 
-Semua mekanisme harus berbasis:
-- Tick Counter
-- Game Loop Tick
-
----
-
-## Time Representation Standard
-
-Gunakan:
-- currentTick (integer)
-- tickInterval (fixed step)
-- nextActionTick
-- cooldownTick
-- durationTick
-
-Contoh:
-- Skill cooldown 5 detik → dikonversi menjadi 300 tick (jika 60 tick/sec)
-- Buff duration → expireTick = currentTick + durationTick
+hanya untuk:
+- Energy regeneration
+- NPC wanderer timing
+- World events
+- Mail expiration
+- Tavern timers
+- Guild invites
+- etc (sistem di luar combat)
 
 ---
 
@@ -43,6 +40,8 @@ Semua sistem berikut WAJIB berbasis tick:
 - AI decision timing
 - Animation state trigger
 
+Penggunaan `Date.now()` untuk sistem di luar combat (energy regeneration, NPC wanderer, world events, mail, tavern, guild) adalah **ACCEPTABLE** karena tick-based hanya berlaku untuk combat logic.
+
 ---
 
 ## Deterministic Simulation Rule
@@ -53,15 +52,12 @@ Combat harus:
 - Tidak tergantung clock sistem
 - Tidak berubah karena lag atau FPS drop
 
-Tick engine menjadi satu-satunya sumber kebenaran waktu.
-
 ---
 
 ## Refactor Trigger
 
 Jika ditemukan:
-- Penggunaan DateTime
-- Perhitungan berbasis detik langsung
+- Penggunaan DateTime pada mode combat
 - Timer real-time di combat module
 
 Maka WAJIB diganti menjadi tick-based logic.
@@ -72,5 +68,4 @@ Maka WAJIB diganti menjadi tick-based logic.
 
 Sebelum commit:
 - Cari keyword: Date, Time, now, setTimeout
-- Validasi semua duration dalam bentuk tick
 - Pastikan combat module tidak mengakses system clock

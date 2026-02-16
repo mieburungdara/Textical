@@ -3,19 +3,27 @@ const guildRepository = require('../../repositories/guildRepository');
 const transactionManager = require('../economy/TransactionManager');
 const resolver = require('../../logic/economy/CurrencyResolver');
 const GuildUtils = require('./GuildUtils');
+const AppError = require('../../utils/AppError');
+const ErrorCodes = require('../../constants/ErrorCodes');
 
 /**
  * Service for handling guild treasury deposits and withdrawals.
  */
 class GuildTreasuryService {
     async depositTreasury(user, amount) {
-        if (!user.guildId) throw new Error("You are not in a guild.");
-        if (amount <= 0) throw new Error("Amount must be positive.");
+        if (!user.guildId) {
+            throw new AppError(ErrorCodes.GUILD_NOT_IN_GUILD, 'You are not in a guild.');
+        }
+        if (amount <= 0) {
+            throw new AppError(ErrorCodes.GUILD_AMOUNT_POSITIVE, 'Amount must be positive.');
+        }
         
         const amountSilver = BigInt(amount);
         const userTotalSilver = resolver.getTotalSilver(user);
         if (userTotalSilver < amountSilver) {
-            throw new Error(`Insufficient funds. Need ${amountSilver} silver, have: ${userTotalSilver}`);
+            throw new AppError(ErrorCodes.GUILD_INSUFFICIENT_FUNDS, `Insufficient funds. Need ${amountSilver} silver, have: ${userTotalSilver}`, {
+                context: { required: amountSilver.toString(), available: userTotalSilver.toString() }
+            });
         }
 
         await transactionManager.removeCurrency(prisma, user.id, amountSilver, "GUILD_TREASURY_DEPOSIT", user.guildId, "GUILD");
@@ -31,12 +39,18 @@ class GuildTreasuryService {
 
     async withdrawTreasury(requester, amount) {
         if (!["MASTER", "OFFICER"].includes(requester.guildRole)) {
-            throw new Error("Only officers can withdraw from treasury.");
+            throw new AppError(ErrorCodes.GUILD_OFFICER_ONLY, 'Only officers can withdraw from treasury.');
         }
-        if (amount <= 0) throw new Error("Amount must be positive.");
+        if (amount <= 0) {
+            throw new AppError(ErrorCodes.GUILD_AMOUNT_POSITIVE, 'Amount must be positive.');
+        }
 
         const guild = await guildRepository.findById(requester.guildId);
-        if (guild.treasury < amount) throw new Error("Insufficient funds in treasury.");
+        if (guild.treasury < amount) {
+            throw new AppError(ErrorCodes.GUILD_TREASURY_INSUFFICIENT, 'Insufficient funds in treasury.', {
+                context: { requested: amount, available: guild.treasury }
+            });
+        }
 
         await guildRepository.update(requester.guildId, {
             treasury: { decrement: amount }

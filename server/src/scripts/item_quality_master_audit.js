@@ -40,7 +40,7 @@ async function runItemQualityAudit() {
 
     // Provide materials
     await prisma.inventoryItem.create({ data: { userId, templateId: ironIngotId, quantity: 10 } });
-    await prisma.user.update({ where: { id: userId }, data: { gold: 10000, currentRegion: regionId, vitality: 100 } });
+    await prisma.user.update({ where: { id: userId }, data: { gold: 10000, currentRegion: regionId, energy: 100 } });
 
     // Ensure High Surplus (600 units)
     await prisma.regionalExtractionStats.upsert({

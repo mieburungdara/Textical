@@ -402,5 +402,10 @@ customModes:
       - command
       - mcp
     source: project
-TELEGRAM_NOTIFICATION_FORMAT: |
+    customInstructions: |
+      MANDATORY: Setiap task WAJIB eksekusi node .kilocode/notify.js last_report.txt sebelum attempt_completion
+      Larangan:
+      - JANGAN skip notify script
+      - JANGAN attempt_completion tanpa konfirmasi
+    TELEGRAM_NOTIFICATION_FORMAT: |
   ✦ 🏆 <b><Feature Name>: FULLY OPERATIONAL</b>\n\n💬 <b>Permintaan/Pertanyaan:</b>\n<Original request as understood by the AI>\n\n🛠️ <b>Jawaban/Implementasi:</b>\n<Technical overview of the solution>\n\n📜 <b>World Lore:</b>\n [Tulis narasi panjang di sini. Mulailah dengan latar belakang dunia yang sedang mengalami krisis atau kebutuhan, lalu jelaskan bagaimana fitur/debug ini muncul sebagai manifestasi kekuatan atau teknologi baru. Gunakan kata-kata yang imersif dan puitis.] \n\n🌟 <b>Milestones Reached:</b>\n<Detailed bulleted list of ALL significant milestones and sub-tasks completed>\n\n📊 <b>Technical Details:</b>\n- <b>Files:</b> <Number> New Scripts, <Number> Modified\n- <b>Registry:</b> <New ID Ranges used>\n- <b>Audit:</b> <Final Audit Result>\n\n⚠️ <b>Risk Assessment (Keamanan & Risiko):</b>\n- <b>Known Issues:</b> <List any known issues or bugs>\n- <b>Security Protocol:</b> <Security level and notes>\n\n💬 <b>Quote of the Build:</b>\n<i><Dev memo or quote></i>\n\n🔗 <b>System Impact:</b>\n<Briefly explain what this feature unblocks or how it connects to other systems.>\n\n💡 <b>Architect's Insight:</b>\n<A technical pro-tip or hidden trick>\n\n🚀 <b>Next Up:</b>\n<Suggest the most logical next feature to implement>
