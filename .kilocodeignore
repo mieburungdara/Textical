@@ -1,0 +1,27 @@
+# Test files moved to tests/ folder
+# AI/Agent should NOT search these folders unless specifically for testing
+
+# Ignore test directories for general AI processing
+tests/
+server/tests/
+
+# Original .gitignore content
+client/.godot/**
+client\.godot\**
+server\node_modules\**
+server/node_modules/**
+.gemini/
+gha-creds-*.json
+client/src/ui/CombatScreen.gd
+replays/*
+node_modules/**
+node_modules/*
+godot-mcp/*
+godot-mcp
+*.log
+server/prisma/dev.db
+server/prisma/dev-db-journal
+godot-mcp-cli
+
+# Report files (temporary)
+*.txt

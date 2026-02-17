@@ -83,6 +83,9 @@ func _ready():
     socket.elemental_affinity_updated.connect(func(u, a): elemental_affinity_updated.emit(u, a))
     socket.set_bonus_updated.connect(func(u, b): set_bonus_updated.emit(u, b))
     
+    # Socket Badge Routing
+    socket.badge_updated.connect(_on_badge_updated)
+    
     auth.login_success.connect(_on_login_success)
     auth.login_failed.connect(func(e): emit_signal("login_failed", e))
 
@@ -189,6 +192,19 @@ func socket_subscribe_unit_stats(unit_id: int):
 
 func socket_unsubscribe_unit_stats(unit_id: int):
     socket.unsubscribe_from_unit_stats(unit_id)
+
+# --- BADGE METHODS ---
+func _on_badge_updated(badge_name: String, count: int):
+    # Route to SideHUD if available
+    var side_hud = get_tree().get_first_node_in_group("SideHUD")
+    if side_hud and side_hud.has_method("update_badge_count"):
+        side_hud.update_badge_count(badge_name, count)
+    else:
+        # Try to find SideHUD by path
+        var hud_node = get_node_or_null("/root/SideHUD")
+        if hud_node and hud_node.has_method("update_badge_count"):
+            hud_node.update_badge_count(badge_name, count)
+    print("[CONNECTOR] Badge updated: %s = %d" % [badge_name, count])
 
 # --- UTILITY (For Sync System) ---
 func _send_get(path): world._request(path, HTTPClient.METHOD_GET)

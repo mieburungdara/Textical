@@ -255,6 +255,55 @@ class SocketService {
     }
 
     /**
+     * Update badge count for a specific user
+     * @param {number} userId - Target user ID
+     * @param {string} badgeName - Badge identifier (Quests, Bag, Guild, Character, Chat, Mail)
+     * @param {number} count - Badge count (0 to hide)
+     */
+    updateBadge(userId, badgeName, count) {
+        return this.emitToUser(userId, "badge:update", {
+            badge: badgeName,
+            count: count
+        });
+    }
+
+    /**
+     * Show notification badge for chat
+     * @param {number} userId - Target user ID
+     * @param {number} unreadCount - Number of unread messages
+     */
+    notifyNewChat(userId, unreadCount) {
+        return this.updateBadge(userId, "Chat", unreadCount);
+    }
+
+    /**
+     * Show notification badge for mail
+     * @param {number} userId - Target user ID
+     * @param {number} unreadCount - Number of unread mails
+     */
+    notifyNewMail(userId, unreadCount) {
+        return this.updateBadge(userId, "Mail", unreadCount);
+    }
+
+    /**
+     * Show notification badge for guild
+     * @param {number} userId - Target user ID
+     * @param {number} notificationCount - Number of notifications
+     */
+    notifyGuildActivity(userId, notificationCount) {
+        return this.updateBadge(userId, "Guild", notificationCount);
+    }
+
+    /**
+     * Show notification badge for friend request
+     * @param {number} userId - Target user ID
+     * @param {number} requestCount - Number of pending requests
+     */
+    notifyFriendRequest(userId, requestCount) {
+        return this.updateBadge(userId, "FriendRequest", requestCount);
+    }
+
+    /**
      * Broadcast to everyone (World events).
      */
     broadcast(event, data) {

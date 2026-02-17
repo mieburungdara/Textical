@@ -52,7 +52,10 @@ extends Control
     "Quests": %QuestBadge,
     "Bag": %BagBadge,
     "Guild": %GuildBadge,
-    "Character": %CharacterBadge
+    "Character": %CharacterBadge,
+    "Chat": %ChatBadge if has_node("%ChatBadge") else null,
+    "Mail": %MailBadge if has_node("%MailBadge") else null,
+    "FriendRequest": %FriendBadge if has_node("%FriendBadge") else null
 }
 
 var _ping_timer: Timer

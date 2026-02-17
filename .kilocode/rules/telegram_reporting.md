@@ -22,7 +22,7 @@ Setiap laporan hasil pekerjaan WAJIB dikirim ke Telegram menggunakan:
 .kilocode/notify.js
 
 Eksekusi harus melalui Git Bash dengan:
-node .kilocode/notify.js last_report.txt
+node .kilocode/notify.js last_report.md
 
 **Larangan:**
 - Dilarang hanya print ke console tanpa menjalankan script notify.

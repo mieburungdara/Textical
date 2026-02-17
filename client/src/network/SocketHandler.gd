@@ -41,6 +41,9 @@ signal settings_updated(settings)
 signal leadership_transferred(new_master_id)
 signal guild_error(message)
 
+# === BADGE SIGNALS
+signal badge_updated(badge_name, count)
+
 # === STAT SIGNALS ===
 signal stat_updated(unit_id, stats_data)
 signal stat_changed(unit_id, stat_name, old_value, new_value)
@@ -171,6 +174,8 @@ func _on_data(raw_data: String):
                 "stat:cap_reached": _on_stat_cap_reached(data)
                 "stat:elemental_update": _on_elemental_update(data)
                 "stat:set_bonus_update": _on_set_bonus_update(data)
+                # === BADGE EVENTS ===
+                "badge:update": _on_badge_update(data)
     
     elif raw_data.begins_with("2"): # PING
         socket.send_text("3") # PONG
@@ -462,6 +467,14 @@ func _on_set_bonus_update(data: Dictionary):
     if unit_id != -1:
         set_bonus_updated.emit(unit_id, bonuses)
     print("[SOCKET] Set bonuses updated for unit %d" % unit_id)
+
+# === BADGE EVENT HANDLERS ===
+
+func _on_badge_update(data: Dictionary):
+    var badge_name = data.get("badge", "")
+    var count = data.get("count", 0)
+    print("[SOCKET] Badge update: %s = %d" % [badge_name, count])
+    badge_updated.emit(badge_name, count)
 
 # === STAT SOCKET METHODS ===
 

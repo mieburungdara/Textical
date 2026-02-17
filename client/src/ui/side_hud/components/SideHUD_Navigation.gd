@@ -20,7 +20,10 @@ extends Control
 	"Bag": %BagBadge,
 	"Guild": %GuildBadge,
 	"Character": %CharacterBadge,
-	"Codex": %CodexBadge
+	"Codex": %CodexBadge,
+	"Chat": %ChatBadge if has_node("%ChatBadge") else null,
+	"Mail": %MailBadge if has_node("%MailBadge") else null,
+	"FriendRequest": %FriendBadge if has_node("%FriendBadge") else null
 }
 
 func _ready():

@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -35,7 +34,7 @@ model User {
   recoveryUntil          DateTime?
   lastVisitedCityId      Int?
   settings               String                    @default("{}")
-  moral                  Int                       @default(100)
+  moral                  Int                       @default(0)
   bindPointId            Int?
   restingXpPool          Int                       @default(0)
   infamyScore            Int                       @default(0)

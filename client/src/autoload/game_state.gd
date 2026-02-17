@@ -25,12 +25,30 @@ var inventory_status = {"used": 0, "max": 20}
 var inventory_is_dirty = true
 var active_task = null
 var active_quests = []
-var current_region_type = "TOWN" 
 var current_region_data = null:
     set(val):
         print("[STATE] Region Data Setting: ", "null" if not val else val.get("name", "Unknown"))
         current_region_data = val
         region_changed.emit(val)
+
+## Getter for region type - derives from current_region_data or currentUser.currentRegion
+func get_region_type() -> String:
+    # First try current_region_data
+    if current_region_data:
+        return current_region_data.get("visualType", current_region_data.get("type", ""))
+    
+    # Fallback: try current_user.currentRegion with DataManager lookup
+    if current_user and current_user.has("currentRegion"):
+        var rid = int(current_user.get("currentRegion", 1))
+        if has_node("/root/DataManager"):
+            var region = get_node("/root/DataManager").get_region(rid)
+            if region and not region.is_empty():
+                return region.get("visualType", region.get("type", ""))
+    
+    # CRITICAL: No fallback to "TOWN" - this would cause exploits/bugs
+    # Return empty string to indicate error state
+    printerr("[GameState.get_region_type] ERROR: Region data unavailable! User may be in invalid state.")
+    return ""
 
 # SYNCED DATA
 var online_friends = []
@@ -286,3 +304,51 @@ func is_in_town():
 func get_title_rarity(_title): return "common"
 func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}
 func is_in_combat(): return false
+    if current_user:
+        current_user.energy = new_energy
+
+func set_quests(data):
+    if data is Array:
+        active_quests = data
+        quest_updated.emit()
+
+func is_in_town():
+    return current_user and current_user.get("currentRegion", 0) == 1
+
+func get_title_rarity(_title): return "common"
+func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}
+func is_in_combat(): return false
+
+        _heroes_loaded_from_server = true
+
+func update_energy(new_energy):
+    if current_user:
+        current_user.energy = new_energy
+
+func set_quests(data):
+    if data is Array:
+        active_quests = data
+        quest_updated.emit()
+
+func is_in_town():
+    return current_user and current_user.get("currentRegion", 0) == 1
+
+func get_title_rarity(_title): return "common"
+func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}
+func is_in_combat(): return false
+    if current_user:
+        current_user.energy = new_energy
+
+func set_quests(data):
+    if data is Array:
+        active_quests = data
+        quest_updated.emit()
+
+func is_in_town():
+    return current_user and current_user.get("currentRegion", 0) == 1
+
+func get_title_rarity(_title): return "common"
+func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}
+func is_in_combat(): return false
+
+
