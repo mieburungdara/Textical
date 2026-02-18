@@ -212,6 +212,49 @@ class StatQueryService extends BaseService {
             Object.entries(bonuses).forEach(([key, value]) => {
                 totalBonuses[key] = (totalBonuses[key] || 0) + value.final;
             });
+            
+            // Add gem socket bonuses
+            if (instance.socket && instance.socket.gem) {
+                const gem = instance.socket.gem;
+                const gemBonus = {};
+                
+                if (gem.statValue > 0) {
+                    gemBonus[gem.statKey] = {
+                        base: gem.statValue,
+                        qualityModifier: 1.0,
+                        durabilityImpact: 1.0,
+                        final: gem.statValue,
+                        source: `Gem:${gem.name}`
+                    };
+                }
+                
+                if (gem.percentValue > 0) {
+                    const percentKey = gem.statKey + '_percent';
+                    gemBonus[percentKey] = {
+                        base: gem.percentValue,
+                        qualityModifier: 1.0,
+                        durabilityImpact: 1.0,
+                        final: gem.percentValue,
+                        source: `Gem:${gem.name}`
+                    };
+                }
+                
+                equipmentStats[equipmentStats.length - 1].gemSocket = {
+                    hasGem: true,
+                    gemName: gem.name,
+                    element: gem.element,
+                    tier: gem.tier,
+                    bonuses: gemBonus
+                };
+                
+                Object.entries(gemBonus).forEach(([key, value]) => {
+                    totalBonuses[key] = (totalBonuses[key] || 0) + value.final;
+                });
+            } else {
+                equipmentStats[equipmentStats.length - 1].gemSocket = {
+                    hasGem: false
+                };
+            }
         }
         
         return {

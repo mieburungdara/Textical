@@ -7,6 +7,7 @@ const skillExecutor = require('./rules/skillExecutor');
 const CombatFormulaResolver = require('./rules/CombatFormulaResolver');
 const CombatEventBroadcaster = require('./rules/CombatEventBroadcaster');
 const MovementResolver = require('./rules/MovementResolver');
+const skillMasteryService = require('../services/skill/SkillMasteryService');
 
 /**
  * BattleRules (v4.5 - SRP Optimized)
@@ -162,7 +163,7 @@ class BattleRules {
         if (!isReaction) traitService.executeHook("onPostAction", attacker, this.sim);
     }
 
-    performSkill(actor, skill, targetPos) {
+    async performSkill(actor, skill, targetPos) {
         actor.recordDurabilityLoss("MAIN_HAND");
         const target = this.sim.grid.unitGrid[targetPos.y]?.[targetPos.x];
         
@@ -170,10 +171,54 @@ class BattleRules {
             actor.setSkillCooldown(skill.id, skill.cooldown, this.sim);
         }
 
+        // Record skill usage for mastery tracking (after skill resolves)
+        // We'll call this asynchronously to not block combat
+        this._recordSkillMastery(actor, skill).catch(err => {
+            this.sim.logger.warn(`[SkillMastery] Failed to record mastery: ${err.message}`);
+        });
+
         if (target) {
             skillExecutor.execute(actor, target, skill, this.sim);
         } else {
             this.skills.resolve(actor, skill, targetPos);
+        }
+    }
+
+    /**
+     * Record skill usage for mastery system
+     */
+    async _recordSkillMastery(actor, skill) {
+        if (!actor.data.userId || !actor.data.heroId || !skill.id) {
+            return; // Skip if not a hero or no skill ID
+        }
+
+        try {
+            // Record usage and get result
+            const result = await skillMasteryService.recordSkillUse(
+                actor.data.userId,
+                actor.data.heroId,
+                skill.id
+            );
+
+            // Cache the bonuses on the actor for use during skill execution
+            const bonuses = await skillMasteryService.getCombatBonuses(actor.data.heroId, skill.id);
+            actor._skillMasteryBonuses = bonuses;
+
+            if (result && result.leveledUp) {
+                this.sim.logger.addEvent("MASTERY", 
+                    `${actor.data.name}'s ${skill.name} reached ${result.newLevel}!`, 
+                    { 
+                        heroId: actor.data.heroId, 
+                        skillId: skill.id, 
+                        skillName: skill.name,
+                        newLevel: result.newLevel,
+                        useCount: result.useCount
+                    }
+                );
+            }
+        } catch (error) {
+            // Don't let mastery errors break combat
+            this.sim.logger.warn(`[SkillMastery] Error: ${error.message}`);
         }
     }
 

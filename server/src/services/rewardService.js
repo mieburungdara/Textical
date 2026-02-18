@@ -55,6 +55,24 @@ class RewardService {
             await inventoryService.addItem(user.id, item.itemId, item.quantity, null, options);
         }
 
+        // 3b. Gem Drops (from monsters)
+        const gemDrops = [];
+        for (const monsterId of (result.killed_monsters || [])) {
+            // Check if monster is a boss (by checking monster template)
+            const monster = await prisma.monsterTemplate.findUnique({
+                where: { id: monsterId },
+                select: { rank: true }
+            });
+            const isBoss = monster && (monster.rank === 'BOSS' || monster.rank === 'ELITE');
+            
+            const drops = await lootService.rollForGems(monsterId, isBoss);
+            gemDrops.push(...drops);
+        }
+        
+        for (const gem of gemDrops) {
+            await inventoryService.addItem(user.id, gem.itemId, gem.quantity);
+        }
+
         // 4. Update Quest Progress
         if (result.killed_monsters) {
             for (const monsterId of result.killed_monsters) {
@@ -66,6 +84,7 @@ class RewardService {
             alerts, 
             goldGained: result.rewards ? result.rewards.gold : 0, 
             droppedItems,
+            gemDrops,
             progression: result.hero_progression || [] 
         };
     }

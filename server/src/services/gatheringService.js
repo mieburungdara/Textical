@@ -210,6 +210,11 @@ class GatheringService extends BaseService {
         // AAA: Ecosystem Stress Reporting (Harvest)
         await ecosystemService.reportActivity(task.user.currentRegion, 0.01); // Harvesting is slightly more stressful than a single kill
 
+        // --- AAA: Private Island Seed Drop (5% chance for HERBALISM) ---
+        if (context === "HERBALISM") {
+            await this._tryDropSeed(userId);
+        }
+
         // --- AAA Guild Gathering Taxation ---
         const territory = await this.db.territory.findUnique({
             where: { regionId: task.user.currentRegion },
@@ -239,6 +244,35 @@ class GatheringService extends BaseService {
         }
 
         return await this.db.taskQueue.update({ where: { id: taskId }, data: { status: "COMPLETED" } });
+    }
+
+    /**
+     * Try to drop a random seed (5% chance) when gathering plants (HERBALISM)
+     * @param {number} userId - User ID
+     */
+    async _tryDropSeed(userId) {
+        // 5% chance to drop seed
+        if (Math.random() > 0.05) return;
+
+        try {
+            // Get all seed items from database
+            const seeds = await this.db.itemTemplate.findMany({
+                where: { category: 'SEED' },
+                select: { id: true, name: true }
+            });
+
+            if (seeds.length === 0) return;
+
+            // Pick random seed
+            const randomSeed = seeds[Math.floor(Math.random() * seeds.length)];
+
+            // Add to inventory
+            await inventoryService.addItem(userId, randomSeed.id, 1);
+            this.logger.info(`[GatheringService._tryDropSeed] User ${userId} received seed: ${randomSeed.name}`);
+        } catch (error) {
+            // Silent fail - seed drop should not break gathering
+            this.logger.warn(`[GatheringService._tryDropSeed] Failed to drop seed: ${error.message}`);
+        }
     }
 }
 

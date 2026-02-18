@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../db');
+
 
 async function main() {
   console.log("--- SEEDING TEXTICAL FINAL CODEX (v17.0 - FULL LORE) ---");

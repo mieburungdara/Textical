@@ -22,14 +22,19 @@ class AuthenticationService {
         }
 
         // Rate limiting check
+        const isRateLimitDisabled = process.env.DISABLE_AUTH_RATE_LIMIT === 'true';
         const rateLimit = await rateLimitService.checkRateLimit(ipAddress, username);
-        if (rateLimit.blocked) {
+        
+        if (rateLimit.blocked && !isRateLimitDisabled) {
             throw {
                 status: 429,
                 message: "Too many failed login attempts. Please try again later.",
                 retryAfter: rateLimit.retryAfter
             };
+        } else if (rateLimit.blocked && isRateLimitDisabled) {
+            console.log(`[AUTH] Rate limit blocked for ${username} (${ipAddress}), but Bypassed due to DISABLE_AUTH_RATE_LIMIT=true`);
         }
+
 
         // Find user
         const user = await prisma.user.findUnique({

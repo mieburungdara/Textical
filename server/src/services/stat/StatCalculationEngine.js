@@ -22,6 +22,7 @@ const facilityResolver = require('../../logic/guild/FacilityEffectResolver');
 const factionService = require('../factionService');
 const StatLayerProcessor = require('./StatLayerProcessor');
 const StatPredictionService = require('./StatPredictionService');
+const HeroBondResolver = require('./HeroBondResolver');
 
 /**
  * Calculation layers in order of application.
@@ -38,6 +39,7 @@ const CalculationLayer = {
     SKILLS: 7,
     BUFFS: 8,
     GUILD: 9,
+    BOND: 9.5,  // Hero Bond System - Party Synergy
     FACTION: 10,
     WORLD_EVENTS: 11,
     SCALING: 12,
@@ -57,6 +59,7 @@ const ModifierPriority = {
     SKILL: 25,
     BUFF: 30,
     GUILD: 35,
+    BOND: 36,  // Hero Bond - between Guild and Faction
     FACTION: 40,
     EVENT: 45,
     CAP: 100
@@ -149,6 +152,9 @@ class StatCalculationEngine extends BaseService {
             applyDurabilityPenalty: this._applyDurabilityPenalty.bind(this)
         });
 
+        // Layer 4.5: Apply gem socket bonuses
+        this._applyGemSocketBonuses(stats, heroData, calcContext, applyMod);
+
         // Layer 5: Apply set bonuses
         await this._applySetBonuses(stats, heroData, calcContext, applyMod);
 
@@ -163,6 +169,9 @@ class StatCalculationEngine extends BaseService {
 
         // Layer 9: Apply guild facility buffs
         await this._applyGuildFacilities(stats, heroData, calcContext, applyMod);
+
+        // Layer 9.5: Apply hero bond bonuses
+        await this._applyHeroBonds(stats, heroData, calcContext, applyMod);
 
         // Layer 10: Apply faction perks
         await this._applyFactionPerks(stats, heroData, calcContext, applyMod);
@@ -305,7 +314,17 @@ class StatCalculationEngine extends BaseService {
                                         traits: { include: { trait: { include: { stats: true } } } }
                                     }
                                 },
-                                instanceTraits: { include: { trait: { include: { stats: true } } } }
+                                instanceTraits: { include: { trait: { include: { stats: true } } } },
+                                enchantments: {
+                                    include: {
+                                        enchantment: true
+                                    }
+                                },
+                                socket: {
+                                    include: {
+                                        gem: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -613,6 +632,43 @@ class StatCalculationEngine extends BaseService {
     }
 
     /**
+     * Apply gem socket bonuses from equipped items.
+     * @param {Object} stats - Secondary stats map.
+     * @param {Object} heroData - Hero data.
+     * @param {Object} context - Calculation context.
+     * @param {Function} applyMod - Modifier applicator.
+     * @private
+     */
+    _applyGemSocketBonuses(stats, heroData, context, applyMod) {
+        const equipment = heroData.equipment || [];
+        
+        for (const eq of equipment) {
+            const instance = eq.itemInstance;
+            if (!instance || !instance.socket || !instance.socket.gem) continue;
+            
+            // Check if equipment is broken
+            if (instance.currentDurability <= 0) continue;
+            
+            const gem = instance.socket.gem;
+            
+            // Apply flat bonus
+            if (gem.statValue > 0) {
+                applyMod(gem.statKey, gem.statValue, StatModifierType.FLAT, `Gem:${gem.name}`, {
+                    priority: ModifierPriority.EQUIPMENT
+                });
+            }
+            
+            // Apply percentage bonus
+            if (gem.percentValue > 0) {
+                const percentStatKey = gem.statKey + '_percent';
+                applyMod(percentStatKey, gem.percentValue, StatModifierType.PERCENT, `Gem:${gem.name}`, {
+                    priority: ModifierPriority.EQUIPMENT
+                });
+            }
+        }
+    }
+
+    /**
      * Apply guild facility buffs.
      * @param {Object} stats - Secondary stats map.
      * @param {Object} heroData - Hero data.
@@ -628,6 +684,41 @@ class StatCalculationEngine extends BaseService {
             applyMod(statKey, val, 1, 'GuildFacility', {
                 priority: 35
             });
+        }
+    }
+
+    /**
+     * Apply hero bond bonuses (party synergy).
+     * @param {Object} stats - Secondary stats map.
+     * @param {Object} heroData - Hero data.
+     * @param {Object} context - Calculation context.
+     * @param {Function} applyMod - Modifier applicator.
+     * @private
+     */
+    async _applyHeroBonds(stats, heroData, context, applyMod) {
+        if (!heroData.userId) return;
+
+        try {
+            // Get active bonds for the user's party
+            const activeBonds = await HeroBondResolver.calculateActiveBonds(heroData.userId);
+            
+            if (activeBonds.length === 0) return;
+
+            // Apply each bond's bonuses
+            for (const bond of activeBonds) {
+                // Check if this hero is part of this bond
+                if (!bond.heroIds.includes(heroData.id)) continue;
+                
+                const bonuses = bond.bonuses;
+                for (const [statKey, value] of Object.entries(bonuses)) {
+                    // Apply as percentage modifier
+                    applyMod(statKey, value, 1, `Bond:${bond.name}`, {
+                        priority: ModifierPriority.BOND
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('[StatCalculationEngine] Error applying hero bonds:', error.message);
         }
     }
 

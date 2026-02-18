@@ -96,6 +96,66 @@ class LootService {
 
         return allLoot;
     }
+
+    /**
+     * Roll for gem drops from monsters
+     * Bosses have higher drop chance
+     * @param {number} monsterId - The ID of the defeated monster
+     * @param {boolean} isBoss - Whether the monster is a boss
+     * @returns {Array} Array of gem drops (or empty array)
+     */
+    async rollForGems(monsterId, isBoss = false) {
+        const gemDrops = [];
+
+        // Get all gem templates
+        const gemTemplates = await prisma.gemTemplate.findMany();
+        if (gemTemplates.length === 0) return gemDrops;
+
+        // Determine drop chance based on monster type
+        const baseDropChance = isBoss ? 0.10 : 0.01; // 10% for bosses, 1% for normal monsters
+
+        // Roll for gem drop
+        if (Math.random() < baseDropChance) {
+            // Select a random element
+            const elements = [...new Set(gemTemplates.map(g => g.element))];
+            const randomElement = elements[Math.floor(Math.random() * elements.length)];
+
+            // Filter gems by element and get available tiers
+            const elementGems = gemTemplates.filter(g => g.element === randomElement);
+
+            // Higher chance for lower tier gems
+            const tierWeights = [0.5, 0.25, 0.15, 0.07, 0.03]; // 50% T1, 25% T2, 15% T3, 7% T4, 3% T5
+            const roll = Math.random();
+            let cumulativeWeight = 0;
+            let selectedTier = 1;
+
+            for (let i = 0; i < tierWeights.length; i++) {
+                cumulativeWeight += tierWeights[i];
+                if (roll < cumulativeWeight) {
+                    selectedTier = i + 1;
+                    break;
+                }
+            }
+
+            // Find the gem with selected tier and element
+            const gem = elementGems.find(g => g.tier === selectedTier);
+            if (gem) {
+                gemDrops.push({
+                    id: gem.id,
+                    itemId: gem.id,
+                    name: gem.name,
+                    quantity: 1,
+                    isGem: true,
+                    element: gem.element,
+                    tier: gem.tier,
+                    statKey: gem.statKey,
+                    statValue: gem.statValue
+                });
+            }
+        }
+
+        return gemDrops;
+    }
 }
 
 module.exports = new LootService();

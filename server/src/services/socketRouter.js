@@ -7,6 +7,8 @@ const chatHandler = require('../handlers/chatSocketHandler');
 const statHandler = require('../handlers/statHandler');
 const guildHandler = require('../handlers/guildHandler');
 const mapHandler = require('../handlers/MapRealtimeHandler');
+const enchantmentHandler = require('../handlers/enchantmentHandler');
+const treasureMapHandler = require('../handlers/treasureMapSocketHandler');
 
 /**
  * Register all socket event handlers to a socket connection
@@ -52,6 +54,16 @@ function registerHandlers(io, socket, userId) {
     // Register Map Realtime Handlers
     mapHandler.register(io, socket, userId);
     console.log(`[SOCKET_ROUTER] Map realtime handlers registered for user ${userId}`);
+
+    // Register Enchantment Handlers
+    socket.on("enchantment:apply", (request) => enchantmentHandler.handleApplyEnchantment(socket, request));
+    socket.on("enchantment:preview", (request) => enchantmentHandler.handleGetEnchantmentPreview(socket, request));
+    socket.on("enchantment:available", (request) => enchantmentHandler.handleGetAvailableEnchantments(socket, request));
+    socket.on("enchantment:item_enchantments", (request) => enchantmentHandler.handleGetItemEnchantments(socket, request));
+    console.log(`[SOCKET_ROUTER] Enchantment handlers registered for user ${userId}`);
+
+    // Register Treasure Map Handlers
+    treasureMapHandler.register(io, socket, userId);
 }
 
 /**
@@ -67,7 +79,10 @@ function unregisterHandlers(socket) {
         'guild:deposit_treasury', 'guild:withdraw_treasury', 'guild:build_facility',
         'guild:upgrade_facility', 'guild:create_invite', 'guild:accept_invite',
         'guild:cancel_invite', 'guild:get_info', 'guild:get_my_info', 'guild:search',
-        'guild:disband'
+        'guild:disband',
+        'treasure:get_maps', 'treasure:get_unused_maps', 'treasure:get_active_maps',
+        'treasure:use_map', 'treasure:check_dig', 'treasure:start_dig', 'treasure:complete_dig',
+        'treasure:debug_create'
     ];
 
     eventTypes.forEach(eventType => {

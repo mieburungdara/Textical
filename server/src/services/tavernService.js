@@ -4,6 +4,7 @@ const energyService = require('./energyService');
 const transactionManager = require('./economy/TransactionManager');
 const resolver = require('../logic/economy/CurrencyResolver');
 const { AppError, ErrorCodes } = require('../utils/AppError');
+const HeroBondResolver = require('./stat/HeroBondResolver');
 
 /**
  * TavernService
@@ -121,6 +122,9 @@ class TavernService {
         await prisma.tavernMercenary.delete({
             where: { id: mercenaryId }
         });
+
+        // 7. Recalculate Hero Bonds (party synergy)
+        await HeroBondResolver.recalculateBonds(userId);
 
         return { success: true, heroId: merc.heroId, name: merc.hero.name };
     }

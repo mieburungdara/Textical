@@ -457,6 +457,7 @@ const BUILDING_FACILITY_MISSING: String = "BUILDING_FACILITY_MISSING"
 # ===========================================
 # Stat Errors (STAT_*)
 # ===========================================
+const STAT_HERO_NOT_FOUND: String = "STAT_HERO_NOT_FOUND"
 const STAT_INSUFFICIENT_POINTS: String = "STAT_INSUFFICIENT_POINTS"
 const STAT_CAP_EXCEEDED: String = "STAT_CAP_EXCEEDED"
 
@@ -468,6 +469,9 @@ const ECONOMY_INSUFFICIENT_TOTAL: String = "ECONOMY_INSUFFICIENT_TOTAL"
 # ===========================================
 # Promotion Errors (PROMOTION_*)
 # ===========================================
+const PROMO_LEVEL_REQUIREMENT: String = "PROMO_LEVEL_REQUIREMENT"
+const PROMO_INVALID_CLASS: String = "PROMO_INVALID_CLASS"
+const PROMO_WRONG_BRANCH: String = "PROMO_WRONG_BRANCH"
 const PROMOTION_TARGET_CLASS_NOT_FOUND: String = "PROMOTION_TARGET_CLASS_NOT_FOUND"
 
 # ===========================================
@@ -495,252 +499,252 @@ const NETWORK_UNKNOWN_ERROR: String = "NETWORK_UNKNOWN_ERROR"
 # Error Messages Dictionary
 # ===========================================
 const ERROR_MESSAGES: Dictionary = {
-	# Authentication
-	AUTH_INVALID_CREDENTIALS: "Invalid username or password",
-	AUTH_USER_NOT_FOUND: "User account does not exist",
-	AUTH_SESSION_EXPIRED: "Your session has expired. Please log in again.",
-	AUTH_UNAUTHORIZED: "Authentication required",
-	AUTH_FORBIDDEN: "You do not have permission for this action",
-	
-	# User
-	USER_NOT_FOUND: "User not found",
-	USER_INVALID_ID: "Invalid user ID format",
-	USER_BUSY: "You have active tasks in progress",
-	USER_UNCONSCIOUS: "You are unconscious",
-	USER_IN_RECOVERY: "You are in recovery period",
-	
-	# Hero
-	HERO_NOT_FOUND: "Hero not found",
-	HERO_INVALID_ID: "Invalid hero ID format",
-	HERO_UNAUTHORIZED: "You do not own this hero",
-	HERO_BUSY: "Hero has an active task",
-	HERO_DEAD: "Hero is dead",
-	HERO_LOW_LEVEL: "Hero level is too low",
-	HERO_WRONG_CLASS: "Hero class is incompatible",
-	HERO_ALREADY_SPECIALIZED: "Hero already has a profession",
-	HERO_NO_JOB: "Hero has no job assigned",
-	HERO_OFFSPRING_LIMIT: "Hero already has offspring",
-	HERO_NOT_IN_FORMATION: "Hero is not in formation",
-	HERO_LISTED_MARKET: "Hero is listed on the market",
-	
-	# Energy
-	ENERGY_INSUFFICIENT: "Not enough energy",
-	ENERGY_ZERO: "Energy is completely depleted",
-	
-	# Inventory
-	INVENTORY_FULL: "Inventory is full",
-	INVENTORY_ITEM_NOT_FOUND: "Item not found in inventory",
-	INVENTORY_ITEM_EQUIPPED: "Item is currently equipped",
-	INVENTORY_ITEM_LOCKED: "Item is locked by another system",
-	INVENTORY_ITEM_STOLEN: "Item is marked as stolen",
-	INVENTORY_WRONG_TYPE: "Item type mismatch",
-	
-	# Equipment
-	EQUIP_INVALID_SLOT: "Invalid equipment slot",
-	EQUIP_WRONG_SLOT: "Item cannot go in this slot",
-	EQUIP_LEVEL_REQUIREMENT: "Hero level too low for this item",
-	EQUIP_CLASS_REQUIREMENT: "Hero class cannot use this item",
-	EQUIP_ALREADY_EQUIPPED: "Slot already has an item",
-	EQUIP_SLOT_EMPTY: "No item in slot",
-	EQUIP_ITEM_LISTED: "Item is listed on market",
-	
-	# Travel
-	TRAVEL_NO_PATH: "No direct path to destination",
-	TRAVEL_UNCONSCIOUS: "Cannot travel while unconscious",
-	TRAVEL_IN_RECOVERY: "Cannot travel during recovery",
-	TRAVEL_BUSY: "Cannot travel with active tasks",
-	TRAVEL_BLACK_ZONE_MIN_UNITS: "Need 30+ heroes for Black Zone",
-	TRAVEL_ENERGY_COST: "Not enough energy for travel",
-	TRAVEL_ALREADY_THERE: "Already at destination",
-	TRAVEL_INVALID_REGION: "Region does not exist",
-	
-	# Tavern
-	TAVERN_NOT_IN_TAVERN: "Must be inside tavern",
-	TAVERN_NO_INN: "Region has no inn",
-	TAVERN_DAILY_LIMIT: "Daily tavern time exhausted",
-	TAVERN_MERCENARY_GONE: "Mercenary no longer available",
-	TAVERN_INSUFFICIENT_FUNDS: "Not enough gold/silver",
-	TAVERN_BUSY: "Cannot use tavern while busy",
-	TAVERN_FAST_TRAVEL_COOLDOWN: "Fast travel on cooldown",
-	TAVERN_FAST_TRAVEL_WRONG_ZONE: "Must be in Royal City",
-	
-	# Market
-	MARKET_NOT_IN_TOWN: "Must be in town for market",
-	MARKET_LISTING_NOT_FOUND: "Listing no longer exists",
-	MARKET_INSUFFICIENT_FUNDS: "Not enough gold/silver",
-	MARKET_ITEM_EQUIPPED: "Cannot sell equipped items",
-	MARKET_PRICE_TOO_LOW: "Price below minimum",
-	MARKET_BUSY: "Cannot use market while busy",
-	
-	# Formation
-	FORMATION_MAX_UNITS: "Exceeded 2500 unit limit",
-	FORMATION_INVALID_POSITION: "Position outside valid grid",
-	FORMATION_OVERLAP: "Position already occupied",
-	FORMATION_HERO_DUPLICATE: "Hero already in formation",
-	FORMATION_HERO_NOT_OWNED: "Hero belongs to another user",
-	FORMATION_HERO_LISTED: "Cannot add listed hero",
-	FORMATION_SWAP_FAILED: "Swap failed - heroes not in formation",
-	
-	# Combat
-	COMBAT_NO_ACTIVE_BATTLE: "No active battle found",
-	COMBAT_HERO_NOT_IN_BATTLE: "Hero not participating",
-	COMBAT_HERO_DEAD: "Hero is dead",
-	COMBAT_POTION_COOLDOWN: "Potion on cooldown",
-	COMBAT_NO_POTIONS: "No potions in inventory",
-	COMBAT_NO_POTIONS_REMAINING: "Potion charges depleted",
-	COMBAT_PVP_NOT_ALLOWED: "PvP disabled in this zone",
-	COMBAT_NO_FORMATION: "No formation preset found",
-	COMBAT_MONSTER_NOT_FOUND: "Monster does not exist",
-	COMBAT_MONSTER_UNAVAILABLE: "Monster not in this region",
-	COMBAT_BUSY: "Cannot start battle while busy",
-	
-	# Consumable
-	CONSUMABLE_ITEM_NOT_FOUND: "Item not in inventory",
-	CONSUMABLE_NOT_CONSUMABLE: "Item cannot be consumed",
-	CONSUMABLE_NO_EFFECT: "Item has no defined effect",
-	CONSUMABLE_NO_HERO_SELECTED: "Must select target hero",
-	CONSUMABLE_INVALID_STAT: "Invalid stat key",
-	CONSUMABLE_BLACK_ZONE_RESTRICTION: "Cannot use in Black Zone",
-	
-	# Crafting
-	CRAFT_NOT_IN_TOWN: "Complex crafting requires town",
-	CRAFT_RECIPE_NOT_FOUND: "Recipe does not exist",
-	CRAFT_MISSING_MATERIAL: "Missing required materials",
-	CRAFT_INVENTORY_FULL: "No space for crafted item",
-	CRAFT_AFFIX_MISSING: "Missing affix material",
-	CRAFT_BUSY: "Cannot craft while busy",
-	CRAFT_SALVAGE_NO_ITEMS: "No items selected for salvage",
-	CRAFT_SALVAGE_INVALID: "Items cannot be salvaged",
-	
-	# Gathering
-	GATHER_RESOURCE_NOT_FOUND: "Resource not in this region",
-	GATHER_WRONG_REGION: "Not in resource region",
-	GATHER_INVENTORY_FULL: "No space for gathered items",
-	GATHER_LOW_STRENGTH: "Strength below requirement",
-	GATHER_WRONG_TOOL: "Missing required tool tier",
-	GATHER_BUSY: "Hero has active task",
-	GATHER_UNAUTHORIZED: "Hero not owned by user",
-	
-	# Quest
-	QUEST_NOT_FOUND: "Quest does not exist",
-	QUEST_LOW_REPUTATION: "Reputation below requirement",
-	QUEST_USER_QUEST_NOT_FOUND: "Quest not started",
-	QUEST_ALREADY_COMPLETED: "Quest already finished",
-	QUEST_STAGE_INCOMPLETE: "Current stage not finished",
-	QUEST_NO_ACTIVE_STAGE: "No active quest stage",
-	QUEST_OBJECTIVE_INCOMPLETE: "Objective not met",
-	QUEST_WRONG_REGION: "Not at target location",
-	QUEST_KILLS_INSUFFICIENT: "Not enough kills",
-	
-	# Guild
-	GUILD_NOT_IN_GUILD: "Not a guild member",
-	GUILD_ALREADY_IN_GUILD: "Already in a guild",
-	GUILD_NOT_FOUND: "Guild does not exist",
-	GUILD_NAME_TAKEN: "Guild name already used",
-	GUILD_INSUFFICIENT_FUNDS: "Not enough gold",
-	GUILD_NO_PERMISSION: "Insufficient guild rank",
-	GUILD_INVITE_INVALID: "Invite code invalid",
-	GUILD_INVITE_EXPIRED: "Invite has expired",
-	GUILD_TREASURY_INSUFFICIENT: "Not enough in treasury",
-	
-	# Territory
-	TERRITORY_NOT_FOUND: "Territory does not exist",
-	TERRITORY_NOT_CLAIMABLE: "Region cannot be claimed",
-	TERRITORY_ALREADY_OWNED: "Already owned by your guild",
-	TERRITORY_UNDER_SIEGE: "Territory already being sieged",
-	TERRITORY_SIEGE_NOT_ACTIVE: "No active siege",
-	
-	# Property
-	PROPERTY_NO_PLOTS: "No plots available in region",
-	PROPERTY_INSUFFICIENT_FUNDS: "Not enough silver",
-	PROPERTY_NOT_FOUND: "Property does not exist",
-	PROPERTY_ACCESS_DENIED: "Property not owned by you",
-	PROPERTY_MAX_TIER: "Already at maximum tier",
-	
-	# NPC
-	NPC_NOT_FOUND: "NPC does not exist",
-	NPC_NO_DIALOGUE: "NPC has nothing to say",
-	NPC_FACTION_ENEMY: "NPC refuses to deal with enemy",
-	NPC_INSUFFICIENT_FUNDS: "Not enough for service",
-	NPC_SHOP_OUT_OF_STOCK: "Item out of stock",
-	
-	# Chat
-	CHAT_EMPTY_MESSAGE: "Message cannot be empty",
-	CHAT_TOO_LONG: "Message exceeds limit",
-	CHAT_SPAM_DETECTED: "Sending messages too fast",
-	
-	# Mail
-	MAIL_NOT_FOUND: "Mail does not exist",
-	MAIL_ACCESS_DENIED: "Mail not addressed to you",
-	MAIL_ALREADY_CLAIMED: "Attachments already claimed",
-	
-	# Inn
-	INN_NO_INN: "Region has no inn",
-	INN_INSUFFICIENT_FUNDS: "Not enough silver",
-	INN_CANNOT_STORE_EQUIPPED: "Cannot store equipped items",
-	
-	# Gambling
-	GAMBLE_INVALID_GUESS: "Guess must be 1-6",
-	GAMBLE_INVALID_BET: "Bet must be positive",
-	GAMBLE_NOT_IN_INN: "Can only gamble in inn",
-	GAMBLE_INSUFFICIENT_FUNDS: "Not enough silver",
-	
-	# Faction
-	FACTION_ALREADY_JOINED: "Already in a faction",
-	FACTION_NOT_FOUND: "Faction does not exist",
-	
-	# Bounty
-	BOUNTY_SELF_TARGET: "Cannot place bounty on yourself",
-	BOUNTY_BELOW_MINIMUM: "Bounty below minimum amount",
-	BOUNTY_INSUFFICIENT_FUNDS: "Not enough silver",
-	
-	# Siege
-	SIEGE_NOT_ACTIVE: "No active siege",
-	SIEGE_OWN_TERRITORY: "Cannot siege own territory",
-	
-	# Black Zone
-	BLACKZONE_MIN_UNITS: "Need 30+ heroes to enter",
-	BLACKZONE_POTION_BANNED: "Potions prohibited in Black Zone",
-	BLACKZONE_DEATH_PENALTY: "Hero died in Black Zone",
-	
-	# Fast Travel
-	FASTTRAVEL_NOT_IN_TAVERN: "Must be in tavern/inn",
-	FASTTRAVEL_WRONG_ZONE: "Must start from Royal City",
-	FASTTRAVEL_INVALID_DESTINATION: "Destination not a Royal City",
-	FASTTRAVEL_ALREADY_THERE: "Already at destination",
-	FASTTRAVEL_COOLDOWN: "Caravan not departed yet",
-	FASTTRAVEL_INSUFFICIENT_FUNDS: "Not enough for ticket",
-	
-	# Rumor
-	RUMOR_NOT_IN_INN: "Must be in inn to post",
-	
-	# Escort
-	ESCORT_USER_NOT_FOUND: "User does not exist",
-	
-	# Mana
-	MANA_INTENSITY_LOW: "Mana intensity below 1.5",
-	MANA_ITEM_NOT_FOUND: "Item not in inventory",
-	MANA_CANNOT_CHARGE: "Item cannot be charged here",
-	
-	# Stat
-	STAT_HERO_NOT_FOUND: "Hero does not exist",
-	STAT_INSUFFICIENT_POINTS: "Not enough stat points",
-	STAT_CAP_EXCEEDED: "Stat at maximum value",
-	
-	# Promotion
-	PROMO_LEVEL_REQUIREMENT: "Need Class Level 20",
-	PROMO_INVALID_CLASS: "Target class not found",
-	PROMO_WRONG_BRANCH: "Class not in evolution line",
-	
-	# Generic
-	GENERIC_NOT_IMPLEMENTED: "Feature not implemented",
-	GENERIC_INVALID_INPUT: "Invalid input parameters",
-	
-	# Network (client-side only)
-	NETWORK_CONNECTION_ERROR: "Unable to connect to server",
-	NETWORK_INVALID_RESPONSE: "Invalid response from server",
-	NETWORK_TIMEOUT: "Connection timed out",
-	NETWORK_UNKNOWN_ERROR: "An unknown network error occurred",
+    # Authentication
+    AUTH_INVALID_CREDENTIALS: "Invalid username or password",
+    AUTH_USER_NOT_FOUND: "User account does not exist",
+    AUTH_SESSION_EXPIRED: "Your session has expired. Please log in again.",
+    AUTH_UNAUTHORIZED: "Authentication required",
+    AUTH_FORBIDDEN: "You do not have permission for this action",
+    
+    # User
+    USER_NOT_FOUND: "User not found",
+    USER_INVALID_ID: "Invalid user ID format",
+    USER_BUSY: "You have active tasks in progress",
+    USER_UNCONSCIOUS: "You are unconscious",
+    USER_IN_RECOVERY: "You are in recovery period",
+    
+    # Hero
+    HERO_NOT_FOUND: "Hero not found",
+    HERO_INVALID_ID: "Invalid hero ID format",
+    HERO_UNAUTHORIZED: "You do not own this hero",
+    HERO_BUSY: "Hero has an active task",
+    HERO_DEAD: "Hero is dead",
+    HERO_LOW_LEVEL: "Hero level is too low",
+    HERO_WRONG_CLASS: "Hero class is incompatible",
+    HERO_ALREADY_SPECIALIZED: "Hero already has a profession",
+    HERO_NO_JOB: "Hero has no job assigned",
+    HERO_OFFSPRING_LIMIT: "Hero already has offspring",
+    HERO_NOT_IN_FORMATION: "Hero is not in formation",
+    HERO_LISTED_MARKET: "Hero is listed on the market",
+    
+    # Energy
+    ENERGY_INSUFFICIENT: "Not enough energy",
+    ENERGY_ZERO: "Energy is completely depleted",
+    
+    # Inventory
+    INVENTORY_FULL: "Inventory is full",
+    INVENTORY_ITEM_NOT_FOUND: "Item not found in inventory",
+    INVENTORY_ITEM_EQUIPPED: "Item is currently equipped",
+    INVENTORY_ITEM_LOCKED: "Item is locked by another system",
+    INVENTORY_ITEM_STOLEN: "Item is marked as stolen",
+    INVENTORY_WRONG_TYPE: "Item type mismatch",
+    
+    # Equipment
+    EQUIP_INVALID_SLOT: "Invalid equipment slot",
+    EQUIP_WRONG_SLOT: "Item cannot go in this slot",
+    EQUIP_LEVEL_REQUIREMENT: "Hero level too low for this item",
+    EQUIP_CLASS_REQUIREMENT: "Hero class cannot use this item",
+    EQUIP_ALREADY_EQUIPPED: "Slot already has an item",
+    EQUIP_SLOT_EMPTY: "No item in slot",
+    EQUIP_ITEM_LISTED: "Item is listed on market",
+    
+    # Travel
+    TRAVEL_NO_PATH: "No direct path to destination",
+    TRAVEL_UNCONSCIOUS: "Cannot travel while unconscious",
+    TRAVEL_IN_RECOVERY: "Cannot travel during recovery",
+    TRAVEL_BUSY: "Cannot travel with active tasks",
+    TRAVEL_BLACK_ZONE_MIN_UNITS: "Need 30+ heroes for Black Zone",
+    TRAVEL_ENERGY_COST: "Not enough energy for travel",
+    TRAVEL_ALREADY_THERE: "Already at destination",
+    TRAVEL_INVALID_REGION: "Region does not exist",
+    
+    # Tavern
+    TAVERN_NOT_IN_TAVERN: "Must be inside tavern",
+    TAVERN_NO_INN: "Region has no inn",
+    TAVERN_DAILY_LIMIT: "Daily tavern time exhausted",
+    TAVERN_MERCENARY_GONE: "Mercenary no longer available",
+    TAVERN_INSUFFICIENT_FUNDS: "Not enough gold/silver",
+    TAVERN_BUSY: "Cannot use tavern while busy",
+    TAVERN_FAST_TRAVEL_COOLDOWN: "Fast travel on cooldown",
+    TAVERN_FAST_TRAVEL_WRONG_ZONE: "Must be in Royal City",
+    
+    # Market
+    MARKET_NOT_IN_TOWN: "Must be in town for market",
+    MARKET_LISTING_NOT_FOUND: "Listing no longer exists",
+    MARKET_INSUFFICIENT_FUNDS: "Not enough gold/silver",
+    MARKET_ITEM_EQUIPPED: "Cannot sell equipped items",
+    MARKET_PRICE_TOO_LOW: "Price below minimum",
+    MARKET_BUSY: "Cannot use market while busy",
+    
+    # Formation
+    FORMATION_MAX_UNITS: "Exceeded 2500 unit limit",
+    FORMATION_INVALID_POSITION: "Position outside valid grid",
+    FORMATION_OVERLAP: "Position already occupied",
+    FORMATION_HERO_DUPLICATE: "Hero already in formation",
+    FORMATION_HERO_NOT_OWNED: "Hero belongs to another user",
+    FORMATION_HERO_LISTED: "Cannot add listed hero",
+    FORMATION_SWAP_FAILED: "Swap failed - heroes not in formation",
+    
+    # Combat
+    COMBAT_NO_ACTIVE_BATTLE: "No active battle found",
+    COMBAT_HERO_NOT_IN_BATTLE: "Hero not participating",
+    COMBAT_HERO_DEAD: "Hero is dead",
+    COMBAT_POTION_COOLDOWN: "Potion on cooldown",
+    COMBAT_NO_POTIONS: "No potions in inventory",
+    COMBAT_NO_POTIONS_REMAINING: "Potion charges depleted",
+    COMBAT_PVP_NOT_ALLOWED: "PvP disabled in this zone",
+    COMBAT_NO_FORMATION: "No formation preset found",
+    COMBAT_MONSTER_NOT_FOUND: "Monster does not exist",
+    COMBAT_MONSTER_UNAVAILABLE: "Monster not in this region",
+    COMBAT_BUSY: "Cannot start battle while busy",
+    
+    # Consumable
+    CONSUMABLE_ITEM_NOT_FOUND: "Item not in inventory",
+    CONSUMABLE_NOT_CONSUMABLE: "Item cannot be consumed",
+    CONSUMABLE_NO_EFFECT: "Item has no defined effect",
+    CONSUMABLE_NO_HERO_SELECTED: "Must select target hero",
+    CONSUMABLE_INVALID_STAT: "Invalid stat key",
+    CONSUMABLE_BLACK_ZONE_RESTRICTION: "Cannot use in Black Zone",
+    
+    # Crafting
+    CRAFT_NOT_IN_TOWN: "Complex crafting requires town",
+    CRAFT_RECIPE_NOT_FOUND: "Recipe does not exist",
+    CRAFT_MISSING_MATERIAL: "Missing required materials",
+    CRAFT_INVENTORY_FULL: "No space for crafted item",
+    CRAFT_AFFIX_MISSING: "Missing affix material",
+    CRAFT_BUSY: "Cannot craft while busy",
+    CRAFT_SALVAGE_NO_ITEMS: "No items selected for salvage",
+    CRAFT_SALVAGE_INVALID: "Items cannot be salvaged",
+    
+    # Gathering
+    GATHER_RESOURCE_NOT_FOUND: "Resource not in this region",
+    GATHER_WRONG_REGION: "Not in resource region",
+    GATHER_INVENTORY_FULL: "No space for gathered items",
+    GATHER_LOW_STRENGTH: "Strength below requirement",
+    GATHER_WRONG_TOOL: "Missing required tool tier",
+    GATHER_BUSY: "Hero has active task",
+    GATHER_UNAUTHORIZED: "Hero not owned by user",
+    
+    # Quest
+    QUEST_NOT_FOUND: "Quest does not exist",
+    QUEST_LOW_REPUTATION: "Reputation below requirement",
+    QUEST_USER_QUEST_NOT_FOUND: "Quest not started",
+    QUEST_ALREADY_COMPLETED: "Quest already finished",
+    QUEST_STAGE_INCOMPLETE: "Current stage not finished",
+    QUEST_NO_ACTIVE_STAGE: "No active quest stage",
+    QUEST_OBJECTIVE_INCOMPLETE: "Objective not met",
+    QUEST_WRONG_REGION: "Not at target location",
+    QUEST_KILLS_INSUFFICIENT: "Not enough kills",
+    
+    # Guild
+    GUILD_NOT_IN_GUILD: "Not a guild member",
+    GUILD_ALREADY_IN_GUILD: "Already in a guild",
+    GUILD_NOT_FOUND: "Guild does not exist",
+    GUILD_NAME_TAKEN: "Guild name already used",
+    GUILD_INSUFFICIENT_FUNDS: "Not enough gold",
+    GUILD_NO_PERMISSION: "Insufficient guild rank",
+    GUILD_INVITE_INVALID: "Invite code invalid",
+    GUILD_INVITE_EXPIRED: "Invite has expired",
+    GUILD_TREASURY_INSUFFICIENT: "Not enough in treasury",
+    
+    # Territory
+    TERRITORY_NOT_FOUND: "Territory does not exist",
+    TERRITORY_NOT_CLAIMABLE: "Region cannot be claimed",
+    TERRITORY_ALREADY_OWNED: "Already owned by your guild",
+    TERRITORY_UNDER_SIEGE: "Territory already being sieged",
+    TERRITORY_SIEGE_NOT_ACTIVE: "No active siege",
+    
+    # Property
+    PROPERTY_NO_PLOTS: "No plots available in region",
+    PROPERTY_INSUFFICIENT_FUNDS: "Not enough silver",
+    PROPERTY_NOT_FOUND: "Property does not exist",
+    PROPERTY_ACCESS_DENIED: "Property not owned by you",
+    PROPERTY_MAX_TIER: "Already at maximum tier",
+    
+    # NPC
+    NPC_NOT_FOUND: "NPC does not exist",
+    NPC_NO_DIALOGUE: "NPC has nothing to say",
+    NPC_FACTION_ENEMY: "NPC refuses to deal with enemy",
+    NPC_INSUFFICIENT_FUNDS: "Not enough for service",
+    NPC_SHOP_OUT_OF_STOCK: "Item out of stock",
+    
+    # Chat
+    CHAT_EMPTY_MESSAGE: "Message cannot be empty",
+    CHAT_TOO_LONG: "Message exceeds limit",
+    CHAT_SPAM_DETECTED: "Sending messages too fast",
+    
+    # Mail
+    MAIL_NOT_FOUND: "Mail does not exist",
+    MAIL_ACCESS_DENIED: "Mail not addressed to you",
+    MAIL_ALREADY_CLAIMED: "Attachments already claimed",
+    
+    # Inn
+    INN_NO_INN: "Region has no inn",
+    INN_INSUFFICIENT_FUNDS: "Not enough silver",
+    INN_CANNOT_STORE_EQUIPPED: "Cannot store equipped items",
+    
+    # Gambling
+    GAMBLE_INVALID_GUESS: "Guess must be 1-6",
+    GAMBLE_INVALID_BET: "Bet must be positive",
+    GAMBLE_NOT_IN_INN: "Can only gamble in inn",
+    GAMBLE_INSUFFICIENT_FUNDS: "Not enough silver",
+    
+    # Faction
+    FACTION_ALREADY_JOINED: "Already in a faction",
+    FACTION_NOT_FOUND: "Faction does not exist",
+    
+    # Bounty
+    BOUNTY_SELF_TARGET: "Cannot place bounty on yourself",
+    BOUNTY_BELOW_MINIMUM: "Bounty below minimum amount",
+    BOUNTY_INSUFFICIENT_FUNDS: "Not enough silver",
+    
+    # Siege
+    SIEGE_NOT_ACTIVE: "No active siege",
+    SIEGE_OWN_TERRITORY: "Cannot siege own territory",
+    
+    # Black Zone
+    BLACKZONE_MIN_UNITS: "Need 30+ heroes to enter",
+    BLACKZONE_POTION_BANNED: "Potions prohibited in Black Zone",
+    BLACKZONE_DEATH_PENALTY: "Hero died in Black Zone",
+    
+    # Fast Travel
+    FASTTRAVEL_NOT_IN_TAVERN: "Must be in tavern/inn",
+    FASTTRAVEL_WRONG_ZONE: "Must start from Royal City",
+    FASTTRAVEL_INVALID_DESTINATION: "Destination not a Royal City",
+    FASTTRAVEL_ALREADY_THERE: "Already at destination",
+    FASTTRAVEL_COOLDOWN: "Caravan not departed yet",
+    FASTTRAVEL_INSUFFICIENT_FUNDS: "Not enough for ticket",
+    
+    # Rumor
+    RUMOR_NOT_IN_INN: "Must be in inn to post",
+    
+    # Escort
+    ESCORT_USER_NOT_FOUND: "User does not exist",
+    
+    # Mana
+    MANA_INTENSITY_LOW: "Mana intensity below 1.5",
+    MANA_ITEM_NOT_FOUND: "Item not in inventory",
+    MANA_CANNOT_CHARGE: "Item cannot be charged here",
+    
+    # Stat
+    STAT_HERO_NOT_FOUND: "Hero does not exist",
+    STAT_INSUFFICIENT_POINTS: "Not enough stat points",
+    STAT_CAP_EXCEEDED: "Stat at maximum value",
+    
+    # Promotion
+    PROMO_LEVEL_REQUIREMENT: "Need Class Level 20",
+    PROMO_INVALID_CLASS: "Target class not found",
+    PROMO_WRONG_BRANCH: "Class not in evolution line",
+    
+    # Generic
+    GENERIC_NOT_IMPLEMENTED: "Feature not implemented",
+    GENERIC_INVALID_INPUT: "Invalid input parameters",
+    
+    # Network (client-side only)
+    NETWORK_CONNECTION_ERROR: "Unable to connect to server",
+    NETWORK_INVALID_RESPONSE: "Invalid response from server",
+    NETWORK_TIMEOUT: "Connection timed out",
+    NETWORK_UNKNOWN_ERROR: "An unknown network error occurred",
 }
 
 
@@ -748,43 +752,43 @@ const ERROR_MESSAGES: Dictionary = {
 ## @param error_code: The error code string
 ## @return: User-friendly message or the code itself if not found
 static func get_message(error_code: String) -> String:
-	if ERROR_MESSAGES.has(error_code):
-		return ERROR_MESSAGES[error_code]
-	return error_code
+    if ERROR_MESSAGES.has(error_code):
+        return ERROR_MESSAGES[error_code]
+    return error_code
 
 
 ## Check if error code is an authentication error
 ## @param error_code: The error code to check
 ## @return: True if authentication-related error
 static func is_auth_error(error_code: String) -> bool:
-	return error_code.begins_with("AUTH_")
+    return error_code.begins_with("AUTH_")
 
 
 ## Check if error code indicates user/hero is busy
 ## @param error_code: The error code to check
 ## @return: True if busy-related error
 static func is_busy_error(error_code: String) -> bool:
-	return error_code.ends_with("_BUSY") or error_code == "USER_BUSY"
+    return error_code.ends_with("_BUSY") or error_code == "USER_BUSY"
 
 
 ## Check if error code is related to insufficient funds
 ## @param error_code: The error code to check
 ## @return: True if funds-related error
 static func is_funds_error(error_code: String) -> bool:
-	return error_code.find("INSUFFICIENT") != -1 or error_code.find("FUNDS") != -1
+    return error_code.find("INSUFFICIENT") != -1 or error_code.find("FUNDS") != -1
 
 
 ## Check if error is recoverable (user can retry)
 ## @param error_code: The error code to check
 ## @return: True if error is recoverable
 static func is_recoverable(error_code: String) -> bool:
-	# Non-recoverable errors require user action
-	var non_recoverable: Array = [
-		AUTH_SESSION_EXPIRED,
-		AUTH_FORBIDDEN,
-		USER_UNCONSCIOUS,
-		USER_IN_RECOVERY,
-		HERO_DEAD,
-		INVENTORY_ITEM_STOLEN,
-	]
-	return not non_recoverable.has(error_code)
+    # Non-recoverable errors require user action
+    var non_recoverable: Array = [
+        AUTH_SESSION_EXPIRED,
+        AUTH_FORBIDDEN,
+        USER_UNCONSCIOUS,
+        USER_IN_RECOVERY,
+        HERO_DEAD,
+        INVENTORY_ITEM_STOLEN,
+    ]
+    return not non_recoverable.has(error_code)

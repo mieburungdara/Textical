@@ -4,6 +4,7 @@ extends Control
 @onready var market_btn = $ActionGrid/MarketButton
 @onready var quest_btn = $ActionGrid/QuestButton
 @onready var crafting_btn = $ActionGrid/CraftingButton
+@onready var island_btn = $ActionGrid/IslandButton
 @onready var town_title = $HeaderContainer/TownTitle
 @onready var action_grid = $ActionGrid
 
@@ -31,6 +32,7 @@ func _ready():
     market_btn.pressed.connect(_on_market_pressed)
     quest_btn.pressed.connect(_on_quest_pressed)
     crafting_btn.pressed.connect(_on_crafting_pressed)
+    island_btn.pressed.connect(_on_island_pressed)
     
     GameState.last_visited_hub = "res://src/ui/TownScreen.tscn"
     
@@ -95,3 +97,9 @@ func _on_quest_pressed():
     else:
         get_tree().change_scene_to_file("res://src/ui/QuestScreen.tscn")
 func _on_crafting_pressed(): get_tree().change_scene_to_file("res://src/ui/CraftingScreen.tscn")
+
+func _on_island_pressed():
+    if UIManager:
+        UIManager.open_overlay("PrivateIsland", "res://src/ui/PrivateIslandScreen.tscn")
+    else:
+        get_tree().change_scene_to_file("res://src/ui/PrivateIslandScreen.tscn")

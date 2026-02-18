@@ -1,6 +1,7 @@
 const BaseService = require('./BaseService');
 const resolver = require('../logic/genetics/InheritanceResolver');
 const economyService = require('./economyService');
+const HeroBondResolver = require('./stat/HeroBondResolver');
 
 /**
  * HeroBreedingService
@@ -59,6 +60,10 @@ class HeroBreedingService extends BaseService {
             await tx.hero.update({ where: { id: motherId }, data: { hasOffspring: true } });
 
             this.log(`New Legend Born: ${childName} (Gen ${generation}) from Father ${fatherId} and Mother ${motherId}`, "Breeding");
+            
+            // 6. Recalculate Hero Bonds (party synergy)
+            await HeroBondResolver.recalculateBonds(userId);
+            
             return child;
         });
     }

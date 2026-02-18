@@ -38,6 +38,15 @@ func fetch_friends(u_id: int):
 func fetch_achievements(u_id: int):
     _request("/user/" + str(u_id) + "/achievements", HTTPClient.METHOD_GET)
 
+func claim_achievement_reward(u_id: int, code: String):
+    _request("/user/" + str(u_id) + "/achievements/" + code + "/claim", HTTPClient.METHOD_POST)
+
+func fetch_achievement_progress(u_id: int):
+    _request("/user/" + str(u_id) + "/achievements/progress", HTTPClient.METHOD_GET)
+
+func fetch_achievement_titles(u_id: int):
+    _request("/user/" + str(u_id) + "/achievements/titles", HTTPClient.METHOD_GET)
+
 func update_settings(u_id: int, settings: Dictionary):
     _request("/user/settings", HTTPClient.METHOD_POST, {"userId": u_id, "settings": settings})
 

@@ -1,328 +1,137 @@
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
 const sessionService = require('./sessionService');
 const socketRouter = require('./socketRouter');
+const logger = require('../utils/logger');
 
+/**
+ * SocketService - Manages real-time connections via Socket.io
+ */
 class SocketService {
     constructor() {
         this.io = null;
-        this.userSockets = new Map(); // userId -> socketId
-        this.socketToToken = new Map(); // socketId -> sessionToken
-        this.socketToUser = new Map(); // socketId -> userId
+        this.userSockets = new Map(); // userId -> Set of socketIds
+        this.socketSessions = new Map(); // socketId -> session token
     }
 
+    /**
+     * Initializes the Socket.io server
+     * @param {Object} server - The HTTP server instance
+     */
     init(server) {
         this.io = new Server(server, {
-            cors: { origin: "*" }
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST"]
+            }
         });
 
-        this.io.on("connection", (socket) => {
-            console.log(`[SOCKET] New connection: ${socket.id}`);
-
-            socket.on("authenticate", async (data) => {
-                try {
-                    // Support both old format (userId only) and new format (userId + sessionToken)
-                    let userId, sessionToken;
-                    
-                    if (typeof data === 'object' && data.sessionToken) {
-                        userId = parseInt(data.userId);
-                        sessionToken = data.sessionToken;
-                    } else {
-                        userId = parseInt(data);
-                        sessionToken = null;
-                    }
-                    
-                    // If new session-based auth, validate the token
-                    if (sessionToken) {
-                        const session = await sessionService.validateSession(sessionToken);
-                        if (!session) {
-                            socket.emit("session_invalid", { reason: "expired" });
-                            console.log(`[SOCKET] Authentication failed for ${socket.id}: invalid session token`);
-                            return;
-                        }
-                        
-                        // Check if user already has an active socket
-                        const existingSocketId = this.userSockets.get(userId);
-                        if (existingSocketId && existingSocketId !== socket.id) {
-                            // Send disconnect notification to old socket
-                            this.emitToSocket(existingSocketId, "session_disconnecting", {
-                                reason: "new_login",
-                                message: "New login detected on another device"
-                            });
-                            
-                            // Wait 5 seconds then disconnect old socket
-                            setTimeout(() => {
-                                this.disconnectSocket(existingSocketId, "new_login");
-                            }, 5000);
-                        }
-                        
-                        // Store session token mapping
-                        this.socketToToken.set(socket.id, sessionToken);
-                    }
-                    
-                    // Store user mapping
-                    this.userSockets.set(userId, socket.id);
-                    this.socketToUser.set(socket.id, userId);
-                    socket.userId = userId;
-                    socket.sessionToken = sessionToken;
-                    
-                    // Register handlers via SocketRouter
-                    socketRouter.registerHandlers(this.io, socket, userId);
-
-                    console.log(`[SOCKET] User ${userId} authenticated on socket ${socket.id}`);
-                    socket.emit("authenticated", { userId, sessionToken }); // Confirm auth
-                    
-                } catch (error) {
-                    console.error(`[SOCKET] Authentication error: ${error.message}`);
-                    socket.emit("error", { message: "Authentication failed" });
-                }
-            });
-
-            // Admin bypass login handler (DEVELOPMENT MODE ONLY)
-            if (process.env.NODE_ENV === 'development') {
-                socket.on("admin_bypass_login", async () => {
-                    try {
-                        // Use dev user ID 1 for bypass login
-                        const devUserId = 1;
-                        
-                        // Store user mapping
-                        this.userSockets.set(devUserId, socket.id);
-                        this.socketToUser.set(socket.id, devUserId);
-                        socket.userId = devUserId;
-                        socket.sessionToken = null;
-                        socket.isDevAdmin = true;
-                        
-                        // Register handlers via SocketRouter
-                        socketRouter.registerHandlers(this.io, socket, devUserId);
-
-                        console.log(`[SOCKET] Dev admin bypass login: User ${devUserId} authenticated on socket ${socket.id}`);
-                        socket.emit("authenticated", { userId: devUserId, devMode: true });
-                        
-                    } catch (error) {
-                        console.error(`[SOCKET] Admin bypass login error: ${error.message}`);
-                        socket.emit("error", { message: "Admin bypass login failed" });
-                    }
-                });
-            } else {
-                // Production mode: log warning and ignore bypass attempts
-                socket.on("admin_bypass_login", () => {
-                    console.warn(`[SECURITY] Admin bypass login attempt blocked in ${process.env.NODE_ENV} mode`);
-                    socket.emit("error", { message: "Admin bypass not available in production" });
-                });
+        this.io.use(async (socket, next) => {
+            const token = socket.handshake.auth.token || socket.handshake.headers['x-session-token'];
+            
+            if (!token) {
+                return next(new Error("Authentication required"));
             }
 
-            // Heartbeat handler
-            socket.on("heartbeat", async (data) => {
-                const token = data?.token || socket.sessionToken;
-                if (token) {
-                    await sessionService.heartbeat(token);
+            try {
+                const session = await sessionService.validateSession(token);
+                if (!session) {
+                    return next(new Error("Invalid or expired session"));
                 }
-            });
 
+                socket.userId = session.userId;
+                socket.sessionToken = token;
+                next();
+            } catch (error) {
+                logger.error("[SOCKET] Auth error:", error);
+                next(new Error("Internal server error"));
+            }
+        });
 
+        this.io.on('connection', (socket) => {
+            const userId = socket.userId;
+            const token = socket.sessionToken;
 
-            socket.on("disconnect", () => {
-                console.log(`[SOCKET] Disconnected: ${socket.id}`);
+            logger.info(`[SOCKET] User ${userId} connected (socket: ${socket.id})`);
+
+            // Track socket
+            if (!this.userSockets.has(userId)) {
+                this.userSockets.set(userId, new Set());
+            }
+            this.userSockets.get(userId).add(socket.id);
+            this.socketSessions.set(socket.id, token);
+
+            // Register handlers
+            socketRouter.registerHandlers(this.io, socket, userId);
+
+            socket.on('disconnect', () => {
+                logger.info(`[SOCKET] User ${userId} disconnected (socket: ${socket.id})`);
                 
-                // Lazy-load to avoid circular dependencies
-                try {
-                    const statHandler = require('../handlers/statHandler');
-                    if (statHandler && typeof statHandler.removeClient === 'function') {
-                        statHandler.removeClient(socket);
-                    }
-                } catch (e) {
-                    console.error("[SOCKET] Failed to cleanup statHandler:", e.message);
-                }
-                
-                // Get userId before cleanup
-                const userId = socket.userId;
-                const token = socket.sessionToken;
-                
-                // Cleanup mappings
-                this.socketToToken.delete(socket.id);
-                this.socketToUser.delete(socket.id);
-                
-                if (userId) {
-                    // Only clear user socket mapping if this is the current socket for that user
-                    if (this.userSockets.get(userId) === socket.id) {
+                const sockets = this.userSockets.get(userId);
+                if (sockets) {
+                    sockets.delete(socket.id);
+                    if (sockets.size === 0) {
                         this.userSockets.delete(userId);
-                        console.log(`[SOCKET] User ${userId} socket cleared`);
                     }
                 }
+                this.socketSessions.delete(socket.id);
             });
         });
+
+        logger.info("[SOCKET] Socket.io system initialized");
     }
 
     /**
-     * Emit event to specific socket by socketId
-     */
-    emitToSocket(socketId, event, data) {
-        if (this.io && socketId) {
-            this.io.to(socketId).emit(event, data);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Get socketId by session token
+     * Finds a socketId by session token
+     * @param {string} token 
+     * @returns {string|null}
      */
     getSocketIdBySessionToken(token) {
-        for (let [socketId, sessionToken] of this.socketToToken.entries()) {
-            if (sessionToken === token) {
-                return socketId;
-            }
+        for (const [socketId, t] of this.socketSessions.entries()) {
+            if (t === token) return socketId;
         }
         return null;
     }
 
     /**
-     * Disconnect a specific socket with reason
+     * Emits an event to a specific socket
+     */
+    emitToSocket(socketId, event, data) {
+        if (this.io) {
+            this.io.to(socketId).emit(event, data);
+        }
+    }
+
+    /**
+     * Disconnects a specific socket
      */
     disconnectSocket(socketId, reason = "unknown") {
-        if (this.io && socketId) {
-            const userId = this.socketToUser.get(socketId);
-            
-            // Emit force_logout before disconnecting
-            this.io.to(socketId).emit("force_logout", {
-                reason,
-                message: `Disconnected: ${reason}`
-            });
-            
-            // Disconnect the socket
-            const socket = this.io.sockets.sockets.get(socketId);
-            if (socket) {
-                socket.disconnect(true);
-            }
-            
-            // Cleanup mappings
-            this.socketToToken.delete(socketId);
-            this.socketToUser.delete(socketId);
-            
-            if (userId) {
-                if (this.userSockets.get(userId) === socketId) {
-                    this.userSockets.delete(userId);
-                }
-            }
-            
-            console.log(`[SOCKET] Force disconnected socket ${socketId}, reason: ${reason}`);
-            return true;
+        const socket = this.io?.sockets.sockets.get(socketId);
+        if (socket) {
+            socket.disconnect(true);
+            logger.info(`[SOCKET] Disconnected socket ${socketId} (reason: ${reason})`);
         }
-        return false;
     }
 
     /**
-     * Disconnect socket by session token
+     * Disconnects all sockets for a user
      */
-    disconnectSocketByToken(token, reason = "logout") {
+    disconnectAllUserSockets(userId, reason = "unknown") {
+        const sockets = this.userSockets.get(userId);
+        if (sockets) {
+            for (const socketId of sockets) {
+                this.disconnectSocket(socketId, reason);
+            }
+        }
+    }
+
+    /**
+     * Disconnects socket by token
+     */
+    disconnectSocketByToken(token, reason = "unknown") {
         const socketId = this.getSocketIdBySessionToken(token);
         if (socketId) {
-            return this.disconnectSocket(socketId, reason);
-        }
-        return false;
-    }
-
-    /**
-     * Disconnect all sockets for a user
-     */
-    disconnectAllUserSockets(userId, reason = "logout") {
-        const socketIds = [];
-        
-        // Find all socketIds for this user
-        for (let [socketId, uid] of this.socketToUser.entries()) {
-            if (uid === userId) {
-                socketIds.push(socketId);
-            }
-        }
-        
-        // Disconnect each socket
-        for (const socketId of socketIds) {
             this.disconnectSocket(socketId, reason);
         }
-        
-        return socketIds.length;
-    }
-
-    /**
-     * Pushes data to a specific user instantly.
-     */
-    emitToUser(userId, event, data) {
-        const socketId = this.userSockets.get(userId);
-        if (socketId && this.io) {
-            this.io.to(socketId).emit(event, data);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Update badge count for a specific user
-     * @param {number} userId - Target user ID
-     * @param {string} badgeName - Badge identifier (Quests, Bag, Guild, Character, Chat, Mail)
-     * @param {number} count - Badge count (0 to hide)
-     */
-    updateBadge(userId, badgeName, count) {
-        return this.emitToUser(userId, "badge:update", {
-            badge: badgeName,
-            count: count
-        });
-    }
-
-    /**
-     * Show notification badge for chat
-     * @param {number} userId - Target user ID
-     * @param {number} unreadCount - Number of unread messages
-     */
-    notifyNewChat(userId, unreadCount) {
-        return this.updateBadge(userId, "Chat", unreadCount);
-    }
-
-    /**
-     * Show notification badge for mail
-     * @param {number} userId - Target user ID
-     * @param {number} unreadCount - Number of unread mails
-     */
-    notifyNewMail(userId, unreadCount) {
-        return this.updateBadge(userId, "Mail", unreadCount);
-    }
-
-    /**
-     * Show notification badge for guild
-     * @param {number} userId - Target user ID
-     * @param {number} notificationCount - Number of notifications
-     */
-    notifyGuildActivity(userId, notificationCount) {
-        return this.updateBadge(userId, "Guild", notificationCount);
-    }
-
-    /**
-     * Show notification badge for friend request
-     * @param {number} userId - Target user ID
-     * @param {number} requestCount - Number of pending requests
-     */
-    notifyFriendRequest(userId, requestCount) {
-        return this.updateBadge(userId, "FriendRequest", requestCount);
-    }
-
-    /**
-     * Broadcast to everyone (World events).
-     */
-    broadcast(event, data) {
-        if (this.io) this.io.emit(event, data);
-    }
-
-    /**
-     * Get all connected socket IDs
-     */
-    getConnectedSocketIds() {
-        if (!this.io) return [];
-        return Array.from(this.io.sockets.sockets.keys());
-    }
-
-    /**
-     * Get count of connected sockets
-     */
-    getConnectedCount() {
-        return this.socketToUser.size;
     }
 }
 

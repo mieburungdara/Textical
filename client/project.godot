@@ -20,11 +20,13 @@ ServerConnector="*res://src/autoload/server_connector.gd"
 GameState="*res://src/autoload/game_state.gd"
 DataManager="*res://src/autoload/data_manager.gd"
 SocketHandler="*res://src/network/SocketHandler.gd"
+SkillMasteryHandler="*res://src/network/SkillMasteryHandler.gd"
 GuildHandler="*res://src/network/GuildHandler.gd"
 DebugOverlay="*res://src/ui/DebugOverlay.tscn"
 UIManager="*res://src/autoload/ui_manager.gd"
 SideHUD="*res://src/ui/side_hud/SideHUD.tscn"
 LocalizationManager="*res://src/autoload/LocalizationManager.gd"
+MCPInputHandler="*res://addons/godot_mcp/mcp_input_handler.gd"
 
 [display]
 

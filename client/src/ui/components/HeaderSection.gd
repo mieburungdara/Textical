@@ -2,7 +2,7 @@ extends VBoxContainer
 class_name HeaderSection
 
 ## HeaderSection - Component untuk menampilkan header hero
-## Features: Avatar, name, level, class, rarity, dan stats summary
+## Features: Avatar, name, level, class, rarity, stats summary, dan reputation
 
 # === NODE REFERENCES ===
 @onready var avatar_frame: PanelContainer = $AvatarFrame
@@ -13,6 +13,15 @@ class_name HeaderSection
 @onready var rarity_label: Label = $InfoSection/RarityLabel
 @onready var class_label: Label = $InfoSection/ClassLevelRow/ClassLabel
 @onready var stats_summary: StatsSummary = $InfoSection/StatsSummary
+@onready var reputation_label: Label = $InfoSection/ReputationLabel
+
+# === PRIVATE VARIABLES ===
+var _reputation_handler = null
+
+func _ready():
+	_reputation_handler = get_node_or_null("/root/ReputationHandler")
+	if reputation_label:
+		reputation_label.visible = false
 
 # === PUBLIC METHODS ===
 
@@ -86,6 +95,27 @@ func update_stats(stats: Dictionary):
         stats_summary.update_stats_from_dict(stats)
 
 
+## Update reputation display
+func update_reputation(user_id: int):
+	if _reputation_handler and user_id > 0:
+		_reputation_handler.get_user_reputation(user_id)
+		if not _reputation_handler.reputation_received.is_connected(_on_reputation_received):
+			_reputation_handler.reputation_received.connect(_on_reputation_received)
+
+func _on_reputation_received(stats: Dictionary):
+	if reputation_label:
+		var likes = stats.get("totalLikes", 0)
+		var dislikes = stats.get("totalDislikes", 0)
+		var tier = stats.get("likeTier", "NEWCOMER")
+		var badge_info = ReputationHandler.get_badge_info(tier)
+		var icon = badge_info.get("icon", "⚪")
+		var special = ReputationHandler.get_special_badge(likes, dislikes)
+		if not special.is_empty():
+			icon = special.get("icon", icon)
+		reputation_label.text = "%s ❤️%d 💔%d" % [icon, likes, dislikes]
+		reputation_label.visible = true
+
+
 ## Reset semua display ke default
 func reset_display():
     if name_label:
@@ -100,6 +130,8 @@ func reset_display():
         avatar_initial.text = "H"
     if stats_summary:
         stats_summary.reset_stats()
+    if reputation_label:
+        reputation_label.visible = false
 
 
 # === PRIVATE METHODS ===

@@ -5,6 +5,7 @@
  */
 
 const heroRepository = require('../repositories/heroRepository');
+const HeroBondResolver = require('./stat/HeroBondResolver');
 
 class PermadeathService {
     /**
@@ -57,12 +58,15 @@ class PermadeathService {
             if (hero.isMain) {
                  return { ...result, deleted: false, message: "Main unit respawns naked." };
             }
+            const userId = hero.userId; // Capture before deletion
             if (result.isLegendary) {
                 await this.archiveToHallOfFame(hero, username, deathReason);
                 result.archived = true;
             }
             await this.deleteHero(hero.id);
             result.deleted = true;
+            // Recalculate bonds after permadeath
+            if (userId) await HeroBondResolver.recalculateBonds(userId);
             return result;
         }
 
@@ -72,12 +76,15 @@ class PermadeathService {
                 // Main hero survives in Red Zone (but penalty is inventory loss, handled in RewardService)
                 return { ...result, deleted: false, message: "Main unit survived Red Zone penalty." };
             }
+            const userId = hero.userId; // Capture before deletion
             if (result.isLegendary) {
                 await this.archiveToHallOfFame(hero, username, deathReason);
                 result.archived = true;
             }
             await this.deleteHero(hero.id);
             result.deleted = true;
+            // Recalculate bonds after permadeath
+            if (userId) await HeroBondResolver.recalculateBonds(userId);
             return result;
         }
 

@@ -4,6 +4,17 @@ Selamat datang di **Textical**, sebuah dunia di mana taktik persiapan Anda menen
 
 ---
 
+## 💎 Sistem Socket Gem (Item Enhancement)
+Sistem penyisipan gem ke equipment untuk meningkatkan statistik pahlawan:
+- **6 Jenis Elemen**: Fire (ATK), Water (MATK), Earth (DEF), Wind (SPD), Light (CRIT), Dark (HP)
+- **5 Tier**: Setiap elemen memiliki 5 tier dengan statistik yang meningkat
+- **Drop Chance**: 1% dari monster normal, 10% dari boss
+- **Gem Removal**: Biaya 50% dari nilai gem
+- **Upgrade Recipe**: 3x gem tier sama = 1x tier berikutnya
+- **Integrasi Stats**: Bonus gem dihitung dalam total statistik pahlawan
+
+---
+
 ## 🌟 20 Tahapan Perang (Master Battle Life-Cycle)
 Setiap detik di medan perang simulasi kami melewati 20 filter logika yang sangat detail. Tidak ada aksi yang terjadi secara kebetulan; semuanya adalah hasil dari sinergi persiapan Anda.
 

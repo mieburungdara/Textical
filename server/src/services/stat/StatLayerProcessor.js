@@ -116,6 +116,30 @@ class StatLayerProcessor {
                     });
                 });
             });
+
+            // Apply enchantment bonuses
+            instance.enchantments?.forEach(ench => {
+                const template = ench.enchantment;
+                if (!template) return;
+                
+                const level = ench.level || 1;
+                const flatBonus = (template.statValuePerLevel || 0) * level;
+                const percentBonus = (template.percentBonusPerLevel || 0) * level;
+                
+                // Apply flat bonus
+                if (flatBonus > 0) {
+                    applyMod(template.statKey, flatBonus, 0, `Enchant:${template.name}`, {
+                        priority: 19 // Between traits (18) and equipment (20)
+                    });
+                }
+                
+                // Apply percentage bonus
+                if (percentBonus > 0) {
+                    applyMod(template.statKey, percentBonus, 1, `Enchant:${template.name}`, {
+                        priority: 19
+                    });
+                }
+            });
         }
     }
 

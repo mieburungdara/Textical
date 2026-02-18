@@ -10,6 +10,8 @@ const InventoryHandlerClass = preload("res://src/network/InventoryHandler.gd")
 const BattleHandlerClass = preload("res://src/network/BattleHandler.gd")
 const StatHandlerClass = preload("res://src/network/StatHandler.gd")
 const AssetHandlerClass = preload("res://src/network/AssetHandler.gd")
+const PrivateIslandHandlerClass = preload("res://src/network/PrivateIslandHandler.gd")
+const AchievementHandlerClass = preload("res://src/network/AchievementHandler.gd")
 
 signal login_success(user)
 signal login_failed(error)
@@ -42,6 +44,8 @@ var battle
 var stat
 var asset
 var socket
+var island
+var achievement
 
 func _ready():
     auth = AuthHandlerClass.new()
@@ -53,14 +57,21 @@ func _ready():
     battle = BattleHandlerClass.new()
     stat = StatHandlerClass.new()
     asset = AssetHandlerClass.new()
+    island = PrivateIslandHandlerClass.new()
+    achievement = AchievementHandlerClass.new()
     # SocketHandler is autoload, use it directly
     socket = SocketHandler
     
-    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, asset]
+    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, asset, island, achievement]
     for h in handlers:
         add_child(h)
         if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
-        if h.has_signal("error_occurred"): h.error_occurred.connect(func(e, m): emit_signal("error_occurred", e, m))
+        if h.has_signal("error_occurred"): 
+            h.error_occurred.connect(func(endpoint, error_code, message): 
+                print("[ServerConnector] Error from handler: ", endpoint, " | ", error_code, ": ", message)
+                emit_signal("error_occurred", endpoint, message)
+            )
+
     
     # Stat Handler Signal Routing
     stat.stats_updated.connect(func(u, s): stats_updated.emit(u, s))
@@ -87,12 +98,16 @@ func _ready():
     socket.badge_updated.connect(_on_badge_updated)
     
     auth.login_success.connect(_on_login_success)
-    auth.login_failed.connect(func(e): emit_signal("login_failed", e))
+    auth.login_failed.connect(func(message, extra): 
+        print("[ServerConnector] Login failed: ", message, " Extra: ", extra)
+        emit_signal("login_failed", message)
+    )
+
 
 func _on_handler_request_completed(endpoint: String, data):
     emit_signal("request_completed", endpoint, data)
 
-func _on_login_success(user, session):
+func _on_login_success(user, _session):
     print("[CONNECTOR] Login success received. User object type: ", typeof(user))
     
     # Extract actual user data - AuthHandler already extracts 'user' or 'data'
@@ -289,3 +304,15 @@ func test_connection(timeout_sec: float = 10.0) -> bool:
 ## Check if server is reachable (must call test_connection first)
 func is_server_reachable() -> bool:
     return _is_server_reachable
+
+# --- PRIVATE ISLAND ---
+func get_private_island(user_id: int): island.get_island(user_id)
+func get_private_island_status(user_id: int): island.get_island_status(user_id)
+func unlock_private_island(user_id: int): island.unlock_island(user_id)
+func plant_seed(user_id: int, plot_index: int, seed_template_id: int): island.plant_seed(user_id, plot_index, seed_template_id)
+func harvest_crop(user_id: int, plot_index: int): island.harvest_crop(user_id, plot_index)
+func add_to_storage(user_id: int, item_template_id: int, quantity: int): island.add_to_storage(user_id, item_template_id, quantity)
+func remove_from_storage(user_id: int, slot_index: int, quantity: int): island.remove_from_storage(user_id, slot_index, quantity)
+func upgrade_island_plots(user_id: int): island.upgrade_plots(user_id)
+func upgrade_island_storage(user_id: int): island.upgrade_storage(user_id)
+func get_crop_templates(): island.get_crop_templates()

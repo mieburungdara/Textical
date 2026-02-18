@@ -79,32 +79,32 @@ class ElementalResolver {
         fire: {
             weakAgainst: 'water',
             strongAgainst: 'nature',
-            neutral: ['earth', 'lightning', 'light', 'dark', 'neutral']
+            neutral: ['earth', 'wind', 'lightning', 'light', 'dark', 'neutral']
         },
         water: {
-            weakAgainst: 'earth',
+            weakAgainst: 'lightning',
             strongAgainst: 'fire',
-            neutral: ['wind', 'lightning', 'light', 'dark', 'neutral']
+            neutral: ['wind', 'earth', 'nature', 'light', 'dark', 'neutral']
+        },
+        nature: {
+            weakAgainst: 'fire',
+            strongAgainst: 'earth',
+            neutral: ['water', 'wind', 'lightning', 'light', 'dark', 'neutral']
+        },
+        wind: {
+            weakAgainst: 'water',
+            strongAgainst: 'earth',
+            neutral: ['fire', 'nature', 'lightning', 'light', 'dark', 'neutral']
         },
         earth: {
             weakAgainst: 'wind',
             strongAgainst: 'lightning',
             neutral: ['fire', 'water', 'nature', 'light', 'dark', 'neutral']
         },
-        wind: {
-            weakAgainst: 'earth',
-            strongAgainst: 'fire',
-            neutral: ['water', 'nature', 'lightning', 'light', 'dark', 'neutral']
-        },
         lightning: {
             weakAgainst: 'earth',
             strongAgainst: 'water',
             neutral: ['fire', 'wind', 'nature', 'light', 'dark', 'neutral']
-        },
-        nature: {
-            weakAgainst: 'fire',
-            strongAgainst: 'earth',
-            neutral: ['water', 'wind', 'lightning', 'light', 'dark', 'neutral']
         },
         light: {
             weakAgainst: 'dark',  // Light is weak against dark attacks
@@ -299,4 +299,5 @@ class ElementalResolver {
     }
 }
 
-module.exports = ElementalResolver;
+module.exports = ElementalResolver;module.exports = ElementalResolver;
+

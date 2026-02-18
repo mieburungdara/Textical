@@ -20,9 +20,6 @@ var _server_versions = {}
 var _fallback_data = {}
 var _data_cache = {}
 
-var _sync_queue = []
-var _total_to_sync = 0
-
 func _ready():
     _load_fallback_data()
     _ensure_dirs()

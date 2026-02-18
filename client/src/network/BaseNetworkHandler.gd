@@ -2,7 +2,7 @@ extends Node
 class_name BaseNetworkHandler
 
 ## Import centralized error codes
-const ErrorCodes = preload("res://src/constants/ErrorCodes.gd")
+const ErrCodes = preload("res://src/constants/ErrorCodes.gd")
 
 ## Signals for request handling
 signal request_completed(endpoint, data)
@@ -29,7 +29,7 @@ func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}
     
     var error = http.request(url, headers, method, json_str)
     if error != OK:
-        emit_signal("error_occurred", endpoint, ErrorCodes.NETWORK_CONNECTION_ERROR, "Connection Error")
+        emit_signal("error_occurred", endpoint, ErrCodes.NETWORK_CONNECTION_ERROR, "Connection Error")
         http.queue_free()
 
 ## Asynchronous request that returns data directly
@@ -44,7 +44,7 @@ func _request_async(endpoint: String, method: HTTPClient.Method, body: Dictionar
     var error = http.request(url, headers, method, json_str)
     if error != OK:
         http.queue_free()
-        return {"success": false, "error": ErrorCodes.NETWORK_CONNECTION_ERROR, "message": "Connection Error"}
+        return {"success": false, "error": ErrCodes.NETWORK_CONNECTION_ERROR, "message": "Connection Error"}
     
     var response = await http.request_completed
     var result = response[0]
@@ -77,7 +77,7 @@ func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, re
         print("[NETWORK_ERROR] Endpoint: ", endpoint)
         print("[NETWORK_ERROR] Response Code: ", response_code)
         print("[NETWORK_ERROR] Raw Body: ", response_text.left(200)) # Log first 200 chars
-        emit_signal("error_occurred", endpoint, ErrorCodes.NETWORK_INVALID_RESPONSE, error_msg)
+        emit_signal("error_occurred", endpoint, ErrCodes.NETWORK_INVALID_RESPONSE, error_msg)
         http_node.queue_free()
         return
     
@@ -98,12 +98,12 @@ func _on_request_completed(http_node: HTTPRequest, endpoint: String, _result, re
 ## Extract error code from server response
 func _extract_error_code(json) -> String:
     if json == null or not json is Dictionary:
-        return ErrorCodes.NETWORK_INVALID_RESPONSE
+        return ErrCodes.NETWORK_INVALID_RESPONSE
     
     # Server sends error code in "error" field
     var error_code = json.get("error", "")
     if error_code.is_empty():
-        return ErrorCodes.NETWORK_UNKNOWN_ERROR
+        return ErrCodes.NETWORK_UNKNOWN_ERROR
     
     return error_code
 
@@ -117,23 +117,23 @@ func _extract_error_message(json) -> String:
 
 ## Check if error code indicates a recoverable error
 func _is_recoverable_error(error_code: String) -> bool:
-    return ErrorCodes.is_recoverable(error_code)
+    return ErrCodes.is_recoverable(error_code)
 
 ## Get user-friendly error message for an error code
 func _get_error_message(error_code: String) -> String:
-    return ErrorCodes.get_message(error_code)
+    return ErrCodes.get_message(error_code)
 
 ## Check if error is authentication-related
 func _is_auth_error(error_code: String) -> bool:
-    return ErrorCodes.is_auth_error(error_code)
+    return ErrCodes.is_auth_error(error_code)
 
 ## Check if error is funds-related
 func _is_funds_error(error_code: String) -> bool:
-    return ErrorCodes.is_funds_error(error_code)
+    return ErrCodes.is_funds_error(error_code)
 
 ## Check if error indicates user/entity is busy
 func _is_busy_error(error_code: String) -> bool:
-    return ErrorCodes.is_busy_error(error_code)
+    return ErrCodes.is_busy_error(error_code)
 
 func _handle_success(_endpoint: String, _json):
     pass

@@ -50,3 +50,7 @@ Daftar tugas implementasi UI di Godot untuk mendukung fitur Backend Inn System.
 - [ ] **Audio Engine Integration:** Implementasi `MapAudioManager` untuk memutar BGM secara dinamis dari `mapMusic.path`.
 - [ ] **Lore UI:** Tampilkan `regionLoreSnippet` dalam panel detail wilayah saat pin atlas diklik.
 - [ ] **Dynamic Ambience:** Sinkronisasi `ambientSfxPack` dengan kontrol volume ambience di Godot.
+## Maintenance & Infrastructure
+- [x] Fix Signal Argument Mismatches in `server_connector.gd`.
+- [ ] Clean up `UNUSED_SIGNAL` and `UNUSED_PARAMETER` warnings once features are implemented.
+- [ ] Implement central logging for all Network Handlers.

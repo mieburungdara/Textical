@@ -27,6 +27,10 @@ var _search_input: LineEdit
 var _sort_dropdown: OptionButton
 var _search_panel: HBoxContainer
 
+# Treasure Map data
+var _treasure_maps: Array = []
+var _treasure_handler: Node = null
+
 # === PRIVATE VARIABLES ===
 var _inventory_data = []
 var _filtered_data = []
@@ -55,9 +59,37 @@ var _rarity_order = {
 func _ready():
     _setup_styles()
     _setup_search_sort_ui()
+    _setup_treasure_handler()
+    _add_maps_category_button()
     _connect_signals()
     _show_initial_state()
     refresh()
+
+func _setup_treasure_handler():
+    # Get or create treasure map handler
+    if has_node("/root/TreasureMapHandler"):
+        _treasure_handler = get_node("/root/TreasureMapHandler")
+    else:
+        # Create handler if not exists
+        _treasure_handler = preload("res://src/network/TreasureMapHandler.gd").new()
+        _treasure_handler.name = "TreasureMapHandler"
+        get_tree().root.add_child(_treasure_handler)
+    
+    # Connect treasure handler signals
+    if _treasure_handler and _treasure_handler.has_signal("maps_updated"):
+        _treasure_handler.maps_updated.connect(_on_treasure_maps_updated)
+        _treasure_handler.map_used.connect(_on_treasure_map_used)
+        _treasure_handler.error_occurred.connect(_on_treasure_error)
+
+func _add_maps_category_button():
+    # Add MAPS button to category header
+    var maps_btn = Button.new()
+    maps_btn.name = "Maps"
+    maps_btn.text = "MAPS"
+    maps_btn.focus_mode = 0
+    maps_btn.add_theme_stylebox_override("normal", _style_tab_normal)
+    maps_btn.pressed.connect(_on_category_pressed.bind("Maps"))
+    category_header.add_child(maps_btn)
 
 func _setup_styles():
     _style_tab_normal = StyleBoxFlat.new()
@@ -267,6 +299,10 @@ func _apply_filter():
     # First filter by category
     if _current_category == "All":
         _filtered_data = _inventory_data.duplicate()
+    elif _current_category == "Maps":
+        # Show treasure maps from server
+        _fetch_treasure_maps()
+        return # Don't populate grid yet, wait for data
     else:
         _filtered_data = []
         for item in _inventory_data:
@@ -391,8 +427,17 @@ func _fill_slot(slot: Control, item):
     slot.add_child(btn)
     
     var template = item.get("template", {})
+    var map_data = item.get("treasure_map_data", {})
+    
+    # Use treasure map emoji if it's a treasure map
+    var icon_text = ""
+    if map_data.size() > 0:
+        icon_text = "🗺️"
+    else:
+        icon_text = _get_item_emoji(template.get("name", "Unknown"))
+    
     var icon = Label.new()
-    icon.text = _get_item_emoji(template.get("name", "Unknown"))
+    icon.text = icon_text
     icon.add_theme_font_size_override("font_size", 34)
     icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -400,6 +445,9 @@ func _fill_slot(slot: Control, item):
     btn.add_child(icon)
     
     var rarity = template.get("rarity", "COMMON")
+    # Use treasure map rarity if available
+    if map_data.size() > 0:
+        rarity = map_data.get("rarity", "COMMON")
     var rarity_color = _get_rarity_color(rarity)
     
     if rarity != "COMMON":
@@ -474,7 +522,13 @@ func _show_details(item, btn):
     main_vbox.visible = true
     
     var template = item.get("template", {})
+    var map_data = item.get("treasure_map_data", {})
     var rarity = template.get("rarity", "COMMON")
+    
+    # Use treasure map rarity if available
+    if map_data.size() > 0:
+        rarity = map_data.get("rarity", "COMMON")
+    
     var rarity_color = _get_rarity_color(rarity)
     
     item_name.text = template.get("name", "Unknown").to_upper()
@@ -482,6 +536,11 @@ func _show_details(item, btn):
     rarity_badge.text = rarity.to_upper() + " ARTIFACT"
     rarity_badge.modulate = rarity_color.lerp(Color.WHITE, 0.3)
     item_desc.text = template.get("description", "No description available.")
+    
+    # Update icon for treasure maps
+    if map_data.size() > 0 and item_icon:
+        item_icon.texture = null  # Clear texture
+        # We'll show emoji in ItemName instead
     
     var stats = ""
     var item_stats = template.get("stats", [])
@@ -522,11 +581,15 @@ func _on_close_details_pressed():
 func _update_action_buttons(item: Dictionary):
     var template = item.get("template", {})
     var cat = template.get("category", "MISC").to_upper()
+    var map_data = item.get("treasure_map_data", {})
+    
+    # Check if this is a treasure map
+    var is_treasure_map = cat == "MAPS" or map_data.size() > 0
     
     # Determine visibility
     var can_equip = cat in ["WEAPON", "ARMOR", "HELMET", "ACCESSORY"]
-    var can_use = cat == "CONSUMABLE"
-    var can_drop = template.get("isQuestItem", false) == false 
+    var can_use = cat == "CONSUMABLE" or is_treasure_map
+    var can_drop = template.get("isQuestItem", false) == false and not is_treasure_map
     
     equip_btn.visible = can_equip
     use_btn.visible = can_use
@@ -539,6 +602,14 @@ func _update_action_buttons(item: Dictionary):
         equip_btn.text = "EQUIP RELIC"
     elif cat == "ACCESSORY":
         equip_btn.text = "WEAR ACCESSORY"
+    
+    # Update use button text for treasure maps
+    if is_treasure_map:
+        var is_used = map_data.get("isUsed", false)
+        if is_used:
+            use_btn.text = "VIEW ON MAP"
+        else:
+            use_btn.text = "USE MAP"
 
 func _animate_slot_appearance(slot, delay):
     slot.modulate.a = 0
@@ -611,6 +682,91 @@ func _get_item_emoji(p_item_name: String) -> String:
     if "ring" in name_lower: return "💍"
     return "📦"
 
+# === TREASURE MAP FUNCTIONS ===
+
+func _fetch_treasure_maps():
+    if _treasure_handler:
+        _treasure_handler.get_unused_maps()
+
+func _on_treasure_maps_updated(maps: Array):
+    _treasure_maps = maps
+    # Convert maps to display format
+    _filtered_data = []
+    for map_data in maps:
+        var display_item = {
+            "template": {
+                "name": _get_treasure_map_name(map_data),
+                "description": _get_treasure_map_desc(map_data),
+                "category": "MAPS",
+                "rarity": map_data.get("rarity", "COMMON"),
+                "icon": "🗺️"
+            },
+            "treasure_map_data": map_data,
+            "id": map_data.get("id", 0),
+            "quantity": 1
+        }
+        _filtered_data.append(display_item)
+    _populate_grid()
+
+func _get_treasure_map_name(map_data: Dictionary) -> String:
+    var rarity = map_data.get("rarity", "COMMON")
+    match rarity:
+        "LEGENDARY": return "Ancient Treasure Map"
+        "RARE": return "Rare Treasure Map"
+        "UNCOMMON": return "Uncommon Treasure Map"
+        _: return "Treasure Map"
+
+func _get_treasure_map_desc(map_data: Dictionary) -> String:
+    var rarity = map_data.get("rarity", "COMMON")
+    var is_used = map_data.get("isUsed", false)
+    
+    if is_used:
+        var region = map_data.get("regionId", 0)
+        var coords = map_data.get("coordinatesX", 0)
+        var coords_y = map_data.get("coordinatesY", 0)
+        var hints = map_data.get("hints", "")
+        
+        match rarity:
+            "LEGENDARY": return "A vague hint points to a legendary treasure..."
+            "RARE": return "A general area has been marked: Region %d" % region
+            "UNCOMMON": return "The map shows Region %d, Coordinates (%d, %d)" % [region, coords, coords_y]
+            _: return "The map reveals exact coordinates: (%d, %d)" % [coords, coords_y]
+    else:
+        match rarity:
+            "LEGENDARY": return "An ancient map promising legendary riches. Use to reveal location."
+            "RARE": return "A detailed map to hidden treasures. Use to reveal location."
+            "UNCOMMON": return "A map marking a hidden cache. Use to reveal location."
+            _: return "A simple treasure map. Use to reveal location."
+
+func _on_treasure_map_used(map_data: Dictionary):
+    print("[Inventory] Treasure map used: ", map_data)
+    # Refresh the maps display
+    _fetch_treasure_maps()
+
+func _on_treasure_error(error_msg: String):
+    print("[Inventory] Treasure error: ", error_msg)
+    # Could show a notification here
+
+func _handle_treasure_map_action(item: Dictionary):
+    var map_data = item.get("treasure_map_data", {})
+    var map_id = map_data.get("id", 0)
+    var is_used = map_data.get("isUsed", false)
+    
+    if map_id == 0:
+        print("[Inventory] Invalid treasure map ID")
+        return
+    
+    if is_used:
+        # Map already used - show location info
+        # Player should go to world map to dig
+        print("[Inventory] Map already used - show dig option on world map")
+    else:
+        # Use the map to reveal location
+        if _treasure_handler:
+            _treasure_handler.use_map(map_id)
+            use_btn.disabled = true
+            use_btn.text = "REVEALING..."
+
 # --- ACTION HANDLERS ---
 func _on_equip_pressed():
     if not _selected_item: return
@@ -647,6 +803,13 @@ func _on_equip_pressed():
 
 func _on_use_pressed():
     if not _selected_item: return
+    
+    # Check if this is a treasure map
+    var map_data = _selected_item.get("treasure_map_data", {})
+    if map_data.size() > 0:
+        # Handle treasure map action
+        _handle_treasure_map_action(_selected_item)
+        return
     
     var item_instance_id = _selected_item.get("id")
     var uid = GameState.current_user.get("id")

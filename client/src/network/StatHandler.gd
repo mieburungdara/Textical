@@ -150,8 +150,8 @@ func _handle_success(endpoint: String, json):
         else:
             _handle_allocation_response(endpoint, json)
 
-func _handle_error(endpoint: String, message: String):
-    print("[STAT_HANDLER] Error on %s: %s" % [endpoint, message])
+func _handle_error(endpoint: String, error_code: String, message: String):
+    print("[STAT_HANDLER] Error on %s: [%s] %s" % [endpoint, error_code, message])
     # Emit error signal yang bisa di-handle oleh UI
 
 # === PRIVATE HANDLERS ===

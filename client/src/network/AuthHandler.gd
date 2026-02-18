@@ -72,6 +72,6 @@ func _handle_success(endpoint: String, json):
     elif endpoint.contains("/user/"):
         GameState.set_user(json)
 
-func _handle_error(endpoint: String, message: String, extra: Dictionary = {}):
+func _handle_error(endpoint: String, error_code: String, message: String):
     if endpoint.contains("/auth/login"):
-        emit_signal("login_failed", message, extra)
+        emit_signal("login_failed", message, {"error_code": error_code})

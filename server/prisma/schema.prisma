@@ -94,6 +94,14 @@ model User {
   activeSpiritExpiresAt  DateTime?
   activeSpirit           SpiritTemplate?           @relation("UserActiveSpirit", fields: [activeSpiritId], references: [id])
   attributes             UserAttribute[]
+  craftingSkills         CraftingSkill[]
+  craftingLogs            CraftingLog[]
+  // Private Island
+  privateIsland          PrivateIsland?
+  // Dynamic Dungeon System
+  dungeonEntries         DungeonEntry[]
+  // Treasure Map System
+  treasureMaps           TreasureMap[]
 }
 
 model WorldBossState {
@@ -307,6 +315,12 @@ model ItemTemplate {
   taskTargets       TaskQueue[]
   wagonItems        WagonItem[]
   historyEquipments HeroHistoryEquipment[]
+  // Private Island relations
+  cropSeedTemplates     CropTemplate[]         @relation("CropSeed")
+  cropHarvestTemplates  CropTemplate[]         @relation("CropHarvest")
+  gardenPlotsHarvest    GardenPlot[]           @relation("CropHarvest")
+  gardenPlotsSeed      GardenPlot[]           @relation("CropSeed")
+  islandStorageItems    IslandStorageItem[]
 }
 
 model InnGuestbook {
@@ -893,7 +907,7 @@ model UserRecipe {
 
 model Hero {
   id                  Int                     @id @default(autoincrement())
-  userId              Int?
+  userId              Int
   name                String
   race                UnitRace                @default(HUMAN)
   unitLevel           Int                     @default(1)
@@ -1158,6 +1172,8 @@ model InventoryItem {
   historyEquipments HeroHistoryEquipment[]
   marketOrders      MarketOrder[]
   vaultItem         VaultItem?
+  enchantments      InventoryItemEnchantment[]
+  socket            InventoryItemSocket?
 }
 
 model ItemInstanceTrait {
@@ -2212,4 +2228,933 @@ model HeroHistoryBuff {
   traitTemplateId Int
   history         HeroStatHistory @relation(fields: [historyId], references: [id])
   trait           TraitTemplate   @relation(fields: [traitTemplateId], references: [id])
+}
+
+// Private Island Farming System
+model PrivateIsland {
+  id                Int                 @id @default(autoincrement())
+  userId            Int                 @unique
+  isUnlocked        Boolean             @default(false)
+  unlockedAt        DateTime?
+  plotCount         Int                 @default(10)
+  storageSlotCount Int                 @default(10)
+  maxPlots          Int                 @default(50)
+  maxStorageSlots   Int                 @default(50)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plots             GardenPlot[]
+  storageItems      IslandStorageItem[]
+}
+
+model GardenPlot {
+  id               Int         @id @default(autoincrement())
+  islandId         Int
+  plotIndex        Int
+  cropTemplateId   Int?
+  seedItemId       Int?
+  plantedAt        DateTime    @default(now())
+  harvestAt        DateTime?
+  status           String      @default("EMPTY")
+  growthProgress   Float       @default(0.0)
+  yieldMultiplier  Float       @default(1.0)
+  island           PrivateIsland @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  cropTemplate     ItemTemplate? @relation("CropHarvest", fields: [cropTemplateId], references: [id])
+  seedTemplate     ItemTemplate? @relation("CropSeed", fields: [seedItemId], references: [id])
+
+  @@index([islandId])
+  @@index([status])
+}
+
+model IslandStorageItem {
+  id             Int         @id @default(autoincrement())
+  islandId       Int
+  itemTemplateId Int
+  quantity       Int         @default(1)
+  slotIndex      Int
+  createdAt      DateTime    @default(now())
+  island         PrivateIsland @relation(fields: [islandId], references: [id], onDelete: Cascade)
+  itemTemplate   ItemTemplate @relation(fields: [itemTemplateId], references: [id])
+
+  @@index([islandId])
+  @@index([slotIndex])
+}
+
+model CropTemplate {
+  id                 Int         @id @default(autoincrement())
+  name               String
+  description        String?
+  seedItemId         Int
+  harvestItemId      Int
+  growthTimeSeconds  Int         @default(600)
+  minYield          Int         @default(1)
+  maxYield          Int         @default(3)
+  experienceReward   Int         @default(10)
+  season             String      @default("ALL")
+  waterRequirement   Int         @default(1)
+  isPremium          Int         @default(0)
+  seedItem           ItemTemplate @relation("CropSeed", fields: [seedItemId], references: [id])
+  harvestItem        ItemTemplate @relation("CropHarvest", fields: [harvestItemId], references: [id])
+
+  @@index([seedItemId])
+}
+
+// Player Reputation System (Like/Dislike between players)
+model PlayerReputation {
+  id              Int       @id @default(autoincrement())
+  fromUserId      Int       // Player who gave like/dislike
+  toUserId        Int       // Player who received
+  type            String    // "LIKE" or "DISLIKE"
+  comment         String?   // Optional comment (max 500 chars)
+  interactionType String?   // First interaction type: GUILD, TRADE, PVP, PARTY, FRIEND, PROPERTY
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([fromUserId, toUserId]) // One reputation per pair
+  @@index([toUserId])
+  @@index([fromUserId])
+}
+
+model PlayerReputationStats {
+  userId          Int      @id
+  totalLikes      Int      @default(0)
+  totalDislikes   Int      @default(0)
+  likeTier        Int      @default(0)    // Cached tier for likes
+  dislikeTier     Int      @default(0)    // Cached tier for dislikes
+  updatedAt       DateTime @updatedAt
+}
+
+// Skill Specialization System
+model SkillMastery {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  heroId      Int
+  skillId     Int
+  useCount    Int       @default(0)
+  level       String    @default("NOVICE") // NOVICE, APPRENTICE, EXPERT, MASTER, GRANDMASTER
+  unlockedAt  DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([heroId, skillId])
+  @@index([userId])
+  @@index([heroId])
+}
+
+model SkillMasteryReward {
+  id                  Int     @id @default(autoincrement())
+  level               String  // APPRENTICE, EXPERT, MASTER, GRANDMASTER
+  usesRequired        Int     // 100, 250, 500, 1000
+  skillDamageBonus    Float   @default(0)    // +5%, +10%, etc (as decimal)
+  effectDurationBonus Float   @default(0)    // +5%, +10%, etc (as decimal)
+  critChanceBonus     Float   @default(0)    // +5%, +10%, etc (as decimal)
+  costReduction       Float   @default(0)    // +5%, +10%, etc (as decimal)
+  description         String  @default("")
+}
+
+// Hero Bond System - Party Synergy
+model HeroBond {
+  id          Int     @id @default(autoincrement())
+  bondType    String  // CLASS, RACE, ELEMENTAL
+  name        String  @unique
+  description String
+  requirement String  // JSON: { class: ["WARRIOR", "MAGE"] } or { race: "UNDEAD", count: 2 }
+  bonuses     String  // JSON: { attack_damage: 0.05, defense: 0.05 }
+  isActive    Boolean @default(true)
+}
+
+model UserHeroBond {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  bondId      Int
+  heroIds     String    // JSON array of hero IDs [1,2]
+  activated   Boolean  @default(false)
+  activatedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, bondId, heroIds])
+}
+
+// ===========================================
+// Item Enchantment System
+// ===========================================
+
+// Enchantment template - defines available enchantments
+model ItemEnchantment {
+  id              Int     @id @default(autoincrement())
+  name            String  // e.g., "Sharpness", "Berserker"
+  category        String  // ATTACK, DEFENSE, ELEMENTAL, SPECIAL
+  description     String  // Description of the enchantment effect
+  statKey         String  // The stat this enchantment modifies (e.g., attack_damage, defense)
+  statValuePerLevel Float // Flat bonus per level (e.g., 2)
+  percentBonusPerLevel Float // Percentage bonus per level (e.g., 0.01 = 1%)
+  isPercent       Boolean @default(false) // Whether statValue is flat or percentage
+  condition       String? // JSON condition for conditional effects (e.g., "hp_below_50")
+  materialId      Int?    // Required material template ID
+  materialCount   Int     @default(1) // Quantity of material required
+  maxLevel       Int     @default(10) // Maximum enchantment level
+  baseSuccessRate Float  @default(0.8) // Base success rate (80%)
+  
+  // Relations
+  appliedEnchantments InventoryItemEnchantment[]
+}
+
+// Applied enchantment on an inventory item
+model InventoryItemEnchantment {
+  id              Int     @id @default(autoincrement())
+  inventoryItemId Int
+  enchantmentId   Int
+  level           Int     @default(1) // Current enchantment level (1-10)
+  appliedAt       DateTime @default(now())
+  
+  // Relations
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  enchantment     ItemEnchantment @relation(fields: [enchantmentId], references: [id])
+  
+  @@unique([inventoryItemId, enchantmentId])
+}
+
+// ===========================================
+// Item Socketing System
+// ===========================================
+
+// Gem template - defines available gems (elemental, 5 tiers)
+model GemTemplate {
+  id            Int     @id @default(autoincrement())
+  name          String  // e.g., "Fire Gem I", "Fire Gem II"
+  element       String  // FIRE, WATER, EARTH, WIND, LIGHT, DARK
+  tier          Int     // 1-5
+  description   String  // Description of the gem effect
+  statKey       String  // The stat this gem modifies (e.g., attack_damage, elemental_damage_FIRE)
+  statValue     Float   // Flat bonus value
+  percentValue  Float   @default(0) // Percentage bonus (e.g., 0.05 = 5%)
+  
+  // Drop configuration
+  dropChance    Float   @default(0.01) // 1% base drop chance from monsters
+  bossDropChance Float  @default(0.1)  // 10% drop chance from bosses
+  
+  // Economics
+  baseValue     Int     @default(100) // Base value for removal cost calculation
+  nextTierGemId Int?    @unique // Gem ID of next tier (for upgrade: 3x this = 1x nextTier)
+  
+  // Relations
+  sockets       InventoryItemSocket[]
+  nextTier      GemTemplate?  @relation("GemTierUpgrade", fields: [nextTierGemId], references: [id])
+  previousTier  GemTemplate?  @relation("GemTierUpgrade")
+  
+  @@unique([element, tier])
+  @@index([element])
+  @@index([tier])
+}
+
+// Applied socket on an inventory item (equipment)
+model InventoryItemSocket {
+  id              Int     @id @default(autoincrement())
+  inventoryItemId Int     @unique // One socket per equipment item
+  gemId           Int?    // null if empty
+  insertedAt      DateTime?
+  
+  // Relations
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  gem             GemTemplate?  @relation(fields: [gemId], references: [id])
+  
+  @@index([gemId])
+}
+
+// ===========================================
+// Crafting Fail System
+// ===========================================
+
+// User's crafting skill per profession
+model CraftingSkill {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  profession  String    // BLACKSMITH, ENCHANTER, ALCHEMIST, TAILOR
+  rank        String    @default("NOVICE") // NOVICE, APPRENTICE, EXPERT, MASTER, GRANDMASTER
+  level       Int       @default(1) // 1-100
+  experience  Int       @default(0)
+  totalCrafts Int       @default(0) // Total successful crafts
+  successCount Int      @default(0) // Successful crafts count
+  failCount   Int       @default(0) // Failed crafts count
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, profession])
+  @@index([userId])
+}
+
+// Crafting outcome log for analytics
+model CraftingLog {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  recipeId        Int
+  profession      String
+  outcome         String    // SUCCESS, SAFE_FAIL, QUALITY_DROP, DESTROYED, CATASTROPHIC
+  itemRarity      String    // Rarity of crafted item
+  successRate     Float     // Success rate at time of crafting
+  rolled          Float     // Random roll value
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ===========================================
+// Dynamic Dungeon System
+// ===========================================
+
+// Modifier reference table - defines available dungeon modifiers
+model DungeonModifier {
+  id              Int       @id @default(autoincrement())
+  modifierKey     String    @unique // e.g., "ENRAGED", "FIRE_REALM", "NO_HEALING"
+  name            String    // Display name
+  description     String
+  category        String    // DIFFICULTY, ELEMENTAL, SPECIAL
+  
+  // Effect definitions (JSON)
+  statMultipliers String    @default("{}") // e.g., { "damage": 1.5, "hp": 1.25 }
+  statusEffects   String    @default("[]") // Array of status effects to apply
+  
+  // Visual/Feedback
+  icon            String    @default("⚡")
+  color           String    @default("#ff0000")
+  
+  // Relations
+  floorModifiers  DungeonFloorModifier[]
+}
+
+// Main dungeon template - defines each unique dungeon
+model DungeonTemplate {
+  id              Int       @id @default(autoincrement())
+  dungeonKey      String    @unique // e.g., "CRYSTAL_CAVERNS", "VOID_DEPOTS"
+  name            String
+  description     String
+  
+  // Dungeon Identity
+  difficulty      String    // NORMAL, HARD, NIGHTMARE, LEGENDARY
+  recommendedLevel Int      @default(1)
+  recommendedItemPower Int @default(0)
+  
+  // Entry Requirements
+  requiredQuestId Int?
+  requiredAchievementId Int?
+  entryCost        Int      @default(0) // Energy or silver cost
+  minPartySize    Int      @default(1)
+  maxPartySize    Int      @default(1)
+  
+  // Scene/Map Configuration
+  scenePath        String   // Godot scene path for this dungeon
+  thumbnailPath    String?
+  ambientMusicId   Int?
+  
+  // Rewards
+  baseGoldReward   Int      @default(100)
+  baseXpReward     Int      @default(50)
+  
+  // Progression
+  totalFloors     Int      @default(3)
+  isRepeatable    Boolean  @default(true)
+  resetType       String   @default("DAILY") // DAILY, WEEKLY, NONE
+  
+  // Relations
+  floors          DungeonFloor[]
+  entries         DungeonEntry[]
+}
+
+// Each floor within a dungeon
+model DungeonFloor {
+  id              Int       @id @default(autoincrement())
+  dungeonId       Int
+  floorNumber     Int
+  
+  // Floor Identity
+  name            String    // e.g., "Floor 1: The Entrance", "Floor 2: Crystal Grotto"
+  description     String?
+  
+  // Grid/Map Configuration
+  gridWidth       Int      @default(8)
+  gridHeight      Int      @default(8)
+  tileMapPath     String?  // Path to tilemap for this floor
+  
+  // Monster Configuration
+  monsterPoolIds  String   @default("[]") // JSON array of monster template IDs
+  eliteSpawnRate  Float    @default(0.1)
+  bossSpawnRate   Float    @default(0.0)
+  monsterLevelScale Float   @default(1.0) // Level multiplier for monsters
+  
+  // Floor Modifiers (fixed per floor, not random)
+  modifiers       DungeonFloorModifier[]
+  
+  // Rewards
+  goldRewardScale  Float    @default(1.0)
+  xpRewardScale    Float    @default(1.0)
+  lootBonusScale  Float    @default(1.0)
+  
+  // Completion Requirements
+  killCountRequired Int    @default(10)
+  bossRequired     Boolean  @default(false)
+  
+  // Relations
+  dungeon         DungeonTemplate @relation(fields: [dungeonId], references: [id], onDelete: Cascade)
+  
+  @@unique([dungeonId, floorNumber])
+}
+
+// Link table for floor-specific modifiers (fixed, not random)
+model DungeonFloorModifier {
+  id              Int       @id @default(autoincrement())
+  floorId         Int
+  modifierId      Int
+  
+  // Apply configuration
+  stackCount      Int      @default(1) // How many stacks of this modifier
+  
+  // Relations
+  floor           DungeonFloor  @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  modifier        DungeonModifier @relation(fields: [modifierId], references: [id])
+  
+  @@unique([floorId, modifierId])
+}
+
+// Player's progress/entry into a dungeon
+model DungeonEntry {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  dungeonId       Int
+  
+  // Current Progress
+  currentFloor    Int      @default(1)
+  highestFloor    Int      @default(0)
+  attempts        Int      @default(0)
+  completions     Int      @default(0)
+  
+  // Floor-specific progress
+  floorProgress   String   @default("{}") // JSON: { "1": { kills: 10, bossesKilled: 0 }, "2": {...} }
+  
+  // Timestamps
+  firstEnteredAt  DateTime @default(now())
+  lastEnteredAt   DateTime @default(now())
+  completedAt     DateTime?
+  
+  // Reset tracking
+  lastResetAt     DateTime @default(now())
+  
+  // Rewards claimed
+  totalGoldEarned Int      @default(0)
+  totalXpEarned   Int      @default(0)
+  rewardsClaimed  String   @default("[]") // Array of reward IDs claimed
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dungeon         DungeonTemplate @relation(fields: [dungeonId], references: [id])
+  
+  @@unique([userId, dungeonId])
+  @@index([userId])
+}
+
+// ===========================================
+// Treasure Map System
+// ===========================================
+
+// Treasure Map items held by players
+model TreasureMap {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  inventoryItemId Int?     // Optional: if map is an inventory item
+  
+  // Map properties
+  rarity          String    // COMMON, UNCOMMON, RARE, LEGENDARY
+  regionId        Int?      // Exact region (for common/uncommon)
+  regionName      String?   // Region name for display
+  coordinatesX    Int?      // Exact X coordinate (for common only)
+  coordinatesY    Int?      // Exact Y coordinate (for common only)
+  hints           String?   // Text hints (for legendary maps)
+  
+  // State
+  isUsed          Boolean   @default(false)
+  isClaimed       Boolean   @default(false)
+  usedAt          DateTime?
+  claimedAt       DateTime?
+  
+  // Expiration
+  expiresAt       DateTime
+  
+  // Anti-exploit: coordinate randomization offset
+  coordOffsetX    Int       @default(0)  // ±1-3 tiles randomized
+  coordOffsetY    Int       @default(0)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([userId, rarity])
+  @@index([expiresAt])
+}
+
+// Loot table for treasure drops by rarity
+model TreasureLootTable {
+  id              Int       @id @default(autoincrement())
+  rarity          String    // COMMON, UNCOMMON, RARE, LEGENDARY
+  lootType        String    // GOLD, ITEM
+  
+  // For gold drops
+  goldMin         Int?      // Minimum gold amount
+  goldMax         Int?      // Maximum gold amount
+  goldWeight      Int?      // Weight for random selection
+  
+  // For item drops
+  itemTemplateId  Int?      // Item template ID
+  quantityMin     Int?      // Minimum quantity
+  quantityMax     Int?      // Maximum quantity
+  itemWeight      Int?      // Weight for random selection
+  
+  // Drop chance (for items only, gold always drops)
+  dropChance      Float     @default(1.0)  // 1.0 = 100%
+  
+  // Epic/Legendary item flag
+  isEpicItem      Boolean   @default(false)
+  isLegendaryItem Boolean   @default(false)
+  
+  // Rarity tier for items
+  itemRarity      String?   // Item rarity when dropped
+  
+  @@unique([rarity, lootType, itemTemplateId])
+  @@index([rarity])
+}
+
+// ===========================================
+// Arena / PvP System
+// ===========================================
+
+enum GameMode {
+  DUEL_1V1        // 1v1 Duel (Solo ELO)
+  SKIRMISH_2V2    // 2v2 Skirmish (Team ELO)
+  FREE_FOR_ALL    // Free-For-All (Points)
+  TOURNAMENT      // Tournament mode
+}
+
+enum MatchStatus {
+  QUEUED
+  MATCHING
+  READY
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  TIMEOUT
+}
+
+enum WinCondition {
+  ELIMINATION      // All opponents eliminated
+  SCORE_LIMIT     // Reached score limit
+  TIME_LIMIT      // Time ran out, highest score wins
+  SURRENDER       // Opponent surrendered
+  FORFEIT         // Opponent didn't show / AFK
+}
+
+enum TournamentType {
+  DAILY_CUP       // 8 players
+  WEEKLY          // 16 players
+  MONTHLY         // 32 players
+  SPECIAL_EVENT   // Custom (16-64)
+}
+
+enum BracketType {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+}
+
+enum TournamentStatus {
+  REGISTRATION    // Registration open
+  CHECK_IN        // Players checking in
+  SEEDING         // Calculating seeds
+  IN_PROGRESS     // Tournament running
+  COMPLETED       // Tournament finished
+  CANCELLED       // Tournament cancelled
+}
+
+enum ParticipantStatus {
+  REGISTERED
+  CHECKED_IN
+  PLAYING
+  ELIMINATED
+  WITHDRAWN
+}
+
+// Arena Match Record
+model ArenaMatch {
+  id              String      @id @default(uuid())
+  matchCode       String      @unique
+  gameMode        GameMode
+  status          MatchStatus @default(QUEUED)
+  
+  // Players - stored as JSON arrays
+  playerIds       String      @default("[]")    // JSON array: ["player1", "player2"]
+  teamAIds        String      @default("[]")    // JSON array: ["player1"]
+  teamBIds        String      @default("[]")    // JSON array: ["player2"]
+  
+  // Results
+  winnerId        String?
+  winCondition    WinCondition?
+  
+  // Score tracking for FFA
+  scores          String      @default("{}")  // JSON: { playerId: score }
+  
+  // Ratings
+  ratingChanges   String      @default("{}")  // JSON: { playerId: { before, after, delta } }
+  
+  // Timing
+  queuedAt        DateTime    @default(now())
+  startedAt       DateTime?
+  endedAt         DateTime?
+  duration        Int?        // seconds
+  
+  // Metadata
+  seasonId        String?
+  isRanked        Boolean     @default(true)
+  
+  // Battle Reference
+  battleId        String?
+  
+  @@index([seasonId, gameMode])
+  @@index([status])
+  @@index([winnerId])
+}
+
+// Player Arena Rating
+model ArenaRating {
+  playerId        String      @id
+  seasonId        String
+  
+  // 1v1 Rating
+  soloRating      Int         @default(1000)
+  soloWins        Int         @default(0)
+  soloLosses      Int         @default(0)
+  soloStreak      Int         @default(0)
+  
+  // Team Rating  
+  teamRating      Int         @default(1000)
+  teamWins        Int         @default(0)
+  teamLosses      Int         @default(0)
+  
+  // FFA
+  ffaPoints       Int         @default(0)
+  ffaWins         Int         @default(0)
+  ffaPlays        Int         @default(0)
+  
+  // Current Rank
+  currentRank     String      @default("Bronze V")
+  highestRank     String      @default("Bronze V")
+  division        Int         @default(5)
+  
+  // Season Progress
+  seasonWins      Int         @default(0)
+  seasonMatches   Int         @default(0)
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@unique([playerId, seasonId])
+}
+
+// Arena Season
+model ArenaSeason {
+  id              String      @id @default(uuid())
+  seasonNumber    Int         @unique
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  
+  // Rewards
+  topRewards      String      @default("{}")  // JSON: { rank: { gems, title, items } }
+  participation   Int         @default(0)     // gems for participation
+  
+  // Status
+  isActive        Boolean     @default(false)
+  isComplete      Boolean     @default(false)
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+}
+
+// Leaderboard Entry
+model ArenaLeaderboard {
+  id              String      @id @default(uuid())
+  playerId        String
+  seasonId        String
+  gameMode        GameMode
+  
+  rank            Int
+  rating          Int
+  wins            Int
+  losses          Int
+  winRate         Float
+  
+  // Streaks
+  currentStreak   Int         @default(0)
+  maxStreak       Int         @default(0)
+  
+  // Spectator
+  spectatedCount  Int         @default(0)
+  
+  // Timestamps
+  updatedAt       DateTime    @updatedAt
+  
+  @@unique([playerId, seasonId, gameMode])
+  @@index([seasonId, gameMode, rank])
+}
+
+// Tournament Definition
+model Tournament {
+  id                  String            @id @default(uuid())
+  name                String
+  type                TournamentType
+  
+  // Structure
+  maxParticipants     Int
+  currentParticipants  Int              @default(0)
+  bracketType         BracketType
+  
+  // Scheduling
+  registrationStart   DateTime
+  registrationEnd     DateTime
+  startDate           DateTime
+  endDate             DateTime
+  
+  // Entry
+  entryFee            Int              // gems
+  minLevel            Int              @default(50)
+  
+  // Rewards
+  prizePool           String           @default("{}")  // JSON: { 1: { gems: 1000, title: "Champion" }, 2: {...} }
+  participationReward Int              @default(0)
+  
+  // Status
+  status              TournamentStatus @default(REGISTRATION)
+  winnerId            String?
+  
+  // Relations
+  matches             TournamentMatch[]
+  participants        TournamentParticipant[]
+  bracket             TournamentBracket?
+  
+  // Timestamps
+  createdAt           DateTime         @default(now())
+  
+  @@index([status, startDate])
+}
+
+// Tournament Participant
+model TournamentParticipant {
+  id              String            @id @default(uuid())
+  tournamentId    String
+  playerId        String
+  
+  // Seed
+  seed            Int
+  elo             Int               // Rating at registration
+  
+  // Status
+  status          ParticipantStatus @default(REGISTERED)
+  checkedIn       Boolean           @default(false)
+  
+  // Progress
+  currentRound    Int               @default(0)
+  wins            Int               @default(0)
+  losses          Int               @default(0)
+  isEliminated    Boolean           @default(false)
+  
+  // Bracket Position
+  bracketPosition Int
+  
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  
+  // Relations
+  tournament      Tournament        @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, seed])
+}
+
+// Tournament Match
+model TournamentMatch {
+  id              String        @id @default(uuid())
+  tournamentId    String
+  
+  // Match Info
+  round           Int           // 1 = QF, 2 = SF, 3 = Finals
+  matchNumber     Int           // Position in round
+  bracketType     BracketType   @default(SINGLE_ELIMINATION)
+  
+  // Players
+  playerAId       String?
+  playerBId       String?
+  winnerId        String?
+  
+  // Score
+  scoreA          Int           @default(0)
+  scoreB          Int           @default(0)
+  
+  // Timing
+  scheduledAt     DateTime
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  // Arena Link
+  arenaMatchId    String?
+  
+  // Next Match (for bracket progression)
+  nextMatchId     String?
+  loserNextMatchId String?
+  
+  // Status
+  status          MatchStatus   @default(QUEUED)
+  
+  // Relations
+  tournament      Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  @@index([tournamentId, round])
+  @@index([status])
+}
+
+// Tournament Bracket State
+model TournamentBracket {
+  id              String    @id @default(uuid())
+  tournamentId    String
+  
+  // Bracket Data (JSON)
+  bracketData     String    // Full bracket structure
+  
+  // Current State
+  currentRound    Int
+  activeMatches    String    // JSON: Currently playing matches
+  
+  // Relations
+  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([tournamentId])
+}
+
+// ===========================================
+// Achievement System
+// ===========================================
+
+enum AchievementCategory {
+  COMBAT
+  COLLECTION
+  ECONOMY
+  CRAFTING
+  PVP
+  EXPLORATION
+  SOCIAL
+  SPECIAL
+}
+
+model Achievement {
+  id              String   @id @default(uuid())
+  code            String   @unique // Unique identifier like "COMBAT_001"
+  
+  // Basic Info
+  name            String
+  description     String
+  category        AchievementCategory
+  icon            String   @default("🏆")
+  
+  // Requirements
+  requirementType String   // counter, milestone, event, hidden
+  targetValue     Int      // Target number to achieve
+  counterName     String   // Internal counter name for tracking
+  
+  // Progression
+  isProgressive   Boolean  @default(false) // Multiple tiers?
+  tiers           String?  // JSON: [{tier: 1, value: 100}, {tier: 2, value: 1000}]
+  
+  // Rewards
+  rewardGold      Int      @default(0)
+  rewardGems      Int      @default(0)
+  rewardItems     String?  // JSON: [{itemId: 1, quantity: 1}]
+  rewardTitle     String?  // Title to unlock
+  
+  // Visibility
+  isHidden        Boolean  @default(false) // Secret achievement
+  hiddenCondition String?  // When to reveal
+  
+  // Requirements
+  prereqCode      String?  // Required achievement code
+  minLevel        Int      @default(1)
+  
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  playerProgress  PlayerAchievement[]
+  
+  @@index([category, isActive])
+  @@index([counterName])
+}
+
+model PlayerAchievement {
+  id              String   @id @default(uuid())
+  userId          Int
+  achievementCode String
+  
+  // Progress
+  currentValue    Int      @default(0)
+  isCompleted     Boolean  @default(false)
+  completedAt     DateTime?
+  
+  // Tiers (if progressive)
+  currentTier     Int      @default(0)
+  unlockedTiers   String   @default("[]") // JSON array: [1, 2]
+  
+  // Rewards Claimed
+  rewardsClaimed  Boolean  @default(false)
+  claimedAt      DateTime?
+  
+  // Discovery (for hidden achievements)
+  isDiscovered    Boolean  @default(false)
+  discoveredAt    DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  achievement     Achievement @relation(fields: [achievementCode], references: [code])
+  
+  @@unique([userId, achievementCode])
+  @@index([userId])
+}
+
+model PlayerTitle {
+  id              String   @id @default(uuid())
+  userId          Int
+  title           String   // Title name like "Brawler", "Hunter"
+  
+  // Title metadata
+  icon            String   @default("🎖️")
+  badgeColor      String   @default("#ffffff") // Color for the badge
+  source          String   // How the title was obtained (achievement, purchase, event)
+  sourceCode      String?  // Achievement code if from achievement
+  
+  // Active state
+  isActive        Boolean  @default(false) // Currently equipped
+  activatedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([userId, title])
+  @@index([userId])
 }
