@@ -7,8 +7,6 @@ const router = express.Router();
 const statService = require('../services/statService');
 const { 
     validateHero, 
-    validateAllocation, 
-    validateBatchAllocation, 
     validateCalculationOptions 
 } = require('../middleware/statValidator');
 
@@ -74,7 +72,7 @@ router.get('/:heroId',
 
 /**
  * GET /api/stats/:heroId/history
- * Get hero stat history (level up, allocation changes)
+ * Get hero stat history (level ups, stat changes)
  */
 router.get('/:heroId/history', 
     validateHero, 
@@ -91,33 +89,6 @@ router.get('/:heroId/history',
     })
 );
 
-/**
- * POST /api/stats/:heroId/allocate
- * Allocate stat points
- */
-router.post('/:heroId/allocate', 
-    validateHero, 
-    validateAllocation, 
-    asyncHandler(async (req, res) => {
-        const { statName, points } = req.body;
-        const result = await statService.allocateStat(req.hero.id, statName, points);
-        handleResponse(res, result);
-    })
-);
-
-/**
- * POST /api/stats/:heroId/allocate/batch
- * Batch allocate stat points
- */
-router.post('/:heroId/allocate/batch', 
-    validateHero, 
-    validateBatchAllocation, 
-    asyncHandler(async (req, res) => {
-        const { batch } = req.body;
-        const result = await statService.batchAllocateStats(req.hero.id, batch);
-        handleResponse(res, result);
-    })
-);
 
 /**
  * POST /api/stats/:heroId/preview
@@ -132,17 +103,6 @@ router.post('/:heroId/preview',
     })
 );
 
-/**
- * POST /api/stats/:heroId/reset
- * Reset stat allocations
- */
-router.post('/:heroId/reset', 
-    validateHero, 
-    asyncHandler(async (req, res) => {
-        const result = await statService.resetStatAllocation(req.hero.id);
-        handleResponse(res, result);
-    })
-);
 
 /**
  * GET /api/stats/:heroId/recovery
@@ -228,6 +188,36 @@ router.get('/:heroId/predict/:targetLevel',
         handleResponse(res, prediction);
     })
 );
+
+/**
+ * GET /api/stats/growth/:className
+ * Get growth information for a specific class
+ */
+router.get('/growth/:className', asyncHandler(async (req, res) => {
+    const { className } = req.params;
+    const growthInfo = statService.getGrowthInfo(className);
+    handleResponse(res, growthInfo);
+}));
+
+/**
+ * GET /api/stats/formula/:className/:statKey
+ * Explain the formula for a specific stat
+ */
+router.get('/formula/:className/:statKey', asyncHandler(async (req, res) => {
+    const { className, statKey } = req.params;
+    const formula = statService.explainStatFormula(className, statKey);
+    handleResponse(res, { className, statKey, formula });
+}));
+
+/**
+ * GET /api/stats/fixed-growth/:className/:level
+ * Calculate fixed stats for a class at a specific level
+ */
+router.get('/fixed-growth/:className/:level', asyncHandler(async (req, res) => {
+    const { className, level } = req.params;
+    const stats = statService.calculateFixedStats(className, parseInt(level));
+    handleResponse(res, stats);
+}));
 
 /**
  * Error handler for this router

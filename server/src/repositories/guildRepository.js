@@ -36,7 +36,10 @@ class GuildRepository {
     async getTemplateById(id) {
         const templateId = parseInt(id);
         if (isNaN(templateId)) return null;
-        return await prisma.guildTemplate.findUnique({ where: { id: templateId } });
+        return await prisma.guildTemplate.findUnique({ 
+            where: { id: templateId },
+            include: { creationReqs: true }
+        });
     }
 
     async update(id, data) {

@@ -69,6 +69,19 @@ class BattleSimulation {
     processTick() {
         this.loop.processTick();
     }
+
+    /**
+     * Get current environment state (DAY/NIGHT cycle info)
+     * @returns {Object} Environment info
+     */
+    getEnvironment() {
+        // Return environment state for combatRules
+        return {
+            hour: this.currentHour || 12,
+            weather: this.weather || "CLEAR",
+            moonPhase: this.moonPhase || "NEW"
+        };
+    }
 }
 
 module.exports = BattleSimulation;

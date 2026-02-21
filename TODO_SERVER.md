@@ -18,3 +18,10 @@
 - [x] Fix PrismaClientInitializationError by centralizing Prisma instance.
 - [x] Create dedicated `auth.js` middleware for session validation.
 
+## Trait Verification
+- [ ] Verify VanguardTrait interception logic (Completed).
+- [ ] Hunt bugs in VampireTrait (Opsi A: Tactical Edge-Case).
+    - [ ] Accuracy of 30% calculation.
+    - [ ] `health_max` dynamic stat bug.
+    - [ ] Death Race scenario (Lifesteal after death).
+    - [ ] Rounding behavior on low damage.

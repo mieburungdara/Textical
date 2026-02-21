@@ -1,3 +1,4 @@
+const prisma = require('../db');
 const userRepository = require('../repositories/userRepository');
 const heroRepository = require('../repositories/heroRepository');
 const inventoryRepository = require('../repositories/inventoryRepository');
@@ -74,14 +75,19 @@ class InventoryHandler {
                 return;
             }
             
-            const equipment = JSON.parse(hero.equipment || "{}");
-
-            if (equipment[request.slot]) {
-                await inventoryRepository.updateEquipStatus(equipment[request.slot], false);
+            // Cek apakah slot sudah terisi dan unequip dulu
+            const existingEquip = hero.equipment?.find(e => e.slotKey === request.slot);
+            if (existingEquip) {
+                await inventoryRepository.updateEquipStatus(existingEquip.itemInstanceId, false);
+                await prisma.heroEquipment.delete({ where: { heroId_slotKey: { heroId: hero.id, slotKey: request.slot } } });
             }
 
-            equipment[request.slot] = item.id;
-            await heroRepository.updateLineage(hero.id, { equipment: JSON.stringify(equipment) });
+            // Pasang item baru ke slot
+            await prisma.heroEquipment.upsert({
+                where: { heroId_slotKey: { heroId: hero.id, slotKey: request.slot } },
+                update: { itemInstanceId: item.id },
+                create: { heroId: hero.id, slotKey: request.slot, itemInstanceId: item.id }
+            });
             await inventoryRepository.updateEquipStatus(item.id, true);
 
             const updatedUser = await userRepository.findByUsername(request.account);
@@ -145,10 +151,9 @@ class InventoryHandler {
                 return;
             }
             
-            const equipment = JSON.parse(hero.equipment || "{}");
-            const itemId = equipment[request.slot];
+            const equipSlot = hero.equipment?.find(e => e.slotKey === request.slot);
 
-            if (!itemId) {
+            if (!equipSlot) {
                 ws.send(JSON.stringify({ 
                     type: "error", 
                     code: ErrorCodes.EQUIP_SLOT_EMPTY,
@@ -157,9 +162,8 @@ class InventoryHandler {
                 return;
             }
 
-            await inventoryRepository.updateEquipStatus(itemId, false);
-            delete equipment[request.slot];
-            await heroRepository.updateLineage(hero.id, { equipment: JSON.stringify(equipment) });
+            await inventoryRepository.updateEquipStatus(equipSlot.itemInstanceId, false);
+            await prisma.heroEquipment.delete({ where: { heroId_slotKey: { heroId: hero.id, slotKey: request.slot } } });
 
             const updatedUser = await userRepository.findByUsername(request.account);
             ws.send(JSON.stringify({ type: "login_success", user: updatedUser }));

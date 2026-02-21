@@ -39,14 +39,13 @@ class ProfileCalculator extends BaseService {
                 HP: hero.hp_base,
                 MP: 100, // Default base MP
                 ATK: hero.damage_base,
-                DEF: hero.defense_base,
+                ARMOR: hero.defense_base,
                 SPD: hero.speed_base,
                 RANGE: hero.range_base,
                 DEX: hero.dex,
                 STR: hero.str,
                 INT: hero.int,
-                VIT: hero.vit,
-                LUK: hero.luk
+                DEF: hero.def
             },
             activeTraits: [],
             equippedItems: [], // AAA: Tracking for Durability

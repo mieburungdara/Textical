@@ -194,27 +194,26 @@ class StatCurveCalculator {
      * @param {Object} classTemplate - Class template with growth config
      * @param {number} level - Current level
      * @param {number} availablePoints - Available stat points to distribute
-     * @returns {Object} Recommended distribution { str, dex, int, vit, luk }
+     * @returns {Object} Recommended distribution { str, dex, int, vit }
      */
     static getRecommendedDistribution(classTemplate, level, availablePoints) {
         const template = classTemplate?.statAllocationTemplate;
         if (!template) {
-            // Default distribution
+            // Default distribution (LUK removed - merged into DEX)
             return {
-                str: Math.floor(availablePoints * 0.3),
-                dex: Math.floor(availablePoints * 0.25),
-                int: Math.floor(availablePoints * 0.25),
-                vit: Math.floor(availablePoints * 0.15),
-                luk: Math.floor(availablePoints * 0.05)
+                str: Math.floor(availablePoints * 0.35),
+                dex: Math.floor(availablePoints * 0.30), // Includes former LUK
+                int: Math.floor(availablePoints * 0.20),
+                vit: Math.floor(availablePoints * 0.15) // Legacy - HP from Class+Equipment
             };
         }
 
         const total = template.recommendedStr + template.recommendedDex + 
-                     template.recommendedInt + template.recommendedVit + template.recommendedLuk;
+                     template.recommendedInt + template.recommendedVit;
         
         if (total <= 0) {
             return {
-                str: 0, dex: 0, int: 0, vit: 0, luk: 0
+                str: 0, dex: 0, int: 0, vit: 0
             };
         }
 
@@ -222,8 +221,7 @@ class StatCurveCalculator {
             str: Math.round((template.recommendedStr / total) * availablePoints),
             dex: Math.round((template.recommendedDex / total) * availablePoints),
             int: Math.round((template.recommendedInt / total) * availablePoints),
-            vit: Math.round((template.recommendedVit / total) * availablePoints),
-            luk: Math.round((template.recommendedLuk / total) * availablePoints)
+            vit: Math.round((template.recommendedVit / total) * availablePoints)
         };
     }
 }

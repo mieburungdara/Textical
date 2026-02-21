@@ -5,17 +5,31 @@ const traitService = require('../../services/traitService');
  * Handles broadcasting combat-related events and hooks to surrounding units.
  */
 class CombatEventBroadcaster {
-    /**
-     * Broadcast an event to all allies of the actor
-     * @param {Object} sim - The battle simulation context
-     * @param {string} hookName - The name of the trait hook to execute
-     * @param {Object} actor - The unit that triggered the event
-     * @param {...any} args - Additional arguments for the hook
-     */
     static broadcastAllyEvent(sim, hookName, actor, ...args) {
         const units = sim.units || [];
         const allies = units.filter(u => u && u.teamId === actor.teamId && !u.isDead && u.instanceId !== actor.instanceId);
         allies.forEach(ally => traitService.executeHook(hookName, ally, sim, actor, ...args));
+    }
+
+    /**
+     * Broadcast an event to allies and return the first truthy result (interception).
+     * @param {Object} sim - The battle simulation context
+     * @param {string} hookName - The name of the trait hook to execute
+     * @param {Object} actor - The unit taking damage/being targeted
+     * @param {...any} args - Additional arguments for the hook
+     * @returns {Object|null} The result from the first intercepting trait
+     */
+    static broadcastInterceptableEvent(sim, hookName, actor, ...args) {
+        const units = sim.units || [];
+        const allies = units.filter(u => u && u.teamId === actor.teamId && !u.isDead && u.instanceId !== actor.instanceId);
+        
+        for (const ally of allies) {
+            const result = traitService.executeHook(hookName, ally, sim, actor, ...args);
+            if (result && result.intercepted) {
+                return result;
+            }
+        }
+        return null;
     }
 
     /**

@@ -23,7 +23,6 @@ function registerHandlers(io, socket, userId) {
 
     // Register Stat Handlers
     socket.on("stat:request", (request) => statHandler.handleStatRequest(socket, request));
-    socket.on("stat:allocate", (request) => statHandler.handleStatAllocate(socket, request));
     socket.on("stat:compare", (request) => statHandler.handleStatCompare(socket, request));
     socket.on("stat:subscribe", (request) => statHandler.handleSubscribe(socket, request));
     socket.on("stat:unsubscribe", (request) => statHandler.handleUnsubscribe(socket, request));
@@ -73,7 +72,7 @@ function registerHandlers(io, socket, userId) {
 function unregisterHandlers(socket) {
     // Remove all event listeners
     const eventTypes = [
-        'stat:request', 'stat:allocate', 'stat:compare', 'stat:subscribe', 'stat:unsubscribe',
+        'stat:request', 'stat:compare', 'stat:subscribe', 'stat:unsubscribe',
         'guild:create', 'guild:join', 'guild:leave', 'guild:kick', 'guild:promote',
         'guild:demote', 'guild:transfer_leadership', 'guild:update_settings',
         'guild:deposit_treasury', 'guild:withdraw_treasury', 'guild:build_facility',

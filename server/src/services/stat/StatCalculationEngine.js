@@ -31,19 +31,18 @@ const HeroBondResolver = require('./HeroBondResolver');
 const CalculationLayer = {
     BASE: 0,
     GROWTH: 1,
-    ALLOCATION: 2,
-    TRAITS: 3,
-    EQUIPMENT: 4,
-    SET_BONUS: 5,
-    ELEMENTAL: 6,
-    SKILLS: 7,
-    BUFFS: 8,
-    GUILD: 9,
-    BOND: 9.5,  // Hero Bond System - Party Synergy
-    FACTION: 10,
-    WORLD_EVENTS: 11,
-    SCALING: 12,
-    FINALIZE: 13
+    TRAITS: 2,
+    EQUIPMENT: 3,
+    SET_BONUS: 4,
+    ELEMENTAL: 5,
+    SKILLS: 6,
+    BUFFS: 7,
+    GUILD: 8,
+    BOND: 8.5,  // Hero Bond System - Party Synergy
+    FACTION: 9,
+    WORLD_EVENTS: 10,
+    SCALING: 11,
+    FINALIZE: 12
 };
 
 /**
@@ -53,7 +52,7 @@ const CalculationLayer = {
 const ModifierPriority = {
     BASE: 0,
     GROWTH: 5,
-    ALLOCATION: 10,
+    TRAIT: 8,
     EQUIPMENT: 20,
     SET_BONUS: 25,
     SKILL: 25,
@@ -138,13 +137,10 @@ class StatCalculationEngine extends BaseService {
             GrowthCurveType
         });
 
-        // Layer 3: Apply stat allocation
-        this._applyStatAllocation(primary, heroData, calcContext);
-
         // Create applyMod function for this calculation
         const applyMod = this._createApplyModifier(primary, stats, calcContext);
 
-        // Layer 3.5: Apply trait stat bonuses
+        // Layer 3: Apply trait stat bonuses
         await this._applyTraitStatBonuses(primary, heroData, calcContext, applyMod);
 
         // Layer 4: Apply equipment stats
@@ -281,11 +277,62 @@ class StatCalculationEngine extends BaseService {
      */
     getStatMetadata() {
         return {
-            primary: ['str', 'dex', 'int', 'vit', 'luk'],
+            primary: ['str', 'dex', 'int', 'def'],
             growthCurves: Object.keys(GrowthCurveType),
-            caps: this.statCapResolver.getGlobalCaps(),
-            formulas: enhancedScalingComponent.getFormulaMetadata()
+            caps: this.statCapResolver.globalCaps,
+            formulas: enhancedScalingComponent.getFormulaMetadata(),
+            // Fixed Growth System Info
+            fixedGrowthSystem: {
+                enabled: true,
+                description: 'Stats are automatically calculated based on hero class and level.',
+                availableClasses: [] // TODO: Query from database
+            }
         };
+    }
+
+    /**
+     * Get growth information for a specific class (for UI display).
+     * @param {string} className - The class name.
+     * @returns {Object} Growth information.
+     */
+    getGrowthInfo(className) {
+        // TODO: Query classTemplate table from database
+        // Returning default for now
+        console.warn('[StatCalculationEngine] getGrowthInfo not implemented - using defaults');
+        return {
+            classType: 'default',
+            description: 'Balanced growth across all stats.',
+            primaryGrowth: {
+                hp: { base: 100, growthPerLevel: 5, maxCap: 99999 },
+                mana: { base: 40, growthPerLevel: 3, maxCap: 9999 },
+                physicalAttack: { base: 10, growthPerLevel: 2, maxCap: 99999 },
+                magicalAttack: { base: 10, growthPerLevel: 2, maxCap: 99999 },
+                defense: { base: 5, growthPerLevel: 1, maxCap: 99999 },
+                speed: { base: 5, growthPerLevel: 0.5, maxCap: 255 }
+            },
+            secondaryGrowth: {
+                critChance: { base: 0.05, growthPerLevel: 0.005, maxCap: 0.75 },
+                critDamage: { base: 1.5, growthPerLevel: 0, maxCap: 5.0 },
+                dodgeChance: { base: 0.03, growthPerLevel: 0.003, maxCap: 0.50 },
+                blockChance: { base: 0, growthPerLevel: 0.001, maxCap: 0.50 },
+                parryChance: { base: 0, growthPerLevel: 0.001, maxCap: 0.40 },
+                accuracy: { base: 100, growthPerLevel: 0.5, maxCap: 100 },
+                hpRegen: { base: 0, growthPerLevel: 0.1, maxCap: 999 },
+                manaRegen: { base: 2, growthPerLevel: 0.3, maxCap: 999 }
+            }
+        };
+    }
+
+    /**
+     * Explain the formula for a specific stat.
+     * @param {string} className - The class name.
+     * @param {string} statKey - The stat key.
+     * @returns {string} Formula explanation.
+     */
+    explainStatFormula(className, statKey) {
+        // TODO: Query classTemplate table from database
+        console.warn('[StatCalculationEngine] explainStatFormula not implemented');
+        return `${statKey}: base + (level - 1) × growth`;
     }
 
     // =========================================================================
@@ -302,7 +349,6 @@ class StatCalculationEngine extends BaseService {
             where: { id: heroId },
             include: {
                 combatClass: true,
-                statAllocation: true,
                 skills: { include: { skill: true } },
                 equipment: {
                     include: {
@@ -345,12 +391,35 @@ class StatCalculationEngine extends BaseService {
 
     /**
      * Initialize secondary stats with EnhancedStat objects.
+     * Now uses FixedGrowthSystem for deterministic class-based growth.
      * @param {Object} heroData - Hero data from database.
      * @returns {Object} Map of stat key to EnhancedStat.
      * @private
      */
     _initializeStats(heroData) {
         const stats = {};
+        const level = heroData.unitLevel || 1;
+        const className = heroData.combatClass?.name || 'default';
+        
+        // TODO: Query classTemplate table from database for growth values
+        // Using default values for now - needs database implementation
+        const fixedStats = {
+            hp: 100 + (level - 1) * 5,
+            mana: 40 + (level - 1) * 3,
+            physicalAttack: 10 + (level - 1) * 2,
+            magicalAttack: 10 + (level - 1) * 2,
+            defense: 5 + (level - 1) * 1,
+            speed: 5 + (level - 1) * 0.5,
+            critChance: 0.05,
+            critDamage: 1.5,
+            dodgeChance: 0.03,
+            blockChance: 0,
+            parryChance: 0,
+            accuracy: 100,
+            hpRegen: 0,
+            manaRegen: 2
+        };
+        
         const statKeys = [
             'health_max', 'mana_max', 'attack_damage', 'defense', 
             'speed', 'crit_chance', 'crit_damage', 'dodge_chance',
@@ -366,27 +435,67 @@ class StatCalculationEngine extends BaseService {
 
         statKeys.forEach(key => {
             // Default values for some stats, otherwise 0
+            // Now using fixed growth system values as base
             let baseValue = 0;
             let options = {};
+            
+            // Map stat keys to fixed growth values
             switch (key) {
-                case 'health_max': baseValue = heroData.hp_base || 100; options = { max: 99999 }; break;
-                case 'mana_max': baseValue = heroData.mana_base || 20; options = { max: 9999 }; break;
-                case 'attack_damage': baseValue = heroData.damage_base || 10; options = { max: 99999 }; break;
-                case 'defense': baseValue = heroData.defense_base || 0; options = { max: 99999 }; break;
-                case 'speed': baseValue = heroData.speed_base || 5; options = { max: 255 }; break;
+                case 'health_max': 
+                    baseValue = fixedStats.hp || heroData.hp_base || 100; 
+                    options = { max: 99999 }; 
+                    break;
+                case 'mana_max': 
+                    baseValue = fixedStats.mana || heroData.mana_base || 20; 
+                    options = { max: 9999 }; 
+                    break;
+                case 'attack_damage': 
+                    baseValue = fixedStats.physicalAttack || heroData.damage_base || 10; 
+                    options = { max: 99999 }; 
+                    break;
+                case 'defense': 
+                    baseValue = fixedStats.defense || heroData.defense_base || 0; 
+                    options = { max: 99999 }; 
+                    break;
+                case 'speed': 
+                    baseValue = fixedStats.speed || heroData.speed_base || 5; 
+                    options = { max: 255 }; 
+                    break;
                 case 'attack_range': baseValue = heroData.range_base || 1; options = { max: 10 }; break;
                 case 'dodge_rate': baseValue = heroData.dodge_chance || 0; options = { max: 0.95, type: 'percent', isExempt: true }; break;
-                case 'crit_chance': baseValue = heroData.crit_chance || 0.05; options = { max: 1.0, type: 'percent' }; break;
-                case 'crit_damage': baseValue = heroData.crit_damage || 1.5; options = { max: 5.0, min: 1.0 }; break;
-                case 'hp_regen': baseValue = heroData.hp_regen || 0; break;
-                case 'mana_regen': baseValue = heroData.mana_regen || 2; break;
-                case 'block_chance': baseValue = heroData.block_chance || 0; options = { max: 0.75, type: 'percent' }; break;
+                case 'crit_chance': 
+                    baseValue = fixedStats.critChance || heroData.crit_chance || 0.05; 
+                    options = { max: 0.75, type: 'percent' }; 
+                    break;
+                case 'crit_damage': 
+                    baseValue = fixedStats.critDamage || heroData.crit_damage || 1.5; 
+                    options = { max: 5.0, min: 1.0 }; 
+                    break;
+                case 'hp_regen': 
+                    baseValue = fixedStats.hpRegen || heroData.hp_regen || 0; 
+                    break;
+                case 'mana_regen': 
+                    baseValue = fixedStats.manaRegen || heroData.mana_regen || 2; 
+                    break;
+                case 'block_chance': 
+                    baseValue = fixedStats.blockChance || heroData.block_chance || 0; 
+                    options = { max: 0.75, type: 'percent' }; 
+                    break;
                 case 'block': baseValue = heroData.block_base || 0; break;
                 case 'parry': baseValue = heroData.parry_base || 0; break;
-                case 'parry_chance': baseValue = heroData.parry_chance || 0; options = { max: 0.5, type: 'percent' }; break;
-                case 'accuracy': baseValue = heroData.accuracy_base || 100; options = { max: 100, type: 'percent' }; break;
+                case 'parry_chance': 
+                    baseValue = fixedStats.parryChance || heroData.parry_chance || 0; 
+                    options = { max: 0.40, type: 'percent' }; 
+                    break;
+                case 'accuracy': 
+                    baseValue = fixedStats.accuracy || heroData.accuracy_base || 100; 
+                    options = { max: 100, type: 'percent' }; 
+                    break;
                 case 'armor_penetration': baseValue = heroData.armor_penetration || 0; break;
-                case 'skill_power': baseValue = heroData.skill_power_base || 10; options = { max: 99999 }; break;
+                case 'skill_power': 
+                    baseValue = fixedStats.magicalAttack || heroData.skill_power_base || 10; 
+                    options = { max: 99999 }; 
+                    break;
                 case 'tenacity': baseValue = heroData.tenacity_base || 0; options = { max: 1.0, type: 'percent' }; break;
                 case 'spell_vamp': baseValue = heroData.spell_vamp || 0; options = { max: 1.0, type: 'percent' }; break;
                 case 'block_power': baseValue = heroData.block_power_base || 0.5; break;
@@ -425,7 +534,7 @@ class StatCalculationEngine extends BaseService {
      */
     _initializePrimaryStats(heroData) {
         const primary = {};
-        const primaryKeys = ['str', 'dex', 'int', 'vit', 'luk'];
+        const primaryKeys = ['str', 'dex', 'int', 'def'];
 
         primaryKeys.forEach(key => {
             const baseValue = heroData[key] || 10;
@@ -438,30 +547,6 @@ class StatCalculationEngine extends BaseService {
     // =========================================================================
     // PRIVATE: Calculation Layers
     // =========================================================================
-
-    /**
-     * Apply stat allocation.
-     * @param {Object} primary - Primary stats map.
-     * @param {Object} heroData - Hero data.
-     * @param {Object} context - Calculation context.
-     * @private
-     */
-    _applyStatAllocation(primary, heroData, context) {
-        const allocation = heroData.statAllocation;
-        if (!allocation) return;
-
-        ['str', 'dex', 'int', 'vit', 'luk'].forEach(attr => {
-            const allocated = allocation[`${attr}Allocated`] || 0;
-            if (allocated > 0) {
-                primary[attr].addModifier(new StatModifier({
-                    value: allocated,
-                    type: StatModifierType.FLAT,
-                    source: 'StatAllocation',
-                    priority: ModifierPriority.ALLOCATION
-                }));
-            }
-        });
-    }
 
     /**
      * Create applyMod closure function for stat modification.
@@ -620,7 +705,7 @@ class StatCalculationEngine extends BaseService {
 
         const setTemplates = await this.db.equipmentSetTemplate.findMany({
             where: { id: { in: setIds } },
-            include: { setBonuses: true }
+            include: { setBonuses: { include: { stats: true, conditions: true } } }
         });
 
         const setData = this.setBonusResolver.registerSetBonuses(equipment);

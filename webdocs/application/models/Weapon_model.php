@@ -39,7 +39,7 @@ class Weapon_model extends CI_Model {
      * Get traits for a specific item
      */
     private function get_item_traits($itemId) {
-        $this->db->select('TraitTemplate.name, TraitTemplate.description');
+        $this->db->select('TraitTemplate.id, TraitTemplate.name, TraitTemplate.description');
         $this->db->from('ItemTrait');
         $this->db->join('TraitTemplate', 'ItemTrait.traitId = TraitTemplate.id');
         $this->db->where('ItemTrait.itemId', $itemId);
@@ -136,7 +136,7 @@ class Weapon_model extends CI_Model {
     /**
      * Update weapon data in both ItemTemplate and ItemStat
      */
-    public function update_weapon($id, $data, $stats) {
+    public function update_weapon($id, $data, $stats, $traitId = null) {
         $this->db->trans_start();
 
         // 1. Update main template
@@ -161,6 +161,16 @@ class Weapon_model extends CI_Model {
                     ));
                 }
             }
+        }
+
+        // 3. Update trait
+        $this->db->where('itemId', $id);
+        $this->db->delete('ItemTrait');
+        if ($traitId !== null && $traitId !== '' && $traitId != 0) {
+            $this->db->insert('ItemTrait', array(
+                'itemId' => $id,
+                'traitId' => (int)$traitId
+            ));
         }
 
         $this->db->trans_complete();
@@ -200,5 +210,14 @@ class Weapon_model extends CI_Model {
         }
 
         return $tree;
+    }
+
+    /**
+     * Get all available traits for selection
+     */
+    public function get_all_traits() {
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get('TraitTemplate');
+        return $query->result_array();
     }
 }

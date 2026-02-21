@@ -260,10 +260,22 @@ class ArenaQueueService {
                 matchCode,
                 gameMode,
                 status: 'READY',
-                playerIds: JSON.stringify(players.map(p => p.playerId)),
-                teamAIds: JSON.stringify(teamAIds),
-                teamBIds: JSON.stringify(teamBIds),
-                queuedAt: new Date()
+                queuedAt: new Date(),
+                participants: {
+                    create: players.map(p => {
+                        let teamId = null;
+                        if (teamAIds.includes(p.playerId)) teamId = 'A';
+                        else if (teamBIds.includes(p.playerId)) teamId = 'B';
+                        
+                        return {
+                            playerId: String(p.playerId),
+                            teamId
+                        };
+                    })
+                }
+            },
+            include: {
+                participants: true
             }
         });
 

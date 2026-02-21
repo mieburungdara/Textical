@@ -8,26 +8,39 @@ class VanguardTrait extends BaseTrait {
     constructor() { super('vanguard'); }
 
     /**
-     * @param {BattleUnit} unit - The Protector
+     * @param {BattleUnit} unit - The Protector (Vanguard)
      * @param {BattleSimulation} sim - Context
-     * @param {BattleUnit} ally - Unit taking damage
-     * @param {number} amount - Damage amount
+     * @param {BattleUnit} ally - Unit being attacked
+     * @param {BattleUnit} attacker - The enemy attacking
+     * @param {number} amount - Final damage after ally's defense
+     * @returns {Object|null}
      */
-    onAllyDamage(unit, sim, ally, amount) {
-        if (unit.isDead || !ally || ally.isDead || !sim) return;
+    onInterceptDamage(unit, sim, ally, attacker, amount) {
+        if (unit.isDead || !ally || ally.isDead || !sim) return null;
 
         const dist = sim.grid.getDistance(unit.gridPos, ally.gridPos);
         
         // If adjacent (within 1 tile)
         if (dist <= 1) {
-            const absorbed = Math.floor(amount * 0.5);
-            unit.takeDamage(absorbed, sim);
+            // Absorb 100% of the final damage
+            unit.takeDamage(amount, sim);
             
-            sim.logger.addEvent("REACTION", `${unit.data.name} shields ${ally.data.name} with Vanguard stance!`, {
+            sim.logger.addEvent("REACTION", `${unit.data.name} intercepts attack for ${ally.data.name}!`, {
                 actor_id: unit.instanceId,
-                damage: absorbed
+                target_id: ally.instanceId,
+                damage: amount
             });
+
+            return { intercepted: true };
         }
+        return null;
+    }
+
+    /**
+     * Kept for notification logic if needed, but primary absorption is now in onInterceptDamage.
+     */
+    onAllyDamage(unit, sim, ally, amount) {
+        // Logically we don't need to do anything here if it was already intercepted (amount will be 0)
     }
 }
 

@@ -3,6 +3,9 @@
 
 # Ignore test directories for general AI processing
 tests/
+docs/old/
+docs/old/*
+lore/
 server/tests/
 
 # Original .gitignore content

@@ -138,8 +138,8 @@ class StatHistoryService extends BaseService {
             str: src.str ?? 0, 
             dex: src.dex ?? 0, 
             int: src.int ?? 0, 
-            vit: src.vit ?? 0, 
-            luk: src.luk ?? 0
+            vit: src.vit ?? 0
+            // LUK removed - merged into DEX
         };
     }
 
@@ -150,7 +150,7 @@ class StatHistoryService extends BaseService {
      * @private
      */
     _getStatCategory(key) {
-        if (['str','dex','int','vit','luk'].includes(key)) return 'PRIMARY';
+        if (['str','dex','int','vit'].includes(key)) return 'PRIMARY';
         if (key === 'attributes' || key === 'calculationLayers') return 'META';
         return 'SECONDARY';
     }

@@ -241,22 +241,20 @@ describe('StatCurveCalculator', () => {
         test('should return default distribution when no template', () => {
             const result = StatCurveCalculator.getRecommendedDistribution(null, 1, 100);
             expect(result).toEqual({
-                str: 30,
-                dex: 25,
-                int: 25,
-                vit: 15,
-                luk: 5
+                str: 35,
+                dex: 30,
+                int: 20,
+                vit: 15
             });
         });
 
         test('should return default distribution when template is empty', () => {
             const result = StatCurveCalculator.getRecommendedDistribution({}, 1, 100);
             expect(result).toEqual({
-                str: 30,
-                dex: 25,
-                int: 25,
-                vit: 15,
-                luk: 5
+                str: 35,
+                dex: 30,
+                int: 20,
+                vit: 15
             });
         });
 
@@ -267,7 +265,6 @@ describe('StatCurveCalculator', () => {
                     recommendedDex: 30,
                     recommendedInt: 20,
                     recommendedVit: 10,
-                    recommendedLuk: 0,
                     total: 100
                 }
             };
@@ -276,8 +273,7 @@ describe('StatCurveCalculator', () => {
                 str: 40,
                 dex: 30,
                 int: 20,
-                vit: 10,
-                luk: 0
+                vit: 10
             });
         });
 
@@ -288,7 +284,6 @@ describe('StatCurveCalculator', () => {
                     recommendedDex: 0,
                     recommendedInt: 0,
                     recommendedVit: 0,
-                    recommendedLuk: 0,
                     total: 0
                 }
             };
@@ -297,8 +292,7 @@ describe('StatCurveCalculator', () => {
                 str: 0,
                 dex: 0,
                 int: 0,
-                vit: 0,
-                luk: 0
+                vit: 0
             });
         });
     });

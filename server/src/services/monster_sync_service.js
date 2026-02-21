@@ -137,10 +137,6 @@ class MonsterSyncService {
                         else if (param.valFloat !== null) aiSettings[param.key] = param.valFloat;
                         else aiSettings[param.key] = param.valStr;
                     });
-                } else {
-                     try {
-                        Object.assign(aiSettings, JSON.parse(monster.aiConfig || "{}"));
-                    } catch (e) {}
                 }
                 
                 // Overwrite the flat aiConfig string with the reconstructed one (or original if no params)

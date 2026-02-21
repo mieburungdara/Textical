@@ -25,7 +25,6 @@ class StatProcessor {
             'dexterity': { base: heroData.dex || 10 },
             'intelligence': { base: heroData.int || 10 },
             'vitality': { base: heroData.vit || 10 },
-            'luck': { base: heroData.luk || 5 },
             
             // Combat Stats
             'attack_damage': { base: heroData.damage_base || 10 },

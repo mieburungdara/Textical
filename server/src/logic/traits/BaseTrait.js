@@ -141,10 +141,10 @@ class BaseTrait {
     onAllyDeath(unit, ally, sim) {} // Vengeance logic
 
     // --- 10. COMBAT CALCULATION HOOKS ---
-    onCalculateHitChance(attacker, defender) { return {}; }
-    onCalculateDodgeChance(defender, attacker) { return {}; }
-    onCalculateCrit(attacker, defender) { return {}; }
-    onCalculateBlock(defender, attacker) { return {}; }
+    onCalculateHitChance(attacker, sim, defender) { return {}; }
+    onCalculateDodgeChance(defender, sim, attacker) { return {}; }
+    onCalculateCrit(attacker, sim, defender) { return {}; }
+    onCalculateBlock(defender, sim, attacker) { return {}; }
     onDirectionalBonus(attacker, bonuses, position) { return {}; }
 }
 

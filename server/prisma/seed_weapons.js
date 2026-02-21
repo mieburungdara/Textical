@@ -181,33 +181,41 @@ async function main() {
         }
     }
 
-    // --- NEW: Seed Weapon Passives ---
+    // --- NEW: Seed Weapon Passives via PassiveTemplate + WeaponTypePassive ---
     const passiveMatch = content.match(/## Weapon Unique Passives \(REVISED\)[\s\S]*?\| Weapon Type \| Unique Passive 1 \| Unique Passive 2 \|[\s\S]*?\|-+\|[\s\S]*?(\n\| [\s\S]*?)(?=\n\n|---)/);
     if (passiveMatch) {
-        console.log('📜 Seeding Weapon Unique Passives...');
+        console.log('📜 Seeding Weapon Unique Passives (PassiveTemplate)...');
         const rows = passiveMatch[1].trim().split('\n');
         for (const row of rows) {
-            const cols = row.split('|').map(c => c.trim()).filter(Boolean);
+            const cols = row.split('|').map(/** @param {string} c */ (c) => c.trim()).filter(Boolean);
             if (cols.length >= 3) {
                 const typeName = cols[0].replace(/\*\*/g, '').toUpperCase();
                 const passives = [cols[1], cols[2]];
 
                 const typeData = weaponTypes[typeName];
                 if (typeData) {
-                    // Clear existing to avoid dupes
-                    await prisma.weaponPassive.deleteMany({ where: { weaponTypeId: typeData.id } });
+                    // Clear existing links for this weapon type
+                    await prisma.weaponTypePassive.deleteMany({ where: { weaponTypeId: typeData.id } });
                     
                     for (const passiveStr of passives) {
                         if (passiveStr && passiveStr !== '-' && passiveStr !== 'N/A') {
                             const [pName, pDesc] = passiveStr.includes(':') 
-                                ? passiveStr.split(':').map(s => s.trim()) 
+                                ? passiveStr.split(':').map(/** @param {string} s */ (s) => s.trim()) 
                                 : [passiveStr, ''];
                                 
-                            await prisma.weaponPassive.create({
+                            // 1. Upsert global PassiveTemplate
+                            let passive = await prisma.passiveTemplate.findFirst({ where: { name: pName } });
+                            if (!passive) {
+                                passive = await prisma.passiveTemplate.create({
+                                    data: { name: pName, description: pDesc || pName }
+                                });
+                            }
+
+                            // 2. Create WeaponTypePassive bridge
+                            await prisma.weaponTypePassive.create({
                                 data: {
                                     weaponTypeId: typeData.id,
-                                    name: pName,
-                                    description: pDesc || pName
+                                    passiveId: passive.id
                                 }
                             });
                         }

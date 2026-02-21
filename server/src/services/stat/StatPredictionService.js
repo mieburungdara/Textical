@@ -42,25 +42,6 @@ class StatPredictionService {
                     }
                 }
             });
-
-            const statAllocation = heroData.statAllocation;
-            if (statAllocation) {
-                const growthConfig = {
-                    type: GrowthCurveType.LINEAR,
-                    rate: 1
-                };
-                
-                ['str', 'dex', 'int', 'vit', 'luk'].forEach(attr => {
-                    const allocated = statAllocation[`${attr}Allocated`] || 0;
-                    const growthBonus = StatCurveCalculator.calculateGrowthToLevel(
-                        allocated, 
-                        heroData.unitLevel, 
-                        targetLevel,
-                        growthConfig
-                    );
-                    predicted.attributes[attr] += growthBonus;
-                });
-            }
         }
 
         const caps = this.engine.statCapResolver.getCaps({

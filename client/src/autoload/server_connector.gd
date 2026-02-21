@@ -182,8 +182,6 @@ func complete_quest(u, q): quest.complete_quest(u, q)
 func fetch_unit_stats(unit_id: int): stat.fetch_unit_stats(unit_id)
 func fetch_stat(unit_id: int, stat_name: String): stat.fetch_stat(unit_id, stat_name)
 func request_stat_comparison(unit_id: int, equipment_preview: Array = []): stat.request_stat_comparison(unit_id, equipment_preview)
-func request_stat_allocation(unit_id: int, stat_points: Dictionary): stat.request_stat_allocation(unit_id, stat_points)
-func preview_stat_allocation(unit_id: int, stat_points: Dictionary): stat.preview_stat_allocation(unit_id, stat_points)
 func fetch_elemental_affinities(unit_id: int): stat.fetch_elemental_affinities(unit_id)
 func fetch_set_bonuses(unit_id: int): stat.fetch_set_bonuses(unit_id)
 func fetch_stat_caps(unit_id: int): stat.fetch_stat_caps(unit_id)
@@ -198,9 +196,6 @@ func stop_stat_sync(): stat.stop_stat_sync()
 # --- SOCKET STAT METHODS ---
 func socket_send_stat_change(unit_id: int, stat_name: String, change_amount: float):
     socket.send_stat_change_request(unit_id, stat_name, change_amount)
-
-func socket_send_stat_allocation(unit_id: int, allocations: Dictionary):
-    socket.send_stat_allocation_request(unit_id, allocations)
 
 func socket_subscribe_unit_stats(unit_id: int):
     socket.subscribe_to_unit_stats(unit_id)

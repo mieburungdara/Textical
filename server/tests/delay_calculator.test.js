@@ -14,9 +14,9 @@ describe('DelayCalculator', () => {
         const delayNormal = delayCalculator.calculateMoveDelay(normal);
         const delayFast = delayCalculator.calculateMoveDelay(fast);
 
-        expect(delaySlow).toBe(100);   // (100/50) * 50 = 100
-        expect(delayNormal).toBe(50); // (100/100) * 50 = 50
-        expect(delayFast).toBe(25);   // (100/200) * 50 = 25
+        expect(delaySlow).toBe(40);   // (100/50) * 20 = 40
+        expect(delayNormal).toBe(20); // (100/100) * 20 = 20
+        expect(delayFast).toBe(10);  // (100/200) * 20 = 10
     });
 
     test('High Attack Speed should reduce Attack Delay', () => {

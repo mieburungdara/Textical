@@ -30,12 +30,11 @@ class StatCapResolver {
      */
     _getDefaultGlobalCaps() {
         return {
-            // Primary attributes
+            // Primary attributes (LUK removed - merged into DEX)
             str: { max: 255, type: 'hard' },
             dex: { max: 255, type: 'hard' },
             int: { max: 255, type: 'hard' },
-            vit: { max: 255, type: 'hard' },
-            luk: { max: 255, type: 'hard' },
+            vit: { max: 255, type: 'hard' }, // Legacy - HP from Class+Equipment
             
             // Combat stats
             health_max: { max: 99999, type: 'hard' },
@@ -48,6 +47,10 @@ class StatCapResolver {
             dodge_rate: { max: 0.95, type: 'percent' }, // 95% max
             block_chance: { max: 0.75, type: 'percent' },
             parry_chance: { max: 0.5, type: 'percent' },
+            
+            // Penetration stats
+            armor_penetration: { max: 1.0, type: 'percent' }, // Physical pen
+            magic_penetration: { max: 1.0, type: 'percent' }, // Magic pen (NEW)
             
             // Speed stats
             speed: { max: 255, type: 'hard' },
@@ -109,18 +112,9 @@ class StatCapResolver {
         // Apply class-level base caps (maxStatCap)
         if (classTemplate?.statAllocationTemplate) {
             const maxCap = classTemplate.statAllocationTemplate.maxStatCap || 255;
-            // Apply to primary stats by default unless overridden
-            ['str', 'dex', 'int', 'vit', 'luk'].forEach(key => {
+            // Apply to primary stats by default unless overridden (LUK removed)
+            ['str', 'dex', 'int', 'vit'].forEach(key => {
                 if (caps[key]) caps[key].max = maxCap;
-            });
-        }
-
-        // Apply Hero-specific Allocation overrides (Relational)
-        if (heroData?.statAllocation?.caps) {
-            heroData.statAllocation.caps.forEach(cap => {
-                if (caps[cap.statKey]) {
-                    caps[cap.statKey].max = cap.capValue;
-                }
             });
         }
 

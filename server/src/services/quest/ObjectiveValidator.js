@@ -58,8 +58,11 @@ class ObjectiveValidator extends BaseService {
     }
 
     async _validateKill(userId, obj, userQuest) {
-        const progress = JSON.parse(userQuest.progressData || "{}");
-        const currentKills = progress[obj.targetId] || 0;
+        let currentKills = 0;
+        if (Array.isArray(userQuest.progressData)) {
+            const progress = userQuest.progressData.find(p => p.targetIdentifier === String(obj.targetId));
+            if (progress) currentKills = progress.currentAmount;
+        }
 
         if (currentKills < obj.amount) {
             throw new Error(`Objective incomplete: Need to defeat ${obj.amount - currentKills}x more monsters (Current: ${currentKills}/${obj.amount}).`);

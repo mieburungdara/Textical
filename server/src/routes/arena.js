@@ -283,7 +283,8 @@ router.get('/match/:matchId', asyncHandler(async (req, res) => {
     const { matchId } = req.params;
     
     const match = await prisma.arenaMatch.findUnique({
-        where: { id: parseInt(matchId) }
+        where: { id: parseInt(matchId) },
+        include: { participants: true }
     });
     
     if (!match) {
@@ -296,10 +297,10 @@ router.get('/match/:matchId', asyncHandler(async (req, res) => {
     // Parse JSON fields
     const formatted = {
         ...match,
-        playerIds: JSON.parse(match.playerIds || '[]'),
-        teamAIds: JSON.parse(match.teamAIds || '[]'),
-        teamBIds: JSON.parse(match.teamBIds || '[]'),
-        winnerIds: match.winnerIds ? JSON.parse(match.winnerIds) : null
+        playerIds: match.participants.map(p => p.playerId),
+        teamAIds: match.participants.filter(p => p.teamId === 'A').map(p => p.playerId),
+        teamBIds: match.participants.filter(p => p.teamId === 'B').map(p => p.playerId),
+        winnerIds: match.winnerId ? [match.winnerId] : null
     };
     
     handleResponse(res, formatted);
@@ -313,7 +314,8 @@ router.get('/match/code/:matchCode', asyncHandler(async (req, res) => {
     const { matchCode } = req.params;
     
     const match = await prisma.arenaMatch.findFirst({
-        where: { matchCode }
+        where: { matchCode },
+        include: { participants: true }
     });
     
     if (!match) {
@@ -325,10 +327,10 @@ router.get('/match/code/:matchCode', asyncHandler(async (req, res) => {
     
     const formatted = {
         ...match,
-        playerIds: JSON.parse(match.playerIds || '[]'),
-        teamAIds: JSON.parse(match.teamAIds || '[]'),
-        teamBIds: JSON.parse(match.teamBIds || '[]'),
-        winnerIds: match.winnerIds ? JSON.parse(match.winnerIds) : null
+        playerIds: match.participants.map(p => p.playerId),
+        teamAIds: match.participants.filter(p => p.teamId === 'A').map(p => p.playerId),
+        teamBIds: match.participants.filter(p => p.teamId === 'B').map(p => p.playerId),
+        winnerIds: match.winnerId ? [match.winnerId] : null
     };
     
     handleResponse(res, formatted);
@@ -343,8 +345,8 @@ router.get('/matches/recent', asyncHandler(async (req, res) => {
     
     const where = {};
     if (playerId) {
-        // Match by checking if player is in playerIds JSON
-        where.playerIds = { contains: `"${playerId}"` };
+        // Match by checking participants
+        where.participants = { some: { playerId: String(playerId) } };
     }
     if (gameMode) {
         where.gameMode = gameMode;
@@ -353,15 +355,16 @@ router.get('/matches/recent', asyncHandler(async (req, res) => {
     const matches = await prisma.arenaMatch.findMany({
         where,
         orderBy: { completedAt: 'desc' },
-        take: parseInt(limit)
+        take: parseInt(limit),
+        include: { participants: true }
     });
     
     const formatted = matches.map(m => ({
         ...m,
-        playerIds: JSON.parse(m.playerIds || '[]'),
-        teamAIds: JSON.parse(m.teamAIds || '[]'),
-        teamBIds: JSON.parse(m.teamBIds || '[]'),
-        winnerIds: m.winnerIds ? JSON.parse(m.winnerIds) : null
+        playerIds: m.participants.map(p => p.playerId),
+        teamAIds: m.participants.filter(p => p.teamId === 'A').map(p => p.playerId),
+        teamBIds: m.participants.filter(p => p.teamId === 'B').map(p => p.playerId),
+        winnerIds: m.winnerId ? [m.winnerId] : null
     }));
     
     handleResponse(res, formatted);
@@ -403,17 +406,16 @@ router.get('/stats/:playerId', asyncHandler(async (req, res) => {
     // Get recent matches
     const recentMatches = await prisma.arenaMatch.findMany({
         where: {
-            playerIds: { contains: `"${playerIdInt}"` },
+            participants: { some: { playerId: String(playerIdInt) } },
             status: 'COMPLETED'
         },
         orderBy: { completedAt: 'desc' },
-        take: 10
+        take: 10,
+        include: { participants: true }
     });
     
     const formattedRecent = recentMatches.map(m => {
-        const playerIds = JSON.parse(m.playerIds || '[]');
-        const winnerIds = m.winnerIds ? JSON.parse(m.winnerIds) : [];
-        const isWinner = winnerIds.includes(playerIdInt);
+        const isWinner = m.winnerId === String(playerIdInt);
         
         return {
             id: m.id,
@@ -450,7 +452,8 @@ router.post('/match/:matchId/result', asyncHandler(async (req, res) => {
     }
     
     const match = await prisma.arenaMatch.findUnique({
-        where: { id: parseInt(matchId) }
+        where: { id: parseInt(matchId) },
+        include: { participants: true }
     });
     
     if (!match) {
@@ -467,13 +470,11 @@ router.post('/match/:matchId/result', asyncHandler(async (req, res) => {
         });
     }
     
-    // Parse player IDs
-    const playerIds = JSON.parse(match.playerIds || '[]');
-    const teamAIds = JSON.parse(match.teamAIds || '[]');
-    const teamBIds = JSON.parse(match.teamBIds || '[]');
-    
+    // Get player IDs
+    const playerIds = match.participants.map(p => p.playerId);
+
     // Determine losers
-    const loserIds = playerIds.filter(id => !winnerIds.includes(id));
+    const loserIds = playerIds.filter(id => !winnerIds.includes(parseInt(id)));
     
     // Process ratings for each player
     const ratingUpdates = [];
@@ -494,9 +495,9 @@ router.post('/match/:matchId/result', asyncHandler(async (req, res) => {
         where: { id: parseInt(matchId) },
         data: {
             status: 'COMPLETED',
-            winnerIds: JSON.stringify(winnerIds),
+            winnerId: String(winnerIds[0]),
             completedAt: new Date(),
-            battleDuration
+            duration: battleDuration
         }
     });
     

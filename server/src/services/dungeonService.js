@@ -132,12 +132,22 @@ class DungeonService {
                             orderBy: { floorNumber: 'asc' },
                             include: {
                                 modifiers: {
-                                    include: { modifier: true }
-                                }
+                                    include: { 
+                                        modifier: {
+                                            include: {
+                                                statMultipliers: true,
+                                                statusEffects: true
+                                            }
+                                        } 
+                                    }
+                                },
+                                monsterPools: true
                             }
                         }
                     }
-                }
+                },
+                floorProgress: true,
+                rewardsClaimed: true
             }
         });
     }
@@ -154,10 +164,25 @@ class DungeonService {
                 dungeon: {
                     include: {
                         floors: {
-                            orderBy: { floorNumber: 'asc' }
+                            orderBy: { floorNumber: 'asc' },
+                            include: {
+                                modifiers: {
+                                    include: { 
+                                        modifier: {
+                                            include: {
+                                                statMultipliers: true,
+                                                statusEffects: true
+                                            }
+                                        } 
+                                    }
+                                },
+                                monsterPools: true
+                            }
                         }
                     }
-                }
+                },
+                floorProgress: true,
+                rewardsClaimed: true
             },
             orderBy: { lastEnteredAt: 'desc' }
         });
@@ -230,12 +255,22 @@ class DungeonService {
                                 orderBy: { floorNumber: 'asc' },
                                 include: {
                                     modifiers: {
-                                        include: { modifier: true }
-                                    }
+                                        include: { 
+                                            modifier: {
+                                                include: {
+                                                    statMultipliers: true,
+                                                    statusEffects: true
+                                                }
+                                            } 
+                                        }
+                                    },
+                                    monsterPools: true
                                 }
                             }
                         }
-                    }
+                    },
+                    floorProgress: true,
+                    rewardsClaimed: true
                 }
             });
             logger.info(`[DungeonService.enterDungeon] Created new entry for user ${userId} in dungeon ${dungeonId}`);
@@ -258,12 +293,22 @@ class DungeonService {
                                     orderBy: { floorNumber: 'asc' },
                                     include: {
                                         modifiers: {
-                                            include: { modifier: true }
-                                        }
+                                            include: { 
+                                                modifier: {
+                                                    include: {
+                                                        statMultipliers: true,
+                                                        statusEffects: true
+                                                    }
+                                                } 
+                                            }
+                                        },
+                                        monsterPools: true
                                     }
                                 }
                             }
-                        }
+                        },
+                        floorProgress: true,
+                        rewardsClaimed: true
                     }
                 });
                 logger.info(`[DungeonService.enterDungeon] Reset dungeon progress for user ${userId}`);
@@ -349,25 +394,32 @@ class DungeonService {
             throw new Error('Invalid floor');
         }
         
-        // Get current floor progress
-        const floorProgress = JSON.parse(entry.floorProgress || '{}');
-        const currentFloorProgress = floorProgress[floorNumber] || { kills: 0, bossesKilled: 0 };
+        // Get current floor progress from relation
+        let currentFloorProgress = entry.floorProgress.find(fp => fp.floorId === floor.id);
         
-        // Get the floor data
-        const floor = entry.dungeon.floors.find(f => f.floorNumber === floorNumber);
-        if (!floor) {
-            throw new Error('Floor not found');
-        }
+        let killsCount = floor.killCountRequired || 0;
+        let bossesKilledCount = floor.bossRequired ? 1 : 0;
         
-        // Update floor progress
-        currentFloorProgress.kills = (currentFloorProgress.kills || 0) + (floor.killCountRequired || 0);
-        if (floor.bossRequired) {
-            currentFloorProgress.bossesKilled = (currentFloorProgress.bossesKilled || 0) + 1;
+        if (currentFloorProgress) {
+             killsCount += currentFloorProgress.kills;
+             bossesKilledCount += currentFloorProgress.bossesKilled;
         }
-        floorProgress[floorNumber] = currentFloorProgress;
         
         // Check if floor is complete
-        const isFloorComplete = currentFloorProgress.kills >= floor.killCountRequired;
+        const isFloorComplete = killsCount >= floor.killCountRequired;
+        
+        if (!isFloorComplete) {
+            throw new Error('Floor not complete yet');
+        }
+
+        // Upsert floor progress
+        await prisma.dungeonEntryFloorProgress.upsert({
+            where: {
+                entryId_floorId: { entryId: entry.id, floorId: floor.id }
+            },
+            update: { kills: killsCount, bossesKilled: bossesKilledCount },
+            create: { entryId: entry.id, floorId: floor.id, kills: killsCount, bossesKilled: bossesKilledCount }
+        });
         
         if (!isFloorComplete) {
             throw new Error('Floor not complete yet');
@@ -382,7 +434,6 @@ class DungeonService {
         
         // Update entry
         const updateData = {
-            floorProgress: JSON.stringify(floorProgress),
             totalGoldEarned: entry.totalGoldEarned + goldReward,
             totalXpEarned: entry.totalXpEarned + xpReward
         };
@@ -468,7 +519,7 @@ class DungeonService {
             floor,
             modifiers,
             statMultipliers: combinedMultipliers,
-            monsterPool: JSON.parse(floor.monsterPoolIds || '[]'),
+            monsterPool: floor.monsterPools ? floor.monsterPools.map(mp => mp.monsterId) : [],
             spawnRates: {
                 elite: floor.eliteSpawnRate,
                 boss: floor.bossSpawnRate
@@ -500,11 +551,13 @@ class DungeonService {
         };
         
         for (const modifier of modifiers) {
-            const stats = JSON.parse(modifier.statMultipliers || '{}');
+            const statsArr = modifier.statMultipliers || [];
             const stackCount = modifier.stackCount || 1;
             
-            for (const [key, value] of Object.entries(stats)) {
-                if (multipliers[key] !== undefined) {
+            for (const stat of statsArr) {
+                const key = stat.key;
+                const value = parseFloat(stat.value);
+                if (multipliers[key] !== undefined && !isNaN(value)) {
                     // Apply multiplier with stack count (compounding)
                     multipliers[key] = Math.pow(value, stackCount);
                 }
@@ -529,8 +582,8 @@ class DungeonService {
                 name: 'Enraged',
                 description: 'Monsters deal 50% more damage but take 25% more damage',
                 category: 'DIFFICULTY',
-                statMultipliers: JSON.stringify({ damage: 1.5, hp: 1.0, defense: 1.0 }),
-                statusEffects: JSON.stringify(['ENRAGED']),
+                statMultipliers: { damage: 1.5, hp: 1.0, defense: 1.0 },
+                statusEffects: ['ENRAGED'],
                 icon: '🔥',
                 color: '#ff4444'
             },
@@ -539,8 +592,8 @@ class DungeonService {
                 name: 'Fortified',
                 description: 'Monsters have 50% more HP but deal 25% less damage',
                 category: 'DIFFICULTY',
-                statMultipliers: JSON.stringify({ damage: 0.75, hp: 1.5, defense: 1.25 }),
-                statusEffects: JSON.stringify([]),
+                statMultipliers: { damage: 0.75, hp: 1.5, defense: 1.25 },
+                statusEffects: [],
                 icon: '🛡️',
                 color: '#4488ff'
             },
@@ -549,8 +602,8 @@ class DungeonService {
                 name: 'Swarm',
                 description: '50% more enemies but each has 50% less HP',
                 category: 'DIFFICULTY',
-                statMultipliers: JSON.stringify({ damage: 0.75, hp: 0.5, speed: 1.1 }),
-                statusEffects: JSON.stringify([]),
+                statMultipliers: { damage: 0.75, hp: 0.5, speed: 1.1 },
+                statusEffects: [],
                 icon: '🪲',
                 color: '#44ff44'
             },
@@ -559,8 +612,8 @@ class DungeonService {
                 name: 'Elite Only',
                 description: 'All enemies are elite with 100% more stats',
                 category: 'DIFFICULTY',
-                statMultipliers: JSON.stringify({ damage: 1.5, hp: 2.0, defense: 1.5 }),
-                statusEffects: JSON.stringify(['ELITE']),
+                statMultipliers: { damage: 1.5, hp: 2.0, defense: 1.5 },
+                statusEffects: ['ELITE'],
                 icon: '⭐',
                 color: '#ffaa00'
             },
@@ -569,8 +622,8 @@ class DungeonService {
                 name: 'Boss Rush',
                 description: 'Every enemy is a boss. Good luck!',
                 category: 'DIFFICULTY',
-                statMultipliers: JSON.stringify({ damage: 2.0, hp: 3.0, defense: 2.0 }),
-                statusEffects: JSON.stringify(['BOSS_AURA']),
+                statMultipliers: { damage: 2.0, hp: 3.0, defense: 2.0 },
+                statusEffects: ['BOSS_AURA'],
                 icon: '👹',
                 color: '#ff0000'
             },
@@ -580,8 +633,8 @@ class DungeonService {
                 name: 'Fire Realm',
                 description: 'All enemies are Fire elemental with fire aura',
                 category: 'ELEMENTAL',
-                statMultipliers: JSON.stringify({ damage: 1.1, hp: 1.0 }),
-                statusEffects: JSON.stringify(['BURNING']),
+                statMultipliers: { damage: 1.1, hp: 1.0 },
+                statusEffects: ['BURNING'],
                 icon: '🔥',
                 color: '#ff6600'
             },
@@ -590,8 +643,8 @@ class DungeonService {
                 name: 'Frost Realm',
                 description: 'All enemies are Ice elemental with chilling aura',
                 category: 'ELEMENTAL',
-                statMultipliers: JSON.stringify({ speed: 0.8, defense: 1.1 }),
-                statusEffects: JSON.stringify(['FROZEN']),
+                statMultipliers: { speed: 0.8, defense: 1.1 },
+                statusEffects: ['FROZEN'],
                 icon: '❄️',
                 color: '#00ccff'
             },
@@ -600,8 +653,8 @@ class DungeonService {
                 name: 'Void Realm',
                 description: 'All enemies are Void elemental. Reality bends...',
                 category: 'ELEMENTAL',
-                statMultipliers: JSON.stringify({ damage: 1.25, hp: 1.25 }),
-                statusEffects: JSON.stringify(['VOID_TOUCH']),
+                statMultipliers: { damage: 1.25, hp: 1.25 },
+                statusEffects: ['VOID_TOUCH'],
                 icon: '🕳️',
                 color: '#9900ff'
             },
@@ -610,8 +663,8 @@ class DungeonService {
                 name: 'Storm Realm',
                 description: 'Lightning fills the air. Everything is conductive.',
                 category: 'ELEMENTAL',
-                statMultipliers: JSON.stringify({ damage: 1.2, speed: 1.1 }),
-                statusEffects: JSON.stringify(['SHOCKED']),
+                statMultipliers: { damage: 1.2, speed: 1.1 },
+                statusEffects: ['SHOCKED'],
                 icon: '⚡',
                 color: '#ffee00'
             },
@@ -621,8 +674,8 @@ class DungeonService {
                 name: 'No Healing',
                 description: 'All healing is disabled in this floor',
                 category: 'SPECIAL',
-                statMultipliers: JSON.stringify({ damage: 1.0, hp: 1.0 }),
-                statusEffects: JSON.stringify(['NO_HEAL']),
+                statMultipliers: { damage: 1.0, hp: 1.0 },
+                statusEffects: ['NO_HEAL'],
                 icon: '🚫',
                 color: '#888888'
             },
@@ -631,8 +684,8 @@ class DungeonService {
                 name: 'Time Attack',
                 description: 'Defeat enemies quickly. 50% more damage but 50% less time.',
                 category: 'SPECIAL',
-                statMultipliers: JSON.stringify({ damage: 1.5, hp: 0.8 }),
-                statusEffects: JSON.stringify(['TIME_PRESSURE']),
+                statMultipliers: { damage: 1.5, hp: 0.8 },
+                statusEffects: ['TIME_PRESSURE'],
                 icon: '⏱️',
                 color: '#ff00ff'
             },
@@ -641,8 +694,8 @@ class DungeonService {
                 name: 'Solo Run',
                 description: 'Only your main hero can be used',
                 category: 'SPECIAL',
-                statMultipliers: JSON.stringify({ damage: 1.25, hp: 1.25 }),
-                statusEffects: JSON.stringify(['SOLO_MODE']),
+                statMultipliers: { damage: 1.25, hp: 1.25 },
+                statusEffects: ['SOLO_MODE'],
                 icon: '🧙',
                 color: '#00ff88'
             },
@@ -651,19 +704,48 @@ class DungeonService {
                 name: 'Equipment Lock',
                 description: 'No equipment bonuses. Pure skill only.',
                 category: 'SPECIAL',
-                statMultipliers: JSON.stringify({ damage: 0.8, defense: 0.8 }),
-                statusEffects: JSON.stringify(['NO_EQUIP']),
+                statMultipliers: { damage: 0.8, defense: 0.8 },
+                statusEffects: ['NO_EQUIP'],
                 icon: '🔒',
                 color: '#666666'
             }
         ];
         
         for (const modifier of modifiers) {
-            await prisma.dungeonModifier.upsert({
-                where: { modifierKey: modifier.modifierKey },
-                update: modifier,
-                create: modifier
+            const { statMultipliers, statusEffects, ...modifierData } = modifier;
+            
+            const dbModifier = await prisma.dungeonModifier.upsert({
+                where: { modifierKey: modifierData.modifierKey },
+                update: modifierData,
+                create: modifierData
             });
+
+            // Update associated statMultipliers and statusEffects
+            await prisma.dungeonModifierStatMult.deleteMany({
+                where: { modifierId: dbModifier.id }
+            });
+            await prisma.dungeonModifierStatusEffect.deleteMany({
+                where: { modifierId: dbModifier.id }
+            });
+            
+            for (const [key, value] of Object.entries(statMultipliers || {})) {
+                await prisma.dungeonModifierStatMult.create({
+                    data: {
+                        modifierId: dbModifier.id,
+                        key: String(key),
+                        value: String(value)
+                    }
+                });
+            }
+            
+            for (const effect of statusEffects || []) {
+                await prisma.dungeonModifierStatusEffect.create({
+                    data: {
+                        modifierId: dbModifier.id,
+                        effectId: String(effect)
+                    }
+                });
+            }
         }
         
         logger.info(`[DungeonService.seedModifiers] Created ${modifiers.length} modifiers`);

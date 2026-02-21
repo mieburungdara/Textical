@@ -26,7 +26,15 @@ class GuildManagementService {
             throw new AppError(ErrorCodes.GUILD_INVALID_TEMPLATE, 'Invalid guild template.');
         }
 
-        const reqs = JSON.parse(template.creationReqs || "{}");
+        const reqs = {};
+        if (template.creationReqs) {
+            template.creationReqs.forEach(r => {
+                if (r.valBool !== null) reqs[r.key] = r.valBool;
+                else if (r.valInt !== null) reqs[r.key] = r.valInt;
+                else if (r.valFloat !== null) reqs[r.key] = r.valFloat;
+                else reqs[r.key] = r.valStr;
+            });
+        }
         const costSilver = BigInt(reqs.gold_cost || 0);
         
         const userTotalSilver = resolver.getTotalSilver(user);

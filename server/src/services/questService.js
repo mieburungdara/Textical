@@ -93,7 +93,9 @@ class QuestService extends BaseService {
         const uQuest = await this.db.userQuest.findUnique({
             where: { id: userQuestId },
             include: { 
-                currentStage: { include: { objectives: true, rewards: true } }
+                currentStage: { include: { objectives: true, rewards: true } },
+                progressData: true,
+                variables: true
             }
         });
 
@@ -119,7 +121,8 @@ class QuestService extends BaseService {
             include: { 
                 currentStage: { include: { objectives: true } }, 
                 quest: true,
-                variables: true // Include relational variables
+                variables: true, // Include relational variables
+                progressData: true // Include relational progress data
             }
         });
     }
@@ -132,8 +135,12 @@ class QuestService extends BaseService {
             if (!currentStage) continue;
 
             let updated = false;
-            // Legacy JSON support (read)
-            const progress = JSON.parse(uQuest.progressData || "{}");
+            
+            // Map relational progress data
+            const progress = {};
+            if (Array.isArray(uQuest.progressData)) {
+                uQuest.progressData.forEach(p => progress[p.targetIdentifier] = p.currentAmount);
+            }
             
             // Relational Variables Map
             const varMap = {};
@@ -162,10 +169,16 @@ class QuestService extends BaseService {
             }
 
             if (updated) {
-                await this.db.userQuest.update({
-                    where: { id: uQuest.id },
-                    data: { progressData: JSON.stringify(progress) }
+                // Double Write: update new UserQuestProgress relation
+                const progressOps = Object.entries(progress).map(([key, value]) => {
+                    return this.db.userQuestProgress.upsert({
+                        where: { userQuestId_targetIdentifier: { userQuestId: uQuest.id, targetIdentifier: key } },
+                        update: { currentAmount: value },
+                        create: { userQuestId: uQuest.id, targetIdentifier: key, currentAmount: value }
+                    });
                 });
+                await this.db.$transaction(progressOps);
+                
                 this.log(`Updated quest ${uQuest.questId} progress for User ${userId}: ${type} ${targetId} -> (Relational Updated)`, "Quest");
             }
         }

@@ -90,12 +90,17 @@ class SetBonusResolver {
                 if (count >= bonus.requiredPieces) {
                     // Check conditions
                     if (this._checkBonusConditions(bonus, heroData, count, setData)) {
+                        const bonusStatsObj = {};
+                        if (Array.isArray(bonus.stats)) {
+                            bonus.stats.forEach(s => bonusStatsObj[s.statKey] = s.statValue);
+                        }
+                        
                         activeBonuses.push({
                             setId: template.id,
                             setName: template.name,
                             requiredPieces: bonus.requiredPieces,
                             equippedPieces: count,
-                            bonusStats: JSON.parse(bonus.bonusStats || '{}'),
+                            bonusStats: bonusStatsObj,
                             bonusSkillId: bonus.bonusSkillId,
                             conditions: bonus.conditions || [],
                             source: `SetBonus:${template.name}`
@@ -123,9 +128,7 @@ class SetBonusResolver {
             return true;
         }
 
-        const conditions = Array.isArray(bonus.conditions) 
-            ? bonus.conditions 
-            : JSON.parse(bonus.conditions || '[]');
+        const conditions = bonus.conditions;
 
         return conditions.every(condition => {
             switch (condition.conditionType) {

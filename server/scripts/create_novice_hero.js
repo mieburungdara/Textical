@@ -30,7 +30,6 @@ async function main() {
             speed: 10,
             agility: 5,
             intelligence: 5,
-            luck: 5,
             baseAttack: 10,
             baseDefense: 5,
             baseSpeed: 10,

@@ -13,13 +13,11 @@
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.3.0",
-    "@prisma/client": "7.3.0",
+    "@prisma/client": "^6.4.1",
     "ajv": "^8.17.1",
     "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
     "behavior3js": "^0.2.2",
-    "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "easystarjs": "^0.4.4",
@@ -39,7 +37,6 @@
     "@types/node": "^25.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
-    "prisma": "^7.3.0",
-    "sqlite3": "^5.1.7"
+    "prisma": "^6.4.1"
   }
 }

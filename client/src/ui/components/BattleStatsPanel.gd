@@ -22,16 +22,14 @@ const STAT_CONFIG = {
     "HPStatRow": {"name": "HP", "icon": "❤️", "key": "hp", "is_vital": true},
     "MPStatRow": {"name": "MP", "icon": "💧", "key": "mp", "is_vital": true},
     "ATKStatRow": {"name": "ATK", "icon": "⚔️", "key": "attack"},
-    "DEFStatRow": {"name": "DEF", "icon": "🛡️", "key": "defense"},
+    "DEFStatRow": {"name": "ARMOR", "icon": "🛡️", "key": "armor"},
     "MAGATKStatRow": {"name": "MAG ATK", "icon": "🔮", "key": "magic_attack"},
-    "MAGDEFStatRow": {"name": "MAG DEF", "icon": "✨", "key": "magic_defense"},
     "SPDStatRow": {"name": "SPD", "icon": "💨", "key": "speed"},
     "INITStatRow": {"name": "INIT", "icon": "⚡", "key": "initiative"},
     "ACCStatRow": {"name": "ACC", "icon": "🎯", "key": "accuracy"},
     "CRITStatRow": {"name": "CRIT", "icon": "💥", "key": "crit_chance"},
     "HPREGENStatRow": {"name": "REGEN", "icon": "🍏", "key": "hp_regen"},
-    "VITALITYStatRow": {"name": "VIT", "icon": "🌱", "key": "vitality"},
-    "TENACITYStatRow": {"name": "TEN", "icon": "💎", "key": "tenacity"},
+    "VITALITYStatRow": {"name": "DEF", "icon": "🌱", "key": "defense"},
     "SVAMPStatRow": {"name": "VAMP", "icon": "🍷", "key": "spell_vamp"},
     "ASPDStatRow": {"name": "ASPD", "icon": "🏹", "key": "attack_speed"},
     "FireElement": {"name": "FIRE", "icon": "🔥", "key": "fire", "is_element": true},
@@ -47,6 +45,7 @@ const STAT_CONFIG = {
 func _ready():
     _get_stat_row_references()
     _setup_click_handlers()
+    _hide_deprecated_rows()
 
 # === PUBLIC METHODS ===
 
@@ -71,12 +70,13 @@ func update_stats(total: Dictionary = {}, _max_vals: Dictionary = {}):
         "attack": _total_stats.get("attack_damage", _total_stats.get("attack", 0)),
         "defense": _total_stats.get("defense", 0),
         "magic_attack": _total_stats.get("skill_power", _total_stats.get("magic_attack", 0)),
-        "magic_defense": _total_stats.get("tenacity", _total_stats.get("magic_defense", 0)),
+        "magic_defense": _total_stats.get("tenacity", 0),
         "speed": _total_stats.get("speed", _total_stats.get("movement_speed", 0)),
         "accuracy": _total_stats.get("accuracy", 100),
-        "crit_chance": int(_total_stats.get("crit_chance", 0) * 100), # Show as percentage
+        "crit_chance": int(_total_stats.get("crit_chance", 0) * 100),
         "hp_regen": _total_stats.get("hp_regen", 0),
-        "vitality": _total_stats.get("vitality_max", 100),
+        "armor": _total_stats.get("armor", _total_stats.get("defense_base", 0)),
+        "defense": _total_stats.get("defense", 0),
         "tenacity": int(_total_stats.get("tenacity", 0) * 100),
         "spell_vamp": int(_total_stats.get("spell_vamp", 0) * 100),
         "attack_speed": _total_stats.get("attack_speed", 1.0)
@@ -139,6 +139,13 @@ func _setup_click_handlers():
         if row and row.has_signal("stat_clicked"):
             if not row.stat_clicked.is_connected(_on_stat_row_clicked):
                 row.stat_clicked.connect(_on_stat_row_clicked.bind(stat_key))
+
+func _hide_deprecated_rows():
+    var to_hide = ["MAGDEFStatRow", "TENACITYStatRow"]
+    for node_name in to_hide:
+        var row = _stat_rows.get(node_name)
+        if row:
+            row.hide()
 
 func _on_stat_row_clicked(stat_key: String):
     if _parent_stats_tab and _parent_stats_tab.has_method("show_stat_detail"):

@@ -283,6 +283,32 @@ Field untuk elemen supranatural yang lebih halus.
 
 ---
 *Terakhir diupdate: 14 Februari 2026 - Textical Architect Agent*
+
+---
+
+## 💰 Currency System (Deferred - Menunggu GDD Finalization)
+
+- [ ] **Guild Creation** - Biaya 100 Gold
+    - *Fungsi:* Pemain bisa membuat guild dengan biaya Gold
+- [ ] **Character Revive** - Biaya Silver 1000 atau Gem 1
+    - *Fungsi:* Pemain bisa revive karakter yang KO
+- [ ] **Inventory Expansion** - Biaya 100 Silver atau 1 Gem per slot
+    - *Fungsi:* Menambah kapasitas inventory
+
+---
+
+## ⚔️ 27. Weapon Data & WebDocs (Selesai)
+Sistem manajemen data senjata terpusat dengan database Prisma dan viewer interaktif.
+
+- [x] **Database Seeding:** Automasi import data dari `WEAPON_DATA_REFERENCE.md` ke Prisma.
+- [x] **Interactive WebDocs:** Viewer database berbasis CodeIgniter 3 dengan fitur Dark Mode.
+- [x] **JSON Export Logic:** Jalur ekspor data senjata dari database ke client assets.
+- [x] **Stat Integration:** Pemetaan statistik `damage_base`, `defense_base`, dan `attack_ticks`.
+- [x] **Visual Identity System:** Dukungan `imageUrl` di database dan interaksi visual di WebDocs.
+- [x] **Seeder Refinement:** Perbaikan logika matching untuk tipe senjata dengan spasi (Battle Axe, War Hammer).
+
+---
+
 ### 🔄 API Updates & Refactoring
 - [x] **UserController Audit Fixes:** Comprehensive security and safety fixes for profile and settings.
 - [ ] **Contract Change:** `POST /user/settings` has been moved to `PUT /user/:id/settings`. Client needs update.

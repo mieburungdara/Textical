@@ -72,8 +72,8 @@ class BattleRules {
         }
 
         // 2. Micro-Phases
-        const atkMods = traitService.executeHook("onPreAttack", attacker, defender, this.sim) || {};
-        const defMods = traitService.executeHook("onPreDefend", defender, attacker, this.sim) || {};
+        const atkMods = traitService.executeHook("onPreAttack", attacker, this.sim, defender) || {};
+        const defMods = traitService.executeHook("onPreDefend", defender, this.sim, attacker) || {};
 
         if (atkMods.cancelAction || defMods.cancelAction) return;
 
@@ -84,7 +84,7 @@ class BattleRules {
         const roll = Math.random() * 100;
         
         if (roll > hitChance) {
-            traitService.executeHook("onDodge", defender, attacker, this.sim);
+            traitService.executeHook("onDodge", defender, this.sim, attacker);
             this.sim.logger.addEvent("MISS", `${defender.data.name} dodged!`, { 
                 targetId: defender.instanceId,
                 hitChance: hitChance,
@@ -117,12 +117,18 @@ class BattleRules {
         
         if (critResult.isCritical) {
             result.isCrit = true;
-            traitService.executeHook("onCrit", attacker, defender, result.damage, this.sim);
+            traitService.executeHook("onCrit", attacker, this.sim, defender, result.damage);
         }
 
         // 7. Mitigation & Hit Hooks
-        const impactMods = traitService.executeHook("onTakeDamage", defender, attacker, result.damage, this.sim) || {};
-        const finalDamage = Math.floor(Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus));
+        const impactMods = traitService.executeHook("onTakeDamage", defender, this.sim, attacker, result.damage) || {};
+        let finalDamage = Math.floor(Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus));
+
+        // AAA: Damage Interception (e.g. Vanguard Guardian Stance)
+        const interceptionResult = CombatEventBroadcaster.broadcastInterceptableEvent(this.sim, "onInterceptDamage", defender, attacker, finalDamage);
+        if (interceptionResult && interceptionResult.intercepted) {
+            finalDamage = 0; 
+        }
 
         defender.takeDamage(finalDamage, this.sim);
         
@@ -134,9 +140,9 @@ class BattleRules {
         CombatEventBroadcaster.broadcastAllyEvent(this.sim, "onAllyDamage", defender, finalDamage);
         this.sim.unitDeeds[attacker.instanceId] = (this.sim.unitDeeds[attacker.instanceId] || 0) + finalDamage;
 
-        traitService.executeHook("onPostHit", defender, attacker, finalDamage, this.sim);
-        traitService.executeHook("onPostAttack", attacker, defender, finalDamage, this.sim);
-        traitService.executeHook("onLifesteal", attacker, finalDamage, this.sim);
+        traitService.executeHook("onPostHit", defender, this.sim, attacker, finalDamage);
+        traitService.executeHook("onPostAttack", attacker, this.sim, defender, finalDamage);
+        traitService.executeHook("onLifesteal", attacker, this.sim, finalDamage);
 
         // 8. Knockback / Impact (Delegated)
         MovementResolver.handleKnockback(this.sim, this.sensor, attacker, defender);
@@ -157,7 +163,7 @@ class BattleRules {
         });
 
         if (defender.currentHealth <= 0) {
-            traitService.executeHook("onKill", attacker, defender, this.sim);
+            traitService.executeHook("onKill", attacker, this.sim, defender);
             CombatEventBroadcaster.broadcastAllyEvent(this.sim, "onAllyKill", attacker, defender);
         }
         if (!isReaction) traitService.executeHook("onPostAction", attacker, this.sim);
@@ -235,6 +241,35 @@ class BattleRules {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Broadcast adjacency loss notification
+     * @param {Object} unit - The unit that lost adjacency
+     */
+    _broadcastAdjacencyLost(unit) {
+        if (this.sim.unitManager) {
+            this.sim.unitManager.notifyAdjacencyLost(unit);
+        }
+    }
+
+    /**
+     * Broadcast adjacency gained notification
+     * @param {Object} unit - The unit that gained adjacency
+     */
+    _broadcastAdjacencyGained(unit) {
+        if (this.sim.unitManager) {
+            this.sim.unitManager.notifyAdjacencyGained(unit);
+        }
+    }
+
+    /**
+     * Broadcast event to allies
+     * @param {string} eventName - Event name
+     * @param {Object} sourceUnit - Source unit
+     */
+    _broadcastAllyEvent(eventName, sourceUnit) {
+        CombatEventBroadcaster.broadcastAllyEvent(this.sim, eventName, sourceUnit);
     }
 }
 

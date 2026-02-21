@@ -8,7 +8,6 @@ class_name StatHandler
 signal stats_updated(unit_id, stats_data)
 signal stat_changed(unit_id, stat_name, old_value, new_value)
 signal stat_comparison_received(unit_id, comparison_data)
-signal stat_allocation_received(unit_id, allocation_data)
 signal stat_cap_reached(unit_id, stat_name, current_value, cap_value)
 signal elemental_affinity_updated(unit_id, affinities)
 signal set_bonus_updated(unit_id, bonuses)
@@ -26,7 +25,6 @@ const STAT_EVENT_PREFIX = "stat:"
 const STAT_UPDATE_EVENT = "stat:updated"
 const STAT_CHANGE_EVENT = "stat:changed"
 const STAT_COMPARE_EVENT = "stat:compare_result"
-const STAT_ALLOCATE_EVENT = "stat:allocation_result"
 const STAT_CAP_EVENT = "stat:cap_reached"
 const ELEMENTAL_UPDATE_EVENT = "stat:elemental_update"
 const SET_BONUS_UPDATE_EVENT = "stat:set_bonus_update"
@@ -65,21 +63,6 @@ func request_stat_comparison(unit_id: int, equipment_preview: Array = []):
     
     _request("/stats/compare", HTTPClient.METHOD_POST, body)
 
-## Request stat allocation
-func request_stat_allocation(unit_id: int, stat_points: Dictionary):
-    # stat_points format: {"hp": 5, "mp": 3, "attack": 2}
-    _request("/stats/allocate", HTTPClient.METHOD_POST, {
-        "unitId": unit_id,
-        "allocations": stat_points
-    })
-
-## Preview stat changes sebelum confirm
-func preview_stat_allocation(unit_id: int, stat_points: Dictionary):
-    _request("/stats/allocate/preview", HTTPClient.METHOD_POST, {
-        "unitId": unit_id,
-        "allocations": stat_points
-    })
-
 ## Fetch elemental affinities
 func fetch_elemental_affinities(unit_id: int):
     _request("/stats/elemental/%d" % unit_id, HTTPClient.METHOD_GET)
@@ -99,6 +82,18 @@ func fetch_growth_curve(unit_id: int, stat_name: String):
 ## Fetch available stat points
 func fetch_available_stat_points(unit_id: int):
     _request("/stats/%d/capabilities" % unit_id, HTTPClient.METHOD_GET)
+
+## Fetch growth info for a class
+func fetch_growth_info(class_name: String):
+    _request("/stats/growth/%s" % class_name, HTTPClient.METHOD_GET)
+
+## Fetch fixed stats for a class at a level
+func fetch_fixed_stats(class_name: String, level: int):
+    _request("/stats/fixed-growth/%s/%d" % [class_name, level], HTTPClient.METHOD_GET)
+
+## Fetch formula explanation for a stat
+func fetch_stat_formula(class_name: String, stat_key: String):
+    _request("/stats/formula/%s/%s" % [class_name, stat_key], HTTPClient.METHOD_GET)
 
 ## Request real-time stat updates subscription
 func subscribe_to_stat_updates(unit_id: int):
@@ -129,7 +124,13 @@ func emit_stat_update_request(unit_id: int):
 
 func _handle_success(endpoint: String, json):
     if "/stats/" in endpoint:
-        if "/elemental/" in endpoint:
+        if "/growth/" in endpoint and "/stats/growth/" in endpoint:
+            _handle_growth_info_response(endpoint, json)
+        elif "/fixed-growth/" in endpoint:
+            _handle_fixed_growth_response(endpoint, json)
+        elif "/formula/" in endpoint:
+            _handle_fixed_growth_response(endpoint, json)
+        elif "/elemental/" in endpoint:
             _handle_elemental_response(endpoint, json)
         elif "/sets/" in endpoint:
             _handle_set_bonuses_response(endpoint, json)
@@ -143,12 +144,6 @@ func _handle_success(endpoint: String, json):
     
     elif "/stats/compare" in endpoint:
         _handle_comparison_response(endpoint, json)
-    
-    elif "/stats/allocate" in endpoint:
-        if "/preview" in endpoint:
-            _handle_allocation_preview_response(endpoint, json)
-        else:
-            _handle_allocation_response(endpoint, json)
 
 func _handle_error(endpoint: String, error_code: String, message: String):
     print("[STAT_HANDLER] Error on %s: [%s] %s" % [endpoint, error_code, message])
@@ -168,18 +163,6 @@ func _handle_comparison_response(_endpoint: String, json):
     var unit_id = data.get("unitId", -1)
     if unit_id != -1:
         stat_comparison_received.emit(unit_id, data)
-
-func _handle_allocation_response(_endpoint: String, json):
-    var data = json.get("data", json) if json is Dictionary else json
-    var unit_id = data.get("unitId", -1)
-    if unit_id != -1:
-        stat_allocation_received.emit(unit_id, data)
-
-func _handle_allocation_preview_response(_endpoint: String, json):
-    var data = json.get("data", json) if json is Dictionary else json
-    var unit_id = data.get("unitId", -1)
-    if unit_id != -1:
-        stat_allocation_received.emit(unit_id, data)
 
 func _handle_elemental_response(endpoint: String, json):
     var unit_id = _extract_unit_id_from_endpoint(endpoint)
@@ -211,6 +194,17 @@ func _handle_available_points_response(endpoint: String, json):
 func _handle_growth_curve_response(_endpoint: String, _json):
     # Growth curve data untuk visualization
     pass
+
+func _handle_growth_info_response(_endpoint: String, json):
+    # Handle growth info response - emit signal for UI
+    var data = json.get("data", json) if json is Dictionary else json
+    # Could emit a signal here for UI to handle
+    print("[STAT_HANDLER] Growth info received: ", data)
+
+func _handle_fixed_growth_response(_endpoint: String, json):
+    # Handle fixed growth stats response
+    var data = json.get("data", json) if json is Dictionary else json
+    print("[STAT_HANDLER] Fixed growth stats received: ", data)
 
 func _extract_unit_id_from_endpoint(endpoint: String) -> int:
     # Extract unit ID dari endpoint pattern /stats/(\d+) atau /stats/.*/(\d+)

@@ -338,6 +338,16 @@
                             <label class="text-secondary small fw-bold">BASE VALUE</label>
                             <input type="number" name="baseValue" id="editValue" class="premium-input w-100">
                         </div>
+                        <div class="col-md-12 mt-3">
+                            <label class="text-warning small fw-bold"><i class="fas fa-star me-1"></i> ESSENCE TRAIT</label>
+                            <select name="traitId" id="editTraitId" class="premium-input w-100 border-warning border-opacity-50" style="background-color: rgba(234, 179, 8, 0.05);">
+                                <option value="">--- No Unique Trait ---</option>
+                                <?php foreach($all_traits as $trait): ?>
+                                <option value="<?php echo $trait['id']; ?>"><?php echo $trait['name']; ?> - <?php echo $trait['description']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-secondary opacity-50 d-block mt-1">Unique traits define specific characteristics of items. E.g: BEAST_SLAYER</small>
+                        </div>
                     </div>
 
                     <div class="mt-4 pt-3 border-top border-secondary">
@@ -460,6 +470,7 @@
         document.getElementById('editHanded').value = w.isTwoHanded;
         document.getElementById('editValue').value = w.baseValue;
         document.getElementById('editImageUrl').value = w.imageUrl || '';
+        document.getElementById('editTraitId').value = w.traits && w.traits.length > 0 ? w.traits[0].id : '';
 
         const statsGrid = document.getElementById('editStatsGrid');
         statsGrid.innerHTML = '';

@@ -22,7 +22,7 @@ const SETTINGS_CONSTANTS = {
  * @param {string} legacySettings - Legacy JSON string settings
  * @returns {object} Transformed settings object
  */
-function transformAttributesToSettings(attributes, legacySettings) {
+function transformAttributesToSettings(attributes, settingsArray) {
     const settingsObj = {};
 
     if (attributes && attributes.length > 0) {
@@ -33,13 +33,16 @@ function transformAttributesToSettings(attributes, legacySettings) {
             else if (attr.valFloat !== null) settingsObj[attr.key] = attr.valFloat;
             else settingsObj[attr.key] = attr.valStr;
         });
-    } else {
-        // Fallback to legacy JSON if no attributes found
-        try {
-            Object.assign(settingsObj, JSON.parse(legacySettings || "{}"));
-        } catch (e) {
-            logger.warn(`Failed to parse legacy settings:`, e);
-        }
+    } else if (Array.isArray(settingsArray)) {
+        // Fallback to relational UserSetting if no attributes found
+        settingsArray.forEach(setting => {
+            if (!setting.key) return;
+            try {
+                settingsObj[setting.key] = JSON.parse(setting.value);
+            } catch {
+                settingsObj[setting.key] = setting.value;
+            }
+        });
     }
 
     return settingsObj;
@@ -183,7 +186,8 @@ class UserController extends BaseController {
                     },
                     premiumTier: true,
                     region: true,
-                    attributes: true
+                    attributes: true,
+                    settings: true
                 }
             });
 
@@ -252,21 +256,20 @@ class UserController extends BaseController {
                 });
             });
 
-            // Double write stringified JSON for legacy support
-            let settingsJson = "{}";
-            try {
-                settingsJson = JSON.stringify(settings);
-            } catch (e) {
-                logger.error(`[UserController.updateSettings] Failed to stringify settings for legacy double-write:`, e);
-            }
+            // Write to new UserSetting relation for fallback support
+            const settingOps = Object.entries(updatedSettings).map(([key, value]) => {
+                let valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                return prisma.userSetting.upsert({
+                    where: { userId_key: { userId, key } },
+                    update: { value: valueStr },
+                    create: { userId, key, value: valueStr }
+                });
+            });
 
             // Execute everything in a single transaction for atomicity and speed
             await prisma.$transaction([
                 ...operations,
-                prisma.user.update({
-                    where: { id: userId },
-                    data: { settings: settingsJson }
-                })
+                ...settingOps
             ]);
 
             logger.info('[UserController.updateSettings] Settings updated successfully', { userId, keyCount: preparedEntries.length });

@@ -89,7 +89,7 @@ class StatQueryService extends BaseService {
         
         const setTemplates = await this.db.equipmentSetTemplate.findMany({
             where: { id: { in: setIds } },
-            include: { setBonuses: true }
+            include: { setBonuses: { include: { stats: true, conditions: true } } }
         });
         
         const sets = [];
@@ -266,6 +266,42 @@ class StatQueryService extends BaseService {
                 averageQuality: equipmentStats.reduce((sum, e) => 
                     sum + e.qualityModifier, 0) / (equipmentStats.length || 1)
             }
+        };
+    }
+
+    /**
+     * Get stat capabilities for a hero (now uses fixed growth system).
+     * @param {number} heroId - Hero ID.
+     * @returns {Promise<Object>} Stat caps and growth info.
+     */
+    async getStatCapabilities(heroId) {
+        const hero = await this.calculationEngine.fetchHeroData(heroId);
+        if (!hero) {
+            throw new Error('Hero not found');
+        }
+
+        const caps = this.calculationEngine.statCapResolver.getCaps(hero);
+        const currentStats = await this.calculationEngine.calculateHeroStats(heroId);
+        
+        // Get growth info from class
+        const growthInfo = this.calculationEngine.getGrowthInfo(hero.combatClass?.name);
+        
+        return {
+            growthSystem: 'fixed',
+            level: hero.unitLevel,
+            class: hero.combatClass?.name,
+            statCaps: caps.primary || {},
+            growthRates: growthInfo?.statGrowth || {},
+            currentStats: {
+                str: currentStats.str || 0,
+                dex: currentStats.dex || 0,
+                int: currentStats.int || 0,
+                vit: currentStats.vit || 0,
+                luk: currentStats.luk || 0
+            },
+            availablePoints: 0, // No manual allocation in fixed growth
+            totalSpent: 0,
+            message: 'Stats are now automatically calculated based on class and level'
         };
     }
 }

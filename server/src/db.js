@@ -1,11 +1,10 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { PrismaClient } = require('@prisma/client');
-const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
-require('dotenv').config();
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL
-});
-
-const prisma = new PrismaClient({ adapter });
+/**
+ * Centralized PrismaClient instance for the Textical engine.
+ * @returns {PrismaClient} singleton instance
+ */
+const prisma = new PrismaClient();
 
 module.exports = prisma;

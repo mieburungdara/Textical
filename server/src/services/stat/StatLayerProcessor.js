@@ -19,35 +19,6 @@ class StatLayerProcessor {
         
         enhancedStatGrowthSystem.applyBaseGrowth(stats, context.level);
         enhancedStatGrowthSystem.applyGrowth(stats, heroData.combatClass, context.level);
-        
-        const allocation = heroData.statAllocation;
-        if (allocation && heroData.combatClass?.statAllocationTemplate) {
-            const template = heroData.combatClass.statAllocationTemplate;
-            
-            ['str', 'dex', 'int', 'vit', 'luk'].forEach(attr => {
-                const growthCurve = template[`${attr}GrowthCurve`] || GrowthCurveType.LINEAR;
-                const growthFactor = template[`${attr}GrowthFactor`] || 1.0;
-                
-                const allocated = allocation[`${attr}Allocated`] || 0;
-                const curveConfig = {
-                    type: growthCurve,
-                    rate: growthFactor
-                };
-                
-                const growthBonus = StatCurveCalculator.calculate(
-                    0, context.level, curveConfig
-                ) * allocated;
-                
-                if (growthBonus > 0 && primary[attr]) {
-                    primary[attr].addModifier(new StatModifier({
-                        value: growthBonus,
-                        type: StatModifierType.FLAT,
-                        source: `StatGrowth:${attr}`,
-                        priority: ModifierPriority.GROWTH
-                    }));
-                }
-            });
-        }
     }
 
     /**

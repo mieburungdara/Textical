@@ -72,55 +72,6 @@ class StatHandler {
     }
 
     /**
-     * Handle stat allocation request
-     */
-    async handleStatAllocate(ws, request) {
-        try {
-            const { heroId, statName, points, confirm } = request;
-
-            if (!heroId || !statName || typeof points !== 'number') {
-                return ws.send(JSON.stringify({
-                    type: 'stat:allocate:error',
-                    error: 'Invalid request. Required: heroId, statName, points'
-                }));
-            }
-
-            const validStats = ['str', 'dex', 'int', 'vit', 'luk'];
-            if (!validStats.includes(statName)) {
-                return ws.send(JSON.stringify({
-                    type: 'stat:allocate:error',
-                    error: `Invalid statName. Must be one of: ${validStats.join(', ')}`
-                }));
-            }
-
-            const result = await statService.allocateStat(heroId, statName, points, { confirm });
-
-            ws.send(JSON.stringify({
-                type: 'stat:allocate:result',
-                success: result.success,
-                heroId,
-                statName,
-                pointsAllocated: points,
-                allocation: result.allocation,
-                stats: result.stats
-            }));
-
-            // Emit update to subscribed clients
-            this.emitStatUpdate(heroId, {
-                type: 'ALLOCATION',
-                statName,
-                points,
-                newStats: result.stats
-            });
-        } catch (error) {
-            ws.send(JSON.stringify({
-                type: 'stat:allocate:error',
-                error: error.message
-            }));
-        }
-    }
-
-    /**
      * Handle stat comparison request
      */
     async handleStatCompare(ws, request) {

@@ -10,8 +10,12 @@ class TraitsManager {
 
     _loadTraits() {
         const definitionsPath = path.join(__dirname, '../logic/traits/definitions');
-        if (!fs.existsSync(definitionsPath)) return;
+        if (!fs.existsSync(definitionsPath)) {
+            console.error(`[TRAIT_SERVICE] Definitions path NOT FOUND: ${definitionsPath}`);
+            return;
+        }
         const files = fs.readdirSync(definitionsPath);
+        console.log(`[TRAIT_SERVICE] Found ${files.length} files in ${definitionsPath}: ${files}`);
         files.forEach(file => {
             if (file.endsWith('.js')) {
                 const TraitClass = require(path.join(definitionsPath, file));

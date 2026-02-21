@@ -34,42 +34,6 @@ const validateHero = async (req, res, next) => {
 };
 
 /**
- * Middleware to validate allocation payload.
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @param {Function} next - Express next middleware function.
- */
-const validateAllocation = (req, res, next) => {
-    const { statName, points } = req.body;
-    
-    if (!statName || typeof statName !== 'string') {
-        return res.status(400).json({ success: false, error: 'Valid stat name is required' });
-    }
-    
-    if (points === undefined || isNaN(parseInt(points)) || parseInt(points) <= 0) {
-        return res.status(400).json({ success: false, error: 'Positive point allocation is required' });
-    }
-    
-    next();
-};
-
-/**
- * Middleware to validate batch allocation payload.
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @param {Function} next - Express next middleware function.
- */
-const validateBatchAllocation = (req, res, next) => {
-    const { batch } = req.body;
-    
-    if (!batch || typeof batch !== 'object' || Object.keys(batch).length === 0) {
-        return res.status(400).json({ success: false, error: 'Non-empty batch allocation data is required' });
-    }
-    
-    next();
-};
-
-/**
  * Middleware to validate calculation options.
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
@@ -91,7 +55,5 @@ const validateCalculationOptions = (req, res, next) => {
 
 module.exports = {
     validateHero,
-    validateAllocation,
-    validateBatchAllocation,
     validateCalculationOptions
 };

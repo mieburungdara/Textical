@@ -1,13 +1,11 @@
 /**
  * EnhancedStatService (Facade)
  * Orchestrates hero stat management by delegating to SRP-compliant modules.
- * Retains: allocation, simulation, recovery, and query methods.
  * Delegates: calculation to StatCalculationEngine, history to StatHistoryService.
  */
 const BaseService = require('./BaseService');
 const StatCalculationEngine = require('./stat/StatCalculationEngine');
 const StatHistoryService = require('./stat/StatHistoryService');
-const StatAllocationService = require('./stat/StatAllocationService');
 const StatQueryService = require('./stat/StatQueryService');
 const StatSimulationService = require('./stat/StatSimulationService');
 const StatRecoveryService = require('./stat/StatRecoveryService');
@@ -24,9 +22,6 @@ class EnhancedStatService extends BaseService {
         
         // History service (SRP: handles snapshots and history retrieval)
         this.historyService = new StatHistoryService(this.calculationEngine);
-
-        // Allocation service (SRP: handles stat points)
-        this.allocationService = new StatAllocationService(this.calculationEngine, this.historyService);
 
         // Query service (SRP: handles various stat queries)
         this.queryService = new StatQueryService(this.calculationEngine);
@@ -129,41 +124,6 @@ class EnhancedStatService extends BaseService {
     }
 
     // =========================================================================
-    // ALLOCATION: Stat Point Management
-    // =========================================================================
-
-    /**
-     * Allocate stat points to a specific stat.
-     * @param {number} heroId - Hero ID.
-     * @param {string} statName - Stat name (str, dex, int, vit, luk).
-     * @param {number} points - Points to allocate.
-     * @param {Object} options - Options.
-     * @returns {Promise<Object>} Allocation result with updated stats.
-     */
-    async allocateStat(heroId, statName, points, options = {}) {
-        return this.allocationService.allocateStat(heroId, statName, points, options);
-    }
-
-    /**
-     * Allocate multiple stats at once (Atomic).
-     * @param {number} heroId - Hero ID.
-     * @param {Object} batch - Allocations { str: 5, dex: 10, ... }.
-     * @returns {Promise<Object>} Result of batch allocation.
-     */
-    async batchAllocateStats(heroId, batch) {
-        return this.allocationService.batchAllocateStats(heroId, batch);
-    }
-
-    /**
-     * Reset all stat allocations for a hero.
-     * @param {number} heroId - Hero ID.
-     * @returns {Promise<Object>} Reset result.
-     */
-    async resetStatAllocation(heroId) {
-        return this.allocationService.resetStatAllocation(heroId);
-    }
-
-    // =========================================================================
     // SIMULATION: What-If Analysis
     // =========================================================================
 
@@ -203,7 +163,7 @@ class EnhancedStatService extends BaseService {
      * @returns {Promise<Object>} Stat caps, available points, growth info.
      */
     async getStatCapabilities(heroId) {
-        return this.allocationService.getStatCapabilities(heroId);
+        return this.queryService.getStatCapabilities(heroId);
     }
 
     /**
@@ -240,6 +200,66 @@ class EnhancedStatService extends BaseService {
      */
     async getRecoveryStats(heroId) {
         return this.recoveryService.getRecoveryStats(heroId);
+    }
+
+    // =========================================================================
+    // FIXED GROWTH SYSTEM: Automatic class-based stat calculation
+    // =========================================================================
+
+    /**
+     * Get growth information for a specific class (for UI display).
+     * @param {string} className - The class name.
+     * @returns {Object} Growth information.
+     */
+    getGrowthInfo(className) {
+        return this.calculationEngine.getGrowthInfo(className);
+    }
+
+    /**
+     * Explain the formula for a specific stat.
+     * @param {string} className - The class name.
+     * @param {string} statKey - The stat key.
+     * @returns {string} Formula explanation.
+     */
+    explainStatFormula(className, statKey) {
+        return this.calculationEngine.explainStatFormula(className, statKey);
+    }
+
+    /**
+     * Calculate fixed stats for a class at a specific level.
+     * TODO: Implement database-based class growth system.
+     * @param {string} className - The class name.
+     * @param {number} level - The target level.
+     * @returns {Object} Calculated stats.
+     */
+    calculateFixedStats(className, level) {
+        // TODO: Query classTemplate table from database
+        // Returning default values for now - needs database implementation
+        console.warn('[statService] calculateFixedStats not implemented - using defaults');
+        return {
+            hp: 100 + (level - 1) * 5,
+            mana: 40 + (level - 1) * 3,
+            physicalAttack: 10 + (level - 1) * 2,
+            magicalAttack: 10 + (level - 1) * 2,
+            defense: 5 + (level - 1) * 1,
+            speed: 5 + (level - 1) * 0.5,
+            critChance: 0.05,
+            critDamage: 1.5,
+            dodgeChance: 0.03,
+            blockChance: 0,
+            parryChance: 0,
+            accuracy: 100,
+            hpRegen: 0,
+            manaRegen: 2
+        };
+    }
+
+    /**
+     * Check if the fixed growth system is enabled.
+     * @returns {boolean} True if enabled.
+     */
+    isFixedGrowthEnabled() {
+        return true;
     }
 
 

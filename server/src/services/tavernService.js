@@ -148,7 +148,7 @@ class TavernService {
     async fastTravel(userId, targetRegionId) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { region: true }
+            include: { region: true, settings: true }
         });
 
         if (!user.isInTavern) throw new AppError(ErrorCodes.TAVERN_NOT_IN_TAVERN, 'You must be inside a Tavern or Inn to arrange Fast Travel.');
@@ -170,9 +170,9 @@ class TavernService {
             throw new AppError(ErrorCodes.TRAVEL_ALREADY_THERE, 'You are already here.');
         }
 
-        // 3. Cooldown Check (Using settings JSON to avoid schema migration)
-        const settings = user.settings ? JSON.parse(user.settings) : {};
-        const lastTravel = settings.lastFastTravelAt ? new Date(settings.lastFastTravelAt) : null;
+        // 3. Cooldown Check (Using UserSetting relation)
+        const lastTravelSetting = user.settings.find(s => s.key === 'lastFastTravelAt');
+        const lastTravel = lastTravelSetting ? new Date(lastTravelSetting.value) : null;
         const now = new Date();
         const COOLDOWN_MINUTES = 60;
         
@@ -201,13 +201,17 @@ class TavernService {
         // 5. Execute
         await transactionManager.removeCurrency(prisma, userId, COST, "FAST_TRAVEL", null, "TAVERN");
         
-        settings.lastFastTravelAt = now.toISOString();
-
         await prisma.user.update({
             where: { id: userId },
             data: {
                 currentRegion: targetRegionId,
-                settings: JSON.stringify(settings),
+                settings: {
+                    upsert: {
+                        where: { userId_key: { userId, key: 'lastFastTravelAt' } },
+                        create: { key: 'lastFastTravelAt', value: now.toISOString() },
+                        update: { value: now.toISOString() }
+                    }
+                },
                 isInTavern: false, // Eject on arrival
                 tavernEntryAt: null
             }
