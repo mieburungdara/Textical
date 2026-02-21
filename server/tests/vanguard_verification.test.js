@@ -1,4 +1,11 @@
 const BattleSimulation = require('../src/logic/battleSimulation');
+const worldCycle = require('../src/services/world/WorldCycleService');
+
+// Mock WorldCycle globally for the test file
+worldCycle.getWorldState = async () => ({
+    currentHour: 12,
+    weatherType: 'CLEAR'
+});
 
 describe('VanguardTrait Verification', () => {
     let sim;
@@ -35,19 +42,21 @@ describe('VanguardTrait Verification', () => {
         ally.currentHealth = 100;
     });
 
-    test('Ally should take 0 damage and Vanguard should take 100% of final damage', async () => {
+    test('Ally and Vanguard should split final damage 50/50', async () => {
         // Calculation: 
         // Attacker Atk: 100
         // Ally Def: 20
         // Expected Final Damage: 80
+        // Vanguard absorbed: 40
+        // Ally takes: 40
         
         sim.rules.performAttack(attacker, ally);
 
         // Assertions
-        // Ally (Mage) should stay at 100 HP (interception 100%)
-        expect(ally.currentHealth).toBe(100); 
+        // Ally (Mage) should take 40 damage: 100 - 40 = 60 HP
+        expect(ally.currentHealth).toBe(60); 
         
-        // Vanguard should take the 80 damage: 200 - 80 = 120
-        expect(vanguard.currentHealth).toBe(120);
+        // Vanguard should take the 40 damage: 200 - 40 = 160 HP
+        expect(vanguard.currentHealth).toBe(160);
     });
 });

@@ -127,7 +127,7 @@ class BattleRules {
         // AAA: Damage Interception (e.g. Vanguard Guardian Stance)
         const interceptionResult = CombatEventBroadcaster.broadcastInterceptableEvent(this.sim, "onInterceptDamage", defender, attacker, finalDamage);
         if (interceptionResult && interceptionResult.intercepted) {
-            finalDamage = 0; 
+            finalDamage = interceptionResult.remainingDamage !== undefined ? interceptionResult.remainingDamage : 0; 
         }
 
         defender.takeDamage(finalDamage, this.sim);

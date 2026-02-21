@@ -19,7 +19,7 @@ describe('VampireTrait Bug Hunting', () => {
         vampire = await sim.addUnit({
             instance_id: "vampire_1",
             name: "Vampire Lord",
-            traits: ["vampire"]
+            traits: ["lifesteal"]
         }, 0, { x: 5, y: 5 }, { health_max: 100, attack_damage: 100 });
         
         victim = await sim.addUnit({
