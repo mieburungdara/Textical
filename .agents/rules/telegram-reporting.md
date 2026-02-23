@@ -215,6 +215,9 @@ FORMAT REFERENSI (Hapus yang tidak perlu):
 - Art Assets: <New assets needed>
 - Audio Assets: <Sound/music requirements>
 - Documentation: <Docs that need updating>
+
+🌟 <b>Milestones Reached:</b>
+<Detailed bulleted list of ALL Improvement and Optimization>
 ```
 
 ---

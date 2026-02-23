@@ -1,6 +1,6 @@
 {
-  "id": 5007,
-  "categoryId": 105,
+  "id": "mob_slime_green",
+  "categoryId": "slime",
   "name": "Green Slime",
   "hp_base": 300,
   "damage_base": 10,
@@ -11,8 +11,7 @@
   "element": "WATER",
   "size": "SMALL",
   "traits": [
-    "split_on_death",
-    "acidic_body"
+    "SplittingForm"
   ],
   "skills": [
     "jump_attack"

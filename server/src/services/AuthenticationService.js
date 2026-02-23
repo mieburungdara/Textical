@@ -6,6 +6,8 @@
 
 const prisma = require('../db');
 const rateLimitService = require('./rateLimitService');
+const bcrypt = require('bcryptjs');
+const logger = require('../utils/logger');
 
 class AuthenticationService {
     /**
@@ -17,7 +19,10 @@ class AuthenticationService {
      * @returns {Object} { user, error } or throws error
      */
     async validateCredentials(username, password, ipAddress, userAgent) {
+        logger.info(`[AUTH_SERVICE] Validating credentials for: ${username}`, { ipAddress });
+        
         if (!username || !password) {
+            logger.warn(`[AUTH_SERVICE] Missing credentials for: ${username}`);
             throw { status: 400, message: "Username and password are required" };
         }
 
@@ -37,21 +42,26 @@ class AuthenticationService {
 
 
         // Find user
+        const lowercaseUsername = username.toLowerCase();
         const user = await prisma.user.findUnique({
-            where: { username: username.toLowerCase() }
+            where: { username: lowercaseUsername }
         });
 
         if (!user) {
+            logger.warn(`[AUTH_SERVICE] User not found: ${lowercaseUsername}`);
             await rateLimitService.recordFailedAttempt(ipAddress, username, 'user_not_found', userAgent);
-            throw { status: 401, message: "Invalid username or password" };
+            throw { status: 401, message: "Invalid username or password (U)" };
         }
 
-        // Password check
-        if (user.password !== password) {
+        // Password check using bcrypt
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            logger.warn(`[AUTH_SERVICE] Invalid password for user: ${lowercaseUsername}`);
             await rateLimitService.recordFailedAttempt(ipAddress, username, 'invalid_password', userAgent, user.id);
-            throw { status: 401, message: "Invalid username or password" };
+            throw { status: 401, message: "Invalid username or password (P)" };
         }
 
+        logger.info(`[AUTH_SERVICE] Authentication successful for: ${lowercaseUsername}`);
         return user;
     }
 

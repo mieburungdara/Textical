@@ -50,7 +50,7 @@ func _do_check_visibility():
     if not current_scene: return
     
     var path = current_scene.scene_file_path
-    var hidden_screens = ["LoadingScreen", "LoginScreen", "AuthScreen", "CombatScreen", "WorldAtlas"]
+    var hidden_screens = ["LoadingScreen", "LoginScreen", "AuthScreen", "CombatScreen"]
     
     var screen_should_hide = false
     for screen in hidden_screens:

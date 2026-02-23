@@ -1,6 +1,6 @@
 {
-  "id": 5003,
-  "categoryId": 101,
+  "id": "mob_orc_king",
+  "categoryId": "orc",
   "name": "Orc King",
   "hp_base": 1500,
   "damage_base": 85,
@@ -11,8 +11,8 @@
   "element": "EARTH",
   "size": "LARGE",
   "traits": [
-    "fearless",
-    "commander_aura"
+    "Berserker",
+    "Vanguard"
   ],
   "skills": [
     "war_cry",

@@ -1,0 +1,138 @@
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: 🛡️ auth for agents: https://vestauth.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+PASS tests/new_traits_verification.test.js (10.946 s)
+  New Traits Verification
+    Adrenaline Trait
+      √ Lv2 should double damage at 0 HP (hypothetical edge case) (112 ms)
+    Executioner Trait
+      √ Lv3 should give +60% DMG if target <50% HP (8 ms)
+    Reflective Spikes Trait
+      √ Lv2 should reflect 30% of damage (6 ms)
+    Second Wind Trait
+      √ Lv2 should heal 40% when HP falls below 25% (7 ms)
+    Opportunist Trait
+      √ Lv3 should hit and crit from back even with 0 base stats and 0.4 random (16 ms)
+
+PASS tests/tiered_traits_verification.test.js (11.081 s)
+  Tiered Traits Verification
+    LifeSteal Tiered Scaling
+      √ Level 1 should heal 15% (87 ms)
+      √ Level 2 should heal 30% (6 ms)
+      √ Level 3 should heal 50% (4 ms)
+      √ Highest Win: Trait Lv1 (15%) vs Stat (40%) -> Should heal 40% (7 ms)
+    Vanguard Tiered Scaling
+      √ Level 1 should absorb 30% (7 ms)
+      √ Level 2 should absorb 50% (6 ms)
+      √ Level 3 should absorb 70% (18 ms)
+
+PASS tests/final_traits_modernized.test.js (11.234 s)
+  Final Traits Modernization Verification
+    ArcaneMaster Trait (Tiered)
+      √ Lv3: 2.0x Skill Damage and 50% Reset Chance (71 ms)
+    Coward Trait (Tiered)
+      √ Lv3: +20 Speed at < 50% HP (4 ms)
+      √ Lv3: 45% Panic chance (Math.random < 0.45) (5 ms)
+    Disruptor Trait (Tiered)
+      √ Lv3: +3 Move Range (6 ms)
+    Sharpshooter Trait (Tiered)
+      √ Lv3: +4 Attack Range (5 ms)
+    Thinker Trait (Tiered)
+      √ Lv3: +25 Mana Regen (6 ms)
+    TrueSight Trait (Tiered)
+      √ Lv3: +50 Accuracy (4 ms)
+
+PASS tests/existing_traits_modernized.test.js (11.342 s)
+  Existing & Modernized Traits Verification
+    Berserker Trait (Tiered)
+      √ Lv3 should give 100% Atk bonus and 1.4x dmg mult at 0 HP (63 ms)
+    CounterStrike Trait (Tiered)
+      √ Lv3 (50%) should trigger counter if random is 0.2 (133 ms)
+      √ Should NOT counter if enemy out of range (4 ms)
+    GlassCannon Trait (Tiered)
+      √ Lv3: Atk x2.5, HP x0.2 (8 ms)
+    Giant Trait (Tiered)
+      √ Lv3: HP x2.0, Spd -10 (5 ms)
+    Thorns Trait (Tiered)
+      √ Lv3: 40% reflect even on low damage (7 ms)
+    UndyingWill Trait (Tiered)
+      √ Lv3 should have DOT immunity for Poison/Burn/Bleed (6 ms)
+      √ Lv3 should revive with 10% HP if random < 0.5 (3 ms)
+    SplittingForm Trait (Tiered)
+      √ Lv2 should split into 2 minis with 40% stats (66 ms)
+    BloodLink Trait (Tiered)
+      √ Lv3 should absorb 60% of damage for linked ally (4 ms)
+
+PASS tests/hidden_traits_verification.test.js (11.314 s)
+  Hidden Legacy Traits Verification
+    Adrenaline Trait (Tiered)
+      √ Lv3: 200% bonus damage at ~0 HP (100% missing) (35 ms)
+    Executioner Trait (Tiered)
+      √ Lv3: +60% DMG if target < 50% HP (3 ms)
+    ReflectiveSpikes Trait (Tiered)
+      √ Lv3: 50% true damage reflection (36 ms)
+    SecondWind Trait (Tiered)
+      √ Lv3: Heal 60% if HP < 35% (4 ms)
+
+Test Suites: 5 passed, 5 total
+Tests:       33 passed, 33 total
+Snapshots:   0 total
+Time:        12.974 s
+Ran all test suites matching tests/existing_traits_modernized.test.js|tests/final_traits_modernized.test.js|tests/hidden_traits_verification.test.js|tests/new_traits_verification.test.js|tests/tiered_traits_verification.test.js.

@@ -84,16 +84,16 @@ func fetch_available_stat_points(unit_id: int):
     _request("/stats/%d/capabilities" % unit_id, HTTPClient.METHOD_GET)
 
 ## Fetch growth info for a class
-func fetch_growth_info(class_name: String):
-    _request("/stats/growth/%s" % class_name, HTTPClient.METHOD_GET)
+func fetch_growth_info(hero_class: String):
+    _request("/stats/growth/%s" % hero_class, HTTPClient.METHOD_GET)
 
 ## Fetch fixed stats for a class at a level
-func fetch_fixed_stats(class_name: String, level: int):
-    _request("/stats/fixed-growth/%s/%d" % [class_name, level], HTTPClient.METHOD_GET)
+func fetch_fixed_stats(hero_class: String, level: int):
+    _request("/stats/fixed-growth/%s/%d" % [hero_class, level], HTTPClient.METHOD_GET)
 
 ## Fetch formula explanation for a stat
-func fetch_stat_formula(class_name: String, stat_key: String):
-    _request("/stats/formula/%s/%s" % [class_name, stat_key], HTTPClient.METHOD_GET)
+func fetch_stat_formula(hero_class: String, stat_key: String):
+    _request("/stats/formula/%s/%s" % [hero_class, stat_key], HTTPClient.METHOD_GET)
 
 ## Request real-time stat updates subscription
 func subscribe_to_stat_updates(unit_id: int):
@@ -219,8 +219,8 @@ func _extract_unit_id_from_endpoint(endpoint: String) -> int:
 # === TIMER CALLBACKS ===
 
 func _on_stat_sync_timer_timeout():
-    if GameState.selected_hero_id != -1:
-        fetch_unit_stats(GameState.selected_hero_id)
+    if game_state and game_state.selected_hero_id != -1:
+        fetch_unit_stats(game_state.selected_hero_id)
 
 # === PUBLIC UTILITY METHODS ===
 

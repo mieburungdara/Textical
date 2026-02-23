@@ -54,13 +54,19 @@ class TavernService {
         const stayMinutes = Math.floor(Math.random() * (this.MAX_STAY_MINUTES - this.MIN_STAY_MINUTES + 1)) + this.MIN_STAY_MINUTES;
         const expiresAt = new Date(Date.now() + (stayMinutes * 60 * 1000));
 
+        const classTemplate = await prisma.classTemplate.findFirst({ orderBy: { id: 'asc' } });
+        if (!classTemplate) {
+            console.warn("[TAVERN] No class templates found, skipping mercenary spawn.");
+            return;
+        }
+
         // Create the "Wild" Hero
         const hero = await prisma.hero.create({
             data: {
                 name: `Mercenary ${Math.floor(Math.random() * 9999)}`,
-                classId: 1001, // Default Novice for now
+                combatClass: { connect: { id: classTemplate.id } }, 
                 vitality: 100,
-                userId: null // UNOWNED
+                // userId is omitted, so it will be null (Unowned)
             }
         });
 

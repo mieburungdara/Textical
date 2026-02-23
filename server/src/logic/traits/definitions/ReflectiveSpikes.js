@@ -33,15 +33,7 @@ class ReflectiveSpikesTrait extends BaseTrait {
         const reflectedDamage = Math.floor(amount * reflectPercent);
 
         if (reflectedDamage > 0) {
-            attacker.takeDamage(reflectedDamage, sim);
-            
-            sim.logger.addEvent("REACTION", `${unit.data.name} reflects damage back to ${attacker.data.name}!`, {
-                actor_id: unit.instanceId,
-                target_id: attacker.instanceId,
-                reflected_damage: reflectedDamage,
-                level: level,
-                reflect_percent: reflectPercent
-            });
+            return { reflectPercent: reflectPercent };
         }
 
         return {};

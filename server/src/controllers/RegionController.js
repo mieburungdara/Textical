@@ -2,6 +2,35 @@ const BaseController = require('./BaseController');
 const prisma = require('../db');
 
 class RegionController extends BaseController {
+    /**
+     * Get the current regions version for delta sync
+     * Returns the version number that client can use to determine if cache needs update
+     */
+    async getVersion(req, res) {
+        await this.execute(res, async () => {
+            // Try to get version from SystemSetting (if exists)
+            const setting = await prisma.systemSetting.findUnique({
+                where: { key: 'regions_version' }
+            });
+            
+            let version = 1; // Default version
+            
+            if (setting) {
+                version = parseInt(setting.value) || 1;
+            } else {
+                // If no setting exists, create one with default version
+                // This ensures version tracking starts
+                await prisma.systemSetting.upsert({
+                    where: { key: 'regions_version' },
+                    update: {},
+                    create: { key: 'regions_version', value: '1' }
+                });
+            }
+            
+            this.sendSuccess(res, { version });
+        });
+    }
+
     async getGlobalInfluence(req, res) {
         await this.execute(res, async () => {
             const regions = await prisma.regionTemplate.findMany({

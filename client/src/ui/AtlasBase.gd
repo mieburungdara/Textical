@@ -1,6 +1,9 @@
 extends Control
 class_name AtlasBase
 
+# Force AtlasBase to be registered first by referencing it
+const _ATLAS_BASE_LOADED := true
+
 @onready var pins_layer = $MapLayer/Pins if has_node("MapLayer/Pins") else null
 @onready var landmarks_layer = $MapLayer/Landmarks if has_node("MapLayer/Landmarks") else null
 @onready var player_marker = $MapLayer/PlayerMarker if has_node("MapLayer/PlayerMarker") else null
@@ -11,6 +14,7 @@ class_name AtlasBase
 
 var SHOW_DEBUG_GRID = true
 var _active_connections = [] # Store paths to draw
+var _loaded_regions = [] # Store regions loaded from API
 
 func _spawn_map_elements():
     if not is_node_ready(): await ready
@@ -68,8 +72,28 @@ func _draw_debug_grid():
                 var label = "[%d,%d]" % [i, j]
                 debug_grid.draw_string(ThemeDB.fallback_font, Vector2(i + 5, j + 25), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.4))
 
+func _grid_to_world(grid_x, grid_y) -> Vector2:
+	const GRID_SIZE = 35
+	const WORLD_SIZE = 5000.0
+	const CELL_SIZE = WORLD_SIZE / GRID_SIZE
+	var world_x = float(grid_x) * CELL_SIZE + CELL_SIZE / 2.0
+	var world_y = (GRID_SIZE - 1 - float(grid_y)) * CELL_SIZE + CELL_SIZE / 2.0
+	return Vector2(world_x, world_y)
+
+
+func _find_region_by_id(regions: Array, target_id: int) -> Dictionary:
+	for r in regions:
+		if r is Dictionary and r.get("id", -1) == target_id:
+			return r
+	return {}
+
+
 func _populate_pins(regions, click_callback: Callable):
     if pins_layer == null: return
+    
+    # [BARU] Simpan regions untuk digunakan oleh fungsi lain
+    _loaded_regions = regions if regions is Array else []
+    
     for child in pins_layer.get_children(): child.queue_free()
     
     _active_connections.clear()
@@ -82,7 +106,11 @@ func _populate_pins(regions, click_callback: Callable):
     for r in regions:
         if not r is Dictionary or not r.has("id"): continue
         var origin_id = int(r.id)
-        var origin_pos = GameState.REGION_POSITIONS.get(origin_id, Vector2.ZERO)
+        
+        # [BARU] Gunakan gridX/gridY dari server untuk hitung posisi
+        var grid_x = r.get("gridX", 0)
+        var grid_y = r.get("gridY", 0)
+        var origin_pos = _grid_to_world(grid_x, grid_y)
         
         # [OPTIMASI] Filtered Connections: Hanya ambil jalur jika ini adalah region pemain
         if origin_id == player_rid:
@@ -91,7 +119,10 @@ func _populate_pins(regions, click_callback: Callable):
                 for conn in connections:
                     if conn is Dictionary:
                         var target_id = int(conn.get("targetRegionId", 0))
-                        var target_pos = GameState.REGION_POSITIONS.get(target_id, Vector2.ZERO)
+                        var target_region = _find_region_by_id(regions, target_id)
+                        var target_grid_x = target_region.get("gridX", 0)
+                        var target_grid_y = target_region.get("gridY", 0)
+                        var target_pos = _grid_to_world(target_grid_x, target_grid_y)
                         if origin_pos != Vector2.ZERO and target_pos != Vector2.ZERO:
                             _active_connections.append({"from": origin_pos, "to": target_pos})
 
@@ -131,13 +162,42 @@ func _update_player_position(is_traveling: bool = false):
         rid_raw = GameState.active_task.get("originRegionId", rid_raw)
     
     var rid = int(str(rid_raw).to_float())
-    player_marker.position = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+    
+    # [BARU] Coba gunakan grid dari _loaded_regions, fallback ke REGION_POSITIONS
+    var target_pos = Vector2(2500, 2500) # Default center
+    if _loaded_regions.size() > 0:
+        var region = _find_region_by_id(_loaded_regions, rid)
+        if region.size() > 0:
+            var grid_x = region.get("gridX", 0)
+            var grid_y = region.get("gridY", 0)
+            target_pos = _grid_to_world(grid_x, grid_y)
+        else:
+            # Fallback ke hardcoded jika region tidak ditemukan
+            target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+    else:
+        # Fallback jika regions belum dimuat
+        target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+    
+    player_marker.position = target_pos
     player_marker.show()
 
 func _center_on_player():
     if GameState.current_user:
         var rid = int(str(GameState.current_user.get("currentRegion", 1)).to_float())
-        var target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        
+        # [BARU] Coba gunakan grid dari _loaded_regions
+        var target_pos = Vector2(2500, 2500) # Default center
+        if _loaded_regions.size() > 0:
+            var region = _find_region_by_id(_loaded_regions, rid)
+            if region.size() > 0:
+                var grid_x = region.get("gridX", 0)
+                var grid_y = region.get("gridY", 0)
+                target_pos = _grid_to_world(grid_x, grid_y)
+            else:
+                target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        else:
+            target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        
         if cam and cam.has_method("center_on"):
             cam.center_on(target_pos)
         else:

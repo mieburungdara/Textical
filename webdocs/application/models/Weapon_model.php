@@ -12,10 +12,10 @@ class Weapon_model extends CI_Model {
      * Get all weapons with their relational weapon type and stats
      */
     public function get_all_weapons() {
-        $this->db->select('ItemTemplate.*, WeaponType.name as weapon_type, WeaponType.category as parent_category');
-        $this->db->from('ItemTemplate');
-        $this->db->join('WeaponType', 'ItemTemplate.weaponTypeId = WeaponType.id', 'left');
-        $this->db->where('ItemTemplate.category', 'EQUIPMENT');
+        $this->db->select('"ItemTemplate".*, "WeaponType"."name" as weapon_type, "WeaponType"."category" as parent_category');
+        $this->db->from('"ItemTemplate"');
+        $this->db->join('"WeaponType"', '"ItemTemplate"."weaponTypeId" = "WeaponType"."id"', 'left');
+        $this->db->where('"ItemTemplate"."category"', 'EQUIPMENT');
         $query = $this->db->get();
         $items = $query->result_array();
 
@@ -39,10 +39,10 @@ class Weapon_model extends CI_Model {
      * Get traits for a specific item
      */
     private function get_item_traits($itemId) {
-        $this->db->select('TraitTemplate.id, TraitTemplate.name, TraitTemplate.description');
-        $this->db->from('ItemTrait');
-        $this->db->join('TraitTemplate', 'ItemTrait.traitId = TraitTemplate.id');
-        $this->db->where('ItemTrait.itemId', $itemId);
+        $this->db->select('"TraitTemplate"."id", "TraitTemplate"."name", "TraitTemplate"."description"');
+        $this->db->from('"ItemTrait"');
+        $this->db->join('"TraitTemplate"', '"ItemTrait"."traitId" = "TraitTemplate"."id"');
+        $this->db->where('"ItemTrait"."itemId"', $itemId);
         $query = $this->db->get();
         return $query->result_array();
     }
@@ -52,15 +52,19 @@ class Weapon_model extends CI_Model {
      */
     private function get_weapon_type_details($typeId) {
         // Passives
-        $this->db->where('weaponTypeId', $typeId);
-        $passives = $this->db->get('WeaponPassive')->result_array();
+        $this->db->select('"PassiveTemplate"."name", "PassiveTemplate"."description"');
+        $this->db->from('"WeaponTypePassive"');
+        $this->db->join('"PassiveTemplate"', '"WeaponTypePassive"."passiveId" = "PassiveTemplate"."id"');
+        $this->db->where('"WeaponTypePassive"."weaponTypeId"', $typeId);
+        $passives = $this->db->get()->result_array();
 
         // Tags
-        $this->db->select('MechanicTag.name');
-        $this->db->from('WeaponTypeTag');
-        $this->db->join('MechanicTag', 'WeaponTypeTag.tagId = MechanicTag.id');
-        $this->db->where('WeaponTypeTag.weaponTypeId', $typeId);
-        $tags_raw = $this->db->get()->result_array();
+        $this->db->select('"MechanicTag"."name"');
+        $this->db->from('"WeaponTypeTag"');
+        $this->db->join('"MechanicTag"', '"WeaponTypeTag"."tagId" = "MechanicTag"."id"');
+        $this->db->where('"WeaponTypeTag"."weaponTypeId"', $typeId);
+        $query = $this->db->get();
+        $tags_raw = $query->result_array();
         
         $tags = array();
         foreach ($tags_raw as $t) $tags[] = $t['name'];
@@ -75,8 +79,8 @@ class Weapon_model extends CI_Model {
      * Get stats for a specific item
      */
     private function get_item_stats($itemId) {
-        $this->db->where('itemId', $itemId);
-        $query = $this->db->get('ItemStat');
+        $this->db->where('"itemId"', $itemId);
+        $query = $this->db->get('"ItemStat"');
         $stats = $query->result_array();
         
         $result = array();
@@ -114,7 +118,7 @@ class Weapon_model extends CI_Model {
      */
     public function get_master_data() {
         // 1. Get all weapon types
-        $types = $this->db->get('WeaponType')->result_array();
+        $types = $this->db->get('"WeaponType"')->result_array();
         
         // 2. Get all weapons
         $weapons = $this->get_all_weapons();
@@ -129,7 +133,7 @@ class Weapon_model extends CI_Model {
      * Get flat list of weapon types for select dropdown
      */
     public function get_all_types() {
-        $query = $this->db->get('WeaponType');
+        $query = $this->db->get('"WeaponType"');
         return $query->result_array();
     }
 
@@ -140,21 +144,21 @@ class Weapon_model extends CI_Model {
         $this->db->trans_start();
 
         // 1. Update main template
-        $this->db->where('id', $id);
-        $this->db->update('ItemTemplate', $data);
+        $this->db->where('"id"', $id);
+        $this->db->update('"ItemTemplate"', $data);
 
         // 2. Update stats
         foreach ($stats as $key => $value) {
-            $this->db->where('itemId', $id);
-            $this->db->where('statKey', $key);
-            $this->db->update('ItemStat', array('statValue' => (float)$value));
+            $this->db->where('"itemId"', $id);
+            $this->db->where('"statKey"', $key);
+            $this->db->update('"ItemStat"', array('statValue' => (float)$value));
             
             // If row doesn't exist (e.g. adding new stat), insert it
             if ($this->db->affected_rows() == 0) {
                 // Check if it exists at all (affected_rows can be 0 if value is same)
-                $exists = $this->db->where(array('itemId' => $id, 'statKey' => $key))->get('ItemStat')->num_rows();
+                $exists = $this->db->where(array('itemId' => $id, 'statKey' => $key))->get('"ItemStat"')->num_rows();
                 if (!$exists) {
-                    $this->db->insert('ItemStat', array(
+                    $this->db->insert('"ItemStat"', array(
                         'itemId' => $id,
                         'statKey' => $key,
                         'statValue' => (float)$value
@@ -164,10 +168,10 @@ class Weapon_model extends CI_Model {
         }
 
         // 3. Update trait
-        $this->db->where('itemId', $id);
-        $this->db->delete('ItemTrait');
+        $this->db->where('"itemId"', $id);
+        $this->db->delete('"ItemTrait"');
         if ($traitId !== null && $traitId !== '' && $traitId != 0) {
-            $this->db->insert('ItemTrait', array(
+            $this->db->insert('"ItemTrait"', array(
                 'itemId' => $id,
                 'traitId' => (int)$traitId
             ));
@@ -190,10 +194,10 @@ class Weapon_model extends CI_Model {
             'UNARMED' => '👊'
         );
 
-        $this->db->select('category, name');
-        $this->db->from('WeaponType');
-        $this->db->order_by('category', 'ASC');
-        $this->db->order_by('name', 'ASC');
+        $this->db->select('"category", "name"');
+        $this->db->from('"WeaponType"');
+        $this->db->order_by('"category"', 'ASC');
+        $this->db->order_by('"name"', 'ASC');
         $query = $this->db->get();
         $rows = $query->result_array();
 
@@ -216,8 +220,8 @@ class Weapon_model extends CI_Model {
      * Get all available traits for selection
      */
     public function get_all_traits() {
-        $this->db->order_by('name', 'ASC');
-        $query = $this->db->get('TraitTemplate');
+        $this->db->order_by('"name"', 'ASC');
+        $query = $this->db->get('"TraitTemplate"');
         return $query->result_array();
     }
 }

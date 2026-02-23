@@ -12,13 +12,13 @@ func _ready():
     # BUG FIX: Auto-redirect if a task is already running
     if GameState.active_task:
         if GameState.active_task.type == "TRAVEL":
-            get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
+            get_tree().change_scene_to_file("res://src/ui/map/MapScreen.tscn")
             return
 
-    # Fetch data to ensure sync (SideHUD, etc)
+    # [OPTIMIZED] Use local cache for static data first, then fetch dynamic data
     if GameState.current_user:
         var rid = GameState.current_user.get("currentRegion", 1)
-        ServerConnector.get_region_details(int(rid))
+        _load_region_data(int(rid))
 
     # Dynamic Title with BBCode Wave Effect
     _update_town_title()
@@ -59,6 +59,24 @@ func _update_town_title():
     else:
         town_title.text = "[center][wave amp=30 freq=3]LOADING...[/wave][/center]"
 
+## [NEW] Load region data with cache-first strategy
+## 1. Static data from local cache (gridX, gridY, name, connections, lore)
+## 2. Dynamic data from network (monsters, resources)
+func _load_region_data(region_id: int) -> void:
+    # STEP 1: Load static data from local cache (NO network)
+    var static_data = DataManager.get_region(region_id)
+    if static_data and static_data.size() > 0:
+        # Use local cache data immediately
+        GameState.current_region_data = static_data
+        _update_town_title()
+        print("[TownScreen] Loaded static data from cache: " + static_data.get("name", "Unknown"))
+    else:
+        print("[TownScreen] Warning: No cached data for region " + str(region_id))
+    
+    # STEP 2: Fetch dynamic data from network (monsters, resources)
+    # This is the only network call needed
+    ServerConnector.get_region_details(region_id)
+
 func _play_entry_animation():
     # ... (rest of function)
     var delay = 0.0
@@ -80,8 +98,22 @@ func _on_request_completed(endpoint: String, data):
     elif "region/" in endpoint:
         var r_data = data.get("data", data)
         if r_data is Dictionary:
-            GameState.current_region_data = r_data
-            _update_town_title()
+            # [OPTIMIZED] Merge dynamic data (monsters, resources) with existing static data
+            var current = GameState.current_region_data
+            if current == null:
+                current = {}
+            
+            # Keep static data from cache, update only dynamic fields
+            if r_data.has("monsters"):
+                current["monsters"] = r_data.get("monsters", [])
+            if r_data.has("resources"):
+                current["resources"] = r_data.get("resources", [])
+            
+            GameState.current_region_data = current
+            print("[TownScreen] Merged dynamic data: monsters=%d, resources=%d" % [
+                current.get("monsters", []).size(),
+                current.get("resources", []).size()
+            ])
 
 func _on_tavern_pressed(): 
     if GameState.current_user:

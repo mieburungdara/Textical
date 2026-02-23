@@ -1,0 +1,1264 @@
+{
+  "tileType": "WATER",
+  "defaults": {
+    "label": "Open Waters",
+    "color": "#2980B9",
+    "icon": "water_tile",
+    "tileCategory": "ZONE",
+    "name": "Open Sea",
+    "description": "Vast ocean waters stretch endlessly beneath an unforgiving sky. The deep currents carry the whispers of drowned sailors and the promise of undiscovered shores.",
+    "visualType": "OCEAN",
+    "traversalType": "BOAT",
+    "zoneType": "WATER",
+    "zoneLevel": 15,
+    "zoneColor": null,
+    "isSafeZone": false,
+    "pvpMode": "SAFE",
+    "dangerLevel": 20,
+    "banditThreatLevel": 0.1,
+    "spiritDensity": 0.05,
+    "corruptionLevel": 0,
+    "sanctuaryPower": 0,
+    "elementalAffinity": "WATER",
+    "terrainAttackMod": 0.9,
+    "terrainDefenseMod": 0.9,
+    "weatherOverride": null,
+    "fogDensity": 0.1,
+    "requiredLevel": 5,
+    "minRequiredUnits": 0,
+    "minRequiredHeroLevel": 1,
+    "hasInn": false,
+    "innTier": 1,
+    "innRecoveryRate": 1,
+    "resourceModifier": 0.8,
+    "resourceScarcity": 1.2,
+    "marketDemandIndex": 1,
+    "regionalTaxRate": 0.1,
+    "gatheringStaminaCost": 1.5,
+    "spawnRateMultiplier": 0.8,
+    "eliteSpawnChance": 0.03,
+    "respawnPenaltyMult": 1.5,
+    "teleportCostMultiplier": 2,
+    "isDiscoveryPoint": true,
+    "discoveryXp": 50,
+    "manaStaticIntensity": 1,
+    "rareHerbSpawnChance": 0,
+    "mysticFogIntensity": 0.1
+  },
+  "coordinates": [
+    {
+      "x": 0,
+      "y": 0,
+      "regionId": 0
+    },
+    {
+      "x": 1,
+      "y": 0,
+      "regionId": 35
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "regionId": 70
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "regionId": 105
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "regionId": 140
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "regionId": 175
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "regionId": 210
+    },
+    {
+      "x": 7,
+      "y": 0,
+      "regionId": 245
+    },
+    {
+      "x": 8,
+      "y": 0,
+      "regionId": 280
+    },
+    {
+      "x": 9,
+      "y": 0,
+      "regionId": 315
+    },
+    {
+      "x": 10,
+      "y": 0,
+      "regionId": 350
+    },
+    {
+      "x": 11,
+      "y": 0,
+      "regionId": 385
+    },
+    {
+      "x": 12,
+      "y": 0,
+      "regionId": 420
+    },
+    {
+      "x": 22,
+      "y": 0,
+      "regionId": 770
+    },
+    {
+      "x": 23,
+      "y": 0,
+      "regionId": 805
+    },
+    {
+      "x": 24,
+      "y": 0,
+      "regionId": 840
+    },
+    {
+      "x": 25,
+      "y": 0,
+      "regionId": 875
+    },
+    {
+      "x": 26,
+      "y": 0,
+      "regionId": 910
+    },
+    {
+      "x": 27,
+      "y": 0,
+      "regionId": 945
+    },
+    {
+      "x": 28,
+      "y": 0,
+      "regionId": 980
+    },
+    {
+      "x": 29,
+      "y": 0,
+      "regionId": 1015
+    },
+    {
+      "x": 30,
+      "y": 0,
+      "regionId": 1050
+    },
+    {
+      "x": 31,
+      "y": 0,
+      "regionId": 1085
+    },
+    {
+      "x": 32,
+      "y": 0,
+      "regionId": 1120
+    },
+    {
+      "x": 33,
+      "y": 0,
+      "regionId": 1155
+    },
+    {
+      "x": 34,
+      "y": 0,
+      "regionId": 1190
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "regionId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "regionId": 36
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "regionId": 106
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "regionId": 141
+    },
+    {
+      "x": 5,
+      "y": 1,
+      "regionId": 176
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "regionId": 211
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "regionId": 246
+    },
+    {
+      "x": 8,
+      "y": 1,
+      "regionId": 281
+    },
+    {
+      "x": 9,
+      "y": 1,
+      "regionId": 316
+    },
+    {
+      "x": 25,
+      "y": 1,
+      "regionId": 876
+    },
+    {
+      "x": 26,
+      "y": 1,
+      "regionId": 911
+    },
+    {
+      "x": 27,
+      "y": 1,
+      "regionId": 946
+    },
+    {
+      "x": 28,
+      "y": 1,
+      "regionId": 981
+    },
+    {
+      "x": 29,
+      "y": 1,
+      "regionId": 1016
+    },
+    {
+      "x": 30,
+      "y": 1,
+      "regionId": 1051
+    },
+    {
+      "x": 31,
+      "y": 1,
+      "regionId": 1086
+    },
+    {
+      "x": 33,
+      "y": 1,
+      "regionId": 1156
+    },
+    {
+      "x": 34,
+      "y": 1,
+      "regionId": 1191
+    },
+    {
+      "x": 0,
+      "y": 2,
+      "regionId": 2
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "regionId": 107
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "regionId": 142
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "regionId": 177
+    },
+    {
+      "x": 6,
+      "y": 2,
+      "regionId": 212
+    },
+    {
+      "x": 7,
+      "y": 2,
+      "regionId": 247
+    },
+    {
+      "x": 27,
+      "y": 2,
+      "regionId": 947
+    },
+    {
+      "x": 28,
+      "y": 2,
+      "regionId": 982
+    },
+    {
+      "x": 29,
+      "y": 2,
+      "regionId": 1017
+    },
+    {
+      "x": 30,
+      "y": 2,
+      "regionId": 1052
+    },
+    {
+      "x": 31,
+      "y": 2,
+      "regionId": 1087
+    },
+    {
+      "x": 34,
+      "y": 2,
+      "regionId": 1192
+    },
+    {
+      "x": 0,
+      "y": 3,
+      "regionId": 3
+    },
+    {
+      "x": 1,
+      "y": 3,
+      "regionId": 38
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "regionId": 73
+    },
+    {
+      "x": 3,
+      "y": 3,
+      "regionId": 108
+    },
+    {
+      "x": 4,
+      "y": 3,
+      "regionId": 143
+    },
+    {
+      "x": 5,
+      "y": 3,
+      "regionId": 178
+    },
+    {
+      "x": 6,
+      "y": 3,
+      "regionId": 213
+    },
+    {
+      "x": 28,
+      "y": 3,
+      "regionId": 983
+    },
+    {
+      "x": 29,
+      "y": 3,
+      "regionId": 1018
+    },
+    {
+      "x": 30,
+      "y": 3,
+      "regionId": 1053
+    },
+    {
+      "x": 31,
+      "y": 3,
+      "regionId": 1088
+    },
+    {
+      "x": 32,
+      "y": 3,
+      "regionId": 1123
+    },
+    {
+      "x": 33,
+      "y": 3,
+      "regionId": 1158
+    },
+    {
+      "x": 34,
+      "y": 3,
+      "regionId": 1193
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "regionId": 4
+    },
+    {
+      "x": 1,
+      "y": 4,
+      "regionId": 39
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "regionId": 74
+    },
+    {
+      "x": 3,
+      "y": 4,
+      "regionId": 109
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "regionId": 144
+    },
+    {
+      "x": 5,
+      "y": 4,
+      "regionId": 179
+    },
+    {
+      "x": 29,
+      "y": 4,
+      "regionId": 1019
+    },
+    {
+      "x": 30,
+      "y": 4,
+      "regionId": 1054
+    },
+    {
+      "x": 31,
+      "y": 4,
+      "regionId": 1089
+    },
+    {
+      "x": 32,
+      "y": 4,
+      "regionId": 1124
+    },
+    {
+      "x": 33,
+      "y": 4,
+      "regionId": 1159
+    },
+    {
+      "x": 34,
+      "y": 4,
+      "regionId": 1194
+    },
+    {
+      "x": 0,
+      "y": 5,
+      "regionId": 5
+    },
+    {
+      "x": 1,
+      "y": 5,
+      "regionId": 40
+    },
+    {
+      "x": 2,
+      "y": 5,
+      "regionId": 75
+    },
+    {
+      "x": 3,
+      "y": 5,
+      "regionId": 110
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "regionId": 145
+    },
+    {
+      "x": 30,
+      "y": 5,
+      "regionId": 1055
+    },
+    {
+      "x": 31,
+      "y": 5,
+      "regionId": 1090
+    },
+    {
+      "x": 32,
+      "y": 5,
+      "regionId": 1125
+    },
+    {
+      "x": 33,
+      "y": 5,
+      "regionId": 1160
+    },
+    {
+      "x": 34,
+      "y": 5,
+      "regionId": 1195
+    },
+    {
+      "x": 0,
+      "y": 6,
+      "regionId": 6
+    },
+    {
+      "x": 1,
+      "y": 6,
+      "regionId": 41
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "regionId": 76
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "regionId": 111
+    },
+    {
+      "x": 31,
+      "y": 6,
+      "regionId": 1091
+    },
+    {
+      "x": 32,
+      "y": 6,
+      "regionId": 1126
+    },
+    {
+      "x": 33,
+      "y": 6,
+      "regionId": 1161
+    },
+    {
+      "x": 34,
+      "y": 6,
+      "regionId": 1196
+    },
+    {
+      "x": 0,
+      "y": 7,
+      "regionId": 7
+    },
+    {
+      "x": 1,
+      "y": 7,
+      "regionId": 42
+    },
+    {
+      "x": 2,
+      "y": 7,
+      "regionId": 77
+    },
+    {
+      "x": 32,
+      "y": 7,
+      "regionId": 1127
+    },
+    {
+      "x": 33,
+      "y": 7,
+      "regionId": 1162
+    },
+    {
+      "x": 34,
+      "y": 7,
+      "regionId": 1197
+    },
+    {
+      "x": 0,
+      "y": 8,
+      "regionId": 8
+    },
+    {
+      "x": 1,
+      "y": 8,
+      "regionId": 43,
+      "name": "Pirate's Cove",
+      "description": "A hidden inlet carved into the cliff face, where smugglers anchor their vessels under cover of night. Barrels of stolen goods and frayed rope ladders line the rocky shore. The Crimson Flag pirates claim this territory as their own.",
+      "landmarkName": "The Smuggler's Dock",
+      "banditThreatLevel": 0.5,
+      "dangerLevel": 35,
+      "visualType": "SHIP",
+      "isBanditHideout": true
+    },
+    {
+      "x": 33,
+      "y": 8,
+      "regionId": 1163
+    },
+    {
+      "x": 34,
+      "y": 8,
+      "regionId": 1198
+    },
+    {
+      "x": 0,
+      "y": 9,
+      "regionId": 9
+    },
+    {
+      "x": 1,
+      "y": 9,
+      "regionId": 44
+    },
+    {
+      "x": 33,
+      "y": 9,
+      "regionId": 1164,
+      "name": "Siren's Strait",
+      "description": "Cursed waters where ethereal songs drift through perpetual fog. Ghostly lights dance beneath the surface, luring unwary sailors to watery graves. The spirits of drowned mariners guard treasures lost to the deep.",
+      "spiritDensity": 0.6,
+      "dangerLevel": 40,
+      "fogDensity": 0.7,
+      "mysticFogIntensity": 0.8,
+      "visualType": "OCEAN"
+    },
+    {
+      "x": 34,
+      "y": 9,
+      "regionId": 1199
+    },
+    {
+      "x": 0,
+      "y": 10,
+      "regionId": 10
+    },
+    {
+      "x": 34,
+      "y": 10,
+      "regionId": 1200
+    },
+    {
+      "x": 0,
+      "y": 11,
+      "regionId": 11
+    },
+    {
+      "x": 34,
+      "y": 11,
+      "regionId": 1201
+    },
+    {
+      "x": 0,
+      "y": 12,
+      "regionId": 12
+    },
+    {
+      "x": 34,
+      "y": 12,
+      "regionId": 1202
+    },
+    {
+      "x": 0,
+      "y": 22,
+      "regionId": 22
+    },
+    {
+      "x": 34,
+      "y": 22,
+      "regionId": 1212
+    },
+    {
+      "x": 0,
+      "y": 23,
+      "regionId": 23
+    },
+    {
+      "x": 34,
+      "y": 23,
+      "regionId": 1213
+    },
+    {
+      "x": 0,
+      "y": 24,
+      "regionId": 24
+    },
+    {
+      "x": 34,
+      "y": 24,
+      "regionId": 1214
+    },
+    {
+      "x": 0,
+      "y": 25,
+      "regionId": 25
+    },
+    {
+      "x": 1,
+      "y": 25,
+      "regionId": 60
+    },
+    {
+      "x": 33,
+      "y": 25,
+      "regionId": 1180
+    },
+    {
+      "x": 34,
+      "y": 25,
+      "regionId": 1215
+    },
+    {
+      "x": 0,
+      "y": 26,
+      "regionId": 26
+    },
+    {
+      "x": 1,
+      "y": 26,
+      "regionId": 61
+    },
+    {
+      "x": 33,
+      "y": 26,
+      "regionId": 1181
+    },
+    {
+      "x": 34,
+      "y": 26,
+      "regionId": 1216
+    },
+    {
+      "x": 0,
+      "y": 27,
+      "regionId": 27
+    },
+    {
+      "x": 1,
+      "y": 27,
+      "regionId": 62
+    },
+    {
+      "x": 2,
+      "y": 27,
+      "regionId": 97
+    },
+    {
+      "x": 32,
+      "y": 27,
+      "regionId": 1147
+    },
+    {
+      "x": 33,
+      "y": 27,
+      "regionId": 1182
+    },
+    {
+      "x": 34,
+      "y": 27,
+      "regionId": 1217
+    },
+    {
+      "x": 0,
+      "y": 28,
+      "regionId": 28
+    },
+    {
+      "x": 1,
+      "y": 28,
+      "regionId": 63
+    },
+    {
+      "x": 2,
+      "y": 28,
+      "regionId": 98
+    },
+    {
+      "x": 3,
+      "y": 28,
+      "regionId": 133
+    },
+    {
+      "x": 31,
+      "y": 28,
+      "regionId": 1113
+    },
+    {
+      "x": 32,
+      "y": 28,
+      "regionId": 1148
+    },
+    {
+      "x": 33,
+      "y": 28,
+      "regionId": 1183
+    },
+    {
+      "x": 34,
+      "y": 28,
+      "regionId": 1218
+    },
+    {
+      "x": 0,
+      "y": 29,
+      "regionId": 29
+    },
+    {
+      "x": 1,
+      "y": 29,
+      "regionId": 64
+    },
+    {
+      "x": 2,
+      "y": 29,
+      "regionId": 99
+    },
+    {
+      "x": 3,
+      "y": 29,
+      "regionId": 134
+    },
+    {
+      "x": 4,
+      "y": 29,
+      "regionId": 169
+    },
+    {
+      "x": 30,
+      "y": 29,
+      "regionId": 1079
+    },
+    {
+      "x": 31,
+      "y": 29,
+      "regionId": 1114
+    },
+    {
+      "x": 32,
+      "y": 29,
+      "regionId": 1149
+    },
+    {
+      "x": 33,
+      "y": 29,
+      "regionId": 1184
+    },
+    {
+      "x": 34,
+      "y": 29,
+      "regionId": 1219
+    },
+    {
+      "x": 0,
+      "y": 30,
+      "regionId": 30
+    },
+    {
+      "x": 1,
+      "y": 30,
+      "regionId": 65
+    },
+    {
+      "x": 2,
+      "y": 30,
+      "regionId": 100
+    },
+    {
+      "x": 3,
+      "y": 30,
+      "regionId": 135
+    },
+    {
+      "x": 4,
+      "y": 30,
+      "regionId": 170
+    },
+    {
+      "x": 5,
+      "y": 30,
+      "regionId": 205
+    },
+    {
+      "x": 29,
+      "y": 30,
+      "regionId": 1045
+    },
+    {
+      "x": 30,
+      "y": 30,
+      "regionId": 1080
+    },
+    {
+      "x": 31,
+      "y": 30,
+      "regionId": 1115
+    },
+    {
+      "x": 32,
+      "y": 30,
+      "regionId": 1150
+    },
+    {
+      "x": 33,
+      "y": 30,
+      "regionId": 1185
+    },
+    {
+      "x": 34,
+      "y": 30,
+      "regionId": 1220
+    },
+    {
+      "x": 0,
+      "y": 31,
+      "regionId": 31
+    },
+    {
+      "x": 1,
+      "y": 31,
+      "regionId": 66
+    },
+    {
+      "x": 2,
+      "y": 31,
+      "regionId": 101
+    },
+    {
+      "x": 3,
+      "y": 31,
+      "regionId": 136
+    },
+    {
+      "x": 4,
+      "y": 31,
+      "regionId": 171
+    },
+    {
+      "x": 5,
+      "y": 31,
+      "regionId": 206
+    },
+    {
+      "x": 6,
+      "y": 31,
+      "regionId": 241
+    },
+    {
+      "x": 28,
+      "y": 31,
+      "regionId": 1011
+    },
+    {
+      "x": 29,
+      "y": 31,
+      "regionId": 1046
+    },
+    {
+      "x": 30,
+      "y": 31,
+      "regionId": 1081
+    },
+    {
+      "x": 31,
+      "y": 31,
+      "regionId": 1116
+    },
+    {
+      "x": 32,
+      "y": 31,
+      "regionId": 1151
+    },
+    {
+      "x": 33,
+      "y": 31,
+      "regionId": 1186
+    },
+    {
+      "x": 34,
+      "y": 31,
+      "regionId": 1221
+    },
+    {
+      "x": 0,
+      "y": 32,
+      "regionId": 32
+    },
+    {
+      "x": 3,
+      "y": 32,
+      "regionId": 137
+    },
+    {
+      "x": 4,
+      "y": 32,
+      "regionId": 172
+    },
+    {
+      "x": 5,
+      "y": 32,
+      "regionId": 207
+    },
+    {
+      "x": 6,
+      "y": 32,
+      "regionId": 242
+    },
+    {
+      "x": 7,
+      "y": 32,
+      "regionId": 277
+    },
+    {
+      "x": 27,
+      "y": 32,
+      "regionId": 977
+    },
+    {
+      "x": 28,
+      "y": 32,
+      "regionId": 1012
+    },
+    {
+      "x": 29,
+      "y": 32,
+      "regionId": 1047
+    },
+    {
+      "x": 30,
+      "y": 32,
+      "regionId": 1082
+    },
+    {
+      "x": 31,
+      "y": 32,
+      "regionId": 1117
+    },
+    {
+      "x": 34,
+      "y": 32,
+      "regionId": 1222
+    },
+    {
+      "x": 0,
+      "y": 33,
+      "regionId": 33
+    },
+    {
+      "x": 1,
+      "y": 33,
+      "regionId": 68
+    },
+    {
+      "x": 3,
+      "y": 33,
+      "regionId": 138
+    },
+    {
+      "x": 4,
+      "y": 33,
+      "regionId": 173
+    },
+    {
+      "x": 5,
+      "y": 33,
+      "regionId": 208
+    },
+    {
+      "x": 6,
+      "y": 33,
+      "regionId": 243
+    },
+    {
+      "x": 7,
+      "y": 33,
+      "regionId": 278
+    },
+    {
+      "x": 8,
+      "y": 33,
+      "regionId": 313
+    },
+    {
+      "x": 9,
+      "y": 33,
+      "regionId": 348
+    },
+    {
+      "x": 25,
+      "y": 33,
+      "regionId": 908
+    },
+    {
+      "x": 26,
+      "y": 33,
+      "regionId": 943
+    },
+    {
+      "x": 27,
+      "y": 33,
+      "regionId": 978
+    },
+    {
+      "x": 28,
+      "y": 33,
+      "regionId": 1013
+    },
+    {
+      "x": 29,
+      "y": 33,
+      "regionId": 1048
+    },
+    {
+      "x": 30,
+      "y": 33,
+      "regionId": 1083
+    },
+    {
+      "x": 31,
+      "y": 33,
+      "regionId": 1118
+    },
+    {
+      "x": 33,
+      "y": 33,
+      "regionId": 1188
+    },
+    {
+      "x": 34,
+      "y": 33,
+      "regionId": 1223
+    },
+    {
+      "x": 0,
+      "y": 34,
+      "regionId": 34
+    },
+    {
+      "x": 1,
+      "y": 34,
+      "regionId": 69
+    },
+    {
+      "x": 2,
+      "y": 34,
+      "regionId": 104
+    },
+    {
+      "x": 3,
+      "y": 34,
+      "regionId": 139
+    },
+    {
+      "x": 4,
+      "y": 34,
+      "regionId": 174
+    },
+    {
+      "x": 5,
+      "y": 34,
+      "regionId": 209
+    },
+    {
+      "x": 6,
+      "y": 34,
+      "regionId": 244
+    },
+    {
+      "x": 7,
+      "y": 34,
+      "regionId": 279
+    },
+    {
+      "x": 8,
+      "y": 34,
+      "regionId": 314
+    },
+    {
+      "x": 9,
+      "y": 34,
+      "regionId": 349
+    },
+    {
+      "x": 10,
+      "y": 34,
+      "regionId": 384
+    },
+    {
+      "x": 11,
+      "y": 34,
+      "regionId": 419
+    },
+    {
+      "x": 12,
+      "y": 34,
+      "regionId": 454
+    },
+    {
+      "x": 22,
+      "y": 34,
+      "regionId": 804
+    },
+    {
+      "x": 23,
+      "y": 34,
+      "regionId": 839
+    },
+    {
+      "x": 24,
+      "y": 34,
+      "regionId": 874
+    },
+    {
+      "x": 25,
+      "y": 34,
+      "regionId": 909
+    },
+    {
+      "x": 26,
+      "y": 34,
+      "regionId": 944
+    },
+    {
+      "x": 27,
+      "y": 34,
+      "regionId": 979
+    },
+    {
+      "x": 28,
+      "y": 34,
+      "regionId": 1014
+    },
+    {
+      "x": 29,
+      "y": 34,
+      "regionId": 1049
+    },
+    {
+      "x": 30,
+      "y": 34,
+      "regionId": 1084
+    },
+    {
+      "x": 31,
+      "y": 34,
+      "regionId": 1119
+    },
+    {
+      "x": 32,
+      "y": 34,
+      "regionId": 1154
+    },
+    {
+      "x": 33,
+      "y": 34,
+      "regionId": 1189
+    },
+    {
+      "x": 34,
+      "y": 34,
+      "regionId": 1224
+    }
+  ]
+}

@@ -54,4 +54,4 @@ func _handle_success(_endpoint: String, json):
     if json is Dictionary and json.has("type") and json.has("status"):
         var status = json.get("status", "")
         if status == "RUNNING" or status == "PENDING":
-            GameState.set_active_task(json)
+            if game_state: game_state.set_active_task(json)

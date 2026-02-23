@@ -29,11 +29,9 @@ func start_preloading(user_id: int, current_region: int) -> void:
 	preload_progress.emit("Syncing inventory...")
 	ServerConnector.fetch_inventory(user_id)
 	
-	preload_progress.emit("Fetching region details...")
-	if current_region > 0:
-		ServerConnector.get_region_details(current_region)
-	else:
-		ServerConnector.get_region_details(1) # Default
+	# [OPTIMIZED] Load static data from local cache first, then fetch dynamic data
+	preload_progress.emit("Loading region data...")
+	_load_region_data(current_region)
 
 func _on_request_completed(endpoint: String, data: Dictionary) -> void:
 	print("[PRELOADER] Request completed: ", endpoint)
@@ -43,8 +41,20 @@ func _on_request_completed(endpoint: String, data: Dictionary) -> void:
 		_inventory_loaded = true
 	elif endpoint.contains("/region/"):
 		_region_loaded = true
-		_region_data = data.get("data", data)
-		GameState.current_region_data = _region_data
+		var r_data = data.get("data", data)
+		if r_data is Dictionary:
+			# [OPTIMIZED] Merge dynamic data (monsters, resources) with existing static data
+			# Keep static data from cache, update only dynamic fields
+			if r_data.has("monsters"):
+				_region_data["monsters"] = r_data.get("monsters", [])
+			if r_data.has("resources"):
+				_region_data["resources"] = r_data.get("resources", [])
+			
+			GameState.current_region_data = _region_data
+			print("[PRELOADER] Merged dynamic data: monsters=%d, resources=%d" % [
+				_region_data.get("monsters", []).size(),
+				_region_data.get("resources", []).size()
+			])
 	
 	_check_completion()
 
@@ -65,3 +75,25 @@ func _check_completion() -> void:
 	if _heroes_loaded and _inventory_loaded and _region_loaded:
 		print("[PRELOADER] All preloading tasks finished.")
 		preload_completed.emit(_region_data)
+
+## [NEW] Load region data with cache-first strategy
+## 1. Static data from local cache (gridX, gridY, name, connections, lore)
+## 2. Dynamic data from network (monsters, resources)
+func _load_region_data(region_id: int) -> void:
+	var rid = region_id if region_id > 0 else 1
+	
+	# STEP 1: Load static data from local cache (NO network)
+	var static_data = DataManager.get_region(rid)
+	if static_data and static_data.size() > 0:
+		# Use local cache data immediately
+		_region_data = static_data.duplicate(true)
+		GameState.current_region_data = _region_data
+		preload_progress.emit("Region: " + static_data.get("name", "Unknown"))
+		print("[PRELOADER] Loaded static data from cache: " + static_data.get("name", "Unknown"))
+	else:
+		print("[PRELOADER] Warning: No cached data for region " + str(rid))
+	
+	# STEP 2: Fetch dynamic data from network (monsters, resources)
+	# This is the only network call needed
+	preload_progress.emit("Fetching dynamic region data...")
+	ServerConnector.get_region_details(rid)

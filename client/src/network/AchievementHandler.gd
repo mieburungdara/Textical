@@ -91,7 +91,7 @@ func unequip_title():
 	_request("/user/" + str(_user_id) + "/titles/unequip", HTTPClient.METHOD_POST)
 
 # Handle achievement progress updates from game events
-func on_monster_killed(is_boss: bool = false):
+func on_monster_killed(_is_boss: bool = false):
 	# This would typically be called from game logic
 	# The actual counter update happens server-side
 	pass
@@ -99,19 +99,19 @@ func on_monster_killed(is_boss: bool = false):
 func on_battle_won():
 	pass
 
-func on_item_collected(item_rarity: String):
+func on_item_collected(_item_rarity: String):
 	pass
 
-func on_gold_earned(amount: int):
+func on_gold_earned(_amount: int):
 	pass
 
-func on_items_crafted(count: int):
+func on_items_crafted(_count: int):
 	pass
 
 func on_arena_win():
 	pass
 
-func on_region_visited(region_id: int):
+func on_region_visited(_region_id: int):
 	pass
 
 func on_friend_added():

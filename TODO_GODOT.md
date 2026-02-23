@@ -54,3 +54,8 @@ Daftar tugas implementasi UI di Godot untuk mendukung fitur Backend Inn System.
 - [x] Fix Signal Argument Mismatches in `server_connector.gd`.
 - [ ] Clean up `UNUSED_SIGNAL` and `UNUSED_PARAMETER` warnings once features are implemented.
 - [ ] Implement central logging for all Network Handlers.
+
+## UI/UX Optimization (MapScreen)
+- [ ] Analisa dan berikan opsi desain ke pengguna (Modern/Glassmorphism vs Fantasy/Parchment vs Minimalist).
+- [ ] Implementasikan visual upgrade `StyleBox`, `Font`, dan `ColorRect` pada elemen `MapScreen.tscn`.
+- [ ] Tambahkan animasi tweening dan hover effects pada tombol dan panel MapScreen.

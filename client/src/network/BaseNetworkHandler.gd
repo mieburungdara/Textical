@@ -8,16 +8,23 @@ const ErrCodes = preload("res://src/constants/ErrorCodes.gd")
 signal request_completed(endpoint, data)
 signal error_occurred(endpoint, error_code, message)
 
+## Dependency Injection
+var game_state = null
+
 var base_url = "http://127.0.0.1:5000/api"
 
 func _ready():
     # Support environment-based configuration
-    if GameState and GameState.has_method("get_api_url") and GameState.get("api_url"):
-        base_url = GameState.api_url
+    if game_state and game_state.has_method("get_api_url") and game_state.get("api_url"):
+        base_url = game_state.api_url
 
-func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}):
+func _request(endpoint: String, method: HTTPClient.Method = HTTPClient.METHOD_GET, body: Dictionary = {}):
     var url = base_url + endpoint
     var headers = ["Content-Type: application/json"]
+    
+    if game_state and not game_state.session_token.is_empty():
+        headers.append("X-Session-Token: " + game_state.session_token)
+        
     var json_str = JSON.stringify(body) if not body.is_empty() else ""
     
     var http = HTTPRequest.new()
@@ -36,6 +43,10 @@ func _request(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}
 func _request_async(endpoint: String, method: HTTPClient.Method, body: Dictionary = {}) -> Dictionary:
     var url = base_url + endpoint
     var headers = ["Content-Type: application/json"]
+    
+    if game_state and not game_state.session_token.is_empty():
+        headers.append("X-Session-Token: " + game_state.session_token)
+        
     var json_str = JSON.stringify(body) if not body.is_empty() else ""
     
     var http = HTTPRequest.new()
@@ -112,8 +123,15 @@ func _extract_error_message(json) -> String:
     if json == null or not json is Dictionary:
         return "Unknown Error"
     
-    # Server sends message in "message" field
-    return json.get("message", "Server Error")
+    # Priority 1: "error" (BaseController.sendError format)
+    if json.has("error") and json.get("error") is String:
+        return json.get("error")
+        
+    # Priority 2: "message" (Sometimes used in other controllers or errors)
+    if json.has("message") and json.get("message") is String:
+        return json.get("message")
+        
+    return "Server Error"
 
 ## Check if error code indicates a recoverable error
 func _is_recoverable_error(error_code: String) -> bool:

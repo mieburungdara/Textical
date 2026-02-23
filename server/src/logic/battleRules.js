@@ -124,6 +124,19 @@ class BattleRules {
         const impactMods = traitService.executeHook("onTakeDamage", defender, this.sim, attacker, result.damage) || {};
         let finalDamage = Math.floor(Math.max(1, (impactMods.finalDamage !== undefined ? impactMods.finalDamage : result.damage) - coverDefBonus));
 
+        // AAA: Reflection Logic (v16.2)
+        if (impactMods.reflectPercent && attacker && !attacker.isDead) {
+            const reflectedDamage = Math.floor(finalDamage * impactMods.reflectPercent);
+            if (reflectedDamage > 0) {
+                attacker.takeDamage(reflectedDamage, this.sim);
+                this.sim.logger.addEvent("REACTION", `${attacker.data.name} takes reflected damage!`, {
+                    actorId: attacker.instanceId,
+                    damage: reflectedDamage,
+                    type: "REFLECTION"
+                });
+            }
+        }
+
         // AAA: Damage Interception (e.g. Vanguard Guardian Stance)
         const interceptionResult = CombatEventBroadcaster.broadcastInterceptableEvent(this.sim, "onInterceptDamage", defender, attacker, finalDamage);
         if (interceptionResult && interceptionResult.intercepted) {

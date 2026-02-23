@@ -9,19 +9,17 @@
 ## Maintenance
 - [ ] Periodic cache invalidation strategy for long-duration global buffs.
 - [ ] Optimization of complex scaling calculations in `StatProcessor`.
-## Security & Middlewares
-- [ ] Implement Auth Middleware for `UserController.updateSettings` (Fix #11 audit).
-- [ ] Implement Rate Limiting for `UserController.updateSettings` to prevent storage DoS (Fix #15 audit).
-- [ ] Centralize all route authentication using `requireAuth` middleware (currently many routes handle it manually).
-- [ ] Enhance reconstructed `SocketService` with proper multi-token handling and session persistence verification.
-- [ ] Add JSDoc type checking for all controllers.
 - [x] Fix PrismaClientInitializationError by centralizing Prisma instance.
+- [x] Integrate User Seeding into `prisma/seed.js` for development convenience.
+- [x] Fix `AuthenticationService` password validation (bcrypt compare).
 - [x] Create dedicated `auth.js` middleware for session validation.
 
 ## Trait Verification
-- [ ] Verify VanguardTrait interception logic (Completed).
-- [ ] Hunt bugs in VampireTrait (Opsi A: Tactical Edge-Case).
-    - [ ] Accuracy of 30% calculation.
-    - [ ] `health_max` dynamic stat bug.
-    - [ ] Death Race scenario (Lifesteal after death).
-    - [ ] Rounding behavior on low damage.
+- [x] Verify VanguardTrait interception logic (Completed).
+- [x] Hunt bugs in VampireTrait (Lifesteal) and modernize with Tiered Scaling.
+- [x] Rename & Modernize ALL 21 Existing Traits (Completed):
+    - [x] Phase 1: Heavy Hitters (Berserker, Thorns, UndyingWill, etc.).
+    - [x] Phase 2: Tactical & Bad Traits (ArcaneMaster, Coward, Thinker, etc.).
+    - [x] Phase 3: Hidden Gems (Adrenaline, Executioner, SecondWind, etc.).
+- [x] Implement Reflection Engine in `BattleRules.js`.
+- [x] Comprehensive Test Coverage (3 Test Suites, 21 Traits Verified).

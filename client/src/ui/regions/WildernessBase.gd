@@ -14,7 +14,7 @@ func _ready():
     # BUG FIX: Auto-redirect if a task is already running
     if GameState.active_task:
         if GameState.active_task.get("type") == "TRAVEL":
-            get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
+            get_tree().change_scene_to_file("res://src/ui/map/MapScreen.tscn")
             return
 
     ServerConnector.request_completed.connect(_on_request_completed)
@@ -28,7 +28,26 @@ func _ready():
 
 func _fetch_data():
     var rid = GameState.current_user.get("currentRegion", 1)
-    ServerConnector.get_region_details(int(rid))
+    _load_region_data(int(rid))
+
+## [NEW] Load region data with cache-first strategy
+## 1. Static data from local cache (gridX, gridY, name, connections, lore)
+## 2. Dynamic data from network (monsters, resources)
+func _load_region_data(region_id: int) -> void:
+    # STEP 1: Load static data from local cache (NO network)
+    var static_data = DataManager.get_region(region_id)
+    if static_data and static_data.size() > 0:
+        # Use local cache data immediately
+        current_region_data = static_data
+        GameState.current_region_data = static_data
+        _update_ui()
+        print("[WildernessBase] Loaded static data from cache: " + static_data.get("name", "Unknown"))
+    else:
+        print("[WildernessBase] Warning: No cached data for region " + str(region_id))
+    
+    # STEP 2: Fetch dynamic data from network (monsters, resources)
+    # This is the only network call needed
+    ServerConnector.get_region_details(region_id)
 
 func _on_request_completed(endpoint, data):
     if !is_inside_tree(): return
@@ -40,13 +59,29 @@ func _on_request_completed(endpoint, data):
             current_region_data = data
         
         if current_region_data is Dictionary:
-            print("[WildernessBase] Updating GameState with region: ", current_region_data.get("name"))
-            GameState.current_region_data = current_region_data
+            # [OPTIMIZED] Merge dynamic data (monsters, resources) with existing static data
+            var current = GameState.current_region_data
+            if current == null:
+                current = {}
+            
+            # Keep static data from cache, update only dynamic fields
+            if current_region_data.has("monsters"):
+                current["monsters"] = current_region_data.get("monsters", [])
+            if current_region_data.has("resources"):
+                current["resources"] = current_region_data.get("resources", [])
+            
+            GameState.current_region_data = current
+            current_region_data = current
+            
+            print("[WildernessBase] Merged dynamic data: monsters=%d, resources=%d" % [
+                current.get("monsters", []).size(),
+                current.get("resources", []).size()
+            ])
             _update_ui()
         else:
             push_error("[WildernessBase] Invalid region data format")
     elif "action/travel" in endpoint:
-        get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
+        get_tree().change_scene_to_file("res://src/ui/map/MapScreen.tscn")
 
 func _on_task_completed(data):
     if not data is Dictionary: return
@@ -112,7 +147,8 @@ func _update_ui():
     _play_entry_animation()
 
 func _on_map_pressed():
-    get_tree().change_scene_to_file("res://src/ui/WorldAtlas.tscn")
+    # Load MapScreen (simpler grid-based map) instead of WorldAtlas
+    get_tree().change_scene_to_file("res://src/ui/map/MapScreen.tscn")
 
 func _create_action_card(title: String, icon: String, sub: String, callback: Callable) -> Button:
     var btn = Button.new()

@@ -1,15 +1,9 @@
 const prisma = require('../db');
-const energyService = require('./energyService');
 const koManager = require('./energy/KOManager');
 const TravelIncidentResolver = require('../logic/world/TravelIncidentResolver');
 const { AppError, ErrorCodes } = require('../utils/AppError');
 
 class TravelService {
-    constructor() {
-        /** @type {number} */
-        this.BASE_TRAVEL_ENERGY_COST = 5;
-    }
-
     /**
      * Start a travel journey for a user.
      * @param {string|number} userIdRaw - ID of the user.
@@ -69,15 +63,8 @@ class TravelService {
             }
         }
 
-        // 3. Energy Management
-        await energyService.syncUserEnergy(userId);
-        const freshUser = await prisma.user.findUnique({ where: { id: userId } });
-        if (freshUser.energy < this.BASE_TRAVEL_ENERGY_COST) {
-            throw new AppError(ErrorCodes.TRAVEL_ENERGY_COST, 'Not enough Energy.');
-        }
-
-        // 4. Incident Resolution (Bandits, Spirits) - Delegated to Resolver
-        const incident = await TravelIncidentResolver.resolveIncidents(userId, connection, freshUser);
+        // 3. Incident Resolution (Bandits, Spirits) - Delegated to Resolver
+        const incident = await TravelIncidentResolver.resolveIncidents(userId, connection, user);
         if (incident && incident.type === "AMBUSH") {
             return {
                 status: "AMBUSHED",
@@ -87,25 +74,23 @@ class TravelService {
             };
         }
 
-        // 5. Per-Grid Deductions (Escort Quota)
+        // 4. Per-Grid Deductions (Escort Quota)
         /** @type {Object.<string, any>} */
         let escortUpdate = {};
-        if (freshUser.escortGridsRemaining > 0) {
+        if (user.escortGridsRemaining > 0) {
             escortUpdate = {
                 escortGridsRemaining: { decrement: 1 }
             };
-            if (freshUser.escortGridsRemaining === 1) {
+            if (user.escortGridsRemaining === 1) {
                 escortUpdate.activeEscortName = null;
             }
         }
 
-        // 6. Task Orchestration (NORMAL vs HAULING)
-        if (mode === "HAULING") {
-            return await this._executeTravelTask(userId, user.currentRegion, targetRegionId, "HAULING_STAY", 60, escortUpdate);
-        }
-
-        const duration = connection.travelTimeSeconds || 15; 
-        const task = await this._executeTravelTask(userId, user.currentRegion, targetRegionId, "TRAVEL", duration, escortUpdate);
+        // 5. Task Orchestration (NORMAL vs HAULING)
+        // Bypass Task Duration - Complete Immediately
+        const duration = 0; 
+        const taskType = mode === "HAULING" ? "HAULING_STAY" : "TRAVEL";
+        const task = await this._executeTravelTask(userId, user.currentRegion, targetRegionId, taskType, duration, escortUpdate);
 
         return { 
             ...task, 
@@ -134,10 +119,9 @@ class TravelService {
             prisma.user.update({
                 where: { id: userId },
                 data: { 
-                    energy: { decrement: this.BASE_TRAVEL_ENERGY_COST },
                     isInTavern: false,
                     tavernEntryAt: null,
-                    ...(type === "HAULING_STAY" ? { currentRegion: targetId } : {}),
+                    currentRegion: targetId, // Instantly move user
                     ...escortUpdate
                 }
             }),
@@ -147,7 +131,7 @@ class TravelService {
                     type,
                     originRegionId: originId,
                     targetRegionId: targetId,
-                    status: "RUNNING",
+                    status: "COMPLETED", // Complete instantly
                     startedAt: now,
                     finishesAt: finishesAt
                 },

@@ -1,17 +1,18 @@
 extends Node
 
-# Preload handler classes
-const AuthHandlerClass = preload("res://src/network/AuthHandler.gd")
-const WorldHandlerClass = preload("res://src/network/WorldHandler.gd")
-const TavernHandlerClass = preload("res://src/network/TavernHandler.gd")
-const MarketHandlerClass = preload("res://src/network/MarketHandler.gd")
-const QuestHandlerClass = preload("res://src/network/QuestHandler.gd")
-const InventoryHandlerClass = preload("res://src/network/InventoryHandler.gd")
-const BattleHandlerClass = preload("res://src/network/BattleHandler.gd")
-const StatHandlerClass = preload("res://src/network/StatHandler.gd")
-const AssetHandlerClass = preload("res://src/network/AssetHandler.gd")
-const PrivateIslandHandlerClass = preload("res://src/network/PrivateIslandHandler.gd")
-const AchievementHandlerClass = preload("res://src/network/AchievementHandler.gd")
+# Load handler classes (using load instead of preload for circular dependency resolution)
+var AuthHandlerClass = load("res://src/network/AuthHandler.gd")
+var WorldHandlerClass = load("res://src/network/WorldHandler.gd")
+var TavernHandlerClass = load("res://src/network/TavernHandler.gd")
+var MarketHandlerClass = load("res://src/network/MarketHandler.gd")
+var QuestHandlerClass = load("res://src/network/QuestHandler.gd")
+var InventoryHandlerClass = load("res://src/network/InventoryHandler.gd")
+var BattleHandlerClass = load("res://src/network/BattleHandler.gd")
+var StatHandlerClass = load("res://src/network/StatHandler.gd")
+var AssetHandlerClass = load("res://src/network/AssetHandler.gd")
+var PrivateIslandHandlerClass = load("res://src/network/PrivateIslandHandler.gd")
+var AchievementHandlerClass = load("res://src/network/AchievementHandler.gd")
+var RegionCacheHandlerClass = load("res://src/network/RegionCacheHandler.gd")
 
 signal login_success(user)
 signal login_failed(error)
@@ -46,6 +47,7 @@ var asset
 var socket
 var island
 var achievement
+var region_cache
 
 func _ready():
     auth = AuthHandlerClass.new()
@@ -59,11 +61,13 @@ func _ready():
     asset = AssetHandlerClass.new()
     island = PrivateIslandHandlerClass.new()
     achievement = AchievementHandlerClass.new()
+    region_cache = RegionCacheHandlerClass.new()
     # SocketHandler is autoload, use it directly
     socket = SocketHandler
     
-    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, asset, island, achievement]
+    var handlers = [auth, world, tavern, market, quest, inventory, battle, stat, asset, island, achievement, region_cache]
     for h in handlers:
+        h.game_state = GameState
         add_child(h)
         if h.has_signal("request_completed"): h.request_completed.connect(_on_handler_request_completed)
         if h.has_signal("error_occurred"): 
@@ -134,15 +138,30 @@ func _on_login_success(user, _session):
     
     # 3. Authenticate only if not already authenticated for this session
     if !socket.is_authenticated and user_id:
-        socket.authenticate(int(user_id))
-        await socket.authenticated # Wait for confirmation
-    
+        var token_to_pass = ""
+        if _session and _session is Dictionary:
+            token_to_pass = _session.get("token", "")
+        
+        socket.authenticate(int(user_id), token_to_pass)
+        var auth_result = await socket.auth_completed
+        var success = auth_result[0]
+        var err_msg = auth_result[1]
+        
+        if not success:
+            emit_signal("login_failed", "Socket Auth Failed: " + err_msg)
+            return
+            
     # 4. Now allow the UI to transition
     emit_signal("login_success", user)
+    
+    # 5. Sync regions cache after login (async, non-blocking)
+    region_cache.sync_regions_after_login()
 
 # --- FACADE METHODS ---
+func get_socket(): return socket
 func login_with_password(u, p): auth.login(u, p)
-func fetch_profile(id): auth.fetch_profile(id)
+func login_with_token(): auth.login_with_token()
+func fetch_profile(_id): auth.login_with_token() # Shared login/fetch logic
 func fetch_inventory(id): inventory.fetch_inventory(id)
 func fetch_heroes(id): inventory.fetch_heroes(id)
 func fetch_recipes(id): inventory.fetch_recipes(id)
@@ -311,3 +330,5 @@ func remove_from_storage(user_id: int, slot_index: int, quantity: int): island.r
 func upgrade_island_plots(user_id: int): island.upgrade_plots(user_id)
 func upgrade_island_storage(user_id: int): island.upgrade_storage(user_id)
 func get_crop_templates(): island.get_crop_templates()
+
+# --- FACADE METHODS ---

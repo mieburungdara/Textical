@@ -31,10 +31,10 @@ func login(username: String, password: String):
     _request("/auth/login", HTTPClient.METHOD_POST, body)
 
 func logout(all_devices: bool = false):
-    if GameState.session_token.is_empty():
+    if game_state and game_state.session_token.is_empty():
         return
     
-    var headers = ["Content-Type: application/json", "X-Session-Token: %s" % GameState.session_token]
+    var headers = ["Content-Type: application/json", "X-Session-Token: %s" % game_state.session_token]
     var body = JSON.stringify({"all": all_devices})
     
     var http = HTTPRequest.new()
@@ -47,31 +47,50 @@ func logout(all_devices: bool = false):
         return
     
     http.request_completed.connect(func(_result, _response_code, _headers, _body):
-        GameState.clear_session()
+        if game_state: game_state.clear_session()
         http.queue_free()
     )
 
-func fetch_profile(id: int):
-    _request("/user/" + str(id), HTTPClient.METHOD_GET)
+func login_with_token():
+    if not game_state or game_state.session_token.is_empty() or not game_state.current_user:
+        emit_signal("login_failed", "No valid session found", {})
+        return
+    
+    print("[AuthHandler] Attempting auto-login with token for user: ", game_state.current_user.id)
+    _request("/user/" + str(game_state.current_user.id), HTTPClient.METHOD_GET)
 
 func _handle_success(endpoint: String, json):
     if endpoint.contains("/auth/login"):
-        # Server now returns { "user": {...}, "session": {...} } or { "data": {...} }
-        var user_data = json.get("user")
-        if user_data == null:
-            user_data = json.get("data", json)
-            
-        var session_data = json.get("session", {})
+        var data_payload = json.get("data", json)
+        var user_data = data_payload.get("user", {})
+        var session_data = data_payload.get("session", {})
         
-        print("[AuthHandler] Extracted user_data, ID: ", user_data.get("id") if user_data else "null")
+        var user_id = user_data.get("id")
+        print("[AuthHandler] Login Success, ID: ", user_id)
         
-        # Store session in GameState
-        GameState.set_user(json)
+        # Store session in game_state
+        if game_state: 
+            game_state.set_user(json)
+            game_state.save_session_to_disk()
         
         emit_signal("login_success", user_data, session_data)
     elif endpoint.contains("/user/"):
-        GameState.set_user(json)
+        print("[AuthHandler] Profile fetch success (Token Login)")
+        if game_state: 
+            game_state.set_user(json)
+            game_state.save_session_to_disk()
+            
+        # Extract user data from 'data' field if present (BaseController format)
+        var user_data = json.get("data", json)
+        if user_data is Dictionary and user_data.has("user"):
+            user_data = user_data.get("user")
+            
+        emit_signal("login_success", user_data, {})
 
 func _handle_error(endpoint: String, error_code: String, message: String):
     if endpoint.contains("/auth/login"):
+        emit_signal("login_failed", message, {"error_code": error_code})
+    elif endpoint.contains("/user/"):
+        print("[AuthHandler] Profile fetch error (Token Login): ", message)
+        if game_state: game_state.clear_session()
         emit_signal("login_failed", message, {"error_code": error_code})

@@ -10,6 +10,8 @@ class SessionController extends BaseController {
             const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
             const userAgent = req.headers['user-agent'];
             
+            require('../utils/logger').info(`[LOGIN_DEBUG] Attempt for user: ${username}`, { deviceInfo, ipAddress });
+            
             // Delegate authentication to AuthenticationService
             const user = await authService.validateCredentials(username, password, ipAddress, userAgent);
             await authService.recordSuccess(user.id, username, ipAddress, userAgent);

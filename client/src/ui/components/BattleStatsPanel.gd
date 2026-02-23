@@ -76,7 +76,6 @@ func update_stats(total: Dictionary = {}, _max_vals: Dictionary = {}):
         "crit_chance": int(_total_stats.get("crit_chance", 0) * 100),
         "hp_regen": _total_stats.get("hp_regen", 0),
         "armor": _total_stats.get("armor", _total_stats.get("defense_base", 0)),
-        "defense": _total_stats.get("defense", 0),
         "tenacity": int(_total_stats.get("tenacity", 0) * 100),
         "spell_vamp": int(_total_stats.get("spell_vamp", 0) * 100),
         "attack_speed": _total_stats.get("attack_speed", 1.0)

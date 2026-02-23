@@ -24,16 +24,26 @@ class HeroController extends BaseController {
                     skills: {
                         where: { isActive: true },
                         include: { skill: true }
+                    },
+                    traits: {
+                        include: { trait: true }
                     }
                 }
             });
 
-            // Transform heroes to flatten the skill structure
+            // Transform heroes to flatten skill and trait structures
             const flattenedHeroes = heroes.map(hero => {
                 const flatSkills = hero.skills.map(hs => hs.skill);
+                const flatTraits = hero.traits.map(ht => ({
+                    name: ht.trait.name,
+                    level: ht.level || 1,
+                    description: ht.trait.description || "",
+                    category: ht.trait.category || "GENERAL"
+                }));
                 return {
                     ...hero,
-                    skills: flatSkills
+                    skills: flatSkills,
+                    passives: flatTraits
                 };
             });
 

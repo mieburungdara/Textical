@@ -3,10 +3,10 @@ extends Control
 ## Codex_Achievements - Enhanced Achievement System UI
 ## Displays achievements with categories, progress tracking, and reward claiming.
 
-@onready var achievement_list = %AchievementList
-@onready var category_tabs = %CategoryTabs
-@onready var progress_label = %ProgressLabel
-@onready var claim_button = %ClaimButton
+@onready var achievement_list = $AchievementList if has_node("AchievementList") else null
+@onready var category_tabs = $TabContainer if has_node("TabContainer") else null
+@onready var progress_label = $ProgressLabel if has_node("ProgressLabel") else null
+@onready var claim_button = $ClaimButton if has_node("ClaimButton") else null
 
 # Data
 var achievements_data: Dictionary = {}

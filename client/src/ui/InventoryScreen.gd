@@ -46,12 +46,12 @@ var _style_tab_active: StyleBoxFlat
 
 # Rarity sort order
 var _rarity_order = {
-	"COMMON": 0,
-	"UNCOMMON": 1,
-	"RARE": 2,
-	"EPIC": 3,
-	"LEGENDARY": 4,
-	"MYTHIC": 5
+    "COMMON": 0,
+    "UNCOMMON": 1,
+    "RARE": 2,
+    "EPIC": 3,
+    "LEGENDARY": 4,
+    "MYTHIC": 5
 }
 
 # === Lifecycle Methods ===
@@ -181,9 +181,11 @@ func _setup_search_sort_ui():
     # Add to CategoryHeader (after the category buttons)
     if category_header and category_header.get_parent():
         var parent = category_header.get_parent()
-        var index = parent.get_child_index(category_header)
         parent.add_child(_search_panel)
-        parent.move_child(_search_panel, index + 1)
+        # Move to after category_header
+        var header_idx = parent.get_child_count() - 1
+        if header_idx > 0:
+            parent.move_child(_search_panel, header_idx)
 
 func _on_search_text_changed(text: String):
     _search_text = text.to_lower()
@@ -212,10 +214,11 @@ func _connect_signals():
     if has_node("%DetailCloseBtn"):
         %DetailCloseBtn.pressed.connect(_on_close_details_pressed)
     
-    # Category buttons
+    # Category buttons - check if already connected before connecting
     for btn in category_header.get_children():
         if btn is Button:
-            btn.pressed.connect(_on_category_pressed.bind(btn.name))
+            if not btn.pressed.is_connected(_on_category_pressed):
+                btn.pressed.connect(_on_category_pressed.bind(btn.name))
 
 # === PUBLIC METHODS ===
 

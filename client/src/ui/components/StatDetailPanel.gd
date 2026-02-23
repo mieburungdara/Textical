@@ -32,7 +32,7 @@ const STAT_INFO = {
     "crit_chance": {"icon": "💥", "name": "Crit Chance", "desc": "The percentage chance to deal critical damage on a successful hit."},
     "hp_regen": {"icon": "🍏", "name": "HP Regen", "desc": "The amount of health points a unit restores naturally at the start of each turn or over time."},
     "vitality": {"icon": "❤️", "name": "Vitality", "desc": "Increases maximum HP. Each point of Vitality adds 2 HP to the hero's health pool."},
-    "energy": {"icon": "⚡", "name": "Energy", "desc": "Energy is consumed during world actions like gathering, travel, or crafting. It slowly regenerates over time."},
+    "energy": {"icon": "⚡", "name": "Energy", "desc": "Energy is consumed during world actions like gathering or crafting. It slowly regenerates over time."},
     "tenacity": {"icon": "💎", "name": "Tenacity", "desc": "Tenacity reduces the duration and effect of negative status conditions."},
     "spell_vamp": {"icon": "🍷", "name": "Spell Vamp", "desc": "Heals the unit for a percentage of the magical damage they deal."},
     "attack_speed": {"icon": "🏹", "name": "Attack Speed", "desc": "Determines how frequently the unit can perform basic attacks in combat."}

@@ -17,7 +17,52 @@ signal force_logout(reason: String)
 var current_user = null
 var session_token: String = ""
 var session_expires_at: int = 0
+var remember_me: bool = true
 var current_heroes = []
+
+const SESSION_SAVE_PATH = "user://session.dat"
+
+func save_session_to_disk():
+    if not remember_me:
+        return
+        
+    var file = FileAccess.open(SESSION_SAVE_PATH, FileAccess.WRITE)
+    if file:
+        var data = {
+            "session_token": session_token,
+            "session_expires_at": session_expires_at,
+            "user": current_user
+        }
+        file.store_string(JSON.stringify(data))
+        file.close()
+        print("[STATE] Session saved to disk.")
+
+func load_session_from_disk() -> bool:
+    if not FileAccess.file_exists(SESSION_SAVE_PATH):
+        return false
+    
+    var file = FileAccess.open(SESSION_SAVE_PATH, FileAccess.READ)
+    if not file:
+        return false
+        
+    var content = file.get_as_text()
+    file.close()
+    
+    var json = JSON.parse_string(content)
+    if json and json is Dictionary:
+        session_token = json.get("session_token", "")
+        session_expires_at = int(json.get("session_expires_at", 0))
+        current_user = json.get("user", null)
+        
+        if is_session_valid():
+            remember_me = true # If it was saved, then it was remembered
+            print("[STATE] Valid session loaded from disk for user: ", current_user.get("username") if current_user else "Unknown")
+            return true
+        else:
+            print("[STATE] Loaded session is expired.")
+            clear_session()
+    
+    return false
 var _heroes_loading = false
 var _heroes_loaded_from_server = false
 var inventory = []
@@ -56,6 +101,51 @@ var game_achievements = []
 var world_state = {"currentHour": 12, "weatherType": "CLEAR"}
 var user_settings = {}
 
+# REGION CACHE (JSON file with version)
+const REGIONS_CACHE_PATH = "user://regions_cache.json"
+var cached_regions_version: int = 0
+
+func load_regions_from_cache() -> Array:
+    if not FileAccess.file_exists(REGIONS_CACHE_PATH):
+        return []
+    
+    var file = FileAccess.open(REGIONS_CACHE_PATH, FileAccess.READ)
+    if not file:
+        return []
+    
+    var content = file.get_as_text()
+    file.close()
+    
+    var json = JSON.parse_string(content)
+    if json and json is Dictionary:
+        var version = json.get("version", 0)
+        var regions = json.get("regions", [])
+        print("[STATE] Loaded regions cache v%d with %d regions" % [version, regions.size()])
+        cached_regions_version = version
+        return regions
+    
+    return []
+
+func save_regions_to_cache(regions: Array, version: int) -> void:
+    var file = FileAccess.open(REGIONS_CACHE_PATH, FileAccess.WRITE)
+    if not file:
+        push_error("[STATE] Failed to save regions cache")
+        return
+    
+    var data = {
+        "version": version,
+        "timestamp": Time.get_unix_time_from_system(),
+        "regions": regions
+    }
+    
+    file.store_string(JSON.stringify(data))
+    file.close()
+    cached_regions_version = version
+    print("[STATE] Saved %d regions to cache v%d" % [regions.size(), version])
+
+func get_cached_regions_version() -> int:
+    return cached_regions_version
+
 # PERSISTENCE
 var selected_hero_id: int = -1
 var last_selected_item_id: int = -1
@@ -63,12 +153,16 @@ var target_monster_id: int = -1
 var last_visited_hub: String = "res://src/ui/TownScreen.tscn"
 
 # GEOGRAPHIC ATLAS (5000x5000 World Grid)
+# Grid: 35x35 cells, each cell ~142.85 pixels
 const REGION_POSITIONS = {
-    1: Vector2(2500, 2500), # Oakhaven Hub (CENTER)
-    2: Vector2(1200, 1800), # Iron Mine (West)
-    3: Vector2(800, 800),   # Crystal Depths (North West)
-    4: Vector2(3800, 1800), # Elm Forest (East)
-    5: Vector2(4200, 800)   # Forbidden Grove (North East)
+    # CITADEL locations (Formula: x * 35 + y)
+    180: Vector2(714, 714),    # Northwind Citadel (grid 5,5)
+    1020: Vector2(4143, 714),  # Sunspire Citadel (grid 29,5)
+    204: Vector2(714, 4143),   # Stormwatch Citadel (grid 5,29)
+    1044: Vector2(4143, 4143), # Duskwall Citadel (grid 29,29)
+    
+    # Legacy / Special (Deprecated)
+    1: Vector2(2500, 2500)  # Legacy Center Point
 }
 
 const FLAVOR_LANDMARKS = [
@@ -152,22 +246,26 @@ func _on_heroes_received(_endpoint: String, data):
 func set_user(data):
     if not data is Dictionary: return
     
-    # Extract user object - check 'user' first, then 'data', then fallback to root
-    var user_data = data.get("user")
-    if user_data == null:
-        user_data = data.get("data", data)
+    # BaseController wraps everything in 'data'
+    var data_payload = data.get("data", data)
     
+    # Extract user object - if new format it's in 'user', if old it's the payload itself
+    var user_data = data_payload.get("user", data_payload)
     current_user = user_data
     
-    # Handle session data if present (new login flow)
-    if data.has("session"):
-        var session_data = data.session
+    # Handle session data if present
+    var session_data = data_payload.get("session", {})
+    if not session_data.is_empty():
         session_token = session_data.get("token", "")
+        print("[GameState] Extracted session token (len): ", session_token.length())
+        
         # Parse expiresAt timestamp
         var expires_at_str = session_data.get("expiresAt", "")
         if expires_at_str and expires_at_str is String:
-            # Parse ISO8601 date string
             session_expires_at = Time.get_unix_time_from_datetime_string(expires_at_str)
+    else:
+        # Fallback for old/other format where session might be at root of data_payload
+        session_token = data_payload.get("session_token", session_token)
     
     # Load settings if present
     if user_data.has("settings"):
@@ -189,6 +287,10 @@ func set_user(data):
 func clear_session():
     session_token = ""
     session_expires_at = 0
+    current_user = null
+    if FileAccess.file_exists(SESSION_SAVE_PATH):
+        DirAccess.remove_absolute(SESSION_SAVE_PATH)
+        print("[STATE] Session file deleted from disk.")
     
 func is_session_valid() -> bool:
     if session_token.is_empty(): return false
@@ -298,8 +400,23 @@ func set_quests(data):
         active_quests = data
         quest_updated.emit()
 
-func is_in_town():
-    return current_user and current_user.get("currentRegion", 0) == 1
+func is_in_town() -> bool:
+    if current_region_data:
+        var r_type = current_region_data.get("visualType", current_region_data.get("type", "")).to_upper()
+        return r_type == "TOWN" or r_type == "CASTLE"
+    
+    if current_user and current_user.has("currentRegion"):
+        var rid = int(current_user.get("currentRegion", 1))
+        if rid == 1: return true # Legacy Hub
+        
+        # Safer lookup to avoid circular references if possible, 
+        # but DataManager is the owner of static data.
+        if has_node("/root/DataManager"):
+            var r = get_node("/root/DataManager").get_region(rid)
+            if r and not r.is_empty():
+                var r_type = r.get("visualType", r.get("type", "")).to_upper()
+                return r_type == "TOWN" or r_type == "CASTLE"
+    return false
 
 func get_title_rarity(_title): return "common"
 func get_current_faction(): return {"id": 1, "name": "Neutral", "reputation": 1000}

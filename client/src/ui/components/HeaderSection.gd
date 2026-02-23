@@ -19,9 +19,9 @@ class_name HeaderSection
 var _reputation_handler = null
 
 func _ready():
-	_reputation_handler = get_node_or_null("/root/ReputationHandler")
-	if reputation_label:
-		reputation_label.visible = false
+    _reputation_handler = get_node_or_null("/root/ReputationHandler")
+    if reputation_label:
+        reputation_label.visible = false
 
 # === PUBLIC METHODS ===
 
@@ -97,23 +97,23 @@ func update_stats(stats: Dictionary):
 
 ## Update reputation display
 func update_reputation(user_id: int):
-	if _reputation_handler and user_id > 0:
-		_reputation_handler.get_user_reputation(user_id)
-		if not _reputation_handler.reputation_received.is_connected(_on_reputation_received):
-			_reputation_handler.reputation_received.connect(_on_reputation_received)
+    if _reputation_handler and user_id > 0:
+        _reputation_handler.get_user_reputation(user_id)
+        if not _reputation_handler.reputation_received.is_connected(_on_reputation_received):
+            _reputation_handler.reputation_received.connect(_on_reputation_received)
 
 func _on_reputation_received(stats: Dictionary):
-	if reputation_label:
-		var likes = stats.get("totalLikes", 0)
-		var dislikes = stats.get("totalDislikes", 0)
-		var tier = stats.get("likeTier", "NEWCOMER")
-		var badge_info = ReputationHandler.get_badge_info(tier)
-		var icon = badge_info.get("icon", "⚪")
-		var special = ReputationHandler.get_special_badge(likes, dislikes)
-		if not special.is_empty():
-			icon = special.get("icon", icon)
-		reputation_label.text = "%s ❤️%d 💔%d" % [icon, likes, dislikes]
-		reputation_label.visible = true
+    if reputation_label:
+        var likes = stats.get("totalLikes", 0)
+        var dislikes = stats.get("totalDislikes", 0)
+        var tier = stats.get("likeTier", "NEWCOMER")
+        var badge_info = ReputationHandler.get_badge_info(tier)
+        var icon = badge_info.get("icon", "⚪")
+        var special = ReputationHandler.get_special_badge(likes, dislikes)
+        if not special.is_empty():
+            icon = special.get("icon", icon)
+        reputation_label.text = "%s ❤️%d 💔%d" % [icon, likes, dislikes]
+        reputation_label.visible = true
 
 
 ## Reset semua display ke default

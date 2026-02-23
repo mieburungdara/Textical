@@ -1,5 +1,5 @@
 extends BaseNetworkHandler
-# class_name SkillMasteryHandler
+
 
 ## Handler for Skill Mastery API calls
 ## Handles fetching skill mastery data from the server

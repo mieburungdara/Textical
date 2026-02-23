@@ -1,498 +1,399 @@
-# Material Data Reference - REVISED EDITION
+# Material Data Reference - ENGINE-ALIGNED EDITION
 
-> **Note**: Materials use a **relational database design** with proper IDs, foreign keys, and enums. No arrays or JSON fields.
+> **Note**: Dalam engine Textical, Material **bukan model database terpisah** — material adalah `ItemTemplate` dengan `category = "MATERIAL"`. Dokumen ini menstandarkan data material agar selaras dengan `schema.prisma`, `GemTemplate`, dan `CraftingSkill` yang ada di engine.
+
+> **Revisi**: Dokumen ini telah diperbaiki dari versi sebelumnya yang menggunakan enum dan model yang tidak ada di engine.
 
 ---
 
-## 1. Material Database Schema Design
+## 1. Arsitektur Material dalam Engine
 
-### Entity Relationship Overview
+### Prinsip Utama
+
+Material di Textical **bukan** entitas terpisah. Material disimpan sebagai baris di tabel `ItemTemplate`:
 
 ```
-MaterialCategory (1) ----< (N) MaterialTemplate
-MaterialGrade (1) ----< (N) MaterialTemplate
-MaterialSource (1) ----< (N) MaterialTemplate
+ItemTemplate (category = "MATERIAL")
+├── subCategory: "ORE" / "WOOD" / "CLOTH" / "LEATHER" / "HERB" / "ESSENCE" / "FRAGMENT" / "DUST" / "BONE" / "FOOD" / "OTHER"
+├── rarity: "COMMON" / "UNCOMMON" / "RARE" / "EPIC" / "LEGENDARY"
+└── maxStack: 999 (default untuk material)
 ```
 
-### Prisma Schema (Relational, No JSON/Arrays)
+### Schema Aktual (dari `schema.prisma`)
 
 ```prisma
-// ============================================
-// ENUMS
-// ============================================
-
-enum MaterialCategory {
-  ORE
-  WOOD
-  CLOTH
-  LEATHER
-  HERB
-  ESSENCE
-  GEM
-  FRAGMENT
-  DUST
-  BONE
-  SCALE
-  FOOD
-  OTHER
+model ItemTemplate {
+  id                Int       @id @default(autoincrement())
+  name              String
+  description       String
+  category          String    @default("EQUIPMENT")  // "MATERIAL" untuk material
+  rarity            String    @default("COMMON")
+  baseValue         Int       @default(10)
+  maxStack          Int       @default(1)             // Material: 999
+  isQuestItem       Boolean   @default(false)
+  hardness          Int       @default(1)
+  // ... relasi lainnya
+  ingredients       RecipeIngredient[]
 }
 
-enum MaterialGrade {
-  BASIC
-  REFINED
-  ADVANCED
-  RARE
-  EPIC
-  LEGENDARY
+model RecipeTemplate {
+  id               Int                @id @default(autoincrement())
+  name             String
+  description      String
+  resultItemId     Int
+  craftTimeSeconds Int                @default(30)
+  ingredients      RecipeIngredient[]
+  resultItem       ItemTemplate       @relation(fields: [resultItemId], references: [id])
 }
 
-enum MaterialSource {
-  MINING
-  LUMBERING
-  SKINNING
-  HERBALISM
-  ALCHEMY
-  FISHING
-  FARMING
-  HUNTING
-  DUNGEON_DROP
-  RAID_DROP
-  CRAFTING
-  EVENT
-}
-
-enum MaterialElement {
-  FIRE
-  ICE
-  LIGHTNING
-  EARTH
-  WIND
-  WATER
-  NATURE
-  DARK
-  DIVINE
-  VOID
-  NEUTRAL
-}
-
-// ============================================
-// MATERIAL TAG ENUM
-// ============================================
-
-enum MaterialTag {
-  // Crafting Type
-  WEAPON_CRAFT      // Used for weapon crafting
-  ARMOR_CRAFT       // Used for armor crafting
-  ACCESSORY_CRAFT   // Used for accessory crafting
-  ALCHEMY           // Used for alchemy
-  COOKING           // Used for cooking
-  ENCHANTING        // Used for enchanting
-  SMITHING          // Used for smithing
-  
-  // Elemental Type
-  FIRE_ELEMENT      // Fire-associated
-  ICE_ELEMENT       // Ice-associated
-  LIGHTNING_ELEMENT // Lightning-associated
-  EARTH_ELEMENT     // Earth-associated
-  WIND_ELEMENT      // Wind-associated
-  WATER_ELEMENT     // Water-associated
-  NATURE_ELEMENT    // Nature-associated
-  DARK_ELEMENT      // Dark-associated
-  DIVINE_ELEMENT    // VOID_ELEMENT      // Void-associated
-  
- Divine-associated
-   // Usage Type
-  CONSUMABLE        // Can be consumed directly
- // Can be traded  TRADABLE         
-  QUEST_ITEM        // Required for quests
-  GUILD_MATERIAL    // Guild crafting material
+model RecipeIngredient {
+  id       Int            @id @default(autoincrement())
+  recipeId Int
+  itemId   Int            // Merujuk ke ItemTemplate (material)
+  quantity Int
 }
 ```
 
+### Gem System (Terpisah dari ItemTemplate)
+
+Gem memiliki model sendiri di engine:
+
+```prisma
+model GemTemplate {
+  id           Int    @id @default(autoincrement())
+  name         String
+  element      String // FIRE, WATER, EARTH, WIND, LIGHT, DARK
+  tier         Int    // 1-5
+  statKey      String
+  statValue    Float
+  percentValue Float  @default(0)
+  dropChance   Float  @default(0.01)
+  baseValue    Int    @default(100)
+}
+```
+
+> **⚠️ PENTING**: Gem **BUKAN** bagian dari `ItemTemplate`. Gem menggunakan `GemTemplate` dan socket system (`InventoryItemSocket`). Jangan masukkan gem ke material ID range.
+
 ---
 
-## 2. Material Type ID Reference
+## 2. Sistem Elemen (Engine Canonical)
+
+Engine Textical hanya mengenal **6 elemen + 2 special**:
+
+| Elemen | Kode Engine | Digunakan Pada |
+|--------|------------|----------------|
+| FIRE | `FIRE` | Senjata, Gem, Monster, Essence |
+| WATER | `WATER` | Senjata, Gem, Monster, Essence |
+| EARTH | `EARTH` | Senjata, Gem, Monster, Essence |
+| WIND | `WIND` | Senjata, Gem, Monster, Essence |
+| LIGHT | `LIGHT` | Senjata, Gem, Monster, Essence |
+| DARK | `DARK` | Senjata, Gem, Monster, Essence |
+| PHYSICAL | `PHYSICAL` | Default attack_element |
+| NEUTRAL | `NEUTRAL` | Default region affinity |
+
+> **❌ TIDAK ADA**: `LIGHTNING`, `NATURE`, `DIVINE`, `VOID` — elemen-elemen ini **tidak dikenali** engine.
+
+---
+
+## 3. Sistem Rarity (Engine Canonical)
+
+Engine menggunakan **5 tier rarity**, bukan grade terpisah:
+
+| Rarity | Warna | Value Multiplier | Drop Rate |
+|--------|-------|-----------------|-----------|
+| COMMON | White (#FFFFFF) | 1.0x | 50% |
+| UNCOMMON | Green (#1EFF00) | 2.0x | 30% |
+| RARE | Blue (#0070DD) | 5.0x | 15% |
+| EPIC | Purple (#A335EE) | 15.0x | 4% |
+| LEGENDARY | Orange (#FF8000) | 50.0x | 1% |
+
+> **❌ TIDAK ADA**: `BASIC`, `REFINED`, `ADVANCED` — ini bukan rarity yang dikenali engine. Gunakan rarity standar di atas.
+
+---
+
+## 4. Profesi Crafting (Engine Canonical)
+
+Engine mengenal **4 profesi** via model `CraftingSkill`:
+
+| Profesi | Kode Engine | Material yang Diolah |
+|---------|------------|---------------------|
+| Blacksmith | `BLACKSMITH` | ORE, WOOD, BONE, LEATHER |
+| Alchemist | `ALCHEMIST` | HERB, ESSENCE, DUST |
+| Enchanter | `ENCHANTER` | ESSENCE, DUST, FRAGMENT |
+| Tailor | `TAILOR` | CLOTH, LEATHER |
+
+> **❌ TIDAK ADA**: `MINING`, `LUMBERING`, `SKINNING`, `HERBALISM`, `FISHING`, `FARMING`, `HUNTING` sebagai profesi engine. Ini adalah **sumber gathering** (flavor text), bukan skill yang di-track di database.
+
+---
+
+## 5. Material Type ID Reference (Engine-Aligned)
 
 ### ORE Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 1001 | COPPER_ORE | Copper Ore | BASIC | MINING | T1 Weapons, T1 Armor |
-| 1002 | IRON_ORE | Iron Ore | BASIC | MINING | T, T1-T1-T2 Weapons2 Armor |
-| 1003 | SILVER_ORE | Silver Ore | REFINED | MINING | T2 Accessories, Jewelry |
-| 1004 | GOLD_ORE | Gold Ore | ADVANCED | MINING | T3-T4 Accessories, Trading |
-| 1005 | MITHRIL_ORE | Mithril Ore | RARE | MINING | T4-T5 Weapons, T4-T5 Armor |
-| 1006 | ADAMANTITE_ORE | Adamantite Ore | EPIC | MINING | T5-T6 Weapons, T5-T6 Armor |
-| 1007 | ETHER_ORE | Ether Ore | LEGENDARY | MINING | T6-T7 Weapons, T6-T7 Armor |
-| 1008 | TITANIUM_ORE | Titanium Ore | EPIC | MINING | T6 Armor, Heavy Armor |
-| 1009 | ORICHALCUM | Orichalcum | LEGENDARY | MINING | T7-T8 Weapons |
-| 1010 | MYTHRIL | Mythril | LEGENDARY | MINING | T8-T9 Weapons, Jewelry |
-| 1011 | PRIMORDIAL_ORE | Primordial Ore | LEGENDARY | MINING | T10 Weapons, Legendary Items |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 1001 | Copper Ore | COMMON | BLACKSMITH | T1 Weapons, T1 Armor |
+| 1002 | Iron Ore | COMMON | BLACKSMITH | T1-T2 Weapons, T2 Armor |
+| 1003 | Silver Ore | UNCOMMON | BLACKSMITH | T2 Accessories |
+| 1004 | Gold Ore | RARE | BLACKSMITH | T3-T4 Accessories |
+| 1005 | Mithril Ore | RARE | BLACKSMITH | T4-T5 Weapons, T4-T5 Armor |
+| 1006 | Adamantite Ore | EPIC | BLACKSMITH | T5-T6 Weapons, T5-T6 Armor |
+| 1007 | Ether Ore | LEGENDARY | BLACKSMITH | T6-T7 Weapons, T6-T7 Armor |
+| 1008 | Titanium Ore | EPIC | BLACKSMITH | T6 Heavy Armor |
+| 1009 | Orichalcum | LEGENDARY | BLACKSMITH | T7-T8 Weapons |
+| 1010 | Mythril | LEGENDARY | BLACKSMITH | T8-T9 Weapons |
+| 1011 | Primordial Ore | LEGENDARY | BLACKSMITH | T10 Legendary Items |
 
 ### WOOD Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 2001 | OAK_WOOD | Oak Wood | BASIC | LUMBERING | T1 Weapons, T1 Armor |
-| 2002 | YEW_WOOD | Yew Wood | REFINED | LUMBERING | T2 Weapons, Bows |
-| 2003 | IRONWOOD | Ironwood | ADVANCED | LUMBERING | T3 Weapons, Shields |
-| 2004 | SPIRIT_WOOD | Spirit Wood | RARE | LUMBERING | T4-T5 Magic Weapons |
-| 2005 | ETHER_WOOD | Ether Wood | EPIC | LUMBERING | T5-T6 Weapons |
-| 2006 | WORLD_TREE_BRANCH | World-Tree Branch | LEGENDARY | LUMBERING | T6-T7 Legendary Weapons |
-| 2007 | MOON_WOOD | Moon Wood | RARE | LUMBERING | Magic bows, Staves |
-| 2008 | SUN_WOOD | Sun Wood | RARE | LUMBERING | Divine weapons |
-| 2009 | SHADOW_WOOD | Shadow Wood | EPIC | LUMBERING | Void weapons |
-| 2010 | PRIMORDIAL_WOOD | Primordial Wood | LEGENDARY | LUMBERING | T10 Weapons |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 2001 | Oak Wood | COMMON | BLACKSMITH | T1 Weapons |
+| 2002 | Yew Wood | UNCOMMON | BLACKSMITH | T2 Weapons, Bows |
+| 2003 | Ironwood | RARE | BLACKSMITH | T3 Weapons, Shields |
+| 2004 | Spirit Wood | RARE | BLACKSMITH | T4-T5 Magic Weapons |
+| 2005 | Ether Wood | EPIC | BLACKSMITH | T5-T6 Weapons |
+| 2006 | World-Tree Branch | LEGENDARY | BLACKSMITH | T6-T7 Legendary Weapons |
+| 2007 | Moon Wood | RARE | BLACKSMITH | Magic Bows, Staves |
+| 2008 | Sun Wood | RARE | BLACKSMITH | LIGHT weapons |
+| 2009 | Shadow Wood | EPIC | BLACKSMITH | DARK weapons |
+| 2010 | Primordial Wood | LEGENDARY | BLACKSMITH | T10 Weapons |
 
 ### CLOTH Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 3001 | CLOTH | Cloth | BASIC | FARMING | T1 Armor, Clothing |
-| 3002 | COTTON | Cotton | BASIC | FARMING | T1-T2 Armor |
-| 3003 | SILK | Silk | REFINED | FARMING | T2-T3 Armor, Accessories |
-| 3004 | WOOL | Wool | BASIC | FARMING | T1 Armor |
-| 3005 | MYSTIC_CLOTH | Mystic Cloth | ADVANCED | CRAFTING | T3-T4 Armor |
-| 3006 | DRAGON_SILK | Dragon Silk | EPIC | HUNTING | T5-T6 Armor |
-| 3007 | ETHER_CLOTH | Ether Cloth | LEGENDARY | CRAFTING | T6-T7 Armor |
-| 3008 | VOID_SILK | Void Silk | LEGENDARY | CRAFTING | T7-T8 Armor |
-| 3009 | DIVINE_CLOTH | Divine Cloth | LEGENDARY | CRAFTING | T7-T8 Armor |
-| 3010 | PRIMORDIAL_CLOTH | Primordial Cloth | LEGENDARY | CRAFTING | T10 Armor |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 3001 | Cloth | COMMON | TAILOR | T1 Armor, Clothing |
+| 3002 | Cotton | COMMON | TAILOR | T1-T2 Armor |
+| 3003 | Silk | UNCOMMON | TAILOR | T2-T3 Armor, Accessories |
+| 3004 | Wool | COMMON | TAILOR | T1 Armor |
+| 3005 | Mystic Cloth | RARE | TAILOR | T3-T4 Armor |
+| 3006 | Dragon Silk | EPIC | TAILOR | T5-T6 Armor |
+| 3007 | Ether Cloth | LEGENDARY | TAILOR | T6-T7 Armor |
+| 3008 | Shadow Silk | LEGENDARY | TAILOR | T7-T8 Armor |
+| 3009 | Holy Cloth | LEGENDARY | TAILOR | T7-T8 Armor |
+| 3010 | Primordial Cloth | LEGENDARY | TAILOR | T10 Armor |
 
 ### LEATHER Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 4001 | LEATHER | Leather | BASIC | SKINNING | T1 Armor, Accessories |
-| 4002 | WOLF_PELT | Wolf Pelt | REFINED | HUNTING | T2-T3 Armor |
-| 4003 | BEAR_HIDE | Bear Hide | ADVANCED | HUNTING | T3-T4 Armor |
-| 4004 | SERPENT_SCALE | Serpent Scale | RARE | HUNTING | T4-T5 Armor |
-| 4005 | DRAGON_SCALE | Dragon Scale | EPIC | RAID_DROP | T5-T6 Armor |
-| 4006 | GIANT_HIDE | Giant Hide | EPIC | HUNTING | T5-T6 Armor |
-| 4007 | ETHER_LEATHER | Ether Leather | LEGENDARY | CRAFTING | T6-T7 Armor |
-| 4008 | PRIMORDIAL_HIDE | Primordial Hide | LEGENDARY | CRAFTING | T10 Armor |
-| 4009 | VOID_LEATHER | Void Leather | LEGENDARY | CRAFTING | T7-T8 Armor |
-| 4010 | DEMON_HIDE | Demon Hide | LEGENDARY | RAID_DROP | T7-T8 Armor |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 4001 | Leather | COMMON | TAILOR | T1 Armor |
+| 4002 | Wolf Pelt | UNCOMMON | TAILOR | T2-T3 Armor |
+| 4003 | Bear Hide | RARE | TAILOR | T3-T4 Armor |
+| 4004 | Serpent Scale | RARE | TAILOR | T4-T5 Armor |
+| 4005 | Dragon Scale | EPIC | TAILOR | T5-T6 Armor |
+| 4006 | Giant Hide | EPIC | TAILOR | T5-T6 Armor |
+| 4007 | Ether Leather | LEGENDARY | TAILOR | T6-T7 Armor |
+| 4008 | Primordial Hide | LEGENDARY | TAILOR | T10 Armor |
+| 4009 | Shadow Leather | LEGENDARY | TAILOR | T7-T8 Armor |
+| 4010 | Demon Hide | LEGENDARY | TAILOR | T7-T8 Armor |
 
 ### HERB Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 5001 | SILVERLEAF | Silverleaf | BASIC | HERBALISM | Potions, Alchemy |
-| 5002 | BLOODROOT | Bloodroot | BASIC | HERBALISM | Healing potions |
-| 5003 | MOONWORT | Moonwort | REFINED | HERBALISM | Mana potions |
-| 5004 | SUNFLOWER | Sunflower | REFINED | HERBALISM | Buff potions |
-| 5005 | WOLFSBANE | Wolfsbane | ADVANCED | HERBALISM | Strength elixirs |
-| 5006 | MANA_ROOT | Mana Root | ADVANCED | HERBALISM | Mana elixirs |
-| 5007 | GHOST_ROOT | Ghost Root | RARE | HERBALISM | Ethereal potions |
-| 5008 | DRAGON_HEART | Dragon Heart | EPIC | HERBALISM | Elite potions |
-| 5009 | VOID_THORN | Void Thorn | EPIC | HERBALISM | Void potions |
-| 5010 | DIVINE_LOTUS | Divine Lotus | LEGENDARY | HERBALISM | Legendary elixirs |
-| 5011 | PRIMORDIAL_HERB | Primordial Herb | LEGENDARY | HERBALISM | T10 Potions |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 5001 | Silverleaf | COMMON | ALCHEMIST | Basic potions |
+| 5002 | Bloodroot | COMMON | ALCHEMIST | Healing potions |
+| 5003 | Moonwort | UNCOMMON | ALCHEMIST | Mana potions |
+| 5004 | Sunflower | UNCOMMON | ALCHEMIST | Buff potions |
+| 5005 | Wolfsbane | RARE | ALCHEMIST | Strength elixirs |
+| 5006 | Mana Root | RARE | ALCHEMIST | Mana elixirs |
+| 5007 | Ghost Root | RARE | ALCHEMIST | Ethereal potions |
+| 5008 | Dragon Heart | EPIC | ALCHEMIST | Elite potions |
+| 5009 | Dark Thorn | EPIC | ALCHEMIST | DARK potions |
+| 5010 | Sacred Lotus | LEGENDARY | ALCHEMIST | Legendary elixirs |
+| 5011 | Primordial Herb | LEGENDARY | ALCHEMIST | T10 Potions |
 
 ### ESSENCE Materials
 
-| Type ID | Name | Display Name | Grade | Source | Element | Used For |
-|---------|------|--------------|-------|--------|---------|----------|
-| 6001 | MANA_ESSENCE | Mana Essence | BASIC | ALCHEMY | NEUTRAL | Potions, Magic items |
-| 6002 | ARCANE_ESSENCE | Arcane Essence | REFINED | ALCHEMY | NEUTRAL | Magic weapons |
-| 6003 | ELEMENTAL_ESSENCE | Elemental Essence | ADVANCED | ALCHEMY | VARIED | Elemental items |
-| 6004 | FIRE_ESSENCE | Fire Essence | RARE | ALCHEMY | FIRE | Fire weapons |
-| 6005 | ICE_ESSENCE | Ice Essence | RARE | ALCHEMY | ICE | Ice weapons |
-| 6006 | LIGHTNING_ESSENCE | Lightning Essence | RARE | ALCHEMY | LIGHTNING | Lightning weapons |
-| 6007 | EARTH_ESSENCE | Earth Essence | RARE | ALCHEMY | EARTH | Earth weapons |
-| 6008 | WIND_ESSENCE | Wind Essence | RARE | ALCHEMY | WIND | Wind weapons |
-| 6009 | WATER_ESSENCE | Water Essence | RARE | ALCHEMY | WATER | Water weapons |
-| 6010 | NATURE_ESSENCE | Nature Essence | RARE | ALCHEMY | NATURE | Nature items |
-| 6011 | DARK_ESSENCE | Dark Essence | EPIC | DUNGEON_DROP | DARK | Dark weapons |
-| 6012 | DIVINE_ESSENCE | Divine Essence | EPIC | DUNGEON_DROP | DIVINE | Divine weapons |
-| 6013 | VOID_ESSENCE | Void Essence | LEGENDARY | RAID_DROP | VOID | Void weapons |
-| 6014 | HOLY_ESSENCE | Holy Essence | EPIC | DUNGEON_DROP | DIVINE | Holy weapons |
-| 6015 | SHADOW_ESSENCE | Shadow Essence | EPIC | DUNGEON_DROP | DARK | Shadow items |
-| 6016 | BLOOD_ESSENCE | Blood Essence | EPIC | HUNTING | NEUTRAL | Blood weapons |
-| 6017 | SOUL_FRAGMENT | Soul Fragment | LEGENDARY | DUNGEON_DROP | DARK | Soul items |
-| 6018 | PRIMORDIAL_ESSENCE | Primordial Essence | LEGENDARY | RAID_DROP | VOID | T10 Items |
-
-### GEM Materials
-
-| Type ID | Name | Display Name | Grade | Element | Used For |
-|---------|------|--------------|-------|---------|----------|
-| 7001 | QUARTZ_CRYSTAL | Quartz Crystal | BASIC | NEUTRAL | Magic accessories |
-| 7002 | RUBY | Ruby | REFINED | FIRE | Fire socket items |
-| 7003 | SAPPHIRE | Sapphire | REFINED | ICE | Ice socket items |
-| 7004 | EMERALD | Emerald | REFINED | NATURE | Nature socket items |
-| 7005 | TOPAZ | Topaz | REFINED | LIGHTNING | Lightning socket items |
-| 7006 | AMETHYST | Amethyst | RARE | VOID | Void socket items |
-| 7007 | DIAMOND | Diamond | EPIC | NEUTRAL | Elite socket items |
-| 7008 | ONYX | Onyx | EPIC | DARK | Dark socket items |
-| 7009 | OPAL | Opal | RARE | WATER | Water socket items |
-| 7010 | JADE | Jade | RARE | EARTH | Earth socket items |
-| 7011 | AMBER | Amber | RARE | FIRE | Fire accessories |
-| 7012 | PEARL | Pearl | RARE | WATER | Water accessories |
-| 7013 | BLACK_PEARL | Black Pearl | EPIC | DARK | Dark accessories |
-| 7014 | DRAGON_EYE | Dragon Eye | LEGENDARY | FIRE | Legendary socket |
-| 7015 | PRIMORDIAL_GEM | Primordial Gem | LEGENDARY | VOID | T10 Socket |
+| ID | Name | Rarity | Element | Crafted By | Used For |
+|----|------|--------|---------|-----------|----------|
+| 6001 | Mana Essence | COMMON | — | ENCHANTER | Potions, Magic items |
+| 6002 | Arcane Essence | UNCOMMON | — | ENCHANTER | Magic weapons |
+| 6003 | Elemental Essence | RARE | VARIED | ENCHANTER | Elemental items |
+| 6004 | Fire Essence | RARE | FIRE | ENCHANTER | FIRE weapons |
+| 6005 | Water Essence | RARE | WATER | ENCHANTER | WATER weapons |
+| 6006 | Earth Essence | RARE | EARTH | ENCHANTER | EARTH weapons |
+| 6007 | Wind Essence | RARE | WIND | ENCHANTER | WIND weapons |
+| 6008 | Light Essence | EPIC | LIGHT | ENCHANTER | LIGHT weapons |
+| 6009 | Dark Essence | EPIC | DARK | ENCHANTER | DARK weapons |
+| 6010 | Blood Essence | EPIC | — | ENCHANTER | Blood weapons |
+| 6011 | Soul Fragment | LEGENDARY | DARK | ENCHANTER | Soul items |
+| 6012 | Primordial Essence | LEGENDARY | — | ENCHANTER | T10 Items |
 
 ### FRAGMENT Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 8001 | ANCIENT_FRAGMENT | Ancient Fragment | RARE | DUNGEON_DROP | Ancient crafting |
-| 8002 | BOSS_RELIC | Boss Relic | RARE | RAID_DROP | Legendary crafting |
-| 8003 | HEROIC_FRAGMENT | Heroic Fragment | EPIC | DUNGEON_DROP | Epic crafting |
-| 8004 | LEGENDARY_PART | Legendary Monster Part | EPIC | RAID_DROP | Legendary items |
-| 8005 | VOID_SHARD | Void Shard | LEGENDARY | RAID_DROP | Void items |
-| 8006 | DIVINE_FRAGMENT | Divine Fragment | LEGENDARY | RAID_DROP | Divine items |
-| 8007 | CHAOS_FRAGMENT | Chaos Fragment | LEGENDARY | EVENT | Chaos items |
-| 8008 | CREATION_FRAGMENT | Creation Fragment | LEGENDARY | RAID_DROP | T10 Items |
-| 8009 | DESTRUCTION_FRAGMENT | Destruction Fragment | LEGENDARY | RAID_DROP | T10 Items |
-| 8010 | ETERNAL_FRAGMENT | Eternal Fragment | LEGENDARY | RAID_DROP | T10 Items |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 8001 | Ancient Fragment | RARE | ENCHANTER | Ancient crafting |
+| 8002 | Boss Relic | RARE | ENCHANTER | Legendary crafting |
+| 8003 | Heroic Fragment | EPIC | ENCHANTER | Epic crafting |
+| 8004 | Legendary Part | EPIC | BLACKSMITH | Legendary items |
+| 8005 | Dark Shard | LEGENDARY | ENCHANTER | DARK items |
+| 8006 | Sacred Fragment | LEGENDARY | ENCHANTER | LIGHT items |
+| 8007 | Chaos Fragment | LEGENDARY | ENCHANTER | Chaos items |
+| 8008 | Creation Fragment | LEGENDARY | ENCHANTER | T10 Items |
+| 8009 | Destruction Fragment | LEGENDARY | ENCHANTER | T10 Items |
+| 8010 | Eternal Fragment | LEGENDARY | ENCHANTER | T10 Items |
 
 ### DUST Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 9001 | IRON_DUST | Iron Dust | BASIC | CRAFTING | Basic crafting |
-| 9002 | STEEL_DUST | Steel Dust | REFINED | CRAFTING | Advanced crafting |
-| 9003 | MAGIC_DUST | Magic Dust | BASIC | CRAFTING | Enchanting |
-| 9004 | ENCHANTING_DUST | Enchanting Dust | REFINED | ENCHANTING | Magic enchanting |
-| 9005 | GEM_DUST | Gem Dust | REFINED | CRAFTING | Socket gems |
-| 9006 | MYSTIC_DUST | Mystic Dust | ADVANCED | ENCHANTING | Epic enchanting |
-| 9007 | VOID_DUST | Void Dust | EPIC | CRAFTING | Void enchanting |
-| 9008 | DIVINE_DUST | Divine Dust | EPIC | ENCHANTING | Divine enchanting |
-| 9009 | PRIMORDIAL_DUST | Primordial Dust | LEGENDARY | ENCHANTING | T10 enchanting |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 9001 | Iron Dust | COMMON | ENCHANTER | Basic enchanting |
+| 9002 | Steel Dust | UNCOMMON | ENCHANTER | Advanced enchanting |
+| 9003 | Magic Dust | COMMON | ENCHANTER | Enchanting |
+| 9004 | Enchanting Dust | UNCOMMON | ENCHANTER | Magic enchanting |
+| 9005 | Gem Dust | UNCOMMON | ENCHANTER | Socket preparation |
+| 9006 | Mystic Dust | RARE | ENCHANTER | Epic enchanting |
+| 9007 | Shadow Dust | EPIC | ENCHANTER | DARK enchanting |
+| 9008 | Sacred Dust | EPIC | ENCHANTER | LIGHT enchanting |
+| 9009 | Primordial Dust | LEGENDARY | ENCHANTER | T10 enchanting |
 
 ### BONE Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 10001 | BONE | Bone | BASIC | HUNTING | Basic weapons |
-| 10002 | SKELETON_BONE | Skeleton Bone | REFINED | HUNTING | Undead weapons |
-| 10003 | ORC_BONE | Orc Bone | ADVANCED | HUNTING | Orc weapons |
-| 10004 | GIANT_BONE | Giant Bone | RARE | HUNTING | Giant weapons |
-| 10005 | DRAGON_BONE | Dragon Bone | EPIC | RAID_DROP | Dragon weapons |
-| 10006 | DEMON_BONE | Demon Bone | LEGENDARY | RAID_DROP | Demon weapons |
-| 10007 | PRIMORDIAL_BONE | Primordial Bone | LEGENDARY | RAID_DROP | T10 Weapons |
+| ID | Name | Rarity | Crafted By | Used For |
+|----|------|--------|-----------|----------|
+| 10001 | Bone | COMMON | BLACKSMITH | Basic weapons |
+| 10002 | Skeleton Bone | UNCOMMON | BLACKSMITH | Undead weapons |
+| 10003 | Orc Bone | RARE | BLACKSMITH | Orc weapons |
+| 10004 | Giant Bone | RARE | BLACKSMITH | Giant weapons |
+| 10005 | Dragon Bone | EPIC | BLACKSMITH | Dragon weapons |
+| 10006 | Demon Bone | LEGENDARY | BLACKSMITH | Demon weapons |
+| 10007 | Primordial Bone | LEGENDARY | BLACKSMITH | T10 Weapons |
 
 ### FOOD Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 11001 | MEAT | Raw Meat | BASIC | HUNTING | Cooking |
-| 11002 | FISH | Raw Fish | BASIC | FISHING | Cooking |
-| 11003 | VEGETABLES | Vegetables | BASIC | FARMING | Cooking |
-| 11004 | GRAIN | Grain | BASIC | FARMING | Cooking |
-| 11005 | FRUIT | Fruit | BASIC | FARMING | Cooking |
-| 11006 | SPICES | Spices | REFINED | FARMING | Advanced cooking |
-| 11007 | RARE_HERB | Rare Herb | RARE | HERBALISM | Elite cooking |
-| 11008 | EXOTIC_FRUIT | Exotic Fruit | RARE | FARMING | Elite cooking |
-| 11009 | MYTHICAL_MEAT | Mythical Meat | EPIC | HUNTING | Legendary cooking |
-| 11010 | DRAGON_MEAT | Dragon Meat | LEGENDARY | RAID_DROP | T10 Cooking |
+| ID | Name | Rarity | Used For |
+|----|------|--------|----------|
+| 11001 | Raw Meat | COMMON | Cooking |
+| 11002 | Raw Fish | COMMON | Cooking |
+| 11003 | Vegetables | COMMON | Cooking |
+| 11004 | Grain | COMMON | Cooking |
+| 11005 | Fruit | COMMON | Cooking |
+| 11006 | Spices | UNCOMMON | Advanced cooking |
+| 11007 | Rare Herb | RARE | Elite cooking |
+| 11008 | Exotic Fruit | RARE | Elite cooking |
+| 11009 | Mythical Meat | EPIC | Legendary cooking |
+| 11010 | Dragon Meat | LEGENDARY | T10 Cooking |
 
 ### OTHER Materials
 
-| Type ID | Name | Display Name | Grade | Source | Used For |
-|---------|------|--------------|-------|--------|----------|
-| 12001 | ROPE | Rope | BASIC | FARMING | Crafting |
-| 12002 | THREAD | Thread | BASIC | FARMING | Crafting |
-| 12003 | LEATHER_STRIP | Leather Strip | BASIC | SKINNING | Crafting |
-| 12004 | METAL_BAR | Metal Bar | REFINED | SMITHING | Basic metalwork |
-| 12005 | CRYSTAL_SHARD | Crystal Shard | REFINED | MINING | Magic crafting |
-| 12006 | ENCHANTED_LOG | Enchanted Log | REFINED | LUMBERING | Magic crafting |
-| 12007 | Phoenix_FEATHER | Phoenix Feather | LEGENDARY | RAID_DROP | Legendary crafting |
-| 12008 | UNICORN_HORN | Unicorn Horn | LEGENDARY | RAID_DROP | Holy crafting |
+| ID | Name | Rarity | Used For |
+|----|------|--------|----------|
+| 12001 | Rope | COMMON | Crafting |
+| 12002 | Thread | COMMON | Crafting |
+| 12003 | Leather Strip | COMMON | Crafting |
+| 12004 | Metal Bar | UNCOMMON | Basic metalwork |
+| 12005 | Crystal Shard | UNCOMMON | Magic crafting |
+| 12006 | Enchanted Log | UNCOMMON | Magic crafting |
+| 12007 | Phoenix Feather | LEGENDARY | Legendary crafting |
+| 12008 | Unicorn Horn | LEGENDARY | LIGHT crafting |
 
 ---
 
-## 3. Material Grade Reference
+## 6. Material Gathering Sources (Flavor / Lore)
 
-### Grade Hierarchy
+Sumber berikut adalah **flavor text** dan **bukan profesi yang di-track di database**. Profesi crafting yang mengolah material tercantum di Section 4.
 
-| Grade | Rarity Color | Value Multiplier | Drop Rate | Used For |
-|-------|-------------|-----------------|-----------|----------|
-| BASIC | Gray (#888888) | 1.0x | 50% | Entry-level crafting |
-| REFINED | Green (#00FF00) | 2.0x | 25% | Standard crafting |
-| ADVANCED | Yellow (#FFFF00) | 4.0x | 15% | Mid-tier crafting |
-| RARE | Blue (#0088FF) | 8.0x | 7% | High-tier crafting |
-| EPIC | Purple (#9900FF) | 20.0x | 2.5% | Elite crafting |
-| LEGENDARY | Orange (#FF8800) | 50.0x | 0.5% | Legendary crafting |
-
----
-
-## 4. Material Source Distribution
-
-### Gathering Sources
-
-| Source | Materials | Tier Range | Respawn Time |
-|--------|-----------|------------|--------------|
-| MINING | ORE | T1-T10 | 5-30 minutes |
-| LUMBERING | WOOD | T1-T10 | 5-30 minutes |
-| SKINNING | LEATHER | T1-T10 | 10-60 minutes |
-| HERBALISM | HERB | T1-T10 | 5-20 minutes |
-| FISHING | FOOD | T1-T10 | 1-10 minutes |
-| FARMING | CLOTH, FOOD | T1-T5 | Instant |
-| HUNTING | LEATHER, FOOD, BONE | T1-T10 | Respawn on kill |
-
-### Drop Sources
-
-| Source | Materials | Tier Range | Drop Rate |
-|--------|-----------|------------|-----------|
-| DUNGEON_DROP | ESSENCE, FRAGMENT | T4-T8 | 5-15% |
-| RAID_DROP | LEGENDARY materials | T7-T10 | 1-10% |
-| BOSS_DROP | Boss-specific materials | T5-T10 | 10-30% |
+| Sumber Gathering | Material yang Didapat | Tier |
+|------------------|-----------------------|------|
+| Mining | ORE | T1-T10 |
+| Lumbering | WOOD | T1-T10 |
+| Skinning | LEATHER | T1-T10 |
+| Herbalism | HERB | T1-T10 |
+| Fishing | FOOD (fish) | T1-T10 |
+| Farming | CLOTH, FOOD | T1-T5 |
+| Hunting | LEATHER, FOOD, BONE | T1-T10 |
+| Monster Drop | ESSENCE, FRAGMENT | T4-T8 |
+| Boss/Raid Drop | LEGENDARY materials | T7-T10 |
 
 ---
 
-## 5. Material Tag Mapping
+## 7. Profession-Material Mapping
 
-### Crafting Tags
-
-| Material | Primary Tag | Secondary Tag | Used For |
-|----------|------------|---------------|----------|
-| ORE (T1-T3) | SMITHING | WEAPON_CRAFT | Basic weapons/armor |
-| ORE (T4-T6) | SMITHING | ARMOR_CRAFT | Advanced armor |
-| ORE (T7-T10) | SMITHING | WEAPON_CRAFT | Legendary weapons |
-| WOOD (T1-T3) | SMITHING | WEAPON_CRAFT | Basic weapons |
-| WOOD (T4-T6) | SMITHING | ARMOR_CRAFT | Shields |
-| WOOD (T7-T10) | SMITHING | WEAPON_CRAFT | Legendary weapons |
-| CLOTH | ARMOR_CRAFT | CLOTH | Armor |
-| LEATHER | ARMOR_CRAFT | ACCESSORY_CRAFT | Armor, accessories |
-| HERB | ALCHEMY | COOKING | Potions, food |
-| ESSENCE | ALCHEMY | ENCHANTING | Magic items |
-| GEM | ACCESSORY_CRAFT | ENCHANTING | Sockets |
-| FRAGMENT | WEAPON_CRAFT | ARMOR_CRAFT | Legendary items |
-
-### Elemental Tags
-
-| Material | Element | Associated Damage |
-|----------|---------|------------------|
-| FIRE_ESSENCE | FIRE | Fire damage |
-| ICE_ESSENCE | ICE | Ice damage |
-| LIGHTNING_ESSENCE | LIGHTNING | Lightning damage |
-| EARTH_ESSENCE | EARTH | Earth damage |
-| WIND_ESSENCE | WIND | Wind damage |
-| WATER_ESSENCE | WATER | Water damage |
-| NATURE_ESSENCE | NATURE | Nature damage |
-| DARK_ESSENCE | DARK | Dark damage |
-| DIVINE_ESSENCE | DIVINE | Holy damage |
-| VOID_ESSENCE | VOID | Void damage |
+| Profesi | Primary Materials | Secondary Materials |
+|---------|-------------------|---------------------|
+| BLACKSMITH | ORE, WOOD, BONE | LEATHER (untuk senjata) |
+| TAILOR | CLOTH, LEATHER | WOOD (untuk frame) |
+| ALCHEMIST | HERB, FOOD | ESSENCE (untuk elixir) |
+| ENCHANTER | ESSENCE, DUST, FRAGMENT | GEM (via GemTemplate) |
 
 ---
 
-## 6. Material Usage by Equipment Tier
+## 8. Crafting Recipes Summary
 
-### T1-T3 Materials (Entry Level)
+### Weapon Crafting (BLACKSMITH)
 
-| Material | Source | Equipment Types |
-|----------|--------|-----------------|
-| COPPER_ORE | MINING | T1 Weapons, Armor |
-| IRON_ORE | MINING | T2 Weapons, Armor |
-| OAK_WOOD | LUMBERING | T1 Weapons |
-| YEW_WOOD | LUMBERING | T2 Weapons |
-| LEATHER | SKINNING | T1-T2 Armor |
-| CLOTH | FARMING | T1 Armor |
-| SILVERLEAF | HERBALISM | T1 Potions |
-| BLOODROOT | HERBALISM | T1 Potions |
+| Tier | Primary | Secondary | Qty |
+|------|---------|-----------|-----|
+| T1 | Copper Ore / Oak Wood | Leather | 3-5 |
+| T2 | Iron Ore / Yew Wood | Leather | 5-8 |
+| T3 | Metal Bar / Ironwood | Mystic Cloth | 8-12 |
+| T4 | Mithril Ore / Spirit Wood | Serpent Scale | 10-15 |
+| T5 | Adamantite Ore / Ether Wood | Dragon Scale | 12-18 |
+| T6 | Ether Ore / Shadow Wood | Legendary Part | 15-20 |
+| T7 | Orichalcum / Primordial Wood | Dark Essence | 20-25 |
+| T8 | Mythril / Spirit Wood | Light Essence | 25-30 |
+| T9 | Mythril / Moon Wood | Dark Shard | 30-35 |
+| T10 | Primordial Ore / Primordial Wood | Primordial Essence | 40-50 |
 
-### T4-T6 Materials (Mid Level)
+### Armor Crafting (BLACKSMITH + TAILOR)
 
-| Material | Source | Equipment Types |
-|----------|--------|-----------------|
-| MITHRIL_ORE | MINING | T4-T5 Weapons, Armor |
-| ADAMANTITE_ORE | MINING | T5-T6 Weapons, Armor |
-| IRONWOOD | LUMBERING | T3-T4 Weapons, Shields |
-| SPIRIT_WOOD | LUMBERING | T4-T5 Magic Weapons |
-| WOLF_PELT | HUNTING | T2-T3 Armor |
-| BEAR_HIDE | HUNTING | T3-T4 Armor |
-| SERPENT_SCALE | HUNTING | T4-T5 Armor |
-| DRAGON_SCALE | RAID_DROP | T5-T6 Armor |
-| ARCANE_ESSENCE | ALCHEMY | Magic weapons |
-| ELEMENTAL_ESSENCE | ALCHEMY | Elemental items |
+| Tier | Primary | Secondary | Qty |
+|------|---------|-----------|-----|
+| T1 | Cloth / Leather | — | 3-5 |
+| T2 | Iron Ore / Leather | Wool | 5-8 |
+| T3 | Metal Bar / Wolf Pelt | Cotton | 8-12 |
+| T4 | Mithril Ore / Bear Hide | Serpent Scale | 10-15 |
+| T5 | Adamantite Ore / Dragon Scale | Silk | 12-18 |
+| T6 | Ether Ore / Ether Leather | Dragon Silk | 15-20 |
+| T7 | Titanium Ore / Shadow Leather | Holy Cloth | 20-25 |
+| T8 | Orichalcum / Demon Hide | Shadow Silk | 25-30 |
+| T9 | Orichalcum / Primordial Hide | Primordial Cloth | 30-35 |
+| T10 | Primordial Ore / Primordial Hide | Primordial Dust | 40-50 |
 
-### T7-T10 Materials (High Level)
+### Potion Crafting (ALCHEMIST)
 
-| Material | Source | Equipment Types |
-|----------|--------|-----------------|
-| ETHER_ORE | MINING | T6-T7 Weapons |
-| ORICHALCUM | MINING | T7-T8 Weapons |
-| MYTHRIL | MINING | T8-T9 Weapons |
-| PRIMORDIAL_ORE | MINING | T10 Weapons |
-| WORLD_TREE_BRANCH | LUMBERING | T6-T7 Legendary |
-| ETHER_LEATHER | CRAFTING | T6-T7 Armor |
-| DRAGON_SILK | HUNTING | T5-T6 Armor |
-| VOID_SILK | CRAFTING | T7-T8 Armor |
-| DIVINE_CLOTH | CRAFTING | T7-T8 Armor |
-| VOID_ESSENCE | RAID_DROP | Void weapons |
-| DIVINE_ESSENCE | RAID_DROP | Divine weapons |
-| LEGENDARY_PART | RAID_DROP | Legendary items |
-| VOID_SHARD | RAID_DROP | Void items |
-| PRIMORDIAL_ESSENCE | RAID_DROP | T10 Items |
+| Tier | Primary | Secondary | Qty |
+|------|---------|-----------|-----|
+| T1 | Silverleaf / Bloodroot | Water | 2-3 |
+| T2 | Moonwort / Sunflower | Mana Essence | 3-5 |
+| T3 | Wolfsbane / Mana Root | Arcane Essence | 5-8 |
+| T4 | Ghost Root / Rare Herb | Elemental Essence | 8-10 |
+| T5 | Dragon Heart / Exotic Fruit | Light Essence | 10-15 |
+| T6 | Dark Thorn / Mythical Meat | Dark Essence | 15-18 |
+| T7 | Sacred Lotus / Dragon Meat | Light Essence | 18-22 |
+| T8 | Sacred Lotus / Dragon Meat | Dark Essence | 22-25 |
+| T9 | Primordial Herb / Mythical Meat | Dark Shard | 25-30 |
+| T10 | Primordial Herb / Dragon Meat | Primordial Essence | 30-40 |
 
 ---
 
-## 7. Crafting Recipes Summary
+## 9. Perbedaan dengan Gem System
 
-### Weapon Crafting Materials
+Gem di engine menggunakan **model terpisah** (`GemTemplate`), bukan `ItemTemplate`:
 
-| Weapon Tier | Primary Material | Secondary Material | Quantity |
-|-------------|-----------------|-------------------|----------|
-| T1 | COPPER_ORE / OAK_WOOD | LEATHER | 3-5 |
-| T2 | IRON_ORE / YEW_WOOD | LEATHER | 5-8 |
-| T3 | STEEL_BAR / IRONWOOD | MYSTIC_CLOTH | 8-12 |
-| T4 | MITHRIL_ORE / SPIRIT_WOOD | SERPENT_SCALE | 10-15 |
-| T5 | ADAMANTITE_ORE / WORLD_TREE | DRAGON_SCALE | 12-18 |
-| T6 | ETHER_ORE / ETHER_WOOD | LEGENDARY_PART | 15-20 |
-| T7 | ORICHALCUM / PRIMORDIAL_WOOD | VOID_ESSENCE | 20-25 |
-| T8 | MYTHRIL / SPIRIT_WOOD | DIVINE_ESSENCE | 25-30 |
-| T9 | MYTHRIL / MOON_WOOD | VOID_SHARD | 30-35 |
-| T10 | PRIMORDIAL_ORE / PRIMORDIAL_WOOD | PRIMORDIAL_ESSENCE | 40-50 |
-
-### Armor Crafting Materials
-
-| Armor Tier | Primary Material | Secondary Material | Quantity |
-|------------|-----------------|-------------------|----------|
-| T1 | CLOTH / LEATHER | - | 3-5 |
-| T2 | IRON_ORE / LEATHER | WOOL | 5-8 |
-| T3 | STEEL_BAR / WOLF_PELT | COTTON | 8-12 |
-| T4 | MITHRIL_ORE / BEAR_HIDE | SERPENT_SCALE | 10-15 |
-| T5 | ADAMANTITE_ORE / DRAGON_SCALE | SILK | 12-18 |
-| T6 | ETHER_ORE / ETHER_LEATHER | DRAGON_SILK | 15-20 |
-| T7 | TITANIUM_ORE / VOID_LEATHER | DIVINE_CLOTH | 20-25 |
-| T8 | ORICHALCUM / DEMON_HIDE | VOID_SILK | 25-30 |
-| T9 | ORICHALCUM / PRIMORDIAL_HIDE | PRIMORDIAL_CLOTH | 30-35 |
-| T10 | PRIMORDIAL_ORE / PRIMORDIAL_HIDE | PRIMORDIAL_DUST | 40-50 |
-
-### Accessory Crafting Materials
-
-| Accessory Tier | Primary Material | Secondary Material | Quantity |
-|----------------|-----------------|-------------------|----------|
-| T1 | COPPER_ORE / SILVER_ORE | QUARTZ_CRYSTAL | 2-3 |
-| T2 | IRON_ORE / SILVER_ORE | QUARTZ_CRYSTAL | 3-5 |
-| T3 | STEEL_BAR / GOLD_ORE | MANA_ESSENCE | 5-8 |
-| T4 | MITHRIL_ORE / GOLD_ORE | ARCANE_ESSENCE | 8-10 |
-| T5 | ADAMANTITE_ORE / ETHER_ORE | ELEMENTAL_ESSENCE | 10-15 |
-| T6 | ETHER_ORE / MYTHRIL | DIVINE_ESSENCE | 15-18 |
-| T7 | ORICHALCUM / MYTHRIL | VOID_ESSENCE | 18-22 |
-| T8 | MYTHRIL / ORICHALCUM | DARK_ESSENCE | 22-25 |
-| T9 | PRIMORDIAL_ORE / MYTHRIL | VOID_SHARD | 25-30 |
-| T10 | PRIMORDIAL_ORE / PRIMORDIAL_GEM | PRIMORDIAL_ESSENCE | 30-40 |
-
-### Potion/Elixir Crafting Materials
-
-| Potion Tier | Primary Material | Secondary Material | Quantity |
-|-------------|-----------------|-------------------|----------|
-| T1 | SILVERLEAF / BLOODROOT | WATER | 2-3 |
-| T2 | MOONWORT / SUNFLOWER | MANA_ESSENCE | 3-5 |
-| T3 | WOLFSBANE / MANA_ROOT | ARCANE_ESSENCE | 5-8 |
-| T4 | GHOST_ROOT / RARE_HERB | ELEMENTAL_ESSENCE | 8-10 |
-| T5 | DRAGON_HEART / EXOTIC_FRUIT | DIVINE_ESSENCE | 10-15 |
-| T6 | VOID_THORN / MYTHICAL_MEAT | VOID_ESSENCE | 15-18 |
-| T7 | DIVINE_LOTUS / DRAGON_MEAT | HOLY_ESSENCE | 18-22 |
-| T8 | DIVINE_LOTUS / DRAGON_MEAT | DIVINE_ESSENCE | 22-25 |
-| T9 | PRIMORDIAL_HERB / MYTHICAL_MEAT | VOID_SHARD | 25-30 |
-| T10 | PRIMORDIAL_HERB / DRAGON_MEAT | PRIMORDIAL_ESSENCE | 30-40 |
+| Aspek | Material (ItemTemplate) | Gem (GemTemplate) |
+|-------|------------------------|-------------------|
+| Model | `ItemTemplate` | `GemTemplate` |
+| Elemen | Tidak wajib | Wajib (6 elemen) |
+| Tier | Tidak ada | 1-5 |
+| Stacking | `maxStack: 999` | N/A (socket system) |
+| Socket | Tidak bisa | Bisa via `InventoryItemSocket` |
+| Upgrade | Tidak ada | 3x tier N → 1x tier N+1 |
 
 ---
 
-*Document Version: 1.0 - Material Edition*
-*Related: WEAPON_DATA_REFERENCE.md, ACCESSORY_DATA_REFERENCE.md, ITEM_CATEGORIZATION_GDD.md*
+## 10. Changelog
+
+| Versi | Tanggal | Perubahan |
+|-------|---------|-----------|
+| 1.0 | — | Versi awal (banyak inkonsistensi dengan engine) |
+| 2.0 | 2026-02-22 | Diselaraskan dengan engine: rarity 5-tier, elemen 6+2, profesi 4, gem terpisah, hapus enum tidak valid |
+
+---
+
+*Document Version: 2.0 - Engine-Aligned Edition*
+*Related: WEAPON_DATA_REFERENCE.md, ITEM_CATEGORIZATION_GDD.md*

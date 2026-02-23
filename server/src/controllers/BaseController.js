@@ -24,9 +24,10 @@ class BaseController {
      * Standard Error Response
      */
     sendError(res, error, status = 400) {
-        return res.status(status).json({
+        const finalStatus = error.status || status;
+        return res.status(finalStatus).json({
             success: false,
-            error: typeof error === 'string' ? error : error.message
+            error: typeof error === 'string' ? error : (error.message || "Internal Server Error")
         });
     }
 

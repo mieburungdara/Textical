@@ -37,14 +37,6 @@ func start_cinematic(task):
     _target_id = target_rid
     _target_type = DataManager.get_region(target_rid).get("type", "TOWN")
     
-    var start_pos = GameState.REGION_POSITIONS.get(origin_rid, Vector2(2500, 2500))
-    var end_pos = GameState.REGION_POSITIONS.get(target_rid, Vector2(2500, 2500))
-    
-    path_2d.curve = Curve2D.new()
-    path_2d.curve.add_point(start_pos)
-    path_2d.curve.add_point(end_pos)
-    line_2d.points = PackedVector2Array([start_pos, end_pos])
-    
-    show()
-    _progress = 0.0
-    is_traveling = true
+    # Bypass visual anim & jump straight to destination
+    is_traveling = false
+    travel_finished.emit(_target_id, _target_type)

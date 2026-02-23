@@ -47,8 +47,13 @@ router.get('/auth/sessions', (req, res) => sessionController.getActiveSessions(r
 // --- USER ---
 router.use('/chat', chatRoutes);
 router.get('/world/state', (req, res) => worldController.getWorldState(req, res));
-    router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
-    router.put('/user/:id/settings', (req, res) => userController.updateSettings(req, res));
+const { requireAuth } = require('../middleware/auth');
+router.get('/user/me', requireAuth, (req, res) => {
+    req.params.id = req.user.id;
+    return userController.getUserProfile(req, res);
+});
+router.get('/user/:id', (req, res) => userController.getUserProfile(req, res));
+router.put('/user/:id/settings', (req, res) => userController.updateSettings(req, res));
 
 // --- HEROES ---
 router.get('/user/:id/heroes', (req, res) => heroController.getHeroes(req, res));
@@ -118,6 +123,7 @@ router.post('/admin/achievements/seed', (req, res) => achievementController.seed
 
 // --- REGIONS ---
 router.get('/regions', (req, res) => regionController.getAllRegions(req, res));
+router.get('/regions/version', (req, res) => regionController.getVersion(req, res));
 router.get('/regions/influence', (req, res) => regionController.getGlobalInfluence(req, res));
 router.get('/region/:id', (req, res) => regionController.getRegionDetails(req, res));
 

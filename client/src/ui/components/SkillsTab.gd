@@ -88,10 +88,10 @@ func _update_passive_skills():
 		passive_list.add_child(no_passives)
 	else:
 		for passive in passives:
-			# Normalisasi
-			var passive_data = {}
+			# Data sudah di-flatten oleh backend (name, level, description, category)
+			var passive_data: Dictionary = {}
 			if passive is String:
-				passive_data = {"name": passive, "description": "Inherent trait.", "category": "TRAIT"}
+				passive_data = {"name": passive, "description": "Inherent trait.", "category": "TRAIT", "level": 1}
 			elif passive is Dictionary:
 				passive_data = passive
 			

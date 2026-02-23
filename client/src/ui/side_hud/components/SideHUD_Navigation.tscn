@@ -106,9 +106,7 @@ unique_name_in_owner = true
 layout_mode = 2
 icon_text = "🗺️"
 menu_label = "WORLD"
-is_overlay = true
-overlay_name = "World"
-target_scene = "res://src/ui/WorldAtlas.tscn"
+target_scene = "res://src/ui/map/MapScreen.tscn"
 
 [node name="TownBtn" parent="." instance=ExtResource("2_btn")]
 unique_name_in_owner = true

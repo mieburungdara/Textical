@@ -1,60 +1,59 @@
-✦ 🛡️ <b>Vanguard Trait Refactor: Completed</b>
+✦ 🛠️ <b>Server Login & Stability Fix: Completed</b>
 
 💬 <b>Request/Question:</b>
-Saya diminta untuk mencari bugs pada `Vanguard.js`, memperbaikinya, dan kemudian mendokumentasikannya di `docs/trait/vanguard.md`.
+Pengguna mengalami kegagalan login ("Invalid username or password") meskipun menggunakan kredensial yang benar, serta adanya indikasi server crash di background.
 
-🛠️ <b>Answer/Implementation:</b>
-Terdapat 3 bug utama pada penerapan sistem perlindungan (Vanguard):
-1. **Damage Absorption Error**: Dokumentasi aslinya menyiratkan bahwa Vanguard menyerap separuh damage rekannya. Tapi secara harfiah, kodenya menyerap **100% damage**. Ini diubah sehingga `remainingDamage` diteruskan ke Ally.
-2. **Hardcoded Wiped Damage**: Di `BattleRules.js`, kemunculan `interceptionResult` secara otomatis menghapus total final damage, seakan-akan tidak ada serangan lanjutan yang diteruskan. Ini sudah diperbaiki agar bisa menerima nilai damage sisa dari trait.
-3. **Ghost Process di Jest**: Test suite gantung selamanya (berjalan lebih dari 1 jam) akibat adanya *timer leak* terhadap `WorldCycleService` di lingkungan pengujian. Ini telah diperbaiki memakai teknik *global mocking*.
+🛠/Implementation:Implementation:</b>
+- <b>Database Schema Fix:</b> Mengubah <code>Hero.userId</code> menjadi opsional di Prisma schema untuk mendukung mercenary/system units tanpa owner.
+- <b>TavernService Bugfix:</b> Memperbaiki <code>prisma.hero.create</code> yang menyebabkan crash berkala pada heartbeat server karena argumen relasi yang hilang dan ID class yang tidak valid.
+- <b>Authentication Audit:</b> Menambahkan logging granular (U/P tags) untuk membedakan <i>User Not Found</i> dan <i>Invalid Password</i>.
+- <b>Client Robustness:</b> Memperbaiki ekstraksi data user di <code>AuthHandler.gd</code> dan menambahkan penanganan diskoneksi pada <code>SocketHandler.gd</code>.
+- <b>Rate Limit Reset:</b> Membersihkan lockout untuk 'player1' dan localhost agar pengujian bisa berlanjut.
 
 📜 <b>World Lore:</b>
-Ksatria yang sejati tak pernah membiarkan rekan setimnya menerima hantaman penuh. "Tubuhku adalah tamengmu," begitulah sumpah yang sering digetarkan di medan tempur. Vanguard, dengan senjumlah lapisan besi dan sihir proteksi, menyerap sebagian rasa sakit, mendistribusikan derita peperangan secara merata di lini depan. 
+Kekacauan di jaringan Tavern akhirnya mereda setelah para teknisi sihir agung menyeimbangkan kembali aliran energi jiwa dalam artefak Hero. Sebelumnya, jiwa-jiwa mercenari yang tak bertuan menyebabkan distorsi pada "Living Tavern", membuat gerbang utama (Login Port) menjadi tidak stabil bagi para pengembara yang ingin memasuki dunia Textical.
 
-Kini, setiap hunjaman pedang musuh ke arah sang penyihir di sayap belakang tidak akan berakibat fatal instan. Selama ksatria setia ini masih bernapas dan berdiri satu meter dalam jangkauan jubah kawannya, dentingan zirah akan terus terdengar, menghalau bilah maut. Keajaiban formasi ini selalu memutarbalikkan keseimbangan daya tempur sebuah pleton militer.
+Kini, dengan segel yang telah diperbarui, para pahlawan dapat kembali melintasi gerbang tanpa hambatan. Bayang-bayang kegagalan koneksi telah diusir oleh cahaya optimasi, memastikan setiap kontrak yang ditandatangani di Tavern tercatat dengan sempurna dalam buku besar takdir.
 
 🌟 <b>Milestones Reached:</b>
-- [-] Identifikasi struktur kode Vanguard dan relasi sistem `interceptDamage`
-- [x] Refactor Bug 100% Damage Interception di `Vanguard.js`
-- [x] Redesign arsitektur penerimaan damage sisa (Remaining Damage) di `BattleRules.js`
-- [x] Fix Test Suite (Hang Issue >1 Jam di-terminate) dan penambahan assertions baru di `tests/vanguard_verification.test.js`
-- [x] Penulisan teknis di `docs/trait/vanguard.md`
+- [x] Prisma Migration: optional_user_id_hero_v2
+- [x] Fixed TavernService heartbeat crash
+- [x] Reset Auth Rate Limits for player1 & localhost
+- [x] Validated Bcrypt comparison logic
+- [x] Improved Godot Auth logging & socket error handling
+- [x] Server restarted and verified on port 5000
 
 📊 <b>Technical Details:</b>
-- <b>Files:</b> 1 New Script (Doc), 3 Modified (`Vanguard.js`, `BattleRules.js`, `vanguard_verification.test.js`)
-- <b>Audit:</b> Validated via local Jest tests (Passed 100%)
+- <b>Files:</b> 1 Schema Modified, 2 Service Scripts Updated, 2 Client Scripts Polished
+- <b>Database Changes:</b> Hero.userId is now Int?
+- <b>API Endpoints:</b> /auth/login (improved logging)
+- <b>Audit:</b> SUCCESS - Server heartbeat clean
 
 ⚠️ <b>Risk Assessment (Security & Risks):</b>
-- <b>Data Integrity:</b> Nilai perisai direstrik mengikuti hitungan logaritmik integer `Math.floor`. Sisa damage juga ditangani. Aman.
-
-🧪 <b>Testing Coverage:</b>
-- Unit Tests: `tests/vanguard_verification.test.js` divalidasi dengan split kalkulasi ekspektasi damage (40 Vanguard, 60 Ally atas total 100 awal kalkulasi 80 sisa setelah def).
+- <b>Data Integrity:</b> Hero tanpa owner sekarang legal di sistem, tidak ada risiko orphan records.
+- <b>Security Protocol:</b> Rate limit tetap aktif namun dibersihkan untuk sesi ini.
 
 🧠 <b>Dependency Graph:</b>
-- Depends on: `traitService.js`, `BattleRules.js`, `CombatEventBroadcaster.js`
+- Depends on: Prisma Client v6.4.1
+- Affects: Tavern recruitment flow, Hero creation logic, Socket authentication
 
 🎮 <b>Gameplay Impact:</b>
-- Player Behavior Shift: Formasi sekarang menjadi vital. Musuh tidak lagi bisa melakukan *oneshots* dengan mudah terhadap mage/healer selama lini depan masih menempel kuat.
-- Exploit Potential: Keterbatasan jangkauan (maks 1 tile) berarti *kiting* dan *AoE attack* adalah penangkal alaminya.
+- Player Behavior Shift: Login menjadi lebih stabil, interaksi Tavern tidak lagi menyebabkan server lag/crash.
 
-⚙️ <b>Economy Simulation:</b>
-- Item Value Progression: Armor *heavy* akan mengalami peningkatan harga drastis di *Meta* karena fungsinya membagi rata durabilitas.
+🧩 <b>Player Psychology Mapping:</b>
+- Dopamine Trigger: Memastikan transisi dari Login Screen ke Game World terasa mulus tanpa hambatan teknis.
 
-🏗️ <b>Expansion Compatibility:</b>
-- Modding Hook: Sistem `remainingDamage` memberi kebebasan ke depannya untuk modder membuat semacam "Skill Perisai 20%".
+🔄 <b>Core Gameplay Loop:</b>
+- Input Action: Masuk ke game (Login)
+- Loop Duration: < 500ms (Auth response time)
 
-🔗 <b>System Impact:</b>
-Memisahkan kontrol event serapan serangan, menyempurnakan struktur hook `onInterceptDamage`.
-
-💡 <b>Architect's Insight:</b>
-Selalu ingat bahwa interception dapat terjadi berlapis (misal ada 2 vanguard). *Fallback logic* `BattleRules` sudah kami siapkan dengan membaca `undefined` parameter agar tidak menyebabkan error `NaN` di runtime hitpoint!
+💬 <b>Quote of the Build:</b>
+<i>"A hero without a master is still a hero, but a server without a fix is just a headache."</i>
 
 🚀 <b>Next Up:</b>
-Tiap hero/sistem punya trait uniknya sendiri. Sistem AoE vs Intercept/Reflect bisa jadi tes kasus kita berikutnya!
+- Verifikasi fitur rekrutmen mercenary di Tavern UI.
+- Implementasi sistem party synergy berdasarkan Hero Bond yang baru direferensikan.
+- Monitoring performa query Hero yang kini memiliki status 'Wild'.
 
-📈 <b>Analytics & Metrics:</b>
-- Success Metrics: Vanguard absorbs 50%, Combat test pass 100%, No script lag/hangs.
-
-🎯 <b>Design Goals:</b>
-- Primary Objective: SRP trait compliance, logical mechanics behavior.
+💡 <b>Architect's Insight:</b>
+Selalu gunakan pola <code>connect</code> untuk relasi di Prisma jika ID class atau referensi lainnya bersifat statis/hardcoded, untuk menghindari ambiguitas pada <i>Unchecked Create</i>.

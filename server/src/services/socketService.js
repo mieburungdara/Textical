@@ -26,23 +26,33 @@ class SocketService {
         });
 
         this.io.use(async (socket, next) => {
-            const token = socket.handshake.auth.token || socket.handshake.headers['x-session-token'];
+            const auth = socket.handshake.auth;
+            const headers = socket.handshake.headers;
+            const token = auth.token || headers['x-session-token'];
+            
+            logger.info(`[SOCKET_AUTH] Connection attempt. Token present: ${!!token}`, { 
+                authKeys: Object.keys(auth),
+                hasHeader: !!headers['x-session-token']
+            });
             
             if (!token) {
+                logger.warn("[SOCKET_AUTH] No token provided in handshake");
                 return next(new Error("Authentication required"));
             }
 
             try {
                 const session = await sessionService.validateSession(token);
                 if (!session) {
+                    logger.warn(`[SOCKET_AUTH] Session validation failed for token: ${token.substring(0, 8)}...`);
                     return next(new Error("Invalid or expired session"));
                 }
 
                 socket.userId = session.userId;
                 socket.sessionToken = token;
+                logger.info(`[SOCKET_AUTH] Session validated for user ${session.userId}`);
                 next();
             } catch (error) {
-                logger.error("[SOCKET] Auth error:", error);
+                logger.error("[SOCKET_AUTH] Internal error during validation:", error);
                 next(new Error("Internal server error"));
             }
         });
@@ -74,6 +84,21 @@ class SocketService {
                     }
                 }
                 this.socketSessions.delete(socket.id);
+            });
+        });
+        this.io.engine.on("connection", (rawSocket) => {
+            logger.info(`[ENGINE_IO] Raw connection from ${rawSocket.remoteAddress} id: ${rawSocket.id}`);
+            
+            rawSocket.on("packet", (packet) => {
+                logger.debug(`[ENGINE_IO] Packet id: ${rawSocket.id} type: ${packet.type} data: ${typeof packet.data === 'string' ? packet.data.substring(0, 100) : 'binary'}`);
+            });
+
+            rawSocket.on("message", (data) => {
+                logger.info(`[ENGINE_IO] Message from ${rawSocket.id}: ${data}`);
+            });
+            
+            rawSocket.on("close", (reason, description) => {
+                logger.info(`[ENGINE_IO] Closed ${rawSocket.id}. Reason: ${reason} - ${description}`);
             });
         });
 

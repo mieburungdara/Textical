@@ -1,54 +1,10 @@
-extends Node
+extends "res://src/network/BaseNetworkHandler.gd"
+class_name PrivateIslandHandler
 
 ## PrivateIslandHandler - Handles Private Island API calls
 
-signal request_completed(endpoint, data)
-signal error_occurred(endpoint, message)
-
-var base_url = "http://127.0.0.1:5000/api"
-
-func _request(endpoint: String, method: int = HTTPClient.METHOD_GET, body: Dictionary = {}):
-	var http = HTTPRequest.new()
-	add_child(http)
-	
-	var url = base_url + endpoint
-	var headers = ["Content-Type: application/json"]
-	
-	var err = 0
-	if method == HTTPClient.METHOD_GET:
-		err = http.request(url, headers, method)
-	elif method == HTTPClient.METHOD_POST:
-		err = http.request(url, headers, method, JSON.stringify(body))
-	
-	if err != OK:
-		push_error("[PrivateIslandHandler] Request failed to start: " + str(err))
-		error_occurred.emit(endpoint, "Request failed to start")
-		http.queue_free()
-		return
-	
-	var response = await http.request_completed
-	http.queue_free()
-	
-	var _result = response[0]
-	var code = response[1]
-	var _headers = response[2]
-	var response_body = response[3]
-	
-	if code != 200:
-		push_error("[PrivateIslandHandler] Error: " + str(code))
-		error_occurred.emit(endpoint, "HTTP Error: " + str(code))
-		return
-	
-	var json = JSON.new()
-	var parse_result = json.parse(response_body.get_string_from_utf8())
-	
-	if parse_result != OK:
-		push_error("[PrivateIslandHandler] JSON parse error")
-		error_occurred.emit(endpoint, "JSON parse error")
-		return
-	
-	var data = json.data
-	request_completed.emit(endpoint, data)
+func _ready():
+	super._ready()
 
 ## Get user's private island data
 func get_island(user_id: int):

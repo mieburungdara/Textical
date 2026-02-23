@@ -58,7 +58,7 @@ func _handle_success(endpoint: String, json):
             print("[InventoryHandler] Extracted inventory from 'data' key")
         
         if inventory_data is Dictionary and inventory_data.has("items"):
-            GameState.set_inventory(inventory_data)
+            if game_state: game_state.set_inventory(inventory_data)
             print("[InventoryHandler] Inventory loaded with", inventory_data.items.size(), "items")
         else:
             print("[InventoryHandler] WARNING: Inventory data missing 'items'")
@@ -78,11 +78,12 @@ func _handle_success(endpoint: String, json):
                 print("[InventoryHandler] Extracted heroes from 'heroes' key")
         
         if heroes_data is Array:
-            GameState.set_heroes(heroes_data)
-            GameState._on_heroes_received(endpoint, heroes_data)
+            if game_state:
+                game_state.set_heroes(heroes_data)
+                game_state._on_heroes_received(endpoint, heroes_data)
         else:
             print("[InventoryHandler] ERROR: Heroes data is not Array, setting empty")
-            GameState.set_heroes([])
+            if game_state: game_state.set_heroes([])
     
     elif endpoint.contains("/formation"):
         # GameState could store active formation here if needed

@@ -69,7 +69,16 @@ class ProfileCalculator extends BaseService {
             profile.totalStats.MP = 100; // Energy max
         }
 
-        hero.traits.forEach(t => profile.activeTraits.push(t.trait.name));
+        // Tiered Trait System: Include level, description, and category
+        hero.traits.forEach(t => {
+            profile.activeTraits.push({
+                name: t.trait.name,
+                level: t.level || 1,
+                description: t.trait.description || "",
+                category: t.trait.category || "GENERAL",
+                source: "HERO"
+            });
+        });
 
         for (const eq of hero.equipment) {
             const instance = eq.itemInstance;
@@ -89,6 +98,10 @@ class ProfileCalculator extends BaseService {
             item.traits.forEach(t => {
                 profile.activeTraits.push({
                     name: t.trait.name,
+                    level: t.level || 1,
+                    description: t.trait.description || "",
+                    category: t.trait.category || "GENERAL",
+                    source: "ITEM",
                     sourceSlot: eq.slotKey
                 });
             });

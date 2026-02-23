@@ -13,16 +13,22 @@
                     <span class="fw-medium">Armaments</span>
                 </a>
             </li>
-            <li>
-                <a href="#" class="category-node disabled opacity-50">
+            <li class="<?php echo ($this->uri->segment(1) == 'armors') ? 'active' : ''; ?>">
+                <a href="<?php echo base_url('index.php/armors'); ?>" class="category-node <?php echo ($this->uri->segment(1) == 'armors') ? 'active' : ''; ?>">
                     <span class="fs-5">🛡️</span>
-                    <span class="fw-medium">Armor (Soon)</span>
+                    <span class="fw-medium">Armor</span>
                 </a>
             </li>
-            <li>
-                <a href="#" class="category-node disabled opacity-50">
-                    <span class="fs-5">🧪</span>
-                    <span class="fw-medium">Bestiary (Soon)</span>
+            <li class="<?php echo ($this->uri->segment(1) == 'materials') ? 'active' : ''; ?>">
+                <a href="<?php echo base_url('index.php/materials'); ?>" class="category-node <?php echo ($this->uri->segment(1) == 'materials') ? 'active' : ''; ?>">
+                    <span class="fs-5">🧱</span>
+                    <span class="fw-medium">Materials</span>
+                </a>
+            </li>
+            <li class="<?php echo ($this->uri->segment(1) == 'traits') ? 'active' : ''; ?>">
+                <a href="<?php echo base_url('index.php/traits'); ?>" class="category-node <?php echo ($this->uri->segment(1) == 'traits') ? 'active' : ''; ?>">
+                    <span class="fs-5">✨</span>
+                    <span class="fw-medium">Traits</span>
                 </a>
             </li>
         </ul>
@@ -39,7 +45,7 @@
     </div>
 
     <div class="sidebar-footer mt-auto pt-4 border-top border-secondary opacity-25 px-3">
-        <p class="small mb-0">v1.2.5 - Stable</p>
+        <p class="small mb-0">v1.3.0 - PostgreSQL</p>
     </div>
 </nav>
 

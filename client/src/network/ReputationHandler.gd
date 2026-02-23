@@ -1,4 +1,5 @@
-extends Node
+extends BaseNetworkHandler
+class_name ReputationHandler
 
 # === REPUTATION SIGNALS ===
 signal reputation_given_success(data)

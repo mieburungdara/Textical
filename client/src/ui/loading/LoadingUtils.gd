@@ -22,6 +22,7 @@ static func validate_scene_path(path: String) -> bool:
 	var allowed_paths = [
 		"res://src/ui/login/LoginScreen.tscn",
 		"res://src/ui/MainMenu.tscn",
+		"res://src/ui/map/MapScreen.tscn",
 		"res://src/ui/WorldAtlas.tscn",
 		"res://src/ui/TownScreen.tscn"
 	]

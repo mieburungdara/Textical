@@ -1,4 +1,5 @@
-extends Node
+extends BaseNetworkHandler
+
 
 # === GUILD SIGNALS ===
 signal guild_created(guild_data)
@@ -39,7 +40,7 @@ func _connect_to_socket():
         _is_connected = true
         
         # Connect to socket handler signals
-        _socket_handler.connected.connect(_on_connected)
+        _socket_handler.authenticated.connect(_on_authenticated)
         
         # Connect to guild-specific signals from SocketHandler
         _socket_handler.guild_created.connect(_on_guild_created_data)
@@ -62,8 +63,8 @@ func _connect_to_socket():
         _socket_handler.leadership_transferred.connect(_on_leadership_transferred_data)
         _socket_handler.guild_error.connect(_on_guild_error_data)
 
-func _on_connected():
-    # Request guild info when connected
+func _on_authenticated():
+    # Request guild info when socket is authenticated
     request_my_guild()
 
 # === DATA HANDLERS (called from SocketHandler signals) ===

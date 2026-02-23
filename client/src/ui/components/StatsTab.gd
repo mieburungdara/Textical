@@ -5,7 +5,7 @@ class_name StatsTab
 ## Features: Delegate ke BattleStatsPanel terpadu
 
 # === NODE REFERENCES ===
-@onready var battle_stats_panel: BattleStatsPanel = $BattleStatsPanel
+@onready var battle_stats_panel = $BattleStatsPanel
 @onready var stat_detail_panel: StatDetailPanel = $StatDetailPanel
 
 # === PRIVATE VARIABLES ===

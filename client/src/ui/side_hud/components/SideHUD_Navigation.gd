@@ -136,5 +136,5 @@ func _highlight_active_menu():
                     var region_scene = GameState.get_region_scene(r_type)
                     is_active = (current_scene_path == region_scene)
             if key == "World":
-                is_active = current_scene_path.contains("WorldAtlas")
+                is_active = current_scene_path.contains("MapScreen")
         btn.modulate = Color(1.5, 1.3, 0.8) if is_active else Color(1, 1, 1)
