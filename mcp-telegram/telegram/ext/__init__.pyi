@@ -1,9 +1,0 @@
-# Stub for telegram.ext module
-
-class Application:
-    pass
-
-class ApplicationBuilder:
-    def __init__(self): ...
-    def token(self, token: str) -> "ApplicationBuilder": ...
-    async def build(self) -> Application: ...

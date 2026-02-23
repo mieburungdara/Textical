@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://b3kj5m2x1qhdr"]
-
-[ext_resource type="Script" uid="uid://cp8yj4h2mz5nq" path="res://src/ui/map/MapGridLayer.gd" id="1_script"]
-
-[node name="MapGridLayer" type="Node2D"]
-script = ExtResource("1_script")
-layer_z_index = -10

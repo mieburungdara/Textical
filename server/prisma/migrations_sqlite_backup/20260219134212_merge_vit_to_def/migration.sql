@@ -1,1 +1,0 @@
--- Empty migration to bypass SQLite autoindex drop error

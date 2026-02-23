@@ -15,3 +15,7 @@ server/prisma/dev.db
 server/prisma/dev.db-journal
 .kilocode
 godot-mcp-cli
+node_modules
+node_modules
+OLD_BACKUP/
+node_modules

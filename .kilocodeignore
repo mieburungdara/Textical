@@ -7,6 +7,7 @@ docs/old/
 docs/old/*
 lore/
 server/tests/
+OLD_BACKUP/
 
 # Original .gitignore content
 client/.godot/**

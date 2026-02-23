@@ -1,5 +1,0 @@
-[pyre]
-startup_timeout = 60
-dot_pyre_directory = .pyre
-typeshed = "/Users/Administrator/AppData/Local/Programs/Python/Python310/Lib/typeshed"
-search_path_size_limit = 10
