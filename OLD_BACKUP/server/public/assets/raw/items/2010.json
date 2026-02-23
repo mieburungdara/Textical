@@ -1,0 +1,11 @@
+{
+  "id": 2010,
+  "name": "Elm Log",
+  "description": "Wood.",
+  "category": "MATERIAL",
+  "baseValue": 15,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "stats": [],
+  "traits": []
+}

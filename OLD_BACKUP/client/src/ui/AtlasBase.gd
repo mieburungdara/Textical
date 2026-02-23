@@ -1,0 +1,222 @@
+extends Control
+class_name AtlasBase
+
+# Force AtlasBase to be registered first by referencing it
+const _ATLAS_BASE_LOADED := true
+
+@onready var pins_layer = $MapLayer/Pins if has_node("MapLayer/Pins") else null
+@onready var landmarks_layer = $MapLayer/Landmarks if has_node("MapLayer/Landmarks") else null
+@onready var player_marker = $MapLayer/PlayerMarker if has_node("MapLayer/PlayerMarker") else null
+@onready var connections_layer = $MapLayer/Connections if has_node("MapLayer/Connections") else null
+@onready var debug_grid = $MapLayer/DebugGrid if has_node("MapLayer/DebugGrid") else null
+@onready var cam = $Camera2D if has_node("Camera2D") else null
+@onready var map_tiles_layer = $MapLayer/PaperSheet if has_node("MapLayer/PaperSheet") else null
+
+var SHOW_DEBUG_GRID = true
+var _active_connections = [] # Store paths to draw
+var _loaded_regions = [] # Store regions loaded from API
+
+func _spawn_map_elements():
+    if not is_node_ready(): await ready
+    
+    # [OPTIMASI] Null checks are vital since AtlasBase is shared and nodes might missing in some scenes
+    
+    # 1. Landmarks
+    if landmarks_layer:
+        landmarks_layer.queue_redraw()
+        if not landmarks_layer.draw.is_connected(_draw_landmarks):
+            landmarks_layer.draw.connect(_draw_landmarks)
+    
+    # 2. Setup Canvas Drawings
+    if connections_layer:
+        if not connections_layer.draw.is_connected(_draw_connections):
+            connections_layer.draw.connect(_draw_connections)
+    
+    if debug_grid:
+        if not debug_grid.draw.is_connected(_draw_debug_grid):
+            debug_grid.draw.connect(_draw_debug_grid)
+        debug_grid.queue_redraw()
+        
+    ServerConnector.fetch_all_regions()
+
+func _draw_landmarks():
+    var font = ThemeDB.fallback_font
+    var font_size = 32
+    var color = Color(0.4, 0.3, 0.2, 0.6)
+    for lm in GameState.FLAVOR_LANDMARKS:
+        landmarks_layer.draw_string(font, lm.pos, lm.name, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, color)
+
+func _draw_connections():
+    var lines = PackedVector2Array()
+    for path in _active_connections:
+        lines.append(path.from)
+        lines.append(path.to)
+    
+    if lines.size() > 0:
+        connections_layer.draw_multiline(lines, Color(0.4, 0.2, 0.1, 0.5), 4.0)
+
+func _draw_debug_grid():
+    if not SHOW_DEBUG_GRID: return
+    var grid_size = 5000
+    var step = 256 # Diubah ke 256px sesuai standar Tiling/GPU
+    var color = Color(0, 0, 0, 0.1)
+    
+    for i in range(0, grid_size + step, step):
+        # Lines
+        debug_grid.draw_line(Vector2(i, 0), Vector2(i, grid_size), color, 1.0)
+        debug_grid.draw_line(Vector2(0, i), Vector2(grid_size, i), color, 1.0)
+        
+        # Major Labels every 1000
+        if i % 1000 == 0:
+            for j in range(0, grid_size + step, 1000):
+                var label = "[%d,%d]" % [i, j]
+                debug_grid.draw_string(ThemeDB.fallback_font, Vector2(i + 5, j + 25), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.4))
+
+func _grid_to_world(grid_x, grid_y) -> Vector2:
+	const GRID_SIZE = 35
+	const WORLD_SIZE = 5000.0
+	const CELL_SIZE = WORLD_SIZE / GRID_SIZE
+	var world_x = float(grid_x) * CELL_SIZE + CELL_SIZE / 2.0
+	var world_y = (GRID_SIZE - 1 - float(grid_y)) * CELL_SIZE + CELL_SIZE / 2.0
+	return Vector2(world_x, world_y)
+
+
+func _find_region_by_id(regions: Array, target_id: int) -> Dictionary:
+	for r in regions:
+		if r is Dictionary and r.get("id", -1) == target_id:
+			return r
+	return {}
+
+
+func _populate_pins(regions, click_callback: Callable):
+    if pins_layer == null: return
+    
+    # [BARU] Simpan regions untuk digunakan oleh fungsi lain
+    _loaded_regions = regions if regions is Array else []
+    
+    for child in pins_layer.get_children(): child.queue_free()
+    
+    _active_connections.clear()
+    
+    # Ambil region ID pemain saat ini untuk filtering jalur
+    var player_rid = 1
+    if GameState.current_user:
+        player_rid = int(str(GameState.current_user.get("currentRegion", 1)).to_float())
+
+    for r in regions:
+        if not r is Dictionary or not r.has("id"): continue
+        var origin_id = int(r.id)
+        
+        # [BARU] Gunakan gridX/gridY dari server untuk hitung posisi
+        var grid_x = r.get("gridX", 0)
+        var grid_y = r.get("gridY", 0)
+        var origin_pos = _grid_to_world(grid_x, grid_y)
+        
+        # [OPTIMASI] Filtered Connections: Hanya ambil jalur jika ini adalah region pemain
+        if origin_id == player_rid:
+            var connections = r.get("connections")
+            if connections is Array:
+                for conn in connections:
+                    if conn is Dictionary:
+                        var target_id = int(conn.get("targetRegionId", 0))
+                        var target_region = _find_region_by_id(regions, target_id)
+                        var target_grid_x = target_region.get("gridX", 0)
+                        var target_grid_y = target_region.get("gridY", 0)
+                        var target_pos = _grid_to_world(target_grid_x, target_grid_y)
+                        if origin_pos != Vector2.ZERO and target_pos != Vector2.ZERO:
+                            _active_connections.append({"from": origin_pos, "to": target_pos})
+
+        # Optimasi Pin: Gunakan pooling atau minimalisir overhead
+        var btn = Button.new()
+        btn.text = str(r.get("name", "Unknown"))
+        btn.position = origin_pos - Vector2(100, 30)
+        btn.custom_minimum_size = Vector2(200, 60)
+        btn.pressed.connect(click_callback.bind(r))
+        btn.mouse_filter = Control.MOUSE_FILTER_STOP # Ensure it catches the click
+        btn.z_index = 300 # Force on top of FogOfWar (z=200)
+        pins_layer.add_child(btn)
+    
+    connections_layer.queue_redraw()
+
+func _draw_dashed_line(canvas: Node2D, from: Vector2, to: Vector2, color: Color, width: float):
+    const DASH_LEN = 15.0
+    const GAP_LEN = 10.0
+    const STEP = DASH_LEN + GAP_LEN
+
+    if STEP <= 0: return
+
+    var diff = to - from
+    var length = diff.length()
+    var direction = diff.normalized()
+    var current_dist = 0.0
+
+    while current_dist < length:
+        var end_dist = min(current_dist + DASH_LEN, length)
+        canvas.draw_line(from + direction * current_dist, from + direction * end_dist, color, width)
+        current_dist += STEP
+
+func _update_player_position(is_traveling: bool = false):
+    if !GameState.current_user: return
+    var rid_raw = GameState.current_user.get("currentRegion", 1)
+    if is_traveling and GameState.active_task:
+        rid_raw = GameState.active_task.get("originRegionId", rid_raw)
+    
+    var rid = int(str(rid_raw).to_float())
+    
+    # [BARU] Coba gunakan grid dari _loaded_regions, fallback ke REGION_POSITIONS
+    var target_pos = Vector2(2500, 2500) # Default center
+    if _loaded_regions.size() > 0:
+        var region = _find_region_by_id(_loaded_regions, rid)
+        if region.size() > 0:
+            var grid_x = region.get("gridX", 0)
+            var grid_y = region.get("gridY", 0)
+            target_pos = _grid_to_world(grid_x, grid_y)
+        else:
+            # Fallback ke hardcoded jika region tidak ditemukan
+            target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+    else:
+        # Fallback jika regions belum dimuat
+        target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+    
+    player_marker.position = target_pos
+    player_marker.show()
+
+func _center_on_player():
+    if GameState.current_user:
+        var rid = int(str(GameState.current_user.get("currentRegion", 1)).to_float())
+        
+        # [BARU] Coba gunakan grid dari _loaded_regions
+        var target_pos = Vector2(2500, 2500) # Default center
+        if _loaded_regions.size() > 0:
+            var region = _find_region_by_id(_loaded_regions, rid)
+            if region.size() > 0:
+                var grid_x = region.get("gridX", 0)
+                var grid_y = region.get("gridY", 0)
+                target_pos = _grid_to_world(grid_x, grid_y)
+            else:
+                target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        else:
+            target_pos = GameState.REGION_POSITIONS.get(rid, Vector2(2500, 2500))
+        
+        if cam and cam.has_method("center_on"):
+            cam.center_on(target_pos)
+        else:
+            cam.global_position = target_pos
+
+func _update_map_tiles():
+    if not map_tiles_layer or not cam: return
+    
+    # [OPTIMASI] Kalkulasi Tile yang terlihat (Frustum Culling)
+    var view_size = get_viewport_rect().size / cam.zoom
+    var center = cam.position
+    var start_pos = center - view_size / 2.0
+    var end_pos = center + view_size / 2.0
+    
+    var _step = 256
+    var _start_x = int(max(0, start_pos.x / _step))
+    var _start_y = int(max(0, start_pos.y / _step))
+    var _end_x = int(min(5000 / _step, end_pos.x / _step))
+    var _end_y = int(min(5000 / _step, end_pos.y / _step))
+    
+    # Logika loading tile (bisa diintegrasikan dengan Sprites/TileMapLayer)
+    pass

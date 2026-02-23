@@ -1,0 +1,159 @@
+<title>Activity Logs - Admin Panel</title>
+
+<style>
+    .log-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    .log-table {
+        font-size: 13px;
+    }
+    .log-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        border-top: none;
+    }
+</style>
+
+<div class="log-section">
+    <h5><i class="bi bi-shield-check"></i> Admin Actions Log</h5>
+    <div class="table-responsive">
+        <table class="table log-table" id="adminLogTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Admin</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="adminLogBody">
+                <tr><td colspan="4" class="text-center">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="log-section">
+    <h5><i class="bi bi-cash-stack"></i> Transaction Log</h5>
+    <div class="table-responsive">
+        <table class="table log-table" id="transactionTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Player</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="transactionBody">
+                <tr><td colspan="4" class="text-center">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="log-section">
+    <h5><i class="bi bi-gear"></i> System Events</h5>
+    <div class="table-responsive">
+        <table class="table log-table" id="systemTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Event</th>
+                    <th>Severity</th>
+                </tr>
+            </thead>
+            <tbody id="systemBody">
+                <tr><td colspan="3" class="text-center">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+window.loadAdminLogs = async function() {
+    try {
+        console.log('[Logs] Loading admin logs...');
+        const response = await fetch('/api/admin/logs/admin-actions');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('adminLogBody');
+        if (data.success && data.data.logs.length > 0) {
+            tbody.innerHTML = data.data.logs.map(log => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.admin || 'System'}</td>
+                    <td>${log.action}</td>
+                    <td>${log.details || '-'}</td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No admin actions logged</td></tr>';
+        }
+        console.log('[Logs] Admin logs loaded successfully');
+    } catch (error) {
+        console.error('[Logs] Error loading admin logs:', error);
+    }
+}
+
+window.loadTransactions = async function() {
+    try {
+        console.log('[Logs] Loading transactions...');
+        const response = await fetch('/api/admin/logs/transactions');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('transactionBody');
+        if (data.success && data.data.transactions.length > 0) {
+            tbody.innerHTML = data.data.transactions.map(tx => `
+                <tr>
+                    <td>${new Date(tx.timestamp).toLocaleString()}</td>
+                    <td>${tx.player}</td>
+                    <td><span class="badge ${tx.type === 'gold' ? 'bg-warning' : 'bg-secondary'}">${tx.type}</span></td>
+                    <td class="${tx.amount > 0 ? 'text-success' : 'text-danger'}">
+                        ${tx.amount > 0 ? '+' : ''}${tx.amount}
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No transactions logged</td></tr>';
+        }
+        console.log('[Logs] Transactions loaded successfully');
+    } catch (error) {
+        console.error('[Logs] Error loading transactions:', error);
+    }
+}
+
+window.loadSystemEvents = function() {
+    console.log('[Logs] Loading system events...');
+    const tbody = document.getElementById('systemBody');
+    tbody.innerHTML = `
+        <tr>
+            <td>${new Date().toLocaleString()}</td>
+            <td>Server started</td>
+            <td><span class="badge bg-success">INFO</span></td>
+        </tr>
+        <tr>
+            <td>${new Date().toLocaleString()}</td>
+            <td>Database connected</td>
+            <td><span class="badge bg-success">SUCCESS</span></td>
+        </tr>
+    `;
+}
+
+// Load when page is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        window.loadAdminLogs();
+        window.loadTransactions();
+        window.loadSystemEvents();
+    });
+} else {
+    window.loadAdminLogs();
+    window.loadTransactions();
+    window.loadSystemEvents();
+}
+</script>

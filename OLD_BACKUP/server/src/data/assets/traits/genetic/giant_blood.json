@@ -1,0 +1,10 @@
+{
+  "id": 3004,
+  "name": "Giant Blood",
+  "description": "Increases health and strength significantly.",
+  "category": "GENETIC",
+  "statModifiers": [
+    { "key": "health_max", "val": 100 },
+    { "key": "strength", "val": 10 }
+  ]
+}

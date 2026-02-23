@@ -1,0 +1,33 @@
+{
+  "id": 7203,
+  "version": 1,
+  "name": "Mana-Oak Rod",
+  "description": "A rod carved from wood grown in mana wells.",
+  "category": "WEAPON",
+  "baseValue": 4200,
+  "rarity": "RARE",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 160,
+      "itemId": 7203,
+      "statKey": "skill_power",
+      "statValue": 110
+    },
+    {
+      "id": 161,
+      "itemId": 7203,
+      "statKey": "mana_max",
+      "statValue": 100
+    }
+  ],
+  "traits": []
+}

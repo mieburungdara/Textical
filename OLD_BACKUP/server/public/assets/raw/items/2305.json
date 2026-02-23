@@ -1,0 +1,20 @@
+{
+  "id": 2305,
+  "version": 1,
+  "name": "Adamantite Pickaxe",
+  "description": "The ultimate mining tool. Can carve through any material.",
+  "category": "PICKAXE",
+  "baseValue": 10000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 4,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

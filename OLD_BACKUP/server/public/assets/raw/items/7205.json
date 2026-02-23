@@ -1,0 +1,33 @@
+{
+  "id": 7205,
+  "version": 1,
+  "name": "World-Tree Archstaff",
+  "description": "The ultimate weapon for any Archmage.",
+  "category": "WEAPON",
+  "baseValue": 55000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 164,
+      "itemId": 7205,
+      "statKey": "skill_power",
+      "statValue": 750
+    },
+    {
+      "id": 165,
+      "itemId": 7205,
+      "statKey": "mana_regen",
+      "statValue": 10
+    }
+  ],
+  "traits": []
+}

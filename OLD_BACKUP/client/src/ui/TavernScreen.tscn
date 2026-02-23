@@ -1,0 +1,179 @@
+[gd_scene load_steps=14 format=3 uid="uid://qglynshcnt8s"]
+
+[ext_resource type="Script" uid="uid://4humij3qcfng" path="res://src/ui/TavernScreen.gd" id="1_script"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(0.12, 0.08, 0.05, 1, 0.05, 0.03, 0.02, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_fire"]
+colors = PackedColorArray(1, 0.4, 0.1, 0.2, 0.8, 0.2, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_fire"]
+gradient = SubResource("Gradient_fire")
+fill = 1
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0.2)
+
+[sub_resource type="Gradient" id="Gradient_embers"]
+offsets = PackedFloat32Array(0, 0, 1)
+colors = PackedColorArray(1, 0.6, 0.2, 0, 0.8, 0.1, 0, 0, 1, 0.3, 0.1, 0.8)
+
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.7)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
+gradient = SubResource("Gradient_vignette")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_board"]
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0.15, 0.1, 0.05, 0.85)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.35, 0.25, 0.15, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 20
+shadow_offset = Vector2(0, 10)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_separator"]
+color = Color(0.35, 0.25, 0.15, 1)
+thickness = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status"]
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.05, 0.03, 0.02, 0.6)
+border_width_top = 1
+border_color = Color(0.35, 0.25, 0.15, 0.5)
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="TavernScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_bg")
+
+[node name="Firelight" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -600.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = SubResource("GradientTexture2D_fire")
+
+[node name="Embers" type="CPUParticles2D" parent="."]
+position = Vector2(360, 1280)
+amount = 25
+lifetime = 8.0
+preprocess = 4.0
+emission_shape = 3
+emission_rect_extents = Vector2(360, 1)
+gravity = Vector2(0, -20)
+tangential_accel_min = -10.0
+tangential_accel_max = 10.0
+scale_amount_min = 2.0
+scale_amount_max = 5.0
+color_ramp = SubResource("Gradient_embers")
+
+[node name="Vignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_vignette")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 160.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 15
+
+[node name="MainBoard" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_board")
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainBoard"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Title" type="RichTextLabel" parent="MarginContainer/MainBoard/VBox"]
+layout_mode = 2
+theme_override_colors/default_color = Color(1, 0.8, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 38
+bbcode_enabled = true
+text = "[center][wave amp=1 freq=9]THE DRUNKEN NOVICE[/wave][/center]"
+fit_content = true
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/MainBoard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+theme_override_styles/separator = SubResource("StyleBoxLine_separator")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainBoard/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MercList" type="VBoxContainer" parent="MarginContainer/MainBoard/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="StatusArea" type="PanelContainer" parent="MarginContainer/MainBoard/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_status")
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/MainBoard/VBox/StatusArea"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.7, 0.5, 1)
+text = "The hearth is warm..."
+horizontal_alignment = 1
+vertical_alignment = 1

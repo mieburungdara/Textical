@@ -1,0 +1,66 @@
+{
+  "METADATA": {
+    "category": "STONE",
+    "atlas_file": "res://assets/icons/stones_atlas.png",
+    "cell_size": 64
+  },
+  "TEMPLATES": {
+    "base_gem": {
+      "type": "MATERIAL",
+      "stackable": true,
+      "usage": ["crafting", "socketing"]
+    }
+  },
+  "ITEMS": {
+    "stn_ruby_01": {
+      "template": "base_gem",
+      "name": "Small Ruby",
+      "desc": "A faint red stone pulsing with heat.",
+      "rarity": "COMMON",
+      "price": 100,
+      "element": "FIRE",
+      "stat_bonus": { "attack_damage": 5 },
+      "atlas_pos": [0, 0]
+    },
+    "stn_ruby_05": {
+      "template": "base_gem",
+      "name": "Dragon Heart Ruby",
+      "desc": "Burning with the intensity of a thousand suns.",
+      "rarity": "LEGENDARY",
+      "price": 10000,
+      "element": "FIRE",
+      "stat_bonus": { "attack_damage": 50, "burn_chance": 15 },
+      "atlas_pos": [0, 1]
+    },
+    "stn_sapph_01": {
+      "template": "base_gem",
+      "name": "Chipped Sapphire",
+      "desc": "Cool to the touch.",
+      "rarity": "COMMON",
+      "price": 100,
+      "element": "WATER",
+      "stat_bonus": { "mana_max": 10 },
+      "atlas_pos": [1, 0]
+    },
+    "stn_emrld_01": {
+      "template": "base_gem",
+      "name": "Rough Emerald",
+      "desc": "Smells like fresh rain.",
+      "rarity": "UNCOMMON",
+      "price": 300,
+      "element": "NATURE",
+      "stat_bonus": { "hp_regen": 2 },
+      "atlas_pos": [2, 0]
+    },
+    "stn_topaz_01": {
+      "template": "base_gem",
+      "name": "Clouded Topaz",
+      "desc": "Static electricity zaps your fingers.",
+      "rarity": "UNCOMMON",
+      "price": 350,
+      "element": "LIGHTNING",
+      "stat_bonus": { "speed": 2 },
+      "atlas_pos": [3, 0]
+    }
+  }
+}

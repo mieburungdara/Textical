@@ -1,0 +1,4 @@
+{
+  "ignore": ["prisma/*", "*.db", "*.log", "public/assets/raw/*"],
+  "ext": "js,json"
+}

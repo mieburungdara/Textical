@@ -1,0 +1,905 @@
+{
+  "tileType": "RED",
+  "defaults": {
+    "label": "Crimson Wastes",
+    "color": "#E74C3C",
+    "icon": "red_tile",
+    "tileCategory": "ZONE",
+    "name": "Crimson Wastes",
+    "description": "Scorched earth where volcanic ash blankets the ground and the air shimmers with heat. Only battle-hardened warriors dare tread these cursed lands.",
+    "visualType": "VOLCANO",
+    "traversalType": "WALK",
+    "zoneType": "RED",
+    "zoneLevel": 60,
+    "zoneColor": "CRIMSON",
+    "isSafeZone": false,
+    "pvpMode": "RESTRICTED",
+    "dangerLevel": 70,
+    "banditThreatLevel": 0.3,
+    "spiritDensity": 0.2,
+    "corruptionLevel": 0.25,
+    "sanctuaryPower": 0,
+    "elementalAffinity": "FIRE",
+    "terrainAttackMod": 1.1,
+    "terrainDefenseMod": 0.9,
+    "weatherOverride": null,
+    "fogDensity": 0.2,
+    "requiredLevel": 35,
+    "minRequiredUnits": 0,
+    "minRequiredHeroLevel": 20,
+    "hasInn": false,
+    "innTier": 1,
+    "innRecoveryRate": 1,
+    "resourceModifier": 1.8,
+    "resourceScarcity": 0.5,
+    "marketDemandIndex": 1.5,
+    "regionalTaxRate": 0.15,
+    "gatheringStaminaCost": 1.5,
+    "spawnRateMultiplier": 1.5,
+    "eliteSpawnChance": 0.15,
+    "respawnPenaltyMult": 2,
+    "teleportCostMultiplier": 2,
+    "isDiscoveryPoint": true,
+    "discoveryXp": 200,
+    "manaStaticIntensity": 1.5,
+    "rareHerbSpawnChance": 0.1,
+    "mysticFogIntensity": 0.3
+  },
+  "coordinates": [
+    {
+      "x": 16,
+      "y": 0,
+      "regionId": 560
+    },
+    {
+      "x": 18,
+      "y": 0,
+      "regionId": 630
+    },
+    {
+      "x": 16,
+      "y": 1,
+      "regionId": 561
+    },
+    {
+      "x": 18,
+      "y": 1,
+      "regionId": 631
+    },
+    {
+      "x": 16,
+      "y": 2,
+      "regionId": 562
+    },
+    {
+      "x": 18,
+      "y": 2,
+      "regionId": 632
+    },
+    {
+      "x": 16,
+      "y": 3,
+      "regionId": 563
+    },
+    {
+      "x": 18,
+      "y": 3,
+      "regionId": 633
+    },
+    {
+      "x": 16,
+      "y": 4,
+      "regionId": 564
+    },
+    {
+      "x": 18,
+      "y": 4,
+      "regionId": 634
+    },
+    {
+      "x": 16,
+      "y": 5,
+      "regionId": 565
+    },
+    {
+      "x": 18,
+      "y": 5,
+      "regionId": 635
+    },
+    {
+      "x": 16,
+      "y": 6,
+      "regionId": 566
+    },
+    {
+      "x": 18,
+      "y": 6,
+      "regionId": 636
+    },
+    {
+      "x": 16,
+      "y": 7,
+      "regionId": 567,
+      "name": "Scorched Battleground",
+      "description": "The charred remains of a legendary battle between fire titans and mortal armies. The ground still smolders centuries later, and fragments of enchanted weapons lie half-melted in the ash. Fire elementals dance among the ruins.",
+      "elementalAffinity": "FIRE",
+      "terrainAttackMod": 1.25,
+      "terrainDefenseMod": 0.75,
+      "dangerLevel": 80,
+      "spawnRateMultiplier": 2,
+      "visualType": "LAVA"
+    },
+    {
+      "x": 18,
+      "y": 7,
+      "regionId": 637
+    },
+    {
+      "x": 16,
+      "y": 8,
+      "regionId": 568
+    },
+    {
+      "x": 18,
+      "y": 8,
+      "regionId": 638
+    },
+    {
+      "x": 16,
+      "y": 9,
+      "regionId": 569
+    },
+    {
+      "x": 18,
+      "y": 9,
+      "regionId": 639
+    },
+    {
+      "x": 16,
+      "y": 10,
+      "regionId": 570
+    },
+    {
+      "x": 18,
+      "y": 10,
+      "regionId": 640,
+      "name": "Cursed Barrows",
+      "description": "Ancient burial mounds corrupted by necromantic energy. The dead do not rest here — skeletal warriors patrol the fog-shrouded hills, and the wails of restless spirits echo through the night. Exorcists find endless work.",
+      "visualType": "GRAVEYARD",
+      "spiritDensity": 0.5,
+      "dominanCaste": "SKELETON",
+      "dangerLevel": 75,
+      "corruptionLevel": 0.4
+    },
+    {
+      "x": 16,
+      "y": 11,
+      "regionId": 571
+    },
+    {
+      "x": 18,
+      "y": 11,
+      "regionId": 641
+    },
+    {
+      "x": 15,
+      "y": 12,
+      "regionId": 537
+    },
+    {
+      "x": 16,
+      "y": 12,
+      "regionId": 572
+    },
+    {
+      "x": 17,
+      "y": 12,
+      "regionId": 607
+    },
+    {
+      "x": 18,
+      "y": 12,
+      "regionId": 642
+    },
+    {
+      "x": 19,
+      "y": 12,
+      "regionId": 677
+    },
+    {
+      "x": 14,
+      "y": 13,
+      "regionId": 503
+    },
+    {
+      "x": 15,
+      "y": 13,
+      "regionId": 538
+    },
+    {
+      "x": 16,
+      "y": 13,
+      "regionId": 573
+    },
+    {
+      "x": 18,
+      "y": 13,
+      "regionId": 643
+    },
+    {
+      "x": 19,
+      "y": 13,
+      "regionId": 678
+    },
+    {
+      "x": 20,
+      "y": 13,
+      "regionId": 713
+    },
+    {
+      "x": 13,
+      "y": 14,
+      "regionId": 469
+    },
+    {
+      "x": 14,
+      "y": 14,
+      "regionId": 504
+    },
+    {
+      "x": 15,
+      "y": 14,
+      "regionId": 539
+    },
+    {
+      "x": 16,
+      "y": 14,
+      "regionId": 574
+    },
+    {
+      "x": 17,
+      "y": 14,
+      "regionId": 609
+    },
+    {
+      "x": 18,
+      "y": 14,
+      "regionId": 644
+    },
+    {
+      "x": 19,
+      "y": 14,
+      "regionId": 679
+    },
+    {
+      "x": 20,
+      "y": 14,
+      "regionId": 714
+    },
+    {
+      "x": 21,
+      "y": 14,
+      "regionId": 749
+    },
+    {
+      "x": 12,
+      "y": 15,
+      "regionId": 435
+    },
+    {
+      "x": 13,
+      "y": 15,
+      "regionId": 470
+    },
+    {
+      "x": 14,
+      "y": 15,
+      "regionId": 505
+    },
+    {
+      "x": 15,
+      "y": 15,
+      "regionId": 540
+    },
+    {
+      "x": 19,
+      "y": 15,
+      "regionId": 680
+    },
+    {
+      "x": 20,
+      "y": 15,
+      "regionId": 715
+    },
+    {
+      "x": 21,
+      "y": 15,
+      "regionId": 750
+    },
+    {
+      "x": 22,
+      "y": 15,
+      "regionId": 785
+    },
+    {
+      "x": 0,
+      "y": 16,
+      "regionId": 16
+    },
+    {
+      "x": 1,
+      "y": 16,
+      "regionId": 51
+    },
+    {
+      "x": 2,
+      "y": 16,
+      "regionId": 86
+    },
+    {
+      "x": 3,
+      "y": 16,
+      "regionId": 121
+    },
+    {
+      "x": 4,
+      "y": 16,
+      "regionId": 156
+    },
+    {
+      "x": 5,
+      "y": 16,
+      "regionId": 191
+    },
+    {
+      "x": 6,
+      "y": 16,
+      "regionId": 226
+    },
+    {
+      "x": 7,
+      "y": 16,
+      "regionId": 261
+    },
+    {
+      "x": 8,
+      "y": 16,
+      "regionId": 296
+    },
+    {
+      "x": 9,
+      "y": 16,
+      "regionId": 331
+    },
+    {
+      "x": 10,
+      "y": 16,
+      "regionId": 366
+    },
+    {
+      "x": 11,
+      "y": 16,
+      "regionId": 401
+    },
+    {
+      "x": 12,
+      "y": 16,
+      "regionId": 436
+    },
+    {
+      "x": 13,
+      "y": 16,
+      "regionId": 471
+    },
+    {
+      "x": 14,
+      "y": 16,
+      "regionId": 506
+    },
+    {
+      "x": 20,
+      "y": 16,
+      "regionId": 716
+    },
+    {
+      "x": 21,
+      "y": 16,
+      "regionId": 751
+    },
+    {
+      "x": 22,
+      "y": 16,
+      "regionId": 786
+    },
+    {
+      "x": 23,
+      "y": 16,
+      "regionId": 821
+    },
+    {
+      "x": 24,
+      "y": 16,
+      "regionId": 856
+    },
+    {
+      "x": 25,
+      "y": 16,
+      "regionId": 891
+    },
+    {
+      "x": 26,
+      "y": 16,
+      "regionId": 926
+    },
+    {
+      "x": 27,
+      "y": 16,
+      "regionId": 961
+    },
+    {
+      "x": 28,
+      "y": 16,
+      "regionId": 996
+    },
+    {
+      "x": 29,
+      "y": 16,
+      "regionId": 1031
+    },
+    {
+      "x": 30,
+      "y": 16,
+      "regionId": 1066
+    },
+    {
+      "x": 31,
+      "y": 16,
+      "regionId": 1101
+    },
+    {
+      "x": 32,
+      "y": 16,
+      "regionId": 1136
+    },
+    {
+      "x": 33,
+      "y": 16,
+      "regionId": 1171
+    },
+    {
+      "x": 34,
+      "y": 16,
+      "regionId": 1206
+    },
+    {
+      "x": 12,
+      "y": 17,
+      "regionId": 437
+    },
+    {
+      "x": 14,
+      "y": 17,
+      "regionId": 507
+    },
+    {
+      "x": 20,
+      "y": 17,
+      "regionId": 717
+    },
+    {
+      "x": 22,
+      "y": 17,
+      "regionId": 787
+    },
+    {
+      "x": 0,
+      "y": 18,
+      "regionId": 18
+    },
+    {
+      "x": 1,
+      "y": 18,
+      "regionId": 53
+    },
+    {
+      "x": 2,
+      "y": 18,
+      "regionId": 88
+    },
+    {
+      "x": 3,
+      "y": 18,
+      "regionId": 123
+    },
+    {
+      "x": 4,
+      "y": 18,
+      "regionId": 158
+    },
+    {
+      "x": 5,
+      "y": 18,
+      "regionId": 193
+    },
+    {
+      "x": 6,
+      "y": 18,
+      "regionId": 228
+    },
+    {
+      "x": 7,
+      "y": 18,
+      "regionId": 263
+    },
+    {
+      "x": 8,
+      "y": 18,
+      "regionId": 298
+    },
+    {
+      "x": 9,
+      "y": 18,
+      "regionId": 333
+    },
+    {
+      "x": 10,
+      "y": 18,
+      "regionId": 368
+    },
+    {
+      "x": 11,
+      "y": 18,
+      "regionId": 403
+    },
+    {
+      "x": 12,
+      "y": 18,
+      "regionId": 438
+    },
+    {
+      "x": 13,
+      "y": 18,
+      "regionId": 473
+    },
+    {
+      "x": 14,
+      "y": 18,
+      "regionId": 508
+    },
+    {
+      "x": 20,
+      "y": 18,
+      "regionId": 718
+    },
+    {
+      "x": 21,
+      "y": 18,
+      "regionId": 753
+    },
+    {
+      "x": 22,
+      "y": 18,
+      "regionId": 788
+    },
+    {
+      "x": 23,
+      "y": 18,
+      "regionId": 823
+    },
+    {
+      "x": 24,
+      "y": 18,
+      "regionId": 858
+    },
+    {
+      "x": 25,
+      "y": 18,
+      "regionId": 893
+    },
+    {
+      "x": 26,
+      "y": 18,
+      "regionId": 928
+    },
+    {
+      "x": 27,
+      "y": 18,
+      "regionId": 963
+    },
+    {
+      "x": 28,
+      "y": 18,
+      "regionId": 998
+    },
+    {
+      "x": 29,
+      "y": 18,
+      "regionId": 1033
+    },
+    {
+      "x": 30,
+      "y": 18,
+      "regionId": 1068
+    },
+    {
+      "x": 31,
+      "y": 18,
+      "regionId": 1103
+    },
+    {
+      "x": 32,
+      "y": 18,
+      "regionId": 1138
+    },
+    {
+      "x": 33,
+      "y": 18,
+      "regionId": 1173
+    },
+    {
+      "x": 34,
+      "y": 18,
+      "regionId": 1208
+    },
+    {
+      "x": 12,
+      "y": 19,
+      "regionId": 439
+    },
+    {
+      "x": 13,
+      "y": 19,
+      "regionId": 474
+    },
+    {
+      "x": 14,
+      "y": 19,
+      "regionId": 509
+    },
+    {
+      "x": 15,
+      "y": 19,
+      "regionId": 544
+    },
+    {
+      "x": 19,
+      "y": 19,
+      "regionId": 684
+    },
+    {
+      "x": 20,
+      "y": 19,
+      "regionId": 719
+    },
+    {
+      "x": 21,
+      "y": 19,
+      "regionId": 754
+    },
+    {
+      "x": 22,
+      "y": 19,
+      "regionId": 789
+    },
+    {
+      "x": 13,
+      "y": 20,
+      "regionId": 475
+    },
+    {
+      "x": 14,
+      "y": 20,
+      "regionId": 510
+    },
+    {
+      "x": 15,
+      "y": 20,
+      "regionId": 545
+    },
+    {
+      "x": 16,
+      "y": 20,
+      "regionId": 580
+    },
+    {
+      "x": 17,
+      "y": 20,
+      "regionId": 615
+    },
+    {
+      "x": 18,
+      "y": 20,
+      "regionId": 650
+    },
+    {
+      "x": 19,
+      "y": 20,
+      "regionId": 685
+    },
+    {
+      "x": 20,
+      "y": 20,
+      "regionId": 720
+    },
+    {
+      "x": 21,
+      "y": 20,
+      "regionId": 755
+    },
+    {
+      "x": 14,
+      "y": 21,
+      "regionId": 511
+    },
+    {
+      "x": 15,
+      "y": 21,
+      "regionId": 546
+    },
+    {
+      "x": 16,
+      "y": 21,
+      "regionId": 581
+    },
+    {
+      "x": 18,
+      "y": 21,
+      "regionId": 651
+    },
+    {
+      "x": 19,
+      "y": 21,
+      "regionId": 686
+    },
+    {
+      "x": 20,
+      "y": 21,
+      "regionId": 721
+    },
+    {
+      "x": 15,
+      "y": 22,
+      "regionId": 547
+    },
+    {
+      "x": 16,
+      "y": 22,
+      "regionId": 582
+    },
+    {
+      "x": 17,
+      "y": 22,
+      "regionId": 617
+    },
+    {
+      "x": 18,
+      "y": 22,
+      "regionId": 652
+    },
+    {
+      "x": 19,
+      "y": 22,
+      "regionId": 687
+    },
+    {
+      "x": 16,
+      "y": 23,
+      "regionId": 583
+    },
+    {
+      "x": 18,
+      "y": 23,
+      "regionId": 653
+    },
+    {
+      "x": 16,
+      "y": 24,
+      "regionId": 584
+    },
+    {
+      "x": 18,
+      "y": 24,
+      "regionId": 654
+    },
+    {
+      "x": 16,
+      "y": 25,
+      "regionId": 585
+    },
+    {
+      "x": 18,
+      "y": 25,
+      "regionId": 655
+    },
+    {
+      "x": 16,
+      "y": 26,
+      "regionId": 586
+    },
+    {
+      "x": 18,
+      "y": 26,
+      "regionId": 656
+    },
+    {
+      "x": 16,
+      "y": 27,
+      "regionId": 587
+    },
+    {
+      "x": 18,
+      "y": 27,
+      "regionId": 657
+    },
+    {
+      "x": 16,
+      "y": 28,
+      "regionId": 588
+    },
+    {
+      "x": 18,
+      "y": 28,
+      "regionId": 658
+    },
+    {
+      "x": 16,
+      "y": 29,
+      "regionId": 589
+    },
+    {
+      "x": 18,
+      "y": 29,
+      "regionId": 659
+    },
+    {
+      "x": 16,
+      "y": 30,
+      "regionId": 590
+    },
+    {
+      "x": 18,
+      "y": 30,
+      "regionId": 660
+    },
+    {
+      "x": 16,
+      "y": 31,
+      "regionId": 591
+    },
+    {
+      "x": 18,
+      "y": 31,
+      "regionId": 661
+    },
+    {
+      "x": 16,
+      "y": 32,
+      "regionId": 592
+    },
+    {
+      "x": 18,
+      "y": 32,
+      "regionId": 662
+    },
+    {
+      "x": 16,
+      "y": 33,
+      "regionId": 593
+    },
+    {
+      "x": 18,
+      "y": 33,
+      "regionId": 663
+    },
+    {
+      "x": 16,
+      "y": 34,
+      "regionId": 594
+    },
+    {
+      "x": 18,
+      "y": 34,
+      "regionId": 664
+    }
+  ]
+}

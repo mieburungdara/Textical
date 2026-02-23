@@ -1,0 +1,20 @@
+{
+  "id": 2219,
+  "version": 1,
+  "name": "Dragon-Glass",
+  "description": "Material: Dragon-Glass",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 9,
+  "minStr": 80,
+  "minToolTier": 3,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

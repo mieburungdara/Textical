@@ -1,0 +1,39 @@
+{
+  "id": 7413,
+  "version": 1,
+  "name": "Dragon-Scale Jerkin",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 55000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 185,
+      "itemId": 7413,
+      "statKey": "defense",
+      "statValue": 150
+    },
+    {
+      "id": 186,
+      "itemId": 7413,
+      "statKey": "dex",
+      "statValue": 40
+    },
+    {
+      "id": 187,
+      "itemId": 7413,
+      "statKey": "dodge_rate",
+      "statValue": 0.1
+    }
+  ],
+  "traits": []
+}

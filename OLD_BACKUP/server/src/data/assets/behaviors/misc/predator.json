@@ -1,0 +1,19 @@
+{
+  "id": "behavior_predator",
+  "name": "The Predator",
+  "description": "Calculated and ruthless. Specifically hunts down weakened enemies in the backline.",
+  "targetWeights": {
+    "low_hp_bonus": 15,
+    "backline_bonus": 10,
+    "weak_element_bonus": 5
+  },
+  "movementStyle": "FLANK",
+  "tacticTriggers": [
+    { "if": "target_hp_below_20", "then": "use_finisher_skill" },
+    { "if": "surrounded_by_3", "then": "smoke_screen_escape" }
+  ],
+  "cohesionWeight": 0.2,
+  "requirements": {
+    "deeds": { "backline_kills": 100 }
+  }
+}

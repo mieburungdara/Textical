@@ -1,0 +1,62 @@
+[gd_scene load_steps=5 format=3 uid="uid://c57ld4a1alv1c"]
+
+[ext_resource type="Script" uid="uid://dxb5okb3rjavr" path="res://src/ui/components/HeroProfilePanel.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://psxgl11wf4nx" path="res://src/ui/components/HeaderSection.tscn" id="2_header"]
+[ext_resource type="PackedScene" path="res://src/ui/components/TabsContainer.tscn" id="3_tabs"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.08, 0.07, 0.06, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.45, 0.35, 0.6)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
+
+[node name="HeroProfilePanel" type="PanelContainer"]
+custom_minimum_size = Vector2(1100, 0)
+offset_right = 1100.0
+offset_bottom = 550.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_script")
+
+[node name="MainContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="LeftSection" type="VBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="HeaderSection" parent="MainContainer/LeftSection" instance=ExtResource("2_header")]
+layout_mode = 2
+
+[node name="VSeparator" type="VSeparator" parent="MainContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RightSection" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabsContainer" parent="MainContainer/RightSection" instance=ExtResource("3_tabs")]
+layout_mode = 2
+current_tab = 0
+
+[node name="LoadingLabel" type="Label" parent="MainContainer"]
+visible = false
+layout_mode = 2
+text = "⚙️ Loading hero data..."
+horizontal_alignment = 1
+vertical_alignment = 1

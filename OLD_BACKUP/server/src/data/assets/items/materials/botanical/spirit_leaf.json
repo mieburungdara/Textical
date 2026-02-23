@@ -1,0 +1,9 @@
+{
+  "id": 2102,
+  "name": "Spirit Leaf",
+  "description": "Glows with a faint blue light. Attuned to mana flow.",
+  "category": "MATERIAL",
+  "subCategory": "BOTANICAL",
+  "baseDurability": 0,
+  "rarity": "UNCOMMON"
+}

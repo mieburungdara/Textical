@@ -1,0 +1,20 @@
+{
+  "id": 2208,
+  "version": 1,
+  "name": "Marble",
+  "description": "Material: Marble",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 4,
+  "minStr": 20,
+  "minToolTier": 1,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

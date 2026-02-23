@@ -1,0 +1,9 @@
+{
+  "id": 2101,
+  "name": "Red Mushroom",
+  "description": "A common mushroom found in damp areas. Bitter, but useful for basic alchemy.",
+  "category": "MATERIAL",
+  "subCategory": "BOTANICAL",
+  "baseDurability": 0,
+  "rarity": "COMMON"
+}

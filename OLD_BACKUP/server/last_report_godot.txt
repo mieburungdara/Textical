@@ -1,0 +1,52 @@
+✦ 🛠️ <b>Refaktorisasi Sinyal Godot: Completed (Opsi B)</b>
+
+💬 <b>Request/Question:</b>
+Memilih Opsi B untuk memperbaiki mismatch argumen sinyal di klien Godot yang menyebabkan crash saat terjadi error jaringan atau kegagalan login. Mengabaikan peringatan "Unused Signal" karena fitur tersebut belum diimplementasikan.
+
+🛠️ <b>Answer/Implementation:</b>
+Telah dilakukan perbaikan pada sistem komunikasi sinyal antara handler jaringan dan server connector:
+1.  <b>Fix `error_occurred`</b>: Memperbarui lambda di `server_connector.gd` agar menerima 3 argumen (`endpoint`, `error_code`, `message`) sesuai dengan `BaseNetworkHandler`.
+2.  <b>Fix `login_failed`</b>: Memperbarui koneksi sinyal di `AuthHandler` agar menerima 2 argumen (`message`, `extra`) sesuai dengan `AuthHandler`.
+3.  <b>Enhanced Logging</b>: Menambahkan log prefix `[ServerConnector]` untuk mempermudah pelacakan error di konsol Godot.
+4.  <b>TODO Update</b>: Mencatat status perbaikan sinyal dan rencana pembersihan *warnings* di masa mendatang ke dalam `TODO_GODOT.md`.
+
+📜 <b>World Lore:</b>
+Kawat-kawat komunikasi antara menara sihir pusat dan transmisi para pengembara telah diselaraskan. Sebelumnya, frekuensi yang bertabrakan menyebabkan gema yang menghancurkan artefak penerima saat pesan peringatan dikirimkan. Kini, dengan penyesuaian resonansi yang presisi, setiap pesan kegagalan maupun peringatan bahaya dapat diterima dengan utuh tanpa merusak sirkuit kesadaran klien. 
+
+Energi yang tadinya terbuang dalam bentuk sinyal yang tak terpakai tetap dibiarkan mengalir pelan sebagai cadangan daya untuk masa depan, di mana kekuatan baru akan segera dibangkitkan. Klien kini tidak lagi buta saat badai error menerjang, karena sistem peringatan dini telah berfungsi kembali dengan sempurna di bawah naungan protokol Server Connector yang baru.
+
+🌟 <b>Milestones Reached:</b>
+- [x] Perbaikan argumen sinyal `error_occurred`
+- [x] Perbaikan argumen sinyal `login_failed`
+- [x] Penambahan diagnosa log untuk handler jaringan
+- [x] Pembaruan `TODO_GODOT.md` dengan status pemeliharaan klien
+
+📊 <b>Technical Details:</b>
+- <b>Files:</b> 1 GDScript Modified, 1 Markdown Modified
+- <b>Registry:</b> N/A (Client side update)
+- <b>Audit:</b> Menghilangkan 4 error kritis "Method expected X argument(s)" di log Godot.
+
+⚠️ <b>Risk Assessment (Security & Risks):</b>
+- <b>Known Issues:</b> Masih ada peringatan "Unused Signal" (diabaikan sesuai instruksi).
+- <b>Data Integrity:</b> Sinyal error kini membawa informasi lengkap untuk UI feedback.
+
+🧪 <b>Testing Coverage:</b>
+- Integration Tests: Verifikasi manual melalui log editor Godot menunjukkan sinyal error kini terpanggil tanpa kegagalan argumen.
+
+🎮 <b>Gameplay Impact:</b>
+- Player Behavior Shift: UI Login dan error handling sekarang akan memberikan feedback yang benar daripada sekadar diam atau crash saat terjadi masalah server.
+
+🏗️ <b>Expansion Compatibility:</b>
+- Future Features: Sistem siap menerima sinyal tambahan dengan argumen yang lebih kompleks di masa depan.
+
+💬 <b>Quote of the Build:</b>
+<i>"Mendengarkan itu penting, tapi memahami jumlah kata yang diucapkan jauh lebih krusial bagi sebuah mesin."</i>
+
+🔗 <b>System Impact:</b>
+Menstabilkan klien Godot sehingga dapat menangani kasus kegagalan koneksi secara anggun.
+
+💡 <b>Architect's Insight:</b>
+Selalu pastikan jumlah argumen pada `Callable` (lambda) cocok persis dengan deklarasi sinyal untuk menghindari `Native Class` error yang sulit dikontrol.
+
+🚀 <b>Next Up:</b>
+Implementasikan indikator visual (UI Feedback) untuk pesan error yang kini sudah berhasil ditangkap oleh `server_connector.gd`.

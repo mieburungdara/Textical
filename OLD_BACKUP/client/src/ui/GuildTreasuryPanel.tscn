@@ -1,0 +1,75 @@
+[gd_scene load_steps=6 format=3 uid="uid://guild_treasury_panel"]
+
+[ext_resource type="Script" uid="uid://guild_treasury_script" path="res://src/ui/GuildTreasuryPanel.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_treasury_bg"]
+bg_color = Color(0, 0, 0, 0.2)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.6, 0.5, 0.2, 0.4)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.1, 0.08, 0.12, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+
+[sub_resource type="LabelSettings" id="LabelSettings_header"]
+font_size = 20
+font_color = Color(0.9, 0.8, 0.3, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_amount"]
+font_size = 24
+font_color = Color(0.95, 0.85, 0.5, 1)
+
+[node name="GuildTreasuryPanel" type="VBoxContainer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="Header" type="Label" parent="."]
+layout_mode = 2
+text = "TREASURY"
+label_settings = SubResource("LabelSettings_header")
+horizontal_alignment = 1
+
+[node name="AmountDisplay" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="GoldLabel" type="Label" parent="AmountDisplay"]
+layout_mode = 2
+text = "Gold: 0"
+label_settings = SubResource("LabelSettings_amount")
+
+[node name="SilverLabel" type="Label" parent="AmountDisplay"]
+layout_mode = 2
+text = "Silver: 0"
+label_settings = SubResource("LabelSettings_amount")
+
+[node name="Controls" type="HBoxContainer" parent="."]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DepositBtn" type="Button" parent="Controls"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Deposit"
+
+[node name="WithdrawBtn" type="Button" parent="Controls"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Withdraw"

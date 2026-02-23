@@ -1,0 +1,509 @@
+<title>Players Management - Admin Panel</title>
+
+<style>
+    .data-table { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); }
+    .table { margin: 0; }
+    .table thead { background: #f8f9fa; }
+    .table th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; padding: 15px 20px; border: none; }
+    .table td { padding: 15px 20px; border-color: #f0f0f0; vertical-align: middle; }
+    .table tbody tr:hover { background: #f8f9fa; }
+    .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 13px; margin: 0 3px; }
+    .search-box { position: relative; }
+    .search-box input { padding-left: 45px; border-radius: 10px; }
+    .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+    .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 50px; }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+    .progress { height: 8px; border-radius: 4px; background: #e9ecef; }
+</style>
+
+<!-- Page Content -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Players Management</h4>
+    <button class="btn btn-primary" onclick="exportUsersCSV()">
+        <i class="bi bi-download"></i> Export CSV
+    </button>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-lg-2">
+        <div class="bg-white rounded p-3 text-center shadow-sm">
+            <div class="text-muted small">Total Players</div>
+            <div class="h3 mb-0 text-primary" id="totalPlayersCount">-</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg-2">
+        <div class="bg-white rounded p-3 text-center shadow-sm">
+            <div class="text-muted small">In Tavern</div>
+            <div class="h3 mb-0 text-warning" id="inTavernCount">-</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg-2">
+        <div class="bg-white rounded p-3 text-center shadow-sm">
+            <div class="text-muted small">Knocked Out</div>
+            <div class="h3 mb-0 text-danger" id="knockedOutCount">-</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg-2">
+        <div class="bg-white rounded p-3 text-center shadow-sm">
+            <div class="text-muted small">Premium</div>
+            <div class="h3 mb-0 text-success" id="premiumCount">-</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="userSearch" placeholder="Search by username..." oninput="handleUserSearch()">
+        </div>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="userStatusFilter" onchange="handleUserFilter()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="knockedout">Knocked Out</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="userTavernFilter" onchange="handleUserFilter()">
+            <option value="">All Players</option>
+            <option value="in">In Tavern</option>
+            <option value="out">Out of Tavern</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="userGuildFilter" onchange="handleUserFilter()">
+            <option value="">All Guilds</option>
+            <option value="has">Has Guild</option>
+            <option value="none">No Guild</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="userSort" onchange="handleUserFilter()">
+            <option value="id-desc">Newest First</option>
+            <option value="id-asc">Oldest First</option>
+            <option value="silver-desc">Most Silver</option>
+            <option value="gold-desc">Most Gold</option>
+        </select>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th class="text-end">Silver</th>
+                    <th class="text-end">Gold</th>
+                    <th>Vitality</th>
+                    <th>Heroes</th>
+                    <th>Region</th>
+                    <th>Tavern</th>
+                    <th>Guild</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable">
+                <tr>
+                    <td colspan="11" class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <small class="text-muted" id="usersPaginationInfo">Showing 0 to 0 of 0</small>
+        <nav>
+            <ul class="pagination mb-0" id="usersPagination"></ul>
+        </nav>
+    </div>
+</div>
+
+<!-- User View Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userModalBody">
+                Loading...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Edit Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="editUserModalBody">
+                Loading...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveUserEdit()">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+    // Users Page JavaScript
+    let usersState = { data: [], page: 1, total: 0, editingUser: null };
+
+    async function loadUsers() {
+        const tbody = document.getElementById('usersTable');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        try {
+            const searchValue = document.getElementById('userSearch')?.value || '';
+            const sortValue = document.getElementById('userSort')?.value || 'id-desc';
+            const data = await api.getUsers(usersState.page, searchValue, sortValue);
+            usersState.data = data.users;
+            usersState.total = data.pagination.total;
+            
+            renderUsersTable(data);
+            updateQuickStats(data.users);
+        } catch (error) {
+            console.error('Failed to load users:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="text-center text-danger py-4">
+                        Error loading users: ${error.message}
+                    </td>
+                </tr>
+            `;
+            showAlert('Failed to load users', 'danger');
+        }
+    }
+
+    function renderUsersTable(data) {
+        const tbody = document.getElementById('usersTable');
+        
+        if (data.users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="text-center text-muted py-4">
+                        No players found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = data.users.map(user => `
+            <tr>
+                <td><strong>${user.id}</strong></td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm bg-primary text-white rounded-circle me-2">${user.username.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <strong>${user.username}</strong>
+                            ${user.guildRole ? `<span class="badge bg-warning ms-1" style="font-size: 10px;">${user.guildRole}</span>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="text-end"><code>${formatCurrency(user.silver)}</code></td>
+                <td class="text-end"><span class="text-warning fw-bold">${formatCurrency(user.gold)}</span></td>
+                <td>
+                    <div class="progress" style="height: 8px; width: 80px;">
+                        <div class="progress-bar ${user.vitality > 50 ? 'bg-success' : user.vitality > 20 ? 'bg-warning' : 'bg-danger'}" 
+                             style="width: ${Math.min((user.vitality / (user.maxVitality || 100)) * 100, 100)}%"></div>
+                    </div>
+                    <small class="text-muted">${user.vitality}/${user.maxVitality || 100}</small>
+                </td>
+                <td><span class="badge bg-secondary">${user.heroCount || 0}</span></td>
+                <td><small>Region ${user.currentRegion}</small></td>
+                <td>
+                    ${user.isInTavern 
+                        ? '<span class="badge bg-warning">In Tavern</span>' 
+                        : '<span class="badge bg-light text-dark">Out</span>'}
+                </td>
+                <td>
+                    ${user.guildId 
+                        ? `<span class="badge bg-info">Guild #${user.guildId}</span>` 
+                        : '<span class="text-muted">-</span>'}
+                </td>
+                <td>
+                    ${user.isKnockedOut 
+                        ? '<span class="badge bg-danger">KO</span>' 
+                        : user.vitality > 0 
+                            ? '<span class="badge bg-success">Active</span>' 
+                            : '<span class="badge bg-secondary">Inactive</span>'}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="window.viewUser(${user.id})" title="View">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="window.editUser(${user.id})" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+        // Update pagination
+        const start = (usersState.page - 1) * 20 + 1;
+        const end = Math.min(usersState.page * 20, usersState.total);
+        document.getElementById('usersPaginationInfo').textContent = 
+            usersState.total > 0 ? `Showing ${start} to ${end} of ${usersState.total}` : 'No data';
+        
+        let paginationHtml = '';
+        if (usersState.page > 1) {
+            paginationHtml += `<li class="page-item"><button class="page-link" onclick="window.changeUserPage(${usersState.page - 1})">Prev</button></li>`;
+        }
+        paginationHtml += `<li class="page-item active"><span class="page-link">${usersState.page}</span></li>`;
+        if (usersState.page * 20 < usersState.total) {
+            paginationHtml += `<li class="page-item"><button class="page-link" onclick="window.changeUserPage(${usersState.page + 1})">Next</button></li>`;
+        }
+        document.getElementById('usersPagination').innerHTML = paginationHtml;
+    }
+
+    function updateQuickStats(users) {
+        const total = users.length;
+        const inTavern = users.filter(u => u.isInTavern).length;
+        const knockedOut = users.filter(u => u.isKnockedOut).length;
+        const premium = users.filter(u => u.premiumTier > 0).length;
+        
+        document.getElementById('totalPlayersCount').textContent = total;
+        document.getElementById('inTavernCount').textContent = inTavern;
+        document.getElementById('knockedOutCount').textContent = knockedOut;
+        document.getElementById('premiumCount').textContent = premium;
+    }
+
+    async function viewUser(userId) {
+        const user = usersState.data.find(u => u.id === userId);
+        if (!user) return;
+        
+        const modal = new bootstrap.Modal(document.getElementById('userModal'));
+        document.getElementById('userModalBody').innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-3">Account Information</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>ID:</strong></td><td>${user.id}</td></tr>
+                        <tr><td><strong>Username:</strong></td><td>${user.username}</td></tr>
+                        <tr><td><strong>Email:</strong></td><td>${user.email || 'N/A'}</td></tr>
+                        <tr><td><strong>Created:</strong></td><td>${new Date(user.createdAt).toLocaleDateString()}</td></tr>
+                        <tr><td><strong>Last Login:</strong></td><td>${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-3">Resources</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Silver:</strong></td><td><code>${formatCurrency(user.silver)}</code></td></tr>
+                        <tr><td><strong>Gold:</strong></td><td><span class="text-warning fw-bold">${formatCurrency(user.gold)}</span></td></tr>
+                        <tr><td><strong>Vitality:</strong></td><td>${user.vitality}/${user.maxVitality || 100}</td></tr>
+                        <tr><td><strong>Premium:</strong></td><td>${user.premiumTier > 0 ? `Tier ${user.premiumTier}` : 'None'}</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-3">Status</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Current Region:</strong></td><td>${user.currentRegion}</td></tr>
+                        <tr><td><strong>Tavern:</strong></td><td>${user.isInTavern ? 'In Tavern' : 'Out of Tavern'}</td></tr>
+                        <tr><td><strong>Knocked Out:</strong></td><td>${user.isKnockedOut ? 'Yes' : 'No'}</td></tr>
+                        <tr><td><strong>Guild:</strong></td><td>${user.guildId ? `Guild #${user.guildId}` : 'None'}</td></tr>
+                        <tr><td><strong>Hero Count:</strong></td><td>${user.heroCount || 0}</td></tr>
+                    </table>
+                </div>
+            </div>
+        `;
+        modal.show();
+    }
+
+    async function editUser(userId) {
+        const user = usersState.data.find(u => u.id === userId);
+        if (!user) return;
+        
+        usersState.editingUser = user;
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        
+        document.getElementById('editUserModalBody').innerHTML = `
+            <form id="editUserForm">
+                <input type="hidden" name="userId" value="${user.id}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="${user.username}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="${user.email || ''}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Silver</label>
+                        <input type="number" class="form-control" name="silver" value="${user.silver}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Gold</label>
+                        <input type="number" class="form-control" name="gold" value="${user.gold}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Vitality</label>
+                        <input type="number" class="form-control" name="vitality" value="${user.vitality}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Max Vitality</label>
+                        <input type="number" class="form-control" name="maxVitality" value="${user.maxVitality || 100}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Current Region</label>
+                        <input type="number" class="form-control" name="currentRegion" value="${user.currentRegion}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Premium Tier</label>
+                        <select class="form-select" name="premiumTier">
+                            <option value="0" ${user.premiumTier === 0 ? 'selected' : ''}>None</option>
+                            <option value="1" ${user.premiumTier === 1 ? 'selected' : ''}>Bronze</option>
+                            <option value="2" ${user.premiumTier === 2 ? 'selected' : ''}>Silver</option>
+                            <option value="3" ${user.premiumTier === 3 ? 'selected' : ''}>Gold</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" name="isInTavern" ${user.isInTavern ? 'checked' : ''}> In Tavern
+                        </label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" name="isKnockedOut" ${user.isKnockedOut ? 'checked' : ''}> Knocked Out
+                        </label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" name="isActive" ${user.vitality > 0 ? 'checked' : ''}> Active
+                        </label>
+                    </div>
+                </div>
+            </form>
+        `;
+        modal.show();
+    }
+
+    async function saveUserEdit() {
+        const form = document.getElementById('editUserForm');
+        const formData = new FormData(form);
+        const userId = formData.get('userId');
+        
+        const updateData = {
+            silver: parseInt(formData.get('silver')) || 0,
+            gold: parseInt(formData.get('gold')) || 0,
+            vitality: parseInt(formData.get('vitality')) || 0,
+            maxVitality: parseInt(formData.get('maxVitality')) || 100,
+            currentRegion: parseInt(formData.get('currentRegion')) || 1,
+            premiumTier: parseInt(formData.get('premiumTier')) || 0,
+            isInTavern: formData.get('isInTavern') === 'on',
+            isKnockedOut: formData.get('isKnockedOut') === 'on',
+            isActive: formData.get('isActive') === 'on'
+        };
+        
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                showAlert('User updated successfully', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                loadUsers();
+            } else {
+                showAlert('Failed to update user: ' + result.error, 'danger');
+            }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            showAlert('Error updating user: ' + error.message, 'danger');
+        }
+    }
+
+    function handleUserSearch() {
+        usersState.page = 1;
+        loadUsers();
+    }
+
+    function handleUserFilter() {
+        loadUsers();
+    }
+
+    function changeUserPage(page) {
+        usersState.page = page;
+        loadUsers();
+    }
+
+    function exportUsersCSV() {
+        const headers = ['ID', 'Username', 'Email', 'Silver', 'Gold', 'Vitality', 'Region', 'Tavern', 'KO', 'Premium'];
+        const rows = usersState.data.map(u => [
+            u.id, u.username, u.email || '', u.silver, u.gold, u.vitality, 
+            u.currentRegion, u.isInTavern ? 'Yes' : 'No', u.isKnockedOut ? 'Yes' : 'No', u.premiumTier
+        ]);
+        
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showAlert('CSV exported successfully', 'success');
+    }
+
+    function formatCurrency(amount) {
+        if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
+        if (amount >= 1000) return (amount / 1000).toFixed(1) + 'K';
+        return amount?.toLocaleString() || '0';
+    }
+
+    // Auto-load when page is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    } else {
+        loadUsers();
+    }
+</script>

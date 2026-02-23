@@ -1,0 +1,65 @@
+[gd_scene load_steps=9 format=3 uid="uid://igf20she4dvs"]
+
+[ext_resource type="Script" path="res://src/ui/hero_profile/HeroProfileScreen.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bqe6er2xuyggx" path="res://src/ui/TaskListHUD.tscn" id="3_task"]
+[ext_resource type="PackedScene" uid="uid://b7gtungyt03pq" path="res://src/ui/components/HeroGridContainer.tscn" id="5_grid"]
+[ext_resource type="PackedScene" uid="uid://16ypmxfkqdh4" path="res://src/ui/components/ProfileOverlay.tscn" id="6_overlay"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.05, 0.04, 0.03, 1, 0.08, 0.06, 0.04, 1, 0.03, 0.02, 0.01, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[node name="HeroProfileScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_bg")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 160.0
+offset_top = 90.0
+offset_right = -15.0
+offset_bottom = -90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HeroGridContainer" parent="MarginContainer" instance=ExtResource("5_grid")]
+layout_mode = 2
+
+[node name="ProfileOverlay" parent="." instance=ExtResource("6_overlay")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.0069444445
+anchor_top = 0.23203126
+anchor_right = 1.0069444
+anchor_bottom = 1.2320312
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+metadata/_edit_use_anchors_ = true

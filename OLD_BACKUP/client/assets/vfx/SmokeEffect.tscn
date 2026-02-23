@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bw16gwkfbnmkq"]
+
+[ext_resource type="Script" uid="uid://dydw0s5wiwk8w" path="res://assets/vfx/one_shot_vfx.gd" id="1_vfx"]
+
+[node name="SmokeEffect" type="CPUParticles2D"]
+z_index = 1
+amount = 16
+lifetime = 0.6
+explosiveness = 1.0
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 100.0
+scale_amount_min = 10.0
+scale_amount_max = 20.0
+color = Color(1, 1, 1, 0.49411765)
+script = ExtResource("1_vfx")

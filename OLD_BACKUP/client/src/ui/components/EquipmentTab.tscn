@@ -1,0 +1,286 @@
+[gd_scene load_steps=12 format=3 uid="uid://equipment_tab"]
+
+[ext_resource type="Script" path="res://src/ui/components/EquipmentTab.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://equipment_slot" path="res://src/ui/components/EquipmentSlot.tscn" id="2_slot"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_doll_bg"]
+bg_color = Color(0.02, 0.02, 0.02, 0.4)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.03)
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_central_aura"]
+bg_color = Color(1, 0.9, 0.6, 0.03)
+corner_radius_top_left = 200
+corner_radius_top_right = 200
+corner_radius_bottom_right = 200
+corner_radius_bottom_left = 200
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.8, 0.4, 0.05)
+
+[sub_resource type="LabelSettings" id="LabelSettings_doll_title"]
+font_size = 13
+font_color = Color(1, 0.8, 0.4, 0.8)
+outline_size = 4
+outline_color = Color(0, 0, 0, 0.5)
+letter_spacing = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_details"]
+bg_color = Color(0.05, 0.04, 0.03, 0.85)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.5, 0.3, 0.4)
+content_margin_left = 24
+content_margin_top = 24
+content_margin_right = 24
+content_margin_bottom = 24
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_item_name"]
+font_size = 26
+font_color = Color(1, 0.95, 0.8, 1)
+outline_size = 4
+outline_color = Color(0.1, 0.08, 0.05, 1)
+shadow_size = 6
+shadow_color = Color(0, 0, 0, 0.8)
+
+[sub_resource type="LabelSettings" id="LabelSettings_item_type"]
+font_size = 11
+font_color = Color(0.7, 0.65, 0.6, 1)
+letter_spacing = 1.5
+
+[sub_resource type="LabelSettings" id="LabelSettings_item_desc"]
+font_size = 14
+font_color = Color(0.8, 0.75, 0.7, 1)
+line_spacing = 3.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_stats"]
+font_size = 15
+font_color = Color(0.6, 0.9, 0.5, 1)
+outline_size = 1
+outline_color = Color(0, 0, 0, 0.3)
+line_spacing = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.4, 0.3, 0.15, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.9, 0.6, 0.3)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="EquipmentTab" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+script = ExtResource("1_script")
+
+[node name="PaperDollPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_doll_bg")
+
+[node name="VBox" type="VBoxContainer" parent="PaperDollPanel"]
+layout_mode = 2
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="Title" type="Label" parent="PaperDollPanel/VBox"]
+layout_mode = 2
+text = "WARRIOR LOADOUT"
+label_settings = SubResource("LabelSettings_doll_title")
+horizontal_alignment = 1
+
+[node name="DollArea" type="Control" parent="PaperDollPanel/VBox"]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+
+[node name="CentralAura" type="Panel" parent="PaperDollPanel/VBox/DollArea"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_central_aura")
+
+[node name="LeftSlots" type="VBoxContainer" parent="PaperDollPanel/VBox/DollArea"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = -145.0
+offset_right = 100.0
+offset_bottom = 145.0
+grow_vertical = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="HeadSlot" parent="PaperDollPanel/VBox/DollArea/LeftSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="BodySlot" parent="PaperDollPanel/VBox/DollArea/LeftSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="AccessorySlot" parent="PaperDollPanel/VBox/DollArea/LeftSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="RightSlots" type="VBoxContainer" parent="PaperDollPanel/VBox/DollArea"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -145.0
+offset_right = -15.0
+offset_bottom = 145.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="WeaponSlot" parent="PaperDollPanel/VBox/DollArea/RightSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="OffhandSlot" parent="PaperDollPanel/VBox/DollArea/RightSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="TrinketSlot" parent="PaperDollPanel/VBox/DollArea/RightSlots" instance=ExtResource("2_slot")]
+layout_mode = 2
+
+[node name="ItemDetailsPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_details")
+
+[node name="MainVBox" type="VBoxContainer" parent="ItemDetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ItemInfoSection" type="VBoxContainer" parent="ItemDetailsPanel/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="ItemHeader" type="VBoxContainer" parent="ItemDetailsPanel/MainVBox/ItemInfoSection"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ItemName" type="Label" parent="ItemDetailsPanel/MainVBox/ItemInfoSection/ItemHeader"]
+layout_mode = 2
+text = "Iron Greatsword"
+label_settings = SubResource("LabelSettings_item_name")
+
+[node name="ItemType" type="Label" parent="ItemDetailsPanel/MainVBox/ItemInfoSection/ItemHeader"]
+layout_mode = 2
+text = "TWO-HANDED SWORD • RARE"
+label_settings = SubResource("LabelSettings_item_type")
+
+[node name="HSeparator" type="HSeparator" parent="ItemDetailsPanel/MainVBox/ItemInfoSection"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Description" type="Label" parent="ItemDetailsPanel/MainVBox/ItemInfoSection"]
+layout_mode = 2
+text = "A heavy blade forged from cold iron. Deals massive physical damage at the cost of speed."
+label_settings = SubResource("LabelSettings_item_desc")
+autowrap_mode = 3
+
+[node name="StatsSection" type="VBoxContainer" parent="ItemDetailsPanel/MainVBox/ItemInfoSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StatsTitle" type="Label" parent="ItemDetailsPanel/MainVBox/ItemInfoSection/StatsSection"]
+layout_mode = 2
+text = "ENCHANTMENTS & BONUSES"
+label_settings = SubResource("LabelSettings_item_type")
+
+[node name="ItemStats" type="Label" parent="ItemDetailsPanel/MainVBox/ItemInfoSection/StatsSection"]
+layout_mode = 2
+text = "+15 Physical Attack
++5 Strength
+-2 Attack Speed"
+label_settings = SubResource("LabelSettings_stats")
+
+[node name="InventorySection" type="VBoxContainer" parent="ItemDetailsPanel/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="HSeparator2" type="HSeparator" parent="ItemDetailsPanel/MainVBox/InventorySection"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="InventoryTitle" type="Label" parent="ItemDetailsPanel/MainVBox/InventorySection"]
+layout_mode = 2
+text = "AVAILABLE RELICS"
+label_settings = SubResource("LabelSettings_doll_title")
+
+[node name="Scroll" type="ScrollContainer" parent="ItemDetailsPanel/MainVBox/InventorySection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="ItemDetailsPanel/MainVBox/InventorySection/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ActionButtons" type="HBoxContainer" parent="ItemDetailsPanel/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="EquipButton" type="Button" parent="ItemDetailsPanel/MainVBox/ActionButtons"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+text = "EQUIP ITEM"
+
+[node name="UnequipButton" type="Button" parent="ItemDetailsPanel/MainVBox/ActionButtons"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+text = "REMOVE"
+
+[node name="EmptyState" type="CenterContainer" parent="ItemDetailsPanel"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ItemDetailsPanel/EmptyState"]
+layout_mode = 2
+text = "CHOOSE A SLOT TO VIEW RELIC DATA"
+label_settings = SubResource("LabelSettings_item_type")
+horizontal_alignment = 1

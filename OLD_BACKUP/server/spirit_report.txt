@@ -1,0 +1,35 @@
+✦ 🏆 <b>Spirit Expansion Pack: FULLY INTEGRATED</b>
+
+💬 <b>Permintaan/Pertanyaan:</b>
+Menambahkan lebih banyak macam-macam spirit ke dalam database untuk memperkaya ekosistem Spirit Density System.
+
+🛠️ <b>Jawaban/Implementasi:</b>
+Telah dilakukan ekspansi masif pada database roh (Spirit Expansion Pack v1.0). Sebanyak 10 varietas roh baru telah didaftarkan dalam <code>SpiritTemplate</code>, mencakup kategori Benevolent (Pemberi Berkat) dan Malevolent (Pembawa Kutukan). Logika distribusi pada <code>seed_spirits.js</code> telah diperbarui untuk menyebarkan roh-roh ini ke seluruh bioma berdasarkan tingkat korupsi dan jenis zona.
+
+📜 <b>World Lore:</b>
+Tabir antara dunia fana dan alam baka semakin menipis. Kini, bukan hanya pelindung kuno yang berbisik di kegelapan, melainkan juga entitas-entitas baru yang haus akan ingatan manusia. Di hutan yang rimbun, <code>Nature's Embrace</code> menawarkan kesembuhan bagi mereka yang lelah, sementara di pasar-pasar tua yang angker, <code>Restless Merchant Spirit</code> membisikkan rahasia perdagangan yang menggiurkan. Namun berhati-hatilah, karena ratapan <code>Sorrowful Banshee</code> kini menggema di lembah, menghancurkan fokus para kesatria, dan <code>Greedy Poltergeist</code> mengincar kantong perak mereka yang kurang waspada. Malam di Textical kini menjadi simfoni mistis yang jauh lebih kompleks dan mendalam.
+
+🌟 <b>Milestones Reached:</b>
+- ✅ Database Spirit Expanded: 10 Uniqe Spirits (5 Buffs, 5 De-buffs).
+- ✅ New Stat Effects: <code>hpRegen</code>, <code>defense</code>, <code>silverGain</code>, dan <code>skillCastingSpeed</code>.
+- ✅ Biome-Specific Distribution: Roh kini memiliki "rumah" yang lebih logis (misal: Banshee di Red Zone, Sylph di Green Zone).
+- ✅ Re-Seeding Success: 2500+ relasi Region-Spirit diperbarui secara instan.
+- ✅ Automated Verification: Lulus validasi <code>Spirit Encounter</code> dengan varian baru.
+
+📊 <b>Technical Details:</b>
+- <b>Files:</b> Modified <code>seed_spirits.js</code>, Re-run <code>node prisma/seed_spirits.js</code>.
+- <b>Registry:</b> ID Range 1-10 (Full Spirit Roster).
+- <b>Audit:</b> Data integrity <code>OK</code>.
+
+⚠️ <b>Risk Assessment (Keamanan & Risiko):</b>
+- <b>Known Issues:</b> Probabilitas akumulatif di zona dengan kepadatan 1.0 mungkin terasa "terlalu aktif" bagi segelian pemain; balancing mungkin diperlukan.
+- <b>Security Protocol:</b> Spiritual Firewall - Level 6 Status.
+
+💬 <b>Quote of the Build:</b>
+<i>"Setiap roh membawa cerita; namun tidak semua cerita memiliki akhir yang bahagia."</i>
+
+🔗 <b>System Impact:</b>
+Meningkatkan nilai eksplorasi malam hari dan persiapan strategi berdasarkan buff/debuff yang mungkin ditemui di suatu wilayah.
+
+🚀 <b>Next Up:</b>
+Implementasi sistem 'Spirit Repel' (Item pengusir roh) atau 'Spirit Summon' (Item penarik roh).

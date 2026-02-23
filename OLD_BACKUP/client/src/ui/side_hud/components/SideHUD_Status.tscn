@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3 uid="uid://side_hud_status"]
+
+[ext_resource type="Script" path="res://src/ui/side_hud/components/SideHUD_Status.gd" id="1_script"]
+
+[node name="SideHUD_Status" type="VBoxContainer"]
+offset_right = 136.0
+offset_bottom = 200.0
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="RegionInfo" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HBox" type="HBoxContainer" parent="RegionInfo"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="RegionIcon" type="Label" parent="RegionInfo/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🏰"
+
+[node name="RegionName" type="Label" parent="RegionInfo/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "INITIALIZING..."
+
+[node name="CoordLabel" type="Label" parent="RegionInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 8
+text = "X:0 Y:0"
+
+[node name="TimeDisplay" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="DayNightIcon" type="Label" parent="TimeDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "☀️"
+
+[node name="TimeLabel" type="Label" parent="TimeDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "14:30"
+
+[node name="DateLabel" type="Label" parent="TimeDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 9
+text = "Day 1"
+
+[node name="BuffContainer" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="VIPBadge" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Icon" type="Label" parent="VIPBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "👑"
+
+[node name="Label" type="Label" parent="VIPBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 10
+text = "VIP"
+
+[node name="TitleDisplay" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="Label" parent="TitleDisplay"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "📜"
+
+[node name="TitleLabel" type="Label" parent="TitleDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "NOVICE"
+
+[node name="FactionDisplay" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="Label" parent="FactionDisplay"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "⚔️"
+
+[node name="FactionLabel" type="Label" parent="FactionDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 9
+text = "NEUTRAL"
+
+[node name="WeatherDisplay" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeatherIcon" type="Label" parent="WeatherDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "☀️"
+
+[node name="WeatherLabel" type="Label" parent="WeatherDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 9
+text = "CLEAR"

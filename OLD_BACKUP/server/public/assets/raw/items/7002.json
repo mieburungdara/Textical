@@ -1,0 +1,33 @@
+{
+  "id": 7002,
+  "version": 1,
+  "name": "Steel Longsword",
+  "description": "Standard issue for knight-errants.",
+  "category": "WEAPON",
+  "baseValue": 800,
+  "rarity": "UNCOMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 138,
+      "itemId": 7002,
+      "statKey": "attack_damage",
+      "statValue": 45
+    },
+    {
+      "id": 139,
+      "itemId": 7002,
+      "statKey": "crit_chance",
+      "statValue": 0.02
+    }
+  ],
+  "traits": []
+}

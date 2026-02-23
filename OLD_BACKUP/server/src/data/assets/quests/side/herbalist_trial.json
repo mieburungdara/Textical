@@ -1,0 +1,11 @@
+{
+  "id": 7002,
+  "name": "The Herbalist's Trial",
+  "objectives": [
+    { "type": "GATHER", "targetId": 2101, "amount": 5, "desc": "Collect Red Mushrooms" }
+  ],
+  "rewards": [
+    { "type": "JOB", "targetId": 8001, "amount": 1 },
+    { "type": "GOLD", "amount": 100 }
+  ]
+}

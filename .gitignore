@@ -17,5 +17,5 @@ server/prisma/dev.db-journal
 godot-mcp-cli
 node_modules
 node_modules
-OLD_BACKUP/
+#OLD_BACKUP/
 node_modules

@@ -1,0 +1,33 @@
+{
+  "id": 7315,
+  "version": 1,
+  "name": "Adamantite Greathelm",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 35000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 177,
+      "itemId": 7315,
+      "statKey": "defense",
+      "statValue": 150
+    },
+    {
+      "id": 178,
+      "itemId": 7315,
+      "statKey": "vit",
+      "statValue": 20
+    }
+  ],
+  "traits": []
+}

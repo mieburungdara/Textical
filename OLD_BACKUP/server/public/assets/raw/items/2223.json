@@ -1,0 +1,20 @@
+{
+  "id": 2223,
+  "version": 1,
+  "name": "Blood-Ruby",
+  "description": "Material: Blood-Ruby",
+  "category": "MATERIAL",
+  "baseValue": 10,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 6,
+  "minStr": 95,
+  "minToolTier": 4,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [],
+  "traits": []
+}

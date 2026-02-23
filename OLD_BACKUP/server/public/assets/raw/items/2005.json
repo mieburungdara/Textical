@@ -1,0 +1,11 @@
+{
+  "id": 2005,
+  "name": "Iron Ingot",
+  "description": "Metal.",
+  "category": "MATERIAL",
+  "baseValue": 20,
+  "rarity": "COMMON",
+  "isTwoHanded": false,
+  "stats": [],
+  "traits": []
+}

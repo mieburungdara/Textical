@@ -1,0 +1,7 @@
+{
+  "id": 3001,
+  "name": "Searing Heat",
+  "description": "Deals fire damage over time to the target.",
+  "category": "COMBAT",
+  "statModifiers": []
+}

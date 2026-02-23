@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8xv7y2k5mnop"]
+
+[ext_resource type="Script" uid="uid://c1234567890abc" path="res://src/ui/components/GardenPlot.gd" id="1_script"]
+
+[node name="GardenPlot" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 80.0
+offset_bottom = 80.0
+grow_horizontal = 1
+grow_vertical = 1
+script = ExtResource("1_script")
+
+[node name="PlotPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="PlotPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PlotIcon" type="Label" parent="PlotPanel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "🟫"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="PlotPanel/VBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="PlotLabel" type="Label" parent="PlotPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "Plot 1"
+horizontal_alignment = 1

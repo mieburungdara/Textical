@@ -1,0 +1,47 @@
+{
+  "title": "SimpleAI",
+  "description": "Tactical logic for standard units.",
+  "root": "priority-main",
+  "nodes": {
+    "priority-main": {
+      "id": "priority-main",
+      "name": "Priority",
+      "title": "Priority",
+      "children": ["logic-sequence"]
+    },
+    "logic-sequence": {
+      "id": "logic-sequence",
+      "name": "Sequence",
+      "title": "Sequence",
+      "children": ["find-target-act", "combat-selector"]
+    },
+    "find-target-act": {
+      "id": "find-target-act",
+      "name": "FindTarget",
+      "title": "Find Closest",
+      "properties": { "strategy": "ENEMIES" }
+    },
+    "combat-selector": {
+      "id": "combat-selector",
+      "name": "Priority",
+      "title": "Strategy",
+      "children": ["gate-range", "move-act"]
+    },
+    "gate-range": {
+      "id": "gate-range",
+      "name": "IsTargetInRange",
+      "title": "Range Check",
+      "children": ["attack-act"]
+    },
+    "attack-act": {
+      "id": "attack-act",
+      "name": "AttackTarget",
+      "title": "Attack"
+    },
+    "move-act": {
+      "id": "move-act",
+      "name": "MoveToTarget",
+      "title": "Pursue"
+    }
+  }
+}

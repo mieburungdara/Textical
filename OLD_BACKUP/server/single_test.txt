@@ -1,0 +1,50 @@
+  console.log
+    [TRAIT_SERVICE] Found 21 files in C:\Users\Administrator\Documents\GitHub\Textical\server\src\logic\traits\definitions: Adrenaline.js,ArcaneMaster.js,Berserker.js,BloodLink.js,CounterStrike.js,Coward.js,Disruptor.js,Executioner.js,Giant.js,GlassCannon.js,LifeSteal.js,Opportunist.js,ReflectiveSpikes.js,SecondWind.js,Sharpshooter.js,SplittingForm.js,Thinker.js,Thorns.js,TrueSight.js,UndyingWill.js,Vanguard.js
+
+      at TraitsManager.log [as _loadTraits] (src/services/traitService.js:18:17)
+
+  console.log
+    [dotenv@17.3.1] injecting env (4) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+info: Node registry initialized with 28 nodes
+info: Loaded 0 behavior trees
+FAIL tests/final_traits_modernized.test.js
+  Final Traits Modernization Verification
+    ArcaneMaster Trait (Tiered)
+      × Lv3: 2.0x Skill Damage and 50% Reset Chance (16 ms)
+    Coward Trait (Tiered)
+      ○ skipped Lv3: +20 Speed at < 50% HP
+      ○ skipped Lv3: 45% Panic chance (Math.random < 0.45)
+    Disruptor Trait (Tiered)
+      ○ skipped Lv3: +3 Move Range
+    Sharpshooter Trait (Tiered)
+      ○ skipped Lv3: +4 Attack Range
+    Thinker Trait (Tiered)
+      ○ skipped Lv3: +25 Mana Regen
+    TrueSight Trait (Tiered)
+      ○ skipped Lv3: +50 Accuracy
+
+  ● Final Traits Modernization Verification › ArcaneMaster Trait (Tiered) › Lv3: 2.0x Skill Damage and 50% Reset Chance
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: undefined
+
+    [0m [90m 29 |[39m             [90m// 1. Check damage mult[39m
+     [90m 30 |[39m             [36mconst[39m preAttack [33m=[39m traitService[33m.[39mexecuteHook([32m"onPreAttack"[39m[33m,[39m unit[33m,[39m sim[33m,[39m { id[33m:[39m [32m"fireball"[39m })[33m;[39m
+    [31m[1m>[22m[39m[90m 31 |[39m             expect(preAttack[33m.[39mdmgMult)[33m.[39mtoBe([35m2.0[39m)[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 32 |[39m
+     [90m 33 |[39m             [90m// 2. Check cooldown reset (Math.random < 0.5)[39m
+     [90m 34 |[39m             [33mMath[39m[33m.[39mrandom[33m.[39mmockReturnValue([35m0.4[39m)[33m;[39m [0m
+
+      at Object.toBe (tests/final_traits_modernized.test.js:31:39)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 6 skipped, 7 total
+Snapshots:   0 total
+Time:        4.904 s
+Ran all test suites matching tests/final_traits_modernized.test.js with tests matching "ArcaneMaster Trait".

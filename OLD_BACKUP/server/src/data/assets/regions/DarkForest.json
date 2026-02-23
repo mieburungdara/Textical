@@ -1,0 +1,13 @@
+{
+  "id": 2,
+  "name": "Dark Forest",
+  "description": "A dense, shadow-filled woods teeming with dangerous skeletons.",
+  "type": "WILDERNESS",
+  "dangerLevel": 5,
+  "resources": [
+    { "itemId": 2103, "spawnChance": 0.5, "gatherDifficulty": 10, "gatherTimeSeconds": 20 }
+  ],
+  "connections": [
+    { "targetRegionId": 1, "travelTimeSeconds": 15 }
+  ]
+}

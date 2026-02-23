@@ -1,0 +1,177 @@
+<!-- Server Management Page Fragment -->
+<main class="main-content p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Server Management</h2>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" id="uptime">Loading...</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                    <div class="stat-icon text-primary">
+                        <i class="bi bi-clock-history fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" id="memory">...</div>
+                        <div class="stat-label">Memory (Heap)</div>
+                    </div>
+                    <div class="stat-icon text-success">
+                        <i class="bi bi-memory fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" id="cpu">...</div>
+                        <div class="stat-label">CPU Load</div>
+                    </div>
+                    <div class="stat-icon text-warning">
+                        <i class="bi bi-cpu fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" id="records">...</div>
+                        <div class="stat-label">DB Records</div>
+                    </div>
+                    <div class="stat-icon text-info">
+                        <i class="bi bi-database fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5>Memory Usage</h5>
+                <div class="progress progress-thin mb-2">
+                    <div class="progress-bar bg-primary" id="memBar" style="width: 0%"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted">
+                    <span>Used: <span id="memUsed">-</span></span>
+                    <span>Total: <span id="memTotal">-</span></span>
+                    <span>Free: <span id="memFree">-</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5>Database Tables</h5>
+                <table class="table" id="dbTable">
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th class="text-end">Records</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="2" class="text-center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Server Information</h5>
+                    <button class="btn btn-primary btn-sm" id="refreshServerBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div class="row" id="serverInfo">
+                    <div class="col-md-4"><strong>Node.js:</strong> <span id="nodeVersion">Loading...</span></div>
+                    <div class="col-md-4"><strong>Platform:</strong> <span id="platform">Loading...</span></div>
+                    <div class="col-md-4"><strong>Updated:</strong> <span id="lastUpdate">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+window.loadServerInfo = async function() {
+    console.log('[Server] Loading server info...');
+    try {
+        const [healthRes, dbRes] = await Promise.all([
+            fetch('/api/admin/server/health'),
+            fetch('/api/admin/server/db-stats')
+        ]);
+        
+        const health = await healthRes.json();
+        const db = await dbRes.json();
+        
+        if (health.success) {
+            document.getElementById('uptime').textContent = health.data.uptimeFormatted;
+            document.getElementById('memory').textContent = health.data.memoryUsage?.heapUsed || 'N/A';
+            document.getElementById('cpu').textContent = health.data.cpuLoad?.[0]?.toFixed(2) || 'N/A';
+            document.getElementById('nodeVersion').textContent = health.data.nodeVersion || 'N/A';
+            document.getElementById('platform').textContent = health.data.platform || 'N/A';
+            
+            if (health.data.memoryUsage && health.data.systemMemory) {
+                const memPercent = (health.data.memoryUsage.rss / (health.data.systemMemory.total * 1024)) * 100;
+                document.getElementById('memUsed').textContent = (health.data.memoryUsage.rss || 0) + ' MB';
+                document.getElementById('memTotal').textContent = (health.data.systemMemory.total || 0) + ' GB';
+                document.getElementById('memFree').textContent = (health.data.systemMemory.free || 0) + ' GB';
+                document.getElementById('memBar').style.width = Math.min(memPercent, 100) + '%';
+            }
+        }
+        
+        if (db.success) {
+            document.getElementById('records').textContent = (db.data.totalRecords || 0).toLocaleString();
+            const tbody = document.querySelector('#dbTable tbody');
+            if (db.data.tables) {
+                tbody.innerHTML = Object.entries(db.data.tables).map(([table, count]) => `
+                    <tr>
+                        <td class="text-capitalize">${table}</td>
+                        <td class="text-end">${(count || 0).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+        
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        console.log('[Server] Server info loaded successfully');
+    } catch (error) {
+        console.error('[Server] Error loading server info:', error);
+    }
+};
+
+// Auto-refresh every 30 seconds
+window.refreshServerInterval = setInterval(window.loadServerInfo, 30000);
+
+// Refresh button handler
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Server] Initializing server page...');
+    window.loadServerInfo();
+    
+    const refreshBtn = document.getElementById('refreshServerBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.loadServerInfo();
+        });
+    }
+});
+</script>

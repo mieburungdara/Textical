@@ -1,0 +1,33 @@
+{
+  "id": 7515,
+  "version": 1,
+  "name": "World-Tree Crown",
+  "description": "A sturdy piece of armor.",
+  "category": "ARMOR",
+  "baseValue": 38000,
+  "rarity": "LEGENDARY",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 203,
+      "itemId": 7515,
+      "statKey": "defense",
+      "statValue": 40
+    },
+    {
+      "id": 204,
+      "itemId": 7515,
+      "statKey": "int",
+      "statValue": 30
+    }
+  ],
+  "traits": []
+}

@@ -1,0 +1,4552 @@
+{
+  "metadata": {
+    "battle_type": "SOLO",
+    "user_id": 1,
+    "monster_id": 6004,
+    "is_debug_file": true,
+    "generated_at": "2026-02-09T21:32:37.504Z"
+  },
+  "ticks": [
+    {
+      "tick": 0,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "Tactical Engine Engaged. Region: CAVE",
+          "data": {},
+          "isInternal": true
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 1,
+            "y": 1
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 0
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 25,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 0
+        }
+      ]
+    },
+    {
+      "tick": 1,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 24.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 24 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 1,
+              "y": 1
+            },
+            "to": {
+              "x": 2,
+              "y": 2
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 23.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 23 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 25,
+              "y": 5
+            },
+            "to": {
+              "x": 24,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 2,
+            "y": 2
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 21
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 24,
+            "y": 4
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 21
+        }
+      ]
+    },
+    {
+      "tick": 21,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 22.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 22 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 2,
+              "y": 2
+            },
+            "to": {
+              "x": 3,
+              "y": 3
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 21.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 21 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 24,
+              "y": 4
+            },
+            "to": {
+              "x": 23,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 3,
+            "y": 3
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 41
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 23,
+            "y": 4
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 41
+        }
+      ]
+    },
+    {
+      "tick": 41,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 20.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 20 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 3,
+              "y": 3
+            },
+            "to": {
+              "x": 4,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 19.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 19 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 23,
+              "y": 4
+            },
+            "to": {
+              "x": 22,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 4,
+            "y": 4
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 61
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 22,
+            "y": 4
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 61
+        }
+      ]
+    },
+    {
+      "tick": 61,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 18.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 18 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 4,
+              "y": 4
+            },
+            "to": {
+              "x": 5,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 17.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 17 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 22,
+              "y": 4
+            },
+            "to": {
+              "x": 21,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 5,
+            "y": 4
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 81
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 21,
+            "y": 4
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 81
+        }
+      ]
+    },
+    {
+      "tick": 81,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 16.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 16 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 5,
+              "y": 4
+            },
+            "to": {
+              "x": 6,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 15.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 15 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 21,
+              "y": 4
+            },
+            "to": {
+              "x": 20,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 6,
+            "y": 5
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 101
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 20,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 101
+        }
+      ]
+    },
+    {
+      "tick": 101,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 14.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 14 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 6,
+              "y": 5
+            },
+            "to": {
+              "x": 7,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 13.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 13 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 20,
+              "y": 5
+            },
+            "to": {
+              "x": 19,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 7,
+            "y": 5
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 121
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 19,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 121
+        }
+      ]
+    },
+    {
+      "tick": 121,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 12.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 12 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 7,
+              "y": 5
+            },
+            "to": {
+              "x": 8,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 11.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 11 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 19,
+              "y": 5
+            },
+            "to": {
+              "x": 18,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 8,
+            "y": 5
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 141
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 18,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 141
+        }
+      ]
+    },
+    {
+      "tick": 141,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 10.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 10 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 8,
+              "y": 5
+            },
+            "to": {
+              "x": 9,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 9.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 9 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 18,
+              "y": 5
+            },
+            "to": {
+              "x": 17,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 9,
+            "y": 5
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 161
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 17,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 161
+        }
+      ]
+    },
+    {
+      "tick": 161,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 8.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 8 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 9,
+              "y": 5
+            },
+            "to": {
+              "x": 10,
+              "y": 6
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 7.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 7 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 17,
+              "y": 5
+            },
+            "to": {
+              "x": 16,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 10,
+            "y": 6
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 181
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 16,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 181
+        }
+      ]
+    },
+    {
+      "tick": 181,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 6 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 10,
+              "y": 6
+            },
+            "to": {
+              "x": 11,
+              "y": 6
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 5.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 5 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 16,
+              "y": 5
+            },
+            "to": {
+              "x": 15,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 11,
+            "y": 6
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 201
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 15,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 201
+        }
+      ]
+    },
+    {
+      "tick": 201,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 4.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 4 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 11,
+              "y": 6
+            },
+            "to": {
+              "x": 12,
+              "y": 6
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 3.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 3 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 15,
+              "y": 5
+            },
+            "to": {
+              "x": 14,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 12,
+            "y": 6
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 221
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 120,
+          "mp": 100,
+          "nextAction": 221
+        }
+      ]
+    },
+    {
+      "tick": 221,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 12,
+              "y": 6
+            },
+            "to": {
+              "x": 13,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Trainee dodged!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "hitChance": 90,
+            "roll": "90.37",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 100,
+          "mp": 100,
+          "nextAction": 241
+        }
+      ]
+    },
+    {
+      "tick": 241,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1.1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1.1 * 1 = 9.9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 6,
+            "relPos": "SIDE",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 100,
+            "isReaction": false,
+            "nextAction": 241,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 114,
+          "mp": 100,
+          "nextAction": 321
+        }
+      ]
+    },
+    {
+      "tick": 321,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 321,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 91,
+          "mp": 100,
+          "nextAction": 341
+        }
+      ]
+    },
+    {
+      "tick": 341,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 341,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 108,
+          "mp": 100,
+          "nextAction": 421
+        }
+      ]
+    },
+    {
+      "tick": 421,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 421,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 82,
+          "mp": 100,
+          "nextAction": 441
+        }
+      ]
+    },
+    {
+      "tick": 441,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 441,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 102,
+          "mp": 100,
+          "nextAction": 521
+        }
+      ]
+    },
+    {
+      "tick": 500,
+      "events": [],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 82,
+          "mp": 100,
+          "nextAction": 541
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 102,
+          "mp": 100,
+          "nextAction": 521
+        }
+      ]
+    },
+    {
+      "tick": 521,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 521,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 73,
+          "mp": 100,
+          "nextAction": 541
+        }
+      ]
+    },
+    {
+      "tick": 541,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 541,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 96,
+          "mp": 100,
+          "nextAction": 621
+        }
+      ]
+    },
+    {
+      "tick": 621,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 4",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Blocked: 4 * 0.5 = 4",
+                "Final damage: 4"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 4,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 621,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 69,
+          "mp": 100,
+          "nextAction": 641
+        }
+      ]
+    },
+    {
+      "tick": 641,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Wild Boar dodged!",
+          "data": {
+            "targetId": "monster_6004_ewrmt",
+            "hitChance": 98,
+            "roll": "98.73",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 721,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: MISS",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%"
+              ],
+              "result": "MISS"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 1,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 721,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 68,
+          "mp": 100,
+          "nextAction": 741
+        }
+      ]
+    },
+    {
+      "tick": 741,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Wild Boar was knocked back!",
+          "data": {
+            "targetId": "monster_6004_ewrmt",
+            "from": {
+              "x": 14,
+              "y": 5
+            },
+            "to": {
+              "x": 15,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 15,
+              "y": 5
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 741,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 15,
+            "y": 5
+          },
+          "hp": 90,
+          "mp": 100,
+          "nextAction": 821
+        }
+      ]
+    },
+    {
+      "tick": 821,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 15,
+              "y": 5
+            },
+            "to": {
+              "x": 14,
+              "y": 6
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 90,
+          "mp": 100,
+          "nextAction": 841
+        }
+      ]
+    },
+    {
+      "tick": 841,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 3",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 0.77,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 0.77 * 1 = 6.93",
+                "After defense: 3",
+                "Final damage: 3"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 3,
+            "relPos": "SIDE",
+            "isCrit": false,
+            "isBlocked": true,
+            "hitChance": 100,
+            "isReaction": false,
+            "nextAction": 841,
+            "range": 1
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: MISS",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1.1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%"
+              ],
+              "result": "MISS"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 5
+            },
+            "damage": 1,
+            "relPos": "SIDE",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 90,
+            "isReaction": false,
+            "nextAction": 841,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 67,
+          "mp": 100,
+          "nextAction": 941
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 87,
+          "mp": 100,
+          "nextAction": 941
+        }
+      ]
+    },
+    {
+      "tick": 941,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 941,
+            "range": 1
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Trainee was knocked back!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 13,
+              "y": 5
+            },
+            "to": {
+              "x": 13,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 4
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 941,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 4
+          },
+          "hp": 58,
+          "mp": 100,
+          "nextAction": 1041
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 81,
+          "mp": 100,
+          "nextAction": 1041
+        }
+      ]
+    },
+    {
+      "tick": 1000,
+      "events": [],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 4
+          },
+          "hp": 58,
+          "mp": 100,
+          "nextAction": 1041
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 81,
+          "mp": 100,
+          "nextAction": 1041
+        }
+      ]
+    },
+    {
+      "tick": 1041,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 13,
+              "y": 4
+            },
+            "to": {
+              "x": 13,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Trainee dodged!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "hitChance": 85,
+            "roll": "92.29",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 58,
+          "mp": 100,
+          "nextAction": 1061
+        }
+      ]
+    },
+    {
+      "tick": 1061,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Wild Boar dodged!",
+          "data": {
+            "targetId": "monster_6004_ewrmt",
+            "hitChance": 98,
+            "roll": "98.50",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 1141,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Trainee was knocked back!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 13,
+              "y": 5
+            },
+            "to": {
+              "x": 13,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 4
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1141,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 4
+          },
+          "hp": 49,
+          "mp": 100,
+          "nextAction": 1161
+        }
+      ]
+    },
+    {
+      "tick": 1161,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 13,
+              "y": 4
+            },
+            "to": {
+              "x": 14,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 49,
+          "mp": 100,
+          "nextAction": 1181
+        }
+      ]
+    },
+    {
+      "tick": 1181,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1181,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 75,
+          "mp": 100,
+          "nextAction": 1241
+        }
+      ]
+    },
+    {
+      "tick": 1241,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1241,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 40,
+          "mp": 100,
+          "nextAction": 1281
+        }
+      ]
+    },
+    {
+      "tick": 1281,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1281,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 69,
+          "mp": 100,
+          "nextAction": 1341
+        }
+      ]
+    },
+    {
+      "tick": 1341,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1341,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 31,
+          "mp": 100,
+          "nextAction": 1381
+        }
+      ]
+    },
+    {
+      "tick": 1381,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1381,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 63,
+          "mp": 100,
+          "nextAction": 1441
+        }
+      ]
+    },
+    {
+      "tick": 1441,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Trainee was knocked back!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 14,
+              "y": 5
+            },
+            "to": {
+              "x": 14,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 4
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1441,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 4
+          },
+          "hp": 22,
+          "mp": 100,
+          "nextAction": 1481
+        }
+      ]
+    },
+    {
+      "tick": 1481,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 14,
+              "y": 4
+            },
+            "to": {
+              "x": 14,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 22,
+          "mp": 100,
+          "nextAction": 1501
+        }
+      ]
+    },
+    {
+      "tick": 1500,
+      "events": [],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 22,
+          "mp": 100,
+          "nextAction": 1501
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 63,
+          "mp": 100,
+          "nextAction": 1541
+        }
+      ]
+    },
+    {
+      "tick": 1501,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Wild Boar dodged!",
+          "data": {
+            "targetId": "monster_6004_ewrmt",
+            "hitChance": 98,
+            "roll": "98.73",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 1541,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1541,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 13,
+          "mp": 100,
+          "nextAction": 1601
+        }
+      ]
+    },
+    {
+      "tick": 1601,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1601,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 57,
+          "mp": 100,
+          "nextAction": 1641
+        }
+      ]
+    },
+    {
+      "tick": 1641,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: MISS",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%"
+              ],
+              "result": "MISS"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 5
+            },
+            "damage": 1,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1641,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 5
+          },
+          "hp": 12,
+          "mp": 100,
+          "nextAction": 1701
+        }
+      ]
+    },
+    {
+      "tick": 1701,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1701,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 51,
+          "mp": 100,
+          "nextAction": 1741
+        }
+      ]
+    },
+    {
+      "tick": 1741,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Trainee dodged!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "hitChance": 85,
+            "roll": "85.98",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 1801,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 14,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1801,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 45,
+          "mp": 100,
+          "nextAction": 1841
+        }
+      ]
+    },
+    {
+      "tick": 1841,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 6.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 4",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Blocked: 4 * 0.5 = 4",
+                "Final damage: 4"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Trainee was knocked back!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 14,
+              "y": 5
+            },
+            "to": {
+              "x": 14,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 4
+            },
+            "damage": 4,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 1841,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 14,
+            "y": 4
+          },
+          "hp": 8,
+          "mp": 100,
+          "nextAction": 1901
+        }
+      ]
+    },
+    {
+      "tick": 1901,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Trainee moved.",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 14,
+              "y": 4
+            },
+            "to": {
+              "x": 13,
+              "y": 5
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 8,
+          "mp": 100,
+          "nextAction": 1921
+        }
+      ]
+    },
+    {
+      "tick": 1921,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 10",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1.5,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1.5 * 1 = 13.5",
+                "After defense: 10",
+                "Final damage: 10"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Wild Boar was knocked back!",
+          "data": {
+            "targetId": "monster_6004_ewrmt",
+            "from": {
+              "x": 14,
+              "y": 6
+            },
+            "to": {
+              "x": 14,
+              "y": 7
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 7
+            },
+            "damage": 10,
+            "relPos": "FRONT",
+            "isCrit": true,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 1921,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 7
+          },
+          "hp": 35,
+          "mp": 100,
+          "nextAction": 1941
+        }
+      ]
+    },
+    {
+      "tick": 1941,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 2.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 2 (Range: 1). Result: false",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MOVE",
+          "msg": "Wild Boar moved.",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "from": {
+              "x": 14,
+              "y": 7
+            },
+            "to": {
+              "x": 14,
+              "y": 6
+            }
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 35,
+          "mp": 100,
+          "nextAction": 1961
+        }
+      ]
+    },
+    {
+      "tick": 1961,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "MISS",
+          "msg": "Trainee dodged!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "hitChance": 85,
+            "roll": "97.09",
+            "isReaction": false
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 2000,
+      "events": [],
+      "units": [
+        {
+          "id": "hero_Trainee_8q2gx",
+          "team": 0,
+          "pos": {
+            "x": 13,
+            "y": 5
+          },
+          "hp": 8,
+          "mp": 100,
+          "nextAction": 2021
+        },
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 35,
+          "mp": 100,
+          "nextAction": 2061
+        }
+      ]
+    },
+    {
+      "tick": 2021,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee targeted Wild Boar (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Trainee distance to Wild Boar is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 6",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Trainee",
+                "stats": {
+                  "attack": 9,
+                  "accuracy": 100,
+                  "critChance": 0.05,
+                  "critDamage": 1.5,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Wild Boar",
+                "stats": {
+                  "defense": 3,
+                  "dodge": 2,
+                  "blockChance": 0.05,
+                  "blockPower": 0.3
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 100 - 2 = 98%",
+                "Defense: 3 - 0 = 3",
+                "Base damage: 9 * 1 * 1 = 9",
+                "After defense: 6",
+                "Final damage: 6"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Trainee hit Wild Boar",
+          "data": {
+            "actorId": "hero_Trainee_8q2gx",
+            "targetId": "monster_6004_ewrmt",
+            "actorPos": {
+              "x": 13,
+              "y": 5
+            },
+            "targetPos": {
+              "x": 14,
+              "y": 6
+            },
+            "damage": 6,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 98,
+            "isReaction": false,
+            "nextAction": 2021,
+            "range": 1
+          },
+          "isInternal": false
+        }
+      ],
+      "units": [
+        {
+          "id": "monster_6004_ewrmt",
+          "team": 1,
+          "pos": {
+            "x": 14,
+            "y": 6
+          },
+          "hp": 29,
+          "mp": 100,
+          "nextAction": 2061
+        }
+      ]
+    },
+    {
+      "tick": 2061,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar targeted Trainee (Score: 1.0)",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar distance to Trainee is 1 (Range: 1). Result: true",
+          "data": {},
+          "isInternal": true
+        },
+        {
+          "type": "DEBUG",
+          "msg": "Damage Calculation: 9",
+          "data": {
+            "debug": {
+              "attacker": {
+                "name": "Wild Boar",
+                "stats": {
+                  "attack": 14,
+                  "accuracy": 90,
+                  "critChance": 0.02,
+                  "critDamage": 1.2,
+                  "armorPen": 0
+                }
+              },
+              "defender": {
+                "name": "Trainee",
+                "stats": {
+                  "defense": 5,
+                  "dodge": 5,
+                  "blockChance": 0.1,
+                  "blockPower": 0.5
+                }
+              },
+              "params": {
+                "dmgMult": 1,
+                "element": 0
+              },
+              "calculations": [
+                "Hit chance: 90 - 5 = 85%",
+                "Defense: 5 - 0 = 5",
+                "Base damage: 14 * 1 * 1 = 14",
+                "After defense: 9",
+                "Final damage: 9"
+              ],
+              "result": "HIT"
+            }
+          },
+          "isInternal": true
+        },
+        {
+          "type": "KNOCKBACK",
+          "msg": "Trainee was knocked back!",
+          "data": {
+            "targetId": "hero_Trainee_8q2gx",
+            "from": {
+              "x": 13,
+              "y": 5
+            },
+            "to": {
+              "x": 13,
+              "y": 4
+            }
+          },
+          "isInternal": false
+        },
+        {
+          "type": "ATTACK",
+          "msg": "Wild Boar hit Trainee",
+          "data": {
+            "actorId": "monster_6004_ewrmt",
+            "targetId": "hero_Trainee_8q2gx",
+            "actorPos": {
+              "x": 14,
+              "y": 6
+            },
+            "targetPos": {
+              "x": 13,
+              "y": 4
+            },
+            "damage": 9,
+            "relPos": "FRONT",
+            "isCrit": false,
+            "isBlocked": false,
+            "hitChance": 85,
+            "isReaction": false,
+            "nextAction": 2061,
+            "range": 1
+          },
+          "isInternal": false
+        },
+        {
+          "type": "DEATH",
+          "msg": "Trainee died",
+          "data": {
+            "target_id": "hero_Trainee_8q2gx"
+          },
+          "isInternal": false
+        }
+      ],
+      "units": []
+    },
+    {
+      "tick": 2161,
+      "events": [
+        {
+          "type": "ENGINE",
+          "msg": "[AI_TRACE] Wild Boar failed to find ENEMIES",
+          "data": {},
+          "isInternal": true
+        }
+      ],
+      "units": []
+    }
+  ]
+}

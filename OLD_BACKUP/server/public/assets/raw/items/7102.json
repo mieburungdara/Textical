@@ -1,0 +1,33 @@
+{
+  "id": 7102,
+  "version": 1,
+  "name": "Birch Shortbow",
+  "description": "Fast and reliable.",
+  "category": "WEAPON",
+  "baseValue": 750,
+  "rarity": "UNCOMMON",
+  "isTwoHanded": false,
+  "maxStack": 1,
+  "hardness": 1,
+  "minStr": 0,
+  "minToolTier": 0,
+  "toolTier": 0,
+  "elementalAffinity": 0,
+  "masteryClassId": null,
+  "masteryXpAmount": null,
+  "stats": [
+    {
+      "id": 148,
+      "itemId": 7102,
+      "statKey": "attack_damage",
+      "statValue": 35
+    },
+    {
+      "id": 149,
+      "itemId": 7102,
+      "statKey": "speed",
+      "statValue": 3
+    }
+  ],
+  "traits": []
+}
