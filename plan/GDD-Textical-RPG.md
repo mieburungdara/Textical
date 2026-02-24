@@ -676,22 +676,30 @@ The item system uses a layered approach to create depth and variety:
 5. **Durability Degradation (D):** Stat reduction based on equipment condition (0-100%)
 6. **Weather/Element Interaction (W):** Temporary stat changes based on weather or elemental affinities
 
-**Formula Perhitungan Stat Final dari Equipment:**
+**Formula Perhitungan Stat Final dari Equipment (Modular Approach):**
 
-Final Stat = (Base Stat + Affix Modifier) × (1 + Rarity Modifier) × (1 + Enhancement Bonus) × (Durability Modifier) × (1 + Weather/Element Bonus)
+The formula is designed for clarity, ease of debugging, and consistent game feel:
+
+```
+1. BaseTotal = Base Stat + Affix Flat Modifier
+2. ScaledBase = BaseTotal × Rarity Multiplier
+3. Enhanced = ScaledBase × Enhancement Multiplier
+4. DurabilityAdjusted = Enhanced × Durability Modifier
+5. Final = DurabilityAdjusted × Weather/Element Modifier
+```
 
 **Breakdown Komponen:**
 
-| Komponen | Deskripsi | Nilai | Contoh |
-|----------|-----------|-------|--------|
-| Base Stat (B) | Stat dasar item | Fixed per item type | Sword: 10 Attack |
-| Rarity Modifier (R) | Bonus rarity | +0-150% | Epic: +75% |
-| Enhancement Bonus (E) | Bonus enhancement | +5% per level | Level 10: +50% |
-| Durability Modifier (D) | Modifier ketahanan | 0.75 + (0.25 × DurabilityRatio) | Durability 50/100: 0.75 + (0.25 × 0.5) = 0.875 |
-| Weather/Element Bonus (W) | Bonus cuaca/elemen | ±0-25% | Rain: +20% Water Damage |
-| Affix Modifier (A) | Bonus afiks | Fixed per afiks | +5 Attack |
+| Langkah | Komponen | Deskripsi | Nilai | Contoh |
+|---------|----------|-----------|-------|--------|
+| 1 | Base Stat (B) | Stat dasar item | Fixed per item type | Sword: 10 Attack |
+| 1 | Affix Modifier (A) | Bonus afiks flat | Fixed per afiks | +5 Attack |
+| 2 | Rarity Modifier (R) | Bonus rarity | +0-150% | Epic: +75% |
+| 3 | Enhancement Bonus (E) | Bonus enhancement | +5% per level | Level 10: +50% |
+| 4 | Durability Modifier (D) | Modifier ketahanan | 0.75 + (0.25 × DurabilityRatio) | Durability 50/100: 0.75 + (0.25 × 0.5) = 0.875 |
+| 5 | Weather/Element Bonus (W) | Bonus cuaca/elemen | ±0-25% | Rain: +20% Water Damage |
 
-**Contoh Perhitungan:**
+**Contoh Perhitungan (Step-by-Step):**
 
 Item: Epic Sword (Base Attack = 10)
 - Rarity Modifier: +75%
@@ -700,10 +708,20 @@ Item: Epic Sword (Base Attack = 10)
 - Weather: Rain (+20% Water Damage)
 - Affix: +5 Attack
 
-**Rumus Perhitungan:**
--  Final Attack = (10 + 5) × (1 + 0.75) × (1 + 0.5) × 0.875 × (1 + 0.20)
--  Final Attack = 15 × 1.75 × 1.5 × 0.875 × 1.2
--  Final Attack = **41.34 (≈41 Attack)**
+```
+1. BaseTotal = 10 + 5 = 15
+2. ScaledBase = 15 × 1.75 = 26.25
+3. Enhanced = 26.25 × 1.5 = 39.375
+4. DurabilityAdjusted = 39.375 × 0.875 = 34.453125
+5. Final = 34.453125 × 1.2 = **41.34 (≈41 Attack)**
+```
+
+**Game Feel Philosophy:**
+This modular approach ensures:
+- Clear sense of progression with each enhancement level
+- Consistent scaling that feels rewarding without being overwhelming
+- Easy debugging and balance adjustments
+- Players can easily understand how each component contributes to final stats
 
 **Item Stats:**
 - Base stats (attack/defense)
