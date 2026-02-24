@@ -740,10 +740,29 @@ This modular approach ensures:
 
 **Total Power Scaling Limit: <25× from level 1 to 100**
 
-Power scaling should be carefully managed to maintain game balance. A simulation of level 1-100 progression shows:
-- **Level 1**: ~19.5 Attack Power
-- **Level 100**: ~271 Attack Power  
-- **Total Scaling**: ~13.9× (well within acceptable range)
+Power scaling should be carefully managed to maintain game balance. A comprehensive simulation of level 1-100 progression confirms our design is well within the acceptable range:
+
+#### Scaling Analysis
+```
+Tier Difference (Weapon Base Attack):
+- Tier 1 (Level 1): 10 Attack
+- Tier 4 (Level 100): 40 Attack
+- Tier Difference: 4×
+
+Stat Multiplier Difference (STR to Attack):
+- Level 1: STR = 20, Attack Multiplier = 1.20
+- Level 100: STR = 317, Attack Multiplier = 4.17
+- Stat Difference: 3.4×
+
+Total Power Difference:
+- Level 1 Total Attack Power: ~19.5
+- Level 100 Total Attack Power: ~271
+- Total Scaling: ~13–15× (well within acceptable range)
+
+Balance Implication:
+- 1 player level 100 ≈ 13 player level 1
+- Still allows for meaningful progression without breaking game balance
+```
 
 If scaling exceeds 25×, it typically leads to:
 - DPS that becomes too powerful
