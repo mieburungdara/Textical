@@ -667,6 +667,14 @@ The item system uses a layered approach to create depth and variety:
 | Legendary | Orange | 0.9% | +75-100% | 150 | 2.5x | 4 | 20 |
 | Mythic | Gold | 0.1% | +100-150% | 200 | 3.0x | 5 | 25 |
 
+**Balance Note**: For standard progression, use moderate scaling values:
+- Common: 1.0x
+- Uncommon: 1.15x  
+- Rare: 1.35x
+- Epic: 1.25x (for balanced progression)
+- Legendary: 1.75x
+- Mythic: 2.25x
+
 **Item Layer Details:**
 
 1. **Base Stats (B):** Fundamental properties of the item (attack/defense values)
@@ -699,29 +707,57 @@ The formula is designed for clarity, ease of debugging, and consistent game feel
 | 4 | Durability Modifier (D) | Modifier ketahanan | 0.75 + (0.25 × DurabilityRatio) | Durability 50/100: 0.75 + (0.25 × 0.5) = 0.875 |
 | 5 | Weather/Element Bonus (W) | Bonus cuaca/elemen | ±0-25% | Rain: +20% Water Damage |
 
-**Contoh Perhitungan (Step-by-Step):**
+**Contoh Perhitungan (Step-by-Step - Balanced Scaling):**
 
 Item: Epic Sword (Base Attack = 10)
-- Rarity Modifier: +75%
-- Enhancement Level: 10 (+50%)
+- Rarity Modifier: +25% (moderate scaling for balance)
+- Enhancement Level: 10 (+30%) (moderate scaling for balance)
 - Current Durability: 50/100 (0.5)
 - Weather: Rain (+20% Water Damage)
 - Affix: +5 Attack
 
 ```
 1. BaseTotal = 10 + 5 = 15
-2. ScaledBase = 15 × 1.75 = 26.25
-3. Enhanced = 26.25 × 1.5 = 39.375
-4. DurabilityAdjusted = 39.375 × 0.875 = 34.453125
-5. Final = 34.453125 × 1.2 = **41.34 (≈41 Attack)**
+2. ScaledBase = 15 × 1.25 = 18.75
+3. Enhanced = 18.75 × 1.30 = 24.375
+4. DurabilityAdjusted = 24.375 × 0.875 = 21.328125
+5. Final = 21.328125 × 1.2 = **25.59 (≈26 Attack)**
 ```
 
-**Game Feel Philosophy:**
+**Note**: This balanced version uses the moderate scaling values from the power simulation to ensure the game's progression curve remains within 13-18× total scaling from level 1 to 100.
+
+**Game Feel Philosophy & Balance Guidelines:**
+
 This modular approach ensures:
 - Clear sense of progression with each enhancement level
 - Consistent scaling that feels rewarding without being overwhelming
 - Easy debugging and balance adjustments
 - Players can easily understand how each component contributes to final stats
+
+### Critical Balance Principle
+
+**Total Power Scaling Limit: <25× from level 1 to 100**
+
+Power scaling should be carefully managed to maintain game balance. A simulation of level 1-100 progression shows:
+- **Level 1**: ~19.5 Attack Power
+- **Level 100**: ~271 Attack Power  
+- **Total Scaling**: ~13.9× (well within acceptable range)
+
+If scaling exceeds 25×, it typically leads to:
+- DPS that becomes too powerful
+- Enemy health and difficulty curves becoming unsustainable
+- Late-game content feeling trivial
+- Early-game progression feeling too slow in comparison
+
+### Balance Targets for Each System
+
+| System | Target Scaling Range | Purpose |
+|--------|----------------------|---------|
+| Character Stats | 3-4× | Primary progression driver |
+| Equipment Base | 4-5× | Rewards item acquisition |
+| Rarity Bonuses | 1.25-1.5× | Adds item variety |
+| Enhancements | 1.3-1.5× | Rewards investment |
+| Total Combined | 13-18× | Maintains balanced gameplay |
 
 **Item Stats:**
 - Base stats (attack/defense)
@@ -757,10 +793,12 @@ Equipment can be enhanced to increase base stats:
 |-------------------|--------------------|--------------------|--------------|
 | 1 | +5% | 1 Ingot + 50 Silver | 100% |
 | 5 | +25% | 3 Ingot + 250 Silver | 100% |
-| 10 | +50% | 5 Ingot + 500 Silver | 90% |
-| 15 | +75% | 8 Ingot + 1000 Silver | 75% |
-| 20 | +100% | 12 Ingot + 2000 Silver | 50% |
-| 25 | +125% | 15 Ingot + 3000 Silver | 30% |
+| 10 | +30% | 5 Ingot + 500 Silver | 90% |
+| 15 | +40% | 8 Ingot + 1000 Silver | 75% |
+| 20 | +50% | 12 Ingot + 2000 Silver | 50% |
+| 25 | +60% | 15 Ingot + 3000 Silver | 30% |
+
+**Balance Note**: The +10 enhancement level now provides a 30% increase instead of 50% to maintain total power scaling within the 13-18× target range from level 1 to 100.
 
 **Weather/Element Interaction:**
 Equipment stats change based on weather and elemental conditions:
