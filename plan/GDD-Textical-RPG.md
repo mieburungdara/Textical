@@ -959,6 +959,20 @@ Drop Table: [Items]
 - 4 symmetric regions, each with unique characteristics
 - Each region has its own ecosystem and resources
 
+**Map Configuration File:** `plan/maps.json`
+The world map data is stored in a JSON file with 6 terrain types:
+
+| Terrain Type | Traversal Method | Description |
+|--------------|------------------|-------------|
+| WATER | BOAT | Ocean areas - only accessible by boat |
+| RED | WALK | Red terrain (e.g., mountains, lava) - accessible on foot |
+| GREEN | WALK | Green terrain (e.g., forests, plains) - accessible on foot |
+| YELLOW | WALK | Yellow terrain (e.g., deserts, savannas) - accessible on foot |
+| BLUE | WALK | Blue terrain (e.g., swamps, wetlands) - accessible on foot |
+| WHITE | WALK | White terrain (e.g., snow, ice) - accessible on foot |
+
+Each terrain type has an array of coordinate points that define its boundaries within the 69x69 grid world.
+
 ### 9.2 Regions
 
 | Region | Theme | Resources |
