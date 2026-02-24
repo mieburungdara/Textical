@@ -678,7 +678,7 @@ The item system uses a layered approach to create depth and variety:
 
 **Formula Perhitungan Stat Final dari Equipment:**
 
-Final Stat = Base Stat × (1 + Rarity Modifier) × (1 + Enhancement Bonus) × (Durability Modifier) × (1 + Weather/Element Bonus) + Affix Modifier
+Final Stat = (Base Stat + Affix Modifier) × (1 + Rarity Modifier) × (1 + Enhancement Bonus) × (Durability Modifier) × (1 + Weather/Element Bonus)
 
 **Breakdown Komponen:**
 
@@ -701,9 +701,9 @@ Item: Epic Sword (Base Attack = 10)
 - Affix: +5 Attack
 
 **Rumus Perhitungan:**
--  Final Attack = 10 × (1 + 0.75) × (1 + 0.5) × 0.875 × (1 + 0.20) + 5
--  Final Attack = 10 × 1.75 × 1.5 × 0.875 × 1.2 + 5
--  Final Attack = 27.5625 + 5 = **32.56 (≈33 Attack)**
+-  Final Attack = (10 + 5) × (1 + 0.75) × (1 + 0.5) × 0.875 × (1 + 0.20)
+-  Final Attack = 15 × 1.75 × 1.5 × 0.875 × 1.2
+-  Final Attack = **41.34 (≈41 Attack)**
 
 **Item Stats:**
 - Base stats (attack/defense)
