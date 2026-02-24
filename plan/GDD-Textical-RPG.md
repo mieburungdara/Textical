@@ -787,18 +787,25 @@ Affixes are special properties that add unique effects to equipment:
 | Special | Chance to Stun on Hit, Life Leech | Legendary+ |
 
 **Enhancement System:**
-Equipment can be enhanced to increase base stats:
+Equipment can be enhanced up to level 10 for balanced progression:
 
 | Enhancement Level | Base Stat Increase | Materials Required | Success Rate |
 |-------------------|--------------------|--------------------|--------------|
 | 1 | +5% | 1 Ingot + 50 Silver | 100% |
-| 5 | +25% | 3 Ingot + 250 Silver | 100% |
-| 10 | +30% | 5 Ingot + 500 Silver | 90% |
-| 15 | +40% | 8 Ingot + 1000 Silver | 75% |
-| 20 | +50% | 12 Ingot + 2000 Silver | 50% |
-| 25 | +60% | 15 Ingot + 3000 Silver | 30% |
+| 2 | +10% | 2 Ingot + 100 Silver | 100% |
+| 3 | +15% | 3 Ingot + 150 Silver | 100% |
+| 4 | +20% | 4 Ingot + 200 Silver | 100% |
+| 5 | +25% | 5 Ingot + 250 Silver | 100% |
+| 6 | +26% | 6 Ingot + 350 Silver | 95% |
+| 7 | +27% | 7 Ingot + 450 Silver | 90% |
+| 8 | +28% | 8 Ingot + 550 Silver | 85% |
+| 9 | +29% | 9 Ingot + 650 Silver | 80% |
+| 10 | +30% | 10 Ingot + 800 Silver | 75% |
 
-**Balance Note**: The +10 enhancement level now provides a 30% increase instead of 50% to maintain total power scaling within the 13-18× target range from level 1 to 100.
+**Balance Design**:
+- First 5 levels: Linear +5% per level with 100% success rate (easy to reach)
+- Levels 6-10: Diminishing returns (only +1% per level) with increasing materials and decreasing success rates
+- Max +30% total enhancement ensures balanced scaling within the 13-18× total power range
 
 **Weather/Element Interaction:**
 Equipment stats change based on weather and elemental conditions:
