@@ -663,9 +663,9 @@ The item system uses a layered approach to create depth and variety:
 | Common | Gray | 60% | +0-10% | 50 | 1.0x | 0 | 0 |
 | Uncommon | Green | 25% | +10-25% | 75 | 1.2x | 1 | 5 |
 | Rare | Blue | 10% | +25-50% | 100 | 1.5x | 2 | 10 |
-| Epic | Purple | 4% | +50-75% | 125 | 2.0x | 3 | 15 |
-| Legendary | Orange | 0.9% | +75-100% | 150 | 2.5x | 4 | 20 |
-| Mythic | Gold | 0.1% | +100-150% | 200 | 3.0x | 5 | 25 |
+| Epic | Purple | 4% | +50-75% | 125 | 2.0x | 3 | 10 |
+| Legendary | Orange | 0.9% | +75-100% | 150 | 2.5x | 4 | 10 |
+| Mythic | Gold | 0.1% | +100-150% | 200 | 3.0x | 5 | 10 |
 
 **Balance Note**: For standard progression, use moderate scaling values:
 - Common: 1.0x
@@ -674,6 +674,8 @@ The item system uses a layered approach to create depth and variety:
 - Epic: 1.25x (for balanced progression)
 - Legendary: 1.75x
 - Mythic: 2.25x
+
+**Enhancement Cap**: All rarities now cap at level 10 enhancement to maintain balanced power scaling across all equipment tiers.
 
 **Item Layer Details:**
 
