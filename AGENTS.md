@@ -171,6 +171,7 @@ Located in `.kilocode/rules/`:
 - `dry_principle.md` - DRY principle
 - `documentation_governance.md` - Documentation rules
 - `tick_based_combat.md` - Combat system rules
+- `game_data_management.md` - JSON vs Database rules
 
 ---
 
