@@ -1,21 +1,23 @@
-client/.godot/**
-client\.godot\**
-server\node_modules\**
+# Godot
+godot/.godot/**
+godot/.godot/**
+godot/addons/**
+godot/*.import
+godot/*.log
+
+# Server
 server/node_modules/**
-.gemini/
-gha-creds-*.json
-client/src/ui/CombatScreen.gd
-replays/*
-node_modules/**
-node_modules/*
-godot-mcp/*
-godot-mcp
-*.log
+server/dist/**
 server/prisma/dev.db
 server/prisma/dev.db-journal
+
+# Root
+.gemini/
+gha-creds-*.json
+replays/*
+*.log
+node_modules
 .kilocode
-godot-mcp-cli
-node_modules
-node_modules
+
+# OLD
 #OLD_BACKUP/
-node_modules

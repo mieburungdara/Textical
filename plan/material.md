@@ -1,6 +1,6 @@
 # Material Documentation - Textical RPG
 
-**Document Version:** 1.8
+**Document Version:** 1.9
 **Last Updated:** 2026-02-25
 **Related GDD:** [GDD-Textical-RPG.md](./GDD-Textical-RPG.md)
 
@@ -195,14 +195,14 @@ Materials are used in various crafting categories.
 
 ### Quality Tiers Definition
 
-Materials in Textical RPG have three quality tiers that affect their properties and crafting effectiveness:
+Materials in Textical RPG have quality tiers that affect their properties and crafting effectiveness:
 
-| Quality Tier | Color | Description | Value Multiplier |
-|--------------|-------|-------------|------------------|
-| Low | Brown | Imperfect, lower-quality material with impurities. | 0.8x |
-| Normal | Gray | Standard quality material suitable for most purposes. | 1.0x |
-| High | Blue | Premium quality material with exceptional properties. | 1.25x |
-| Pristine | Gold | Perfect, flawless material of the highest quality. Extremely rare. | 1.5x |
+| Quality Tier | Color | Stars | Description | Value Multiplier |
+|--------------|-------|-------|-------------|------------------|
+| Low | 🟤 Brown | ✶ | Imperfect, lower-quality material with impurities. | 0.8x |
+| Normal | ⬜ Gray | ✶✶ | Standard quality material suitable for most purposes. | 1.0x |
+| High | 🔵 Blue | ✶✶✶ | Premium quality material with exceptional properties. | 1.25x |
+| Pristine | 🟡 Gold | ✶✶✶✶ | Perfect, flawless material of the highest quality. Extremely rare. | 1.5x |
 
 ### Quality Effects on Crafting Results
 
@@ -310,14 +310,14 @@ Accounting for quality tier drop rates:
 
 ## Material Rarity Tiers
 
-| Rarity | Color | Drop Rate | Value Multiplier | GDD Link |
-|--------|-------|-----------|------------------|----------|
-| Common | Gray | 60% | 1.0x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
-| Uncommon | Green | 25% | 1.15x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
-| Rare | Blue | 10% | 1.35x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
-| Epic | Purple | 4% | 1.25x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
-| Legendary | Orange | 0.9% | 1.75x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
-| Mythic | Gold | 0.1% | 2.25x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Rarity | Color | Stars | Drop Rate | Value Multiplier | GDD Link |
+|--------|-------|-------|-----------|------------------|----------|
+| Common | ⬜ Gray | ✶ | 60% | 1.0x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Uncommon | 🟢 Green | ✶✶ | 25% | 1.15x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Rare | 🔵 Blue | ✶✶✶ | 10% | 1.35x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Epic | 🟣 Purple | ✶✶✶✶ | 4% | 1.25x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Legendary | 🟠 Orange | ✶✶✶✶✶ | 0.9% | 1.75x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
+| Mythic | 🟡 Gold | ✶✶✶✶✶✶ | 0.1% | 2.25x | [Section 7.2 Equipment Quality](./GDD-Textical-RPG.md#72-equipment-quality--layered-stat-system) |
 
 ---
 
@@ -892,6 +892,148 @@ Recipes unlock through a combination of skill level, quest completion, and mater
 4. **Economic Sink:** Enhancement and repair systems create continuous material demand
 5. **Progressive Difficulty:** Higher-level enemies drop more valuable materials
 
+---
+
+## Regional Material Specialization Bonuses
+
+Each region provides specialization bonuses that encourage players to focus their gathering efforts in specific areas.
+
+### Region Specialization System
+
+| Region | Primary Material | Specialization Bonus | Faction Bonus | Equipment Bonus | GDD Link |
+|--------|------------------|---------------------|---------------|-----------------|----------|
+| Frost Peaks | Ore | +25% mining yield | +15% (Frost Kingdom) | +10% armor crafting efficiency | [Section 4.5 Faction System](./GDD-Textical-RPG.md#45-faction-system) |
+| Murk Bog | Hide | +25% hunting yield | +15% (Bog Empire) | +10% leather crafting efficiency | [Section 4.5 Faction System](./GDD-Textical-RPG.md#45-faction-system) |
+| Sun Wastes | Herb | +25% herb gathering yield | +15% (Sun Sultanate) | +10% alchemy efficiency | [Section 4.5 Faction System](./GDD-Textical-RPG.md#45-faction-system) |
+| Verdant Wilds | Wood | +25% wood gathering yield | +15% (Forest Covenant) | +10% woodworking efficiency | [Section 4.5 Faction System](./GDD-Textical-RPG.md#45-faction-system) |
+
+### Specialization Stacking Rules
+
+- Base regional bonus: +25%
+- Faction bonus: +15% (stacks additively)
+- Achievement bonus: +5-15% (varies by achievement)
+- Total maximum bonus: +55%
+
+### Specialization Unlocks
+
+| Player Level | Unlocked Specialization | Effect |
+|--------------|------------------------|--------|
+| 1-9 | None | Base gathering rates |
+| 10-14 | Basic Specialization | +10% regional yield |
+| 15-19 | Intermediate Specialization | +15% regional yield |
+| 20-29 | Advanced Specialization | +20% regional yield |
+| 30+ | Master Specialization | +25% regional yield |
+
+---
+
+## Material Set Bonuses for Crafting
+
+Crafting with specific material combinations provides additional bonuses beyond individual item stats.
+
+### Ore/Ingot Set Bonuses
+
+| Set Name | Materials Required | Set Bonus | GDD Link |
+|----------|-------------------|-----------|----------|
+| Iron Set (2) | 10 Ingot | +5% ATK | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Iron Set (4) | 25 Ingot | +10% ATK, +5% DEF | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Steel Set (2) | 15 Steel Ingot | +8% ATK | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Steel Set (4) | 35 Steel Ingot | +15% ATK, +8% DEF | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Mithril Set (2) | 20 Mithril Ingot | +12% ATK, +5% SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Mithril Set (4) | 50 Mithril Ingot | +20% ATK, +15% DEF, +10% SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Wood/Plank Set Bonuses
+
+| Set Name | Materials Required | Set Bonus | GDD Link |
+|----------|-------------------|-----------|----------|
+| Timber Set (2) | 10 Plank | +5% MAG | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Timber Set (4) | 25 Plank | +10% MAG, +5% MP | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Hardwood Set (2) | 15 Hardened Plank | +8% MAG, +5% RANGE | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Hardwood Set (4) | 35 Hardened Plank | +15% MAG, +10% MP, +8% RANGE | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Ancient Set (2) | 20 Ancient Wood | +12% MAG, +8% CRIT | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Ancient Set (4) | 50 Ancient Wood | +20% MAG, +15% MP, +10% CRIT | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Leather Set Bonuses
+
+| Set Name | Materials Required | Set Bonus | GDD Link |
+|----------|-------------------|-----------|----------|
+| Leather Set (2) | 10 Leather | +5% DEF | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Leather Set (4) | 25 Leather | +10% DEF, +5% EVADE | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Enchanted Set (2) | 15 Enchanted Leather | +8% DEF, +5% SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Enchanted Set (4) | 35 Enchanted Leather | +15% DEF, +10% EVADE, +5% SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Dragon Scale Set (2) | 20 Dragon Scale | +12% DEF, +8% HP | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Dragon Scale Set (4) | 50 Dragon Scale | +20% DEF, +15% HP, +10% All RES | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Essence Set Bonuses
+
+| Set Name | Materials Required | Set Bonus | GDD Link |
+|----------|-------------------|-----------|----------|
+| Essence Set (2) | 10 Essence | +5% MP | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Essence Set (4) | 25 Essence | +10% MP, +5% CAST SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Pure Set (2) | 15 Pure Essence | +8% MP, +8% CAST SPD | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Pure Set (4) | 35 Pure Essence | +15% MP, +15% CAST SPD, +5% All DMG | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Arcane Set (2) | 20 Arcane Dust | +12% MP, +10% All DMG | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Arcane Set (4) | 50 Arcane Dust | +20% MP, +15% All DMG, +10% CRIT | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+---
+
+## Material Conversion System
+
+The material conversion system allows players to transform excess materials into different types, providing flexibility in resource management.
+
+### Basic Conversion Recipes
+
+| Input Material | Output Material | Conversion Ratio | Cost (Silver) | Unlock Level | GDD Link |
+|----------------|-----------------|------------------|---------------|--------------|----------|
+| 3 Ore | 1 Wood | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Ore | 1 Hide | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Ore | 1 Herb | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Wood | 1 Ore | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Wood | 1 Hide | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Wood | 1 Herb | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Hide | 1 Ore | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Hide | 1 Wood | 3:1 | 5 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Hide | 1 Herb | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Herb | 1 Ore | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Herb | 1 Wood | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Herb | 1 Hide | 3:1 | 8 | 1 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Refined Material Conversion
+
+| Input Material | Output Material | Conversion Ratio | Cost (Silver) | Unlock Level | GDD Link |
+|----------------|-----------------|------------------|---------------|--------------|----------|
+| 3 Ingot | 1 Plank | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Ingot | 1 Leather | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Ingot | 1 Essence | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Plank | 1 Ingot | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Plank | 1 Leather | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Plank | 1 Essence | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Leather | 1 Ingot | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Leather | 1 Plank | 3:1 | 15 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Leather | 1 Essence | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Essence | 1 Ingot | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Essence | 1 Plank | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| 3 Essence | 1 Leather | 3:1 | 20 | 10 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Quality Conversion
+
+Materials can be converted to different quality tiers:
+
+| Input Quality | Output Quality | Conversion Ratio | Success Rate | Cost (Silver) | GDD Link |
+|---------------|---------------|-----------------|-------------|---------------|----------|
+| Low | Normal | 2:1 | 100% | 25 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Normal | High | 3:1 | 75% | 50 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| High | Pristine | 4:1 | 50% | 100 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+| Pristine | Legendary | 5:1 | 25% | 250 | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
+
+### Conversion Efficiency Bonuses
+
+| Conversion Level | Bonus Effect | Unlock Requirement |
+|------------------|--------------|-------------------|
+| Apprentice Converter | +5% output yield | Complete "Material Basics" tutorial |
+| Journeyman Converter | +10% output yield | Complete 50 conversions |
+| Expert Converter | +15% output yield | Complete 200 conversions |
+| Master Converter | +20% output yield | Complete 500 conversions |
+
 ### Balance Targets
 
 | Metric | Target | Current Status | GDD Link |
@@ -1270,6 +1412,7 @@ The quest and achievement system is carefully balanced to:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.9 | 2026-02-25 | Added Hide gathering mechanics (Hunting Grounds), added hunting tools to tool requirements, updated gathering skills to include Hide, added Regional Material Specialization Bonuses section, added Material Set Bonuses for Crafting section, added Material Conversion System, fixed duplicate material IDs in Appendix, added new material IDs (MAT_401-404) |
 | 1.8 | 2026-02-25 | Fixed version inconsistencies, added intermediate material IDs (MAT_201-304), added Material Decay System, Material Fusion System, Material Puzzles & Challenges, Weather Effects on Gathering, and Material Research System |
 | 1.7 | 2026-02-25 | Added Material-Focused Quests & Achievements section: Created material collection quests with varying difficulty levels, designed material gathering achievements with multiple tiers, implemented daily/weekly material challenges with rotating objectives, included quest rewards and achievement tiers with appropriate incentives, and added economic impact analysis of the quest and achievement system |
 | 1.7 | 2026-02-25 | Added Material-Focused Quests & Achievements section: Created material collection quests with varying difficulty levels, designed material gathering achievements with multiple tiers, implemented daily/weekly material challenges with rotating objectives, included quest rewards and achievement tiers with appropriate incentives, and added economic impact analysis of the quest and achievement system |
@@ -1400,6 +1543,6 @@ Players can research materials to unlock new crafting recipes and gathering bonu
 | 16-20 | +20% yield | +20% success rate | Master material bonuses | [Section 7.3 Crafting System](./GDD-Textical-RPG.md#73-crafting-system) |
 ---
 
-*Document Version: 1.7*  
+*Document Version: 1.9*  
 *Created for: Textical RPG Project*  
 *Engine: Godot 4.5*
