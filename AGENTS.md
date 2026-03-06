@@ -7,20 +7,33 @@ This file contains guidelines for agentic coding agents operating in this reposi
 ## Project Overview
 
 This repository contains **Textical**, a Godot-based RPG game with:
-- **Server**: TypeScript/Node.js MCP server for AI editors
-- **Client**: Godot 4.x game engine with GDScript
+- **Client**: Godot 4.x game project (GDScript, scenes) in `godot/`
+- **Game Server**: TypeScript/Node.js server handling combat simulation, player data, and multiplayer in `server/`
+- **MCP Server**: TypeScript MCP server for AI editors (Claude, Cursor) in `godot_mcp/`
 - **Protocol**: WebSocket-based MCP (Model Context Protocol)
 
 **Key directories:**
-- `godot/` - Godot 4.x game project (GDScript, scenes)
-- `godot_mcp/` - TypeScript MCP server (ESM modules)
+- `godot/` - Godot 4.x game project with MCP plugin in addons/godot_mcp/
+- `server/` - Game server for combat simulation and player data
+- `godot_mcp/` - MCP server for AI integration
 
 ---
 
 ## Build Commands
 
-### Server (TypeScript)
+### Game Server (TypeScript)
+```bash
+cd server
+npm install                  # Install dependencies
+npm run build                # Build TypeScript
+npm run dev                  # Development mode (watch + auto-rebuild)
+npm start                    # Start server (port 3000)
+npm test                     # Run combat tests
+npm run db:migrate           # Run database migrations
+npm run db:seed              # Seed initial data
+```
 
+### MCP Server (TypeScript)
 ```bash
 cd godot_mcp
 npm run build              # Build TypeScript
@@ -34,16 +47,10 @@ npm run test:all          # Run all tests including runtime
 
 ```bash
 # By tool name
-node tests/tools.test.js --tool=create_node
-node tests/tools.test.js --tool=list_nodes
+cd godot_mcp && node tests/tools.test.js --tool=create_node
 
-# By category
-node tests/tools.test.js --category=node
-node tests/tools.test.js --category=script
-node tests/tools.test.js --category=scene
-
-# Verbose output
-node tests/tools.test.js --verbose
+# Combat simulation tests
+cd server && npm test
 ```
 
 **Prerequisites:** Godot editor running with MCP plugin enabled, WebSocket on port 9080, run `npm run build` first.
@@ -154,6 +161,31 @@ Use **tick-based** system (not real-time) for combat logic. Use game tick counte
 
 ---
 
+## Game Server Features
+
+### Server Responsibilities
+- **Combat Simulation**: Handles turn-based combat using tick-based system
+- **Player Data**: Manages player accounts, inventory, quests, and progression
+- **Multiplayer**: Socket.IO for real-time communication
+- **Database**: Prisma ORM with SQLite
+- **Authentication**: Player session management
+
+### Database Models
+```
+- Player (id, name, classType, level, experience, gold)
+- Inventory (playerId, itemId, quantity)
+- QuestProgress (playerId, questId, status, progress)
+- CombatLog (playerId, enemyTeam, playerTeam, result, logs)
+```
+
+### API Endpoints
+- `/api/status` - Server status and player count
+- `/api/players` - Player management
+- `/api/combat` - Combat simulation
+- WebSocket events for real-time communication
+
+---
+
 ## Telegram Reporting
 
 When completing significant tasks:
@@ -169,6 +201,8 @@ node notify.js last_report.md
 - MCP Server tests: `godot_mcp/tests/`
 - Godot plugin: `godot/addons/godot_mcp/`
 - Godot project: `godot/`
+- Game server TypeScript: `server/src/`
+- Game server tests: `server/tests/`
 
 ## Additional Rules
 

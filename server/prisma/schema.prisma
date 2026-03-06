@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Player model
+model Player {
+  id          String      @id @default(uuid())
+  name        String
+  classType   String
+  level       Int         @default(1)
+  experience  Int         @default(0)
+  gold        Int         @default(0)
+  inventory   Inventory[]
+  quests      QuestProgress[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// Inventory
+model Inventory {
+  id        String   @id @default(uuid())
+  playerId  String
+  itemId    String
+  quantity  Int      @default(1)
+  player    Player   @relation(fields: [playerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([playerId])
+}
+
+// Quest progress
+model QuestProgress {
+  id          String   @id @default(uuid())
+  playerId    String
+  questId     String
+  status      String   @default("started")
+  progress    Json
+  player      Player   @relation(fields: [playerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([playerId])
+}
+
+// Combat history
+model CombatLog {
+  id          String   @id @default(uuid())
+  playerId    String
+  enemyTeam   Json
+  playerTeam  Json
+  result      String
+  logs        Json
+  timestamp   DateTime @default(now())
+
+  @@index([playerId])
+}

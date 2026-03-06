@@ -4,11 +4,17 @@ godot/addons/**
 godot/*.import
 godot/*.log
 
-# Godot MCP Server
+# Godot MCP Server (for AI integration)
 godot_mcp/node_modules/**
 godot_mcp/dist/**
 godot_mcp/prisma/dev.db
 godot_mcp/prisma/dev.db-journal
+
+# Game Server
+server/node_modules/**
+server/dist/**
+server/prisma/dev.db
+server/prisma/dev.db-journal
 
 # Root
 .gemini/
