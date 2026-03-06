@@ -10,6 +10,7 @@
  */
 
 import { Unit } from './TickCost.js';
+import { DEFAULT_GRID_STATS } from '../templates/stats/GridStats.js';
 
 // ========== HERO CLASSES ==========
 
@@ -411,6 +412,11 @@ export interface UnitTemplate {
   goldReward?: number;
   isBoss?: boolean;
   isHostile?: boolean;
+  
+  // Grid stats (optional for backward compatibility)
+  attackRange?: number;
+  moveRange?: number;
+  minRange?: number;
 }
 
 /**
@@ -478,6 +484,13 @@ export function createUnitFromTemplate(
     // Secondary Stats - Offense
     attackSpeed: 1.0, // Default 100%
     lifeSteal: 0, // Default 0
+    spellVamp: 0, // Default 0
+    castSpeed: 100, // Default 100 (1.0x)
+    
+    // Grid Stats
+    attackRange: template.attackRange ?? DEFAULT_GRID_STATS.attackRange,
+    moveRange: template.moveRange ?? DEFAULT_GRID_STATS.moveRange,
+    minRange: template.minRange ?? DEFAULT_GRID_STATS.minRange,
   };
 }
 

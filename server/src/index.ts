@@ -26,16 +26,16 @@ const playerManager = new PlayerManager(db);
 const combatSimulator = new CombatSimulator();
 
 // Socket.IO connection handler
-io.on('connection', (socket) => {
+io.on('connection', (socket: any) => {
   console.log(`Player connected: ${socket.id}`);
 
   // Combat simulation
-  socket.on('combat:simulate', async (data) => {
+  socket.on('combat:simulate', async (data: any) => {
     try {
       const { playerTeam, enemyTeam } = data;
       const result = await combatSimulator.simulate(playerTeam, enemyTeam);
       socket.emit('combat:result', result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Combat simulation error:', error);
       socket.emit('combat:error', error.message);
     }
@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
 });
 
 // REST API endpoints
-app.get('/api/status', (req, res) => {
+app.get('/api/status', (req: express.Request, res: express.Response) => {
   res.json({
     status: 'online',
     players: io.sockets.sockets.size,

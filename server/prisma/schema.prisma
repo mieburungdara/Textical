@@ -40,7 +40,7 @@ model QuestProgress {
   playerId    String
   questId     String
   status      String   @default("started")
-  progress    Json
+  progress    String
   player      Player   @relation(fields: [playerId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -52,10 +52,10 @@ model QuestProgress {
 model CombatLog {
   id          String   @id @default(uuid())
   playerId    String
-  enemyTeam   Json
-  playerTeam  Json
+  enemyTeam   String
+  playerTeam  String
   result      String
-  logs        Json
+  logs        String
   timestamp   DateTime @default(now())
 
   @@index([playerId])

@@ -26,3 +26,5 @@ node_modules
 
 # OLD
 #OLD_BACKUP/
+node_modules
+server/node_modules
