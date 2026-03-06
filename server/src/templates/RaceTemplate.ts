@@ -36,6 +36,18 @@ export interface RaceStatModifier {
   evasion: number;  // Percentage bonus
 }
 
+// ========== RACE GROWTH RATES ==========
+// Exponential growth per level: stat = base * growthRate^(level-1)
+// Each race has unique growth rates for each stat
+
+export interface RaceGrowthRates {
+  vit: number;      // HP growth per level (e.g., 1.03 = +3%)
+  attack: number;   // STR/ATK growth per level
+  defense: number; // DEF growth per level
+  dex: number;      // DEX/speed growth per level
+  magic: number;    // INT/magic growth per level
+}
+
 export interface RaceTemplate {
   id: string;
   name: string;
@@ -43,6 +55,10 @@ export interface RaceTemplate {
   
   // Stat modifiers (added on top of class stats)
   statModifiers: RaceStatModifier;
+  
+  // Growth rates per level (exponential)
+  // stat = base * growthRate^(level-1)
+  growthRates: RaceGrowthRates;
   
   // Special abilities/bonuses
   bonusAbilities: string[];
@@ -79,33 +95,46 @@ export function createUnitFromClass(
   const name = options?.customName || classTemplate.name;
   const levelOffset = Math.max(0, level - 1);
   
-  // Get race modifiers
+  // Get race modifiers and growth rates
   const raceId = options?.raceId || 'human';
   const race = raceTemplates[raceId] || raceTemplates['human'];
   const raceMod = race?.statModifiers || {
     vit: 0, hp: 0, attack: 0, defense: 0, dex: 0, magic: 0, mana: 0, critRate: 0, evasion: 0
   };
   
-  // Calculate primary stats with class growth + race modifiers
-  const classVit = classTemplate.baseVit + (classTemplate.growth.vit * levelOffset);
-  const classAttack = classTemplate.baseAttack + (classTemplate.growth.attack * levelOffset);
-  const classDefense = classTemplate.baseDefense + (classTemplate.growth.defense * levelOffset);
-  const classDex = classTemplate.baseDex + (classTemplate.growth.dex * levelOffset);
-  const classMagic = classTemplate.baseMagic + (classTemplate.growth.magic * levelOffset);
+  // Get race growth rates (default to 1.03 if not specified)
+  const growth = race?.growthRates || {
+    vit: 1.03, attack: 1.03, defense: 1.03, dex: 1.03, magic: 1.03
+  };
   
-  // Apply race modifiers
-  const vit = classVit + raceMod.vit;
-  const attack = classAttack + raceMod.attack;
-  const defense = classDefense + raceMod.defense;
-  const dex = classDex + raceMod.dex;
-  const magic = classMagic + raceMod.magic;
+  // ========== EXPONENTIAL GROWTH FORMULA ==========
+  // stat = (classBase * raceGrowthRate^levelOffset) + raceFlatBonus
+  // Example: ATK = 15 × 1.05^9 + 5 = 28 at level 10
+  
+  // Get class base stats at level 1
+  const classBaseVit = classTemplate.baseVit;
+  const classBaseAttack = classTemplate.baseAttack;
+  const classBaseDefense = classTemplate.baseDefense;
+  const classBaseDex = classTemplate.baseDex;
+  const classBaseMagic = classTemplate.baseMagic;
+  
+  // Calculate class base stats with race-specific exponential growth
+  const grownVit = classBaseVit * Math.pow(growth.vit, levelOffset);
+  const grownAttack = classBaseAttack * Math.pow(growth.attack, levelOffset);
+  const grownDefense = classBaseDefense * Math.pow(growth.defense, levelOffset);
+  const grownDex = classBaseDex * Math.pow(growth.dex, levelOffset);
+  const grownMagic = classBaseMagic * Math.pow(growth.magic, levelOffset);
+  
+  // Then add race flat modifiers (not scaled by level)
+  const vit = Math.floor(grownVit + raceMod.vit);
+  const attack = Math.floor(grownAttack + raceMod.attack);
+  const defense = Math.floor(grownDefense + raceMod.defense);
+  const dex = Math.floor(grownDex + raceMod.dex);
+  const magic = Math.floor(grownMagic + raceMod.magic);
   
   // Calculate derived stats (HP = VIT * 10, MANA = MAGIC * 10)
-  const baseHp = (vit * 10) + (classTemplate.growth.hp * levelOffset);
-  const baseMana = (magic * 10) + (classTemplate.growth.mana * levelOffset);
-  
-  const hp = baseHp + raceMod.hp;
-  const mana = baseMana + raceMod.mana;
+  const hp = vit * 10;
+  const mana = magic * 10;
   
   return {
     id,

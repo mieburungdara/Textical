@@ -3,9 +3,19 @@
  * 
  * Fierce and strong, orcs are natural warriors.
  * Bonus: High ATK/HP, lower DEF/MAG
+ * 
+ * Growth: High ATK (1.05), High VIT (1.04), Low DEF (1.01), Low MAG (1.00)
  */
 
-import { RaceTemplate, RaceType } from '../RaceTemplate.js';
+import { RaceTemplate, RaceType, RaceGrowthRates } from '../RaceTemplate.js';
+
+const orcGrowth: RaceGrowthRates = {
+  vit: 1.04,      // +4% HP per level (HIGH - tough)
+  attack: 1.05,   // +5% ATK per level (HIGH - rage grows)
+  defense: 1.01,  // +1% DEF per level (low - relies on offense)
+  dex: 1.02,      // +2% DEX per level (moderate)
+  magic: 1.00,    // +0% MAG per level (none - not magical)
+};
 
 export const orc: RaceTemplate = {
   id: 'orc',
@@ -23,6 +33,8 @@ export const orc: RaceTemplate = {
     critRate: 5,
     evasion: 0,
   },
+  
+  growthRates: orcGrowth,
   
   bonusAbilities: ['berserker_blood', 'intimidation'],
   
