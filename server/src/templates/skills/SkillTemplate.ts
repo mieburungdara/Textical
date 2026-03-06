@@ -17,6 +17,9 @@
 
 import { ElementType } from '../elements/index.js';
 
+// Re-export ElementType for convenience
+export { ElementType };
+
 // ========== SKILL CATEGORY ==========
 
 export enum SkillCategory {
