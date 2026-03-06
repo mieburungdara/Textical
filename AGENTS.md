@@ -13,7 +13,7 @@ This repository contains **Textical**, a Godot-based RPG game with:
 
 **Key directories:**
 - `godot/` - Godot 4.x game project (GDScript, scenes)
-- `server/` - TypeScript MCP server (ESM modules)
+- `godot_mcp/` - TypeScript MCP server (ESM modules)
 
 ---
 
@@ -22,7 +22,7 @@ This repository contains **Textical**, a Godot-based RPG game with:
 ### Server (TypeScript)
 
 ```bash
-cd server
+cd godot_mcp
 npm run build              # Build TypeScript
 npm run dev                # Development mode (watch + auto-rebuild)
 npm run start              # Start MCP server
@@ -162,6 +162,13 @@ node notify.js last_report.md
 ```
 
 ---
+
+## File Paths Reference
+
+- MCP Server TypeScript: `godot_mcp/src/`
+- MCP Server tests: `godot_mcp/tests/`
+- Godot plugin: `godot/addons/godot_mcp/`
+- Godot project: `godot/`
 
 ## Additional Rules
 

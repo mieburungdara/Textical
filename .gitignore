@@ -1,15 +1,14 @@
 # Godot
 godot/.godot/**
-godot/.godot/**
 godot/addons/**
 godot/*.import
 godot/*.log
 
-# Server
-server/node_modules/**
-server/dist/**
-server/prisma/dev.db
-server/prisma/dev.db-journal
+# Godot MCP Server
+godot_mcp/node_modules/**
+godot_mcp/dist/**
+godot_mcp/prisma/dev.db
+godot_mcp/prisma/dev.db-journal
 
 # Root
 .gemini/
@@ -21,4 +20,3 @@ node_modules
 
 # OLD
 #OLD_BACKUP/
-.gitignore
