@@ -139,5 +139,12 @@ export function createUnitFromClass(
     // Secondary Stats - Offense
     attackSpeed: 1.0, // Default 100%
     lifeSteal: 0, // Default 0
+    spellVamp: 0, // Default 0
+    castSpeed: 100, // Default 100
+    
+    // Grid Stats
+    attackRange: 1,
+    moveRange: 3,
+    minRange: 0,
   };
 }

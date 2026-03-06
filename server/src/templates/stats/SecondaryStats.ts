@@ -33,9 +33,15 @@
  * OFFENSE:
  * - attackSpeed: Attack speed multiplier
  * - lifeSteal: Damage converted to heal (percentage)
+ * 
+ * GRID (for grid-based combat):
+ * - attackRange: Attack range in tiles
+ * - moveRange: Movement range in tiles per action
+ * - minRange: Minimum range for ranged attacks
  */
 
 import { Unit } from '../../combat/TickCost.js';
+import { GridStats, GRID_STAT_LIMITS, DEFAULT_GRID_STATS } from './GridStats.js';
 
 // ========== SECONDARY STAT TYPES ==========
 
@@ -60,6 +66,7 @@ export enum SecondaryStatType {
   // Offense
   ATTACK_SPEED = 'attackSpeed',
   LIFE_STEAL = 'lifeSteal',
+  SPELL_VAMP = 'spellVamp',
 }
 
 // ========== SECONDARY STAT INTERFACE ==========
@@ -86,7 +93,14 @@ export interface SecondaryStats {
   
   // Offense
   attackSpeed: number;           // Attack speed multiplier
-  lifeSteal: number;             // Damage converted to heal
+  lifeSteal: number;             // Physical damage converted to heal
+  spellVamp: number;            // Spell/magic damage converted to heal
+  castSpeed: number;            // Casting speed (higher = faster)
+  
+  // Grid (extends GridStats)
+  attackRange: number;
+  moveRange: number;
+  minRange: number;
 }
 
 // ========== SECONDARY STAT LIMITS ==========
@@ -112,6 +126,11 @@ export const SECONDARY_STAT_LIMITS = {
   // Offense
   ATTACK_SPEED: { MIN: 0.5, MAX: 3.0 }, // Min 50%, Max 300% attack speed
   LIFE_STEAL: { MIN: 0, MAX: 50 },     // Max 50% lifesteal
+  SPELL_VAMP: { MIN: 0, MAX: 50 },     // Max 50% spell vamp
+  CAST_SPEED: { MIN: 10, MAX: 200 },   // Min 10, Max 200 cast speed
+  
+  // Grid (use imported from GridStats)
+  ...GRID_STAT_LIMITS,
 };
 
 // ========== BASE SECONDARY STATS ==========
@@ -139,6 +158,11 @@ export const BASE_SECONDARY_STATS: SecondaryStats = {
   // Offense
   attackSpeed: 1.0,          // Base 100% attack speed
   lifeSteal: 0,              // Base 0% lifesteal
+  spellVamp: 0,              // Base 0% spell vamp
+  castSpeed: 100,            // Base 100 cast speed (1.0x casting)
+  
+  // Grid (use imported defaults)
+  ...DEFAULT_GRID_STATS,
 };
 
 // ========== STAT FORMULAS ==========
@@ -208,6 +232,13 @@ export interface SecondaryStatBonus {
   // Offense
   attackSpeed?: number;
   lifeSteal?: number;
+  spellVamp?: number;
+  castSpeed?: number;
+  
+  // Grid
+  attackRange?: number;
+  moveRange?: number;
+  minRange?: number;
 }
 
 // ========== FACTORY FUNCTIONS ==========
@@ -269,6 +300,17 @@ export function createSecondaryStats(
     classBonus.lifeSteal ?? BASE_SECONDARY_STATS.lifeSteal
   );
   
+  const spellVamp = Math.min(
+    SECONDARY_STAT_LIMITS.SPELL_VAMP.MAX,
+    classBonus.spellVamp ?? BASE_SECONDARY_STATS.spellVamp
+  );
+  
+  const castSpeed = Math.min(
+    SECONDARY_STAT_LIMITS.CAST_SPEED.MAX,
+    Math.max(SECONDARY_STAT_LIMITS.CAST_SPEED.MIN,
+      classBonus.castSpeed ?? BASE_SECONDARY_STATS.castSpeed)
+  );
+  
   return {
     // Resources
     hp: calculateHp(vit) + (classBonus.hp ?? 0),
@@ -292,6 +334,13 @@ export function createSecondaryStats(
     // Offense
     attackSpeed,
     lifeSteal,
+    spellVamp,
+    castSpeed,
+    
+    // Grid
+    attackRange: classBonus.attackRange ?? BASE_SECONDARY_STATS.attackRange,
+    moveRange: classBonus.moveRange ?? BASE_SECONDARY_STATS.moveRange,
+    minRange: classBonus.minRange ?? BASE_SECONDARY_STATS.minRange,
   };
 }
 
@@ -324,6 +373,13 @@ export function applySecondaryStatsToUnit(
   // Offense
   unit.attackSpeed = stats.attackSpeed;
   unit.lifeSteal = stats.lifeSteal;
+  unit.spellVamp = stats.spellVamp;
+  unit.castSpeed = stats.castSpeed;
+  
+  // Grid
+  unit.attackRange = stats.attackRange;
+  unit.moveRange = stats.moveRange;
+  unit.minRange = stats.minRange;
 }
 
 /**
@@ -356,6 +412,13 @@ export function addSecondaryStats(
     // Offense
     attackSpeed: Math.min(SECONDARY_STAT_LIMITS.ATTACK_SPEED.MAX, Math.max(SECONDARY_STAT_LIMITS.ATTACK_SPEED.MIN, base.attackSpeed + (bonus.attackSpeed ?? 0))),
     lifeSteal: Math.min(SECONDARY_STAT_LIMITS.LIFE_STEAL.MAX, base.lifeSteal + (bonus.lifeSteal ?? 0)),
+    spellVamp: Math.min(SECONDARY_STAT_LIMITS.SPELL_VAMP.MAX, base.spellVamp + (bonus.spellVamp ?? 0)),
+    castSpeed: Math.min(SECONDARY_STAT_LIMITS.CAST_SPEED.MAX, Math.max(SECONDARY_STAT_LIMITS.CAST_SPEED.MIN, base.castSpeed + (bonus.castSpeed ?? 0))),
+    
+    // Grid
+    attackRange: Math.min(SECONDARY_STAT_LIMITS.ATTACK_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.ATTACK_RANGE.MIN, base.attackRange + (bonus.attackRange ?? 0))),
+    moveRange: Math.min(SECONDARY_STAT_LIMITS.MOVE_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.MOVE_RANGE.MIN, base.moveRange + (bonus.moveRange ?? 0))),
+    minRange: Math.min(SECONDARY_STAT_LIMITS.MIN_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.MIN_RANGE.MIN, base.minRange + (bonus.minRange ?? 0))),
   };
 }
 
@@ -386,5 +449,12 @@ export function clampSecondaryStats(stats: SecondaryStats): SecondaryStats {
     // Offense
     attackSpeed: Math.min(SECONDARY_STAT_LIMITS.ATTACK_SPEED.MAX, Math.max(SECONDARY_STAT_LIMITS.ATTACK_SPEED.MIN, stats.attackSpeed)),
     lifeSteal: Math.min(SECONDARY_STAT_LIMITS.LIFE_STEAL.MAX, Math.max(SECONDARY_STAT_LIMITS.LIFE_STEAL.MIN, stats.lifeSteal)),
+    spellVamp: Math.min(SECONDARY_STAT_LIMITS.SPELL_VAMP.MAX, Math.max(SECONDARY_STAT_LIMITS.SPELL_VAMP.MIN, stats.spellVamp)),
+    castSpeed: Math.min(SECONDARY_STAT_LIMITS.CAST_SPEED.MAX, Math.max(SECONDARY_STAT_LIMITS.CAST_SPEED.MIN, stats.castSpeed)),
+    
+    // Grid
+    attackRange: Math.min(SECONDARY_STAT_LIMITS.ATTACK_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.ATTACK_RANGE.MIN, stats.attackRange)),
+    moveRange: Math.min(SECONDARY_STAT_LIMITS.MOVE_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.MOVE_RANGE.MIN, stats.moveRange)),
+    minRange: Math.min(SECONDARY_STAT_LIMITS.MIN_RANGE.MAX, Math.max(SECONDARY_STAT_LIMITS.MIN_RANGE.MIN, stats.minRange)),
   };
 }

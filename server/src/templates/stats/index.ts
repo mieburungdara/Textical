@@ -7,11 +7,14 @@
  * - PrimaryStats: Base stats (VIT, ATK, DEF, DEX, MAG)
  * - SecondaryStats: Derived stats (HP, Mana, Crit, Evasion, etc.)
  * - StatGrowth: Level-up growth formulas
+ * - GridStats: Grid-based combat stats (attackRange, moveRange, minRange)
  */
 
 export * from './PrimaryStats.js';
 export * from './SecondaryStats.js';
 export * from './StatGrowth.js';
+export * from './GridStats.js';
+export * from './CombatStatsCalculator.js';
 
 // ========== CONVENIENCE IMPORTS ==========
 
@@ -86,6 +89,13 @@ export function calculateUnitStats(
     // Secondary Stats - Offense
     attackSpeed: clampedSecondary.attackSpeed,
     lifeSteal: clampedSecondary.lifeSteal,
+    spellVamp: clampedSecondary.spellVamp,
+    castSpeed: clampedSecondary.castSpeed,
+    
+    // Grid Stats
+    attackRange: clampedSecondary.attackRange,
+    moveRange: clampedSecondary.moveRange,
+    minRange: clampedSecondary.minRange,
   };
   
   return unit;

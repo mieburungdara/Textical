@@ -172,6 +172,13 @@ export function calculateSecondaryStatsWithGrowth(
     // Offense
     attackSpeed: baseSecondary.attackSpeed,
     lifeSteal: baseSecondary.lifeSteal,
+    spellVamp: baseSecondary.spellVamp,
+    castSpeed: baseSecondary.castSpeed,
+    
+    // Grid
+    attackRange: baseSecondary.attackRange,
+    moveRange: baseSecondary.moveRange,
+    minRange: baseSecondary.minRange,
   };
 }
 

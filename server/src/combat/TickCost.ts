@@ -38,6 +38,8 @@
  */
 
 import { StatusEffectInstance } from '../templates/status_effects/StatusEffect.js';
+import { WeaponType } from '../templates/items/index.js';
+import { UnitTrait, CombatType, SizeCategory, SIZE_DAMAGE_MULTIPLIER, SIZE_BONUS_VS_LARGER } from '../templates/creatures/CreatureBase.js';
 
 export interface Unit {
   id: string;
@@ -71,10 +73,39 @@ export interface Unit {
   
   // Secondary Stats - Offense
   attackSpeed: number;          // Attack speed multiplier (0.5-3.0)
-  lifeSteal: number;            // Damage converted to heal (0-50%)
+  lifeSteal: number;            // Physical damage converted to heal (0-50%)
+  spellVamp: number;            // Spell/magic damage converted to heal (0-50%)
+  castSpeed: number;            // Casting speed (0-200), higher = faster casting
+  
+  // Grid Stats (for grid-based combat)
+  attackRange: number;         // Attack range in tiles (1 = melee)
+  moveRange: number;           // Movement range in tiles per action
+  minRange: number;            // Minimum range for ranged attacks
+  
+  // Equipment (determines grid stats and combat bonuses)
+  // Weapons equipped - attack range calculated from this
+  equipment?: WeaponType[];
+  
+  // Traits - special properties that affect combat interactions
+  // FLY units cannot be attacked by melee attacks
+  // GHOST units are immune to physical damage
+  traits?: UnitTrait[];
+  
+  // Size category - affects damage calculations
+  // Small units deal less damage to large units
+  size?: SizeCategory;
+  
+  // Position (for grid-based combat)
+  position?: Position;         // Current position on grid
   
   // Status Effects
   statusEffects?: StatusEffectInstance[];
+}
+
+// Position interface for grid-based combat
+export interface Position {
+  x: number;  // Column (0-based)
+  y: number;  // Row (0-based)
 }
 
 export interface StatusEffect {
@@ -90,6 +121,122 @@ export interface StatusEffect {
 export interface UnitState extends Unit {
   currentHp: number;
   isAlive: boolean;
+}
+
+// ========== TRAIT COMBAT HELPERS ==========
+
+/**
+ * Check if a unit has a specific trait
+ */
+export function hasTrait(unit: Unit, trait: UnitTrait): boolean {
+  return unit.traits?.includes(trait) ?? false;
+}
+
+/**
+ * Determine combat type based on attack range
+ */
+export function getCombatType(attackRange: number, isMagic: boolean = false): CombatType {
+  if (isMagic) return CombatType.MAGIC;
+  if (attackRange > 1) return CombatType.RANGED;
+  return CombatType.MELEE;
+}
+
+/**
+ * Check if an attack can hit a target based on traits
+ * Returns { canHit: boolean, reason?: string }
+ */
+export function canAttackHit(attacker: Unit, defender: Unit, combatType: CombatType): { canHit: boolean; reason?: string } {
+  const defenderTraits = defender.traits ?? [];
+  const attackerTraits = attacker.traits ?? [];
+  
+  // Check FLY vs MELEE
+  if (combatType === CombatType.MELEE && defenderTraits.includes(UnitTrait.FLY)) {
+    return { 
+      canHit: false, 
+      reason: `${defender.name} is flying and cannot be hit by melee attacks` 
+    };
+  }
+  
+  // Check GHOST vs PHYSICAL (melee)
+  if (combatType === CombatType.MELEE && defenderTraits.includes(UnitTrait.GHOST)) {
+    return { 
+      canHit: false, 
+      reason: `${defender.name} is ethereal and cannot be hit by physical attacks` 
+    };
+  }
+  
+  // Check MECHANICAL vs POISON (would need poison system)
+  if (defenderTraits.includes(UnitTrait.MECHANICAL)) {
+    // Mechanical units are immune to poison
+    // This would be checked in the damage calculation
+  }
+  
+  // Check UNDEAD vs HEALING (undead take damage from healing)
+  if (defenderTraits.includes(UnitTrait.UNDEAD)) {
+    // Undead might have special interactions with healing
+  }
+  
+  return { canHit: true };
+}
+
+// ========== SIZE-BASED DAMAGE CALCULATIONS ==========
+
+/**
+ * Get size category with default
+ */
+export function getUnitSize(unit: Unit): SizeCategory {
+  return unit.size ?? SizeCategory.MEDIUM;
+}
+
+/**
+ * Calculate damage multiplier based on size difference
+ * Returns: damage multiplier (e.g., 2.0 = 200% damage)
+ * 
+ * Example:
+ * - Small (2) attacking Large (4): 0.5x damage
+ * - Large (4) attacking Small (2): 2.0x damage
+ * - Giant (5) attacking Tiny (1): 3.0x damage
+ */
+export function getSizeDamageMultiplier(attacker: Unit, defender: Unit): number {
+  const attackerSize = getUnitSize(attacker);
+  const defenderSize = getUnitSize(defender);
+  
+  return SIZE_DAMAGE_MULTIPLIER[attackerSize]?.[defenderSize] ?? 1.0;
+}
+
+/**
+ * Calculate bonus damage when attacking larger targets
+ * Returns: bonus multiplier (e.g., 2.0 = +100% bonus damage)
+ * 
+ * Example:
+ * - Medium (3) attacking Giant (5): +25% (sizeDiff = 2)
+ * - Small (2) attacking Giant (5): +50% (sizeDiff = 3)
+ */
+export function getBonusVsLargerTarget(attacker: Unit, defender: Unit): number {
+  const attackerSize = getUnitSize(attacker);
+  const defenderSize = getUnitSize(defender);
+  
+  const sizeDiff = defenderSize - attackerSize;
+  
+  if (sizeDiff <= 0) return 1.0; // No bonus for same or smaller size
+  
+  return SIZE_BONUS_VS_LARGER[sizeDiff] ?? 1.0;
+}
+
+/**
+ * Apply all size-based damage modifiers
+ * Returns: final damage after size modifiers
+ */
+export function applySizeDamageModifiers(
+  baseDamage: number,
+  attacker: Unit,
+  defender: Unit
+): number {
+  const sizeMultiplier = getSizeDamageMultiplier(attacker, defender);
+  const bonusVsLarger = getBonusVsLargerTarget(attacker, defender);
+  
+  // Combined: size multiplier × bonus vs larger
+  return Math.floor(baseDamage * sizeMultiplier * bonusVsLarger);
 }
 
 export interface CombatAction {

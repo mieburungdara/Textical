@@ -10,6 +10,7 @@
  */
 
 import { Unit } from '../combat/TickCost.js';
+import { DEFAULT_GRID_STATS } from './stats/GridStats.js';
 
 // ========== JOB TIERS ==========
 
@@ -70,6 +71,11 @@ export interface ClassTemplate {
   critDamageBonus: number;
   evasionBonus: number;
   resistanceBonus: number;
+  
+  // Grid stats (optional, defaults will be used if not specified)
+  attackRange?: number;
+  moveRange?: number;
+  minRange?: number;
   
   // Description
   description: string;
@@ -145,6 +151,13 @@ export function createUnitFromClass(
     // Secondary Stats - Offense
     attackSpeed: 1.0, // Base 100%, from items/skills
     lifeSteal: 0, // Default 0, from items/skills
+    spellVamp: 0, // Default 0, from items/skills
+    castSpeed: 100, // Default 100
+    
+    // Grid Stats
+    attackRange: template.attackRange ?? DEFAULT_GRID_STATS.attackRange,
+    moveRange: template.moveRange ?? DEFAULT_GRID_STATS.moveRange,
+    minRange: template.minRange ?? DEFAULT_GRID_STATS.minRange,
   };
 }
 
