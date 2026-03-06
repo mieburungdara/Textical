@@ -4,7 +4,7 @@
  * Restores HP to target
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const HEAL_SKILL: SkillTemplate = {
   id: 'heal',

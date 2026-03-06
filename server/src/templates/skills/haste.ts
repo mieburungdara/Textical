@@ -4,7 +4,7 @@
  * Increases action speed
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const HASTE_SKILL: SkillTemplate = {
   id: 'haste',
@@ -16,7 +16,7 @@ export const HASTE_SKILL: SkillTemplate = {
   targetType: SkillTargetType.ALLY,
   castTime: 15,
   manaCost: 10,
-  effectValue: 20, // +20 speed (faster ticks)
+  effectValue: 20,
   effectDuration: 60,
   range: 3,
   icon: '⚡',

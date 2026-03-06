@@ -4,7 +4,7 @@
  * Prevents target from using magic
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const SILENCE_SKILL: SkillTemplate = {
   id: 'silence',

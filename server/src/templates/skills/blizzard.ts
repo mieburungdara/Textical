@@ -4,7 +4,7 @@
  * Powerful area ice attack
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from './SkillTemplate.js';
 
 export const BLIZZARD_SKILL: SkillTemplate = {
   id: 'blizzard',

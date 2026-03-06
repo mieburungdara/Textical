@@ -4,7 +4,7 @@
  * Calls down a meteor from the sky
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from './SkillTemplate.js';
 
 export const METEOR_SKILL: SkillTemplate = {
   id: 'meteor',

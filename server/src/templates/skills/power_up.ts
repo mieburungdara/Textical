@@ -4,7 +4,7 @@
  * Increases attack power
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const POWER_UP_SKILL: SkillTemplate = {
   id: 'power_up',
@@ -16,7 +16,7 @@ export const POWER_UP_SKILL: SkillTemplate = {
   targetType: SkillTargetType.ALLY,
   castTime: 15,
   manaCost: 10,
-  effectValue: 20, // +20 attack
+  effectValue: 20,
   effectDuration: 60,
   range: 3,
   icon: '💪',

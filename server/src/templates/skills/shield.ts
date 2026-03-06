@@ -4,7 +4,7 @@
  * Creates a protective barrier
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const SHIELD_SKILL: SkillTemplate = {
   id: 'shield',
@@ -16,7 +16,7 @@ export const SHIELD_SKILL: SkillTemplate = {
   targetType: SkillTargetType.ALLY,
   castTime: 18,
   manaCost: 12,
-  effectValue: 30, // 30 damage shield
+  effectValue: 30,
   range: 3,
   icon: '🛡️',
 };

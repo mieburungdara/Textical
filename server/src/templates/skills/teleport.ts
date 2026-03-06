@@ -4,7 +4,7 @@
  * Teleport to any position
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const TELEPORT_SKILL: SkillTemplate = {
   id: 'teleport',

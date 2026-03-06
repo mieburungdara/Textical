@@ -21,36 +21,36 @@ export {
   SKILL_CAST_LIMITS
 } from './SkillTemplate.js';
 
-// Import all skills from their respective files
-import { SLASH_SKILL } from './physical/slash.js';
-import { THRUST_SKILL } from './physical/thrust.js';
-import { SPIN_SKILL } from './physical/spin.js';
-import { POWER_STRIKE_SKILL } from './physical/power_strike.js';
+// Import all skills
+import { SLASH_SKILL } from './slash.js';
+import { THRUST_SKILL } from './thrust.js';
+import { SPIN_SKILL } from './spin.js';
+import { POWER_STRIKE_SKILL } from './power_strike.js';
 
-import { FIREBALL_SKILL } from './magic/fire.js';
-import { FLAME_STRIKE_SKILL } from './magic/flame_strike.js';
-import { ICE_SHARD_SKILL } from './magic/ice_shard.js';
-import { BLIZZARD_SKILL } from './magic/blizzard.js';
+import { FIREBALL_SKILL } from './fireball.js';
+import { FLAME_STRIKE_SKILL } from './flame_strike.js';
+import { ICE_SHARD_SKILL } from './ice_shard.js';
+import { BLIZZARD_SKILL } from './blizzard.js';
 
-import { HEAL_SKILL } from './healing/heal.js';
-import { GREATER_HEAL_SKILL } from './healing/greater_heal.js';
-import { GROUP_HEAL_SKILL } from './healing/group_heal.js';
-import { REGENERATION_SKILL } from './healing/regeneration.js';
+import { HEAL_SKILL } from './heal.js';
+import { GREATER_HEAL_SKILL } from './greater_heal.js';
+import { GROUP_HEAL_SKILL } from './group_heal.js';
+import { REGENERATION_SKILL } from './regeneration.js';
 
-import { POWER_UP_SKILL } from './buff/power_up.js';
-import { SHIELD_SKILL } from './buff/shield.js';
-import { HASTE_SKILL } from './buff/haste.js';
+import { POWER_UP_SKILL } from './power_up.js';
+import { SHIELD_SKILL } from './shield.js';
+import { HASTE_SKILL } from './haste.js';
 
-import { POISON_SKILL } from './debuff/poison.js';
-import { SLOW_SKILL } from './debuff/slow.js';
-import { SILENCE_SKILL } from './debuff/silence.js';
+import { POISON_SKILL } from './poison.js';
+import { SLOW_SKILL } from './slow.js';
+import { SILENCE_SKILL } from './silence.js';
 
-import { ULTIMATE_STRIKE_SKILL } from './ultimate/ultimate_strike.js';
-import { METEOR_SKILL } from './ultimate/meteor.js';
-import { DIVINE_SHIELD_SKILL } from './ultimate/divine_shield.js';
+import { ULTIMATE_STRIKE_SKILL } from './ultimate_strike.js';
+import { METEOR_SKILL } from './meteor.js';
+import { DIVINE_SHIELD_SKILL } from './divine_shield.js';
 
-import { TELEPORT_SKILL } from './utility/teleport.js';
-import { BLINK_SKILL } from './utility/blink.js';
+import { TELEPORT_SKILL } from './teleport.js';
+import { BLINK_SKILL } from './blink.js';
 
 // ========== SKILL REGISTRY ==========
 
@@ -117,24 +117,6 @@ export function getSkillsByCategory(category: SkillCategory): SkillTemplate[] {
  */
 export function getSkillsByTier(tier: SkillTier): SkillTemplate[] {
   return Object.values(SKILL_TEMPLATES).filter(skill => skill.tier === tier);
-}
-
-/**
- * Get skills that require a specific weapon
- */
-export function getSkillsByWeapon(weaponType: string): SkillTemplate[] {
-  return Object.values(SKILL_TEMPLATES).filter(
-    skill => skill.requiresWeapon?.includes(weaponType)
-  );
-}
-
-/**
- * Get skills for a specific class
- */
-export function getSkillsForClass(classId: string): SkillTemplate[] {
-  return Object.values(SKILL_TEMPLATES).filter(
-    skill => skill.requiresClass?.includes(classId)
-  );
 }
 
 /**

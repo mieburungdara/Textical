@@ -4,7 +4,7 @@
  * Hurls a ball of fire at the enemy
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from './SkillTemplate.js';
 
 export const FIREBALL_SKILL: SkillTemplate = {
   id: 'fireball',

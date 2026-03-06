@@ -4,7 +4,7 @@
  * Restores a large amount of HP
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const GREATER_HEAL_SKILL: SkillTemplate = {
   id: 'greater_heal',

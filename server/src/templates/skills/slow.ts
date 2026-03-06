@@ -4,7 +4,7 @@
  * Reduces enemy action speed
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const SLOW_SKILL: SkillTemplate = {
   id: 'slow',
@@ -16,7 +16,7 @@ export const SLOW_SKILL: SkillTemplate = {
   targetType: SkillTargetType.ENEMY,
   castTime: 12,
   manaCost: 10,
-  effectValue: -20, // -20 speed
+  effectValue: -20,
   effectDuration: 45,
   range: 3,
   canDodge: true,

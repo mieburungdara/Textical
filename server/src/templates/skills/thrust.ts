@@ -4,7 +4,7 @@
  * A precise thrust attack
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const THRUST_SKILL: SkillTemplate = {
   id: 'thrust',

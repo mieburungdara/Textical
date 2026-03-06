@@ -4,7 +4,7 @@
  * Short range teleport
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const BLINK_SKILL: SkillTemplate = {
   id: 'blink',

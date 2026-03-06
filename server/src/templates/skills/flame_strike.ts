@@ -4,7 +4,7 @@
  * Calls down flames from the sky
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from './SkillTemplate.js';
 
 export const FLAME_STRIKE_SKILL: SkillTemplate = {
   id: 'flame_strike',

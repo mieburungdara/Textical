@@ -4,7 +4,7 @@
  * Applies poison damage over time
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const POISON_SKILL: SkillTemplate = {
   id: 'poison',

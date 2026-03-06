@@ -4,7 +4,7 @@
  * Area attack that hits all surrounding enemies
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const SPIN_SKILL: SkillTemplate = {
   id: 'spin',

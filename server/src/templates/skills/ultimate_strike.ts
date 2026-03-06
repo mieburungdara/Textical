@@ -4,7 +4,7 @@
  * A devastating finishing move
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const ULTIMATE_STRIKE_SKILL: SkillTemplate = {
   id: 'ultimate_strike',

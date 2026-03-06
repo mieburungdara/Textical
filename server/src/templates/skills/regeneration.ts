@@ -4,7 +4,7 @@
  * Applies heal over time
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const REGENERATION_SKILL: SkillTemplate = {
   id: 'regeneration',
@@ -17,7 +17,7 @@ export const REGENERATION_SKILL: SkillTemplate = {
   castTime: 15,
   manaCost: 10,
   healAmount: 10,
-  effectDuration: 30, // 30 ticks = 3 seconds
+  effectDuration: 30,
   range: 3,
   icon: '🌿',
 };

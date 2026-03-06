@@ -4,7 +4,7 @@
  * A heavy strike that deals massive damage
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const POWER_STRIKE_SKILL: SkillTemplate = {
   id: 'power_strike',

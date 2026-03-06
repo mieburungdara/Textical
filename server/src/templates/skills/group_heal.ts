@@ -4,7 +4,7 @@
  * Heals all allies in an area
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const GROUP_HEAL_SKILL: SkillTemplate = {
   id: 'group_heal',

@@ -4,7 +4,7 @@
  * A powerful sword slash that deals damage
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const SLASH_SKILL: SkillTemplate = {
   id: 'slash',

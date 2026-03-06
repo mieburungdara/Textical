@@ -4,7 +4,7 @@
  * Launches a sharp ice projectile
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType, ElementType } from './SkillTemplate.js';
 
 export const ICE_SHARD_SKILL: SkillTemplate = {
   id: 'ice_shard',

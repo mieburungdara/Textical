@@ -4,7 +4,7 @@
  * Grants complete immunity
  */
 
-import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from '../SkillTemplate.js';
+import { SkillTemplate, SkillCategory, SkillTargetType, SkillTier, SkillEffectType } from './SkillTemplate.js';
 
 export const DIVINE_SHIELD_SKILL: SkillTemplate = {
   id: 'divine_shield',
@@ -16,9 +16,9 @@ export const DIVINE_SHIELD_SKILL: SkillTemplate = {
   targetType: SkillTargetType.SELF,
   castTime: 45,
   manaCost: 60,
-  effectValue: 999, // Full immunity (high shield)
+  effectValue: 999,
   effectDuration: 20,
   cooldown: 200,
-  range: 0, // Self-target
+  range: 0,
   icon: '👼',
 };
