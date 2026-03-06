@@ -801,32 +801,43 @@ Affixes are special properties that add unique effects to equipment:
 
 | Affix Type | Example Effects | Rarity Required |
 |------------|-----------------|-----------------|
-| Offensive | +10% Fire Damage, +5% Critical Rate | Uncommon+ |
-| Defensive | +15% Ice Resistance, +10% Max HP | Uncommon+ |
-| Utility | +20% Gold Find, +15% Experience Gain | Rare+ |
-| Elemental | +25% Water Damage, -10% Fire Resistance | Epic+ |
+| Offensive | +10% Elemental Damage, +5% Critical Rate | Uncommon+ |
+| Defensive | +15% Elemental Resistance, +10% Max HP | Uncommon+ |
+| Utility | +10% Evasion, +5% Cooldown Reduction | Rare+ |
+| Elemental | +25% Elemental Damage, -10% Elemental Resistance | Epic+ |
 | Special | Chance to Stun on Hit, Life Leech | Legendary+ |
 
 **Enhancement System:**
-Equipment can be enhanced up to level 10 for balanced progression:
+Equipment can be enhanced up to level 10 for balanced progression with a smooth logarithmic curve. The system is designed to minimize frustration by avoiding level downgrades on failure:
 
 | Enhancement Level | Base Stat Increase | Materials Required | Success Rate |
 |-------------------|--------------------|--------------------|--------------|
 | 1 | +5% | 1 Ingot + 50 Silver | 100% |
-| 2 | +10% | 2 Ingot + 100 Silver | 100% |
-| 3 | +15% | 3 Ingot + 150 Silver | 100% |
-| 4 | +20% | 4 Ingot + 200 Silver | 100% |
-| 5 | +25% | 5 Ingot + 250 Silver | 100% |
-| 6 | +26% | 6 Ingot + 350 Silver | 95% |
-| 7 | +27% | 7 Ingot + 450 Silver | 90% |
+| 2 | +9% | 2 Ingot + 100 Silver | 100% |
+| 3 | +13% | 3 Ingot + 150 Silver | 100% |
+| 4 | +17% | 4 Ingot + 200 Silver | 100% |
+| 5 | +21% | 5 Ingot + 250 Silver | 100% |
+| 6 | +24% | 6 Ingot + 350 Silver | 95% |
+| 7 | +26% | 7 Ingot + 450 Silver | 90% |
 | 8 | +28% | 8 Ingot + 550 Silver | 85% |
 | 9 | +29% | 9 Ingot + 650 Silver | 80% |
 | 10 | +30% | 10 Ingot + 800 Silver | 75% |
 
+**Failure Mechanics (Light Frustration Design)**:
+- **No Level Downgrade**: Failed enhancement attempts do NOT reduce the current enhancement level
+- **Durability Penalty**: Failed attempts reduce equipment durability by 5%
+- **Material Loss**: All materials used for the enhancement attempt are lost
+- **Success Only**: Equipment level only increases on successful attempts
+
 **Balance Design**:
-- First 5 levels: Linear +5% per level with 100% success rate (easy to reach)
-- Levels 6-10: Diminishing returns (only +1% per level) with increasing materials and decreasing success rates
+- Levels 1-5: Logarithmic curve with decreasing per-level increments (5% → 4% → 4% → 4% → 4%)
+- Levels 6-10: Diminishing returns with smaller increments (3% → 2% → 2% → 1% → 1%)
+- Success rates gradually decrease from 100% to 75% for higher levels
+- Materials required increase linearly with level
 - Max +30% total enhancement ensures balanced scaling within the 13-18× total power range
+
+**Psychological Design**:
+The logarithmic curve ensures that each enhancement level feels rewarding. Players see meaningful increases in power at every level, with the slope gradually decreasing rather than abruptly plateauing at level 5. The failure mechanics are designed to be light and manageable, avoiding the high frustration caused by level downgrades.
 
 **Weather/Element Interaction:**
 Equipment stats change based on weather and elemental conditions:

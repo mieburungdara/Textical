@@ -19,10 +19,10 @@
 
 ## Core Rule
 Setiap laporan hasil pekerjaan WAJIB dikirim ke Telegram menggunakan:
-.kilocode/notify.js
+notify.js
 
 Eksekusi harus melalui Git Bash dengan:
-node .kilocode/notify.js last_report.md
+node notify.js last_report.md
 
 **Larangan:**
 - Dilarang hanya print ke console tanpa menjalankan script notify.
@@ -46,7 +46,7 @@ Laporan WAJIB dikirim ketika (tanpa kecuali):
 
 Format laporan HARUS menggunakan struktur berikut dan tidak boleh diubah:
 
-**Protokol Notifikasi Telegram**: Setiap kali saya menyelesaikan tugas signifikan atau fitur baru, saya HARUS SELALU menyampaikan laporan ke Telegram menggunakan `.kilocode/notify.js` (melalui input file UTF-8) FORMAT WAJIB:
+**Protokol Notifikasi Telegram**: Setiap kali saya menyelesaikan tugas signifikan atau fitur baru, saya HARUS SELALU menyampaikan laporan ke Telegram menggunakan `notify.js` (melalui input file UTF-8) FORMAT WAJIB:
 
     ```
     ✦ <Emoji>> <b><Feature Name>: <status: Draft / In Dev / Testing / Completed / Deprecated></b>
@@ -186,7 +186,7 @@ Sebelum dikirim:
 
 ### Checklist Wajib Sebelum attempt_completion:
 - [ ] Buat last_report.txt dengan format yang benar
-- [ ] Eksekusi: `node .kilocode/notify.js last_report.txt`
+- [ ] Eksekusi: `node notify.js last_report.md`
 - [ ] Verifikasi message terkirim ke Telegram
 - [ ] Jika gagal → retry minimal 1x
 - [ ] Jika masih gagal → exit dengan error code ≠ 0
