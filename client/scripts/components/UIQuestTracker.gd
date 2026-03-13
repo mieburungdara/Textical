@@ -23,37 +23,37 @@ func _ready() -> void:
 	_setup_widget()
 
 func _setup_widget() -> void:
-	add_theme_constant_override("separation", Theme.SPACING_SMALL)
-	custom_minimum_size = Vector2(200, ITEM_HEIGHT * MAX_VISIBLE + Theme.SPACING_LARGE)
+	add_theme_constant_override("separation", GameTheme.SPACING_SMALL)
+	custom_minimum_size = Vector2(200, ITEM_HEIGHT * MAX_VISIBLE + GameTheme.SPACING_LARGE)
 	
 	# Header
 	header_label = Label.new()
 	header_label.text = "📜 Active Quests (0)"
-	header_label.add_theme_font_size_override("font_size", Theme.FONT_BODY)
-	header_label.modulate = Theme.COLOR_ACCENT
+	header_label.add_theme_font_size_override("font_size", GameTheme.FONT_BODY)
+	header_label.modulate = GameTheme.COLOR_ACCENT
 	add_child(header_label)
 	
 	# Separator
 	var sep = HSeparator.new()
-	sep.modulate = Theme.COLOR_SURFACE_LIGHT
+	sep.modulate = GameTheme.COLOR_SURFACE_LIGHT
 	add_child(sep)
 	
 	# Quests container
 	quests_container = VBoxContainer.new()
-	quests_container.add_theme_constant_override("separation", Theme.SPACING_TINY)
+	quests_container.add_theme_constant_override("separation", GameTheme.SPACING_TINY)
 	add_child(quests_container)
 	
 	# Empty state
 	empty_label = Label.new()
 	empty_label.text = "No active quests"
-	empty_label.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
-	empty_label.modulate = Theme.COLOR_TEXT_SECONDARY
+	empty_label.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
+	empty_label.modulate = GameTheme.COLOR_TEXT_SECONDARY
 	empty_label.visible = false
 	quests_container.add_child(empty_label)
 
 ## Load quests from GameManager
 func refresh_from_game_manager() -> void:
-	var gm = Theme.get_game_manager()
+	var gm = get_tree().root.get_node("GameManager")
 	if gm == null:
 		# Use sample quests for demo
 		load_quests(_get_sample_quests())
@@ -107,8 +107,8 @@ func load_quests(quests: Array) -> void:
 	if quests.size() > MAX_VISIBLE:
 		var more_label = Label.new()
 		more_label.text = "+%d more" % (quests.size() - MAX_VISIBLE)
-		more_label.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
-		more_label.modulate = Theme.COLOR_TEXT_SECONDARY
+		more_label.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
+		more_label.modulate = GameTheme.COLOR_TEXT_SECONDARY
 		quests_container.add_child(more_label)
 
 func _clear_quests() -> void:
@@ -128,11 +128,11 @@ func _create_quest_item(quest: Dictionary) -> Control:
 	# Style based on difficulty
 	var difficulty = quest.get("difficulty", "easy")
 	var rarity = _difficulty_to_rarity(difficulty)
-	var rarity_color = Theme.get_rarity_color(rarity)
+	var rarity_color = GameTheme.get_rarity_color(rarity)
 	
 	var style = StyleBoxFlat.new()
-	style.bg_color = Theme.darken(rarity_color, 0.6)
-	style.set_corner_radius_all(Theme.RADIUS_SMALL)
+	style.bg_color = GameTheme.darken(rarity_color, 0.6)
+	style.set_corner_radius_all(GameTheme.RADIUS_SMALL)
 	container.add_theme_stylebox_override("panel", style)
 	
 	# Content
@@ -143,7 +143,7 @@ func _create_quest_item(quest: Dictionary) -> Control:
 	# Title
 	var title = Label.new()
 	title.text = "🎯 " + quest.get("title", "Unknown Quest")
-	title.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
+	title.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
 	title.modulate = rarity_color
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_CHAR
 	vbox.add_child(title)
@@ -155,8 +155,8 @@ func _create_quest_item(quest: Dictionary) -> Control:
 	
 	var progress = Label.new()
 	progress.text = progress_text
-	progress.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
-	progress.modulate = Theme.COLOR_TEXT_SECONDARY
+	progress.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
+	progress.modulate = GameTheme.COLOR_TEXT_SECONDARY
 	vbox.add_child(progress)
 	
 	# Progress bar

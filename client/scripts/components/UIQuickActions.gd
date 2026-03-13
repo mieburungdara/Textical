@@ -9,11 +9,11 @@ var _actions: Array = []
 
 # Default actions
 const DEFAULT_ACTIONS := [
-	{"id": "inventory", "icon": "📦", "label": "Inventory", "color": Theme.COLOR_PRIMARY},
-	{"id": "heroes", "icon": "👥", "label": "Heroes", "color": Theme.COLOR_PRIMARY},
-	{"id": "quests", "icon": "📜", "label": "Quests", "color": Theme.COLOR_WARNING},
-	{"id": "shop", "icon": "🏪", "label": "Shop", "color": Theme.COLOR_SUCCESS},
-	{"id": "blacksmith", "icon": "⚒️", "label": "Blacksmith", "color": Theme.COLOR_SECONDARY}
+	{"id": "inventory", "icon": "📦", "label": "Inventory", "color": GameTheme.COLOR_PRIMARY},
+	{"id": "heroes", "icon": "👥", "label": "Heroes", "color": GameTheme.COLOR_PRIMARY},
+	{"id": "quests", "icon": "📜", "label": "Quests", "color": GameTheme.COLOR_WARNING},
+	{"id": "shop", "icon": "🏪", "label": "Shop", "color": GameTheme.COLOR_SUCCESS},
+	{"id": "blacksmith", "icon": "⚒️", "label": "Blacksmith", "color": GameTheme.COLOR_SECONDARY}
 ]
 
 signal action_triggered(action_id: String)
@@ -25,7 +25,7 @@ func _ready() -> void:
 	_setup_widget()
 
 func _setup_widget() -> void:
-	add_theme_constant_override("separation", Theme.SPACING_SMALL)
+	add_theme_constant_override("separation", GameTheme.SPACING_SMALL)
 	
 	# Load default actions
 	load_actions(DEFAULT_ACTIONS)
@@ -48,7 +48,7 @@ func _create_action_button(action: Dictionary) -> Control:
 	
 	var icon = action.get("icon", "⚡")
 	var label = action.get("label", "Action")
-	var color = action.get("color", Theme.COLOR_PRIMARY)
+	var color = action.get("color", GameTheme.COLOR_PRIMARY)
 	var action_id = action.get("id", "")
 	
 	btn.setup(label, icon, color)
@@ -62,7 +62,7 @@ func _on_action_pressed(action_id: String) -> void:
 	print("[UIQuickActions] Action triggered: %s" % action_id)
 
 ## Add custom action
-func add_action(action_id: String, icon: String, label: String, color: Color = Theme.COLOR_PRIMARY) -> void:
+func add_action(action_id: String, icon: String, label: String, color: Color = GameTheme.COLOR_PRIMARY) -> void:
 	var action = {
 		"id": action_id,
 		"icon": icon,

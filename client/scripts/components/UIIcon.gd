@@ -27,8 +27,8 @@ var icon_data: Dictionary = {}
 
 func _ready() -> void:
 	# Initialize Theme constants in _ready to avoid class-level dependency
-	_icon_size = Theme.SIZE_ICON_MEDIUM
-	_bg_color = Theme.COLOR_SURFACE
+	_icon_size = GameTheme.SIZE_ICON_MEDIUM
+	_bg_color = GameTheme.COLOR_SURFACE
 	_ready_called = true
 	_build_icon()
 
@@ -54,7 +54,7 @@ func _build_icon() -> void:
 	
 	# Count label (for stacks)
 	count_label = Label.new()
-	count_label.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
+	count_label.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
 	count_label.position = Vector2(_icon_size * 0.6, _icon_size * 0.6)
 	count_label.visible = false
 	add_child(count_label)
@@ -65,7 +65,7 @@ func _build_icon() -> void:
 	mouse_exited.connect(_on_mouse_exited)
 
 ## Setup icon with emoji and color
-func setup(emoji: String, color: Color = Theme.COLOR_SURFACE, size: int = Theme.SIZE_ICON_MEDIUM) -> void:
+func setup(emoji: String, color: Color = GameTheme.COLOR_SURFACE, size: int = GameTheme.SIZE_ICON_MEDIUM) -> void:
 	_icon_emoji = emoji
 	_bg_color = color
 	_icon_size = size
@@ -89,7 +89,7 @@ func setup_item(item: Dictionary) -> void:
 	icon_data = item
 	
 	var emoji = _get_item_emoji(item.get("type", "material"))
-	var color = Theme.get_rarity_color(item.get("rarity", "common"))
+	var color = GameTheme.get_rarity_color(item.get("rarity", "common"))
 	
 	setup(emoji, color)
 	
@@ -98,7 +98,7 @@ func setup_item(item: Dictionary) -> void:
 		show_count(item.get("quantity", 1))
 
 ## Setup with rarity only (for empty slots)
-func setup_empty(color: Color = Theme.COLOR_SURFACE_LIGHT) -> void:
+func setup_empty(color: Color = GameTheme.COLOR_SURFACE_LIGHT) -> void:
 	setup("", color)
 
 ## Show count label
@@ -123,7 +123,7 @@ func set_icon(emoji: String) -> void:
 
 ## Get item emoji by type (delegate to Theme)
 func _get_item_emoji(item_type: String) -> String:
-	return Theme.get_item_emoji(item_type)
+	return GameTheme.get_item_emoji(item_type)
 
 ## Event handlers
 func _on_gui_input(event: InputEvent) -> void:
@@ -141,12 +141,12 @@ func _on_mouse_exited() -> void:
 ## Quick factory methods
 static func create_weapon() -> UIIcon:
 	var icon = UIIcon.new()
-	icon.setup("⚔️", Theme.get_rarity_color("common"))
+	icon.setup("⚔️", GameTheme.get_rarity_color("common"))
 	return icon
 
 static func create_armor() -> UIIcon:
 	var icon = UIIcon.new()
-	icon.setup("🛡️", Theme.get_rarity_color("common"))
+	icon.setup("🛡️", GameTheme.get_rarity_color("common"))
 	return icon
 
 static func create_empty() -> UIIcon:

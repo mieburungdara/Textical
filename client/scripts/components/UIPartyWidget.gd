@@ -23,16 +23,16 @@ func _ready() -> void:
 	_setup_widget()
 
 func _setup_widget() -> void:
-	add_theme_constant_override("separation", Theme.SPACING_SMALL)
-	custom_minimum_size = Vector2(CARD_WIDTH * MAX_VISIBLE + Theme.SPACING_SMALL * (MAX_VISIBLE - 1), CARD_HEIGHT)
+	add_theme_constant_override("separation", GameTheme.SPACING_SMALL)
+	custom_minimum_size = Vector2(CARD_WIDTH * MAX_VISIBLE + GameTheme.SPACING_SMALL * (MAX_VISIBLE - 1), CARD_HEIGHT)
 	
 	heroes_container = HBoxContainer.new()
-	heroes_container.add_theme_constant_override("separation", Theme.SPACING_SMALL)
+	heroes_container.add_theme_constant_override("separation", GameTheme.SPACING_SMALL)
 	add_child(heroes_container)
 
 ## Load heroes from GameManager
 func refresh_from_game_manager() -> void:
-	var gm = Theme.get_game_manager()
+	var gm = get_tree().root.get_node("GameManager")
 	if gm == null:
 		return
 	
@@ -54,8 +54,8 @@ func load_heroes(heroes: Array) -> void:
 	if heroes.size() > MAX_VISIBLE:
 		var more_label = Label.new()
 		more_label.text = "+%d more" % (heroes.size() - MAX_VISIBLE)
-		more_label.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
-		more_label.modulate = Theme.COLOR_TEXT_SECONDARY
+		more_label.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
+		more_label.modulate = GameTheme.COLOR_TEXT_SECONDARY
 		heroes_container.add_child(more_label)
 
 func _clear_cards() -> void:
@@ -97,10 +97,10 @@ func _create_hero_card(hero: Dictionary, index: int) -> Control:
 
 func _get_status_color(status: String) -> Color:
 	match status:
-		"active": return Theme.COLOR_SUCCESS
-		"resting": return Theme.COLOR_WARNING
-		"dead": return Theme.COLOR_DANGER
-		_: return Theme.COLOR_TEXT_SECONDARY
+		"active": return GameTheme.COLOR_SUCCESS
+		"resting": return GameTheme.COLOR_WARNING
+		"dead": return GameTheme.COLOR_DANGER
+		_: return GameTheme.COLOR_TEXT_SECONDARY
 
 func _on_hero_card_clicked(data: Dictionary) -> void:
 	hero_clicked.emit()

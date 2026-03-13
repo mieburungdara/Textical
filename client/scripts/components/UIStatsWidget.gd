@@ -23,7 +23,7 @@ func _ready() -> void:
 	_setup_widget()
 
 func _setup_widget() -> void:
-	add_theme_constant_override("separation", Theme.SPACING_MEDIUM)
+	add_theme_constant_override("separation", GameTheme.SPACING_MEDIUM)
 	
 	# Gold
 	gold_label = _create_stat_label("💰", "Gold: 0")
@@ -57,13 +57,13 @@ func _setup_widget() -> void:
 func _create_stat_label(icon: String, text: String) -> Label:
 	var label = Label.new()
 	label.text = icon + " " + text
-	label.add_theme_font_size_override("font_size", Theme.FONT_BODY)
-	label.modulate = Theme.COLOR_TEXT_PRIMARY
+	label.add_theme_font_size_override("font_size", GameTheme.FONT_BODY)
+	label.modulate = GameTheme.COLOR_TEXT_PRIMARY
 	return label
 
 func _create_separator() -> VSeparator:
 	var sep = VSeparator.new()
-	sep.modulate = Theme.COLOR_SURFACE_LIGHT
+	sep.modulate = GameTheme.COLOR_SURFACE_LIGHT
 	return sep
 
 ## Update methods
@@ -89,7 +89,7 @@ func update_day(day: int) -> void:
 
 ## Update all from GameManager
 func refresh_from_game_manager() -> void:
-	var gm = Theme.get_game_manager()
+	var gm = get_tree().root.get_node("GameManager")
 	if gm == null:
 		return
 	
@@ -98,7 +98,7 @@ func refresh_from_game_manager() -> void:
 	# Day would come from game state
 
 func _calculate_total_power() -> int:
-	var gm = Theme.get_game_manager()
+	var gm = get_tree().root.get_node("GameManager")
 	if gm == null:
 		return 0
 	

@@ -22,11 +22,11 @@ func _ready() -> void:
 
 func _setup_default_style() -> void:
 	# Apply default styling
-	var style = Theme.create_bordered_panel(
-		Theme.COLOR_SURFACE, 
-		Theme.COLOR_SECONDARY, 
-		Theme.RADIUS_MEDIUM, 
-		Theme.BORDER_MEDIUM
+	var style = GameTheme.create_bordered_panel(
+		GameTheme.COLOR_SURFACE, 
+		GameTheme.COLOR_SECONDARY, 
+		GameTheme.RADIUS_MEDIUM, 
+		GameTheme.BORDER_MEDIUM
 	)
 	add_theme_stylebox_override("panel", style)
 
@@ -42,12 +42,12 @@ func _build_header() -> void:
 	# Create header container
 	header = HBoxContainer.new()
 	header.set_anchors_preset(Control.PRESET_FULL_RECT)
-	header.add_theme_constant_override("separation", Theme.SPACING_MEDIUM)
+	header.add_theme_constant_override("separation", GameTheme.SPACING_MEDIUM)
 	
 	# Title
 	title_label = Label.new()
 	title_label.text = _panel_title
-	title_label.add_theme_font_size_override("font_size", Theme.FONT_SUBTITLE)
+	title_label.add_theme_font_size_override("font_size", GameTheme.FONT_SUBTITLE)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title_label)
 	
@@ -63,11 +63,11 @@ func _build_header() -> void:
 func _build_content() -> void:
 	content_container = VBoxContainer.new()
 	content_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	content_container.add_theme_constant_override("separation", Theme.SPACING_MEDIUM)
+	content_container.add_theme_constant_override("separation", GameTheme.SPACING_MEDIUM)
 	
 	# Offset for header
-	content_container.position = Vector2(0, Theme.SPACING_LARGE * 2)
-	content_container.size = size - Vector2(0, Theme.SPACING_LARGE * 2)
+	content_container.position = Vector2(0, GameTheme.SPACING_LARGE * 2)
+	content_container.size = size - Vector2(0, GameTheme.SPACING_LARGE * 2)
 	
 	add_child(content_container)
 

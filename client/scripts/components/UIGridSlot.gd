@@ -28,8 +28,8 @@ signal slot_dropped(index, target_index, data)
 
 func _ready() -> void:
 	# Initialize Theme constants in _ready to avoid class-level dependency
-	_slot_size = Theme.SIZE_GRID_MEDIUM
-	highlight_color = Theme.COLOR_SUCCESS
+	_slot_size = GameTheme.SIZE_GRID_MEDIUM
+	highlight_color = GameTheme.COLOR_SUCCESS
 	_build_default_slot()
 
 func _build_default_slot() -> void:
@@ -37,7 +37,7 @@ func _build_default_slot() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	
 	# Default styling (empty)
-	_apply_style(Theme.COLOR_SURFACE_LIGHT, false)
+	_apply_style(GameTheme.COLOR_SURFACE_LIGHT, false)
 	
 	# VBox for content
 	vbox = VBoxContainer.new()
@@ -50,7 +50,7 @@ func _build_default_slot() -> void:
 	label_component.text = ""
 	label_component.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label_component.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label_component.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
+	label_component.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
 	vbox.add_child(label_component)
 	
 	# Connect signals
@@ -61,14 +61,14 @@ func _build_default_slot() -> void:
 func _apply_style(bg_color: Color, has_content: bool) -> void:
 	var style = StyleBoxFlat.new()
 	style.bg_color = bg_color
-	style.set_corner_radius_all(Theme.RADIUS_SMALL)
+	style.set_corner_radius_all(GameTheme.RADIUS_SMALL)
 	
 	if is_highlighted:
 		style.border_color = highlight_color
-		style.set_border_width_all(Theme.BORDER_MEDIUM)
+		style.set_border_width_all(GameTheme.BORDER_MEDIUM)
 	else:
-		style.border_color = Theme.COLOR_SURFACE_LIGHT
-		style.set_border_width_all(Theme.BORDER_THIN)
+		style.border_color = GameTheme.COLOR_SURFACE_LIGHT
+		style.set_border_width_all(GameTheme.BORDER_THIN)
 	
 	add_theme_stylebox_override("panel", style)
 
@@ -87,7 +87,7 @@ func setup_empty(index: int, label_text: String = "[EMPTY]") -> void:
 		icon_component.queue_free()
 		icon_component = null
 	
-	_apply_style(Theme.COLOR_SURFACE_LIGHT, false)
+	_apply_style(GameTheme.COLOR_SURFACE_LIGHT, false)
 
 ## Setup with data (item, hero, etc.)
 func setup_with_data(index: int, data: Dictionary) -> void:
@@ -101,7 +101,7 @@ func setup_with_data(index: int, data: Dictionary) -> void:
 	# Create icon component
 	_create_icon_from_data(data)
 	
-	_apply_style(Theme.COLOR_SURFACE, true)
+	_apply_style(GameTheme.COLOR_SURFACE, true)
 
 func _create_icon_from_data(data: Dictionary) -> void:
 	# Remove existing icon
@@ -141,19 +141,19 @@ func _get_data_emoji(data: Dictionary) -> String:
 	if data.has("class"):
 		return "🧑"
 	if data.has("type"):
-		return Theme.get_item_emoji(data["type"])
+		return GameTheme.get_item_emoji(data["type"])
 	
-	return Theme.get_item_emoji("material")
+	return GameTheme.get_item_emoji("material")
 
 func _get_data_color(data: Dictionary) -> Color:
 	if data.has("rarity"):
-		return Theme.get_rarity_color(data["rarity"])
+		return GameTheme.get_rarity_color(data["rarity"])
 	if data.has("color"):
 		return data["color"]
-	return Theme.COLOR_SURFACE
+	return GameTheme.COLOR_SURFACE
 
 ## Highlight slot (for drag-drop feedback)
-func set_highlight(highlight: bool, color: Color = Theme.COLOR_SUCCESS) -> void:
+func set_highlight(highlight: bool, color: Color = GameTheme.COLOR_SUCCESS) -> void:
 	is_highlighted = highlight
 	highlight_color = color
 	
@@ -161,10 +161,10 @@ func set_highlight(highlight: bool, color: Color = Theme.COLOR_SUCCESS) -> void:
 	if style:
 		if highlight:
 			style.border_color = color
-			style.set_border_width_all(Theme.BORDER_MEDIUM)
+			style.set_border_width_all(GameTheme.BORDER_MEDIUM)
 		else:
-			style.border_color = Theme.COLOR_SURFACE_LIGHT
-			style.set_border_width_all(Theme.BORDER_THIN)
+			style.border_color = GameTheme.COLOR_SURFACE_LIGHT
+			style.set_border_width_all(GameTheme.BORDER_THIN)
 
 ## Event handlers
 func _on_gui_input(event: InputEvent) -> void:

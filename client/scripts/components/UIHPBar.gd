@@ -24,25 +24,25 @@ signal bar_clicked
 
 func _ready() -> void:
 	# Initialize Theme constants in _ready to avoid class-level dependency
-	_bar_height = Theme.SIZE_ICON_TINY
-	_bar_color = Theme.COLOR_SUCCESS
+	_bar_height = GameTheme.SIZE_ICON_TINY
+	_bar_color = GameTheme.COLOR_SUCCESS
 	_build_bar()
 
 func _build_bar() -> void:
-	custom_minimum_size = Vector2(0, _bar_height + Theme.SPACING_SMALL)
+	custom_minimum_size = Vector2(0, _bar_height + GameTheme.SPACING_SMALL)
 	
 	# Background
 	background = ColorRect.new()
-	background.color = Theme.COLOR_SURFACE_LIGHT
+	background.color = GameTheme.COLOR_SURFACE_LIGHT
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	background.position = Vector2(0, Theme.SPACING_SMALL)
+	background.position = Vector2(0, GameTheme.SPACING_SMALL)
 	background.size = Vector2(custom_minimum_size.x, _bar_height)
 	add_child(background)
 	
 	# Fill
 	fill = ColorRect.new()
 	fill.color = _bar_color
-	fill.position = Vector2(0, Theme.SPACING_SMALL)
+	fill.position = Vector2(0, GameTheme.SPACING_SMALL)
 	fill.size = Vector2(custom_minimum_size.x, _bar_height)
 	add_child(fill)
 	
@@ -50,9 +50,9 @@ func _build_bar() -> void:
 	label = Label.new()
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", Theme.FONT_CAPTION)
+	label.add_theme_font_size_override("font_size", GameTheme.FONT_CAPTION)
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	label.position = Vector2(0, Theme.SPACING_SMALL)
+	label.position = Vector2(0, GameTheme.SPACING_SMALL)
 	label.size = Vector2(custom_minimum_size.x, _bar_height)
 	add_child(label)
 	
@@ -62,7 +62,7 @@ func _build_bar() -> void:
 	
 	_update_display()
 
-func setup(current: int, max_value: int, bar_color: Color = Theme.COLOR_SUCCESS, label_text: String = "") -> void:
+func setup(current: int, max_value: int, bar_color: Color = GameTheme.COLOR_SUCCESS, label_text: String = "") -> void:
 	_current = current
 	_max = max_value
 	_bar_color = bar_color
@@ -121,15 +121,15 @@ func _on_gui_input(event: InputEvent) -> void:
 
 static func create_hp(current: int, max_value: int) -> UIHPBar:
 	var bar = UIHPBar.new()
-	bar.setup(current, max_value, Theme.COLOR_SUCCESS, "HP")
+	bar.setup(current, max_value, GameTheme.COLOR_SUCCESS, "HP")
 	return bar
 
 static func create_mp(current: int, max_value: int) -> UIHPBar:
 	var bar = UIHPBar.new()
-	bar.setup(current, max_value, Theme.COLOR_PRIMARY, "MP")
+	bar.setup(current, max_value, GameTheme.COLOR_PRIMARY, "MP")
 	return bar
 
 static func create_exp(current: int, max_value: int) -> UIHPBar:
 	var bar = UIHPBar.new()
-	bar.setup(current, max_value, Theme.COLOR_ACCENT, "EXP")
+	bar.setup(current, max_value, GameTheme.COLOR_ACCENT, "EXP")
 	return bar

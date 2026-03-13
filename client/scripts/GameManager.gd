@@ -1,5 +1,5 @@
 extends Node
-class_name GameManager
+# class_name GameManager  # Autoload - no class_name needed
 
 ## Manages global game state
 ## Singleton - accessible from anywhere
@@ -192,7 +192,7 @@ func _add_sample_inventory() -> void:
         {"id": "item_11", "name": "Mana Potion", "type": "consumable", "rarity": "common", "value": 30, "quantity": 3,
             "description": "Restores 30 MP", "effect": {"mp": 30}},
         {"id": "item_12", "name": "Antidote", "type": "consumable", "rarity": "common", "value": 20, "quantity": 2,
-            "Cures poison"},
+            "description": "Cures poison"},
         
         # Materials
         {"id": "item_13", "name": "Iron Ore", "type": "material", "rarity": "common", "value": 10, "quantity": 10},

@@ -45,18 +45,18 @@ func _ready() -> void:
     _update_hud()
 
 func _on_hero_roster_pressed() -> void:
-    # Find and toggle HeroRoster in the scene tree
+    # Find and toggle HeroRoster (now under UILayer/OverlayContainer)
     var game_scene = get_tree().root.get_node("GameScene")
     if game_scene:
-        var hero_roster = game_scene.get_node_or_null("HeroRoster")
+        var hero_roster = game_scene.get_node_or_null("UILayer/OverlayContainer/HeroRoster")
         if hero_roster and hero_roster.has_method("toggle"):
             hero_roster.toggle()
 
 func _on_inventory_pressed() -> void:
-    # Find and toggle InventoryUI in the scene tree
+    # Find and toggle InventoryUI (now under UILayer/OverlayContainer)
     var game_scene = get_tree().root.get_node("GameScene")
     if game_scene:
-        var inventory_ui = game_scene.get_node_or_null("InventoryUI")
+        var inventory_ui = game_scene.get_node_or_null("UILayer/OverlayContainer/InventoryUI")
         if inventory_ui and inventory_ui.has_method("toggle"):
             inventory_ui.toggle()
 
@@ -83,7 +83,7 @@ func _update_hud() -> void:
     
     # Update Gold
     if gold_label and game_manager:
-        gold_label.text = "💰 GOLD: %,d" % game_manager.gold
+        gold_label.text = "💰 GOLD: %d" % game_manager.gold
     
     # Update Party (use MAX_HEROES constant)
     if party_label and game_manager:

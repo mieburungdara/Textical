@@ -17,7 +17,7 @@ class_name InventoryUI
 @onready var inventory_label: Label = $MainContainer/Content/InventoryPanel/InventoryLabel if has_node("MainContainer/Content/InventoryPanel/InventoryLabel") else null
 
 # Item Detail Panel
-@onready var detail_panel: Panel = $MainContainer/Content/DetailPanel if has_node("MainContainer/Content/DetailPanel") else null
+@onready var detail_panel: Control = $MainContainer/Content/DetailPanel if has_node("MainContainer/Content/DetailPanel") else null
 @onready var detail_content: VBoxContainer = $MainContainer/Content/DetailPanel/DetailContent if has_node("MainContainer/Content/DetailPanel/DetailContent") else null
 @onready var use_button: Button = $MainContainer/Content/DetailPanel/UseButton if has_node("MainContainer/Content/DetailPanel/UseButton") else null
 @onready var equip_button: Button = $MainContainer/Content/DetailPanel/EquipButton if has_node("MainContainer/Content/DetailPanel/EquipButton") else null
@@ -85,12 +85,12 @@ func _close_other_panels() -> void:
     var game_scene = get_tree().root.get_node("GameScene")
     if game_scene:
         # Close HeroRoster
-        var hero_roster = game_scene.get_node_or_null("HeroRoster")
+        var hero_roster = game_scene.get_node_or_null("UILayer/OverlayContainer/HeroRoster")
         if hero_roster and hero_roster.has_method("hide_roster"):
             hero_roster.hide_roster()
         
         # Close QuestBoardUI
-        var quest_board = game_scene.get_node_or_null("QuestBoardUI")
+        var quest_board = game_scene.get_node_or_null("UILayer/OverlayContainer/QuestBoardUI")
         if quest_board and quest_board.has_method("hide_quest_board"):
             quest_board.hide_quest_board()
 
