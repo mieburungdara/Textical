@@ -2,9 +2,21 @@
  * Undead Type Template
  * 
  * Base stats for undead creatures: skeletons, zombies, ghosts, liches, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
+
+// Undead: high HP, moderate attack, magic growth
+const undeadGrowth: CreatureGrowthRates = {
+  vit: 1.04,     // +4% VIT per level (tanky)
+  hp: 1.03,      // +3% HP bonus per level
+  attack: 1.04,  // +4% ATK per level
+  defense: 1.03, // +3% DEF per level
+  dex: 1.03,     // +3% DEX per level
+  magic: 1.05,   // +5% MAG per level
+  mana: 1.05,    // +5% MANA per level
+};
 
 export const UNDEAD_TYPE: CreatureTypeTemplate = {
   type: CreatureType.UNDEAD,
@@ -18,15 +30,7 @@ export const UNDEAD_TYPE: CreatureTypeTemplate = {
   baseMagic: 5,
   baseMana: 50,
   
-  growth: {
-    vit: 1,
-    hp: 7,
-    attack: 1.5,
-    defense: 1,
-    dex: 1.2,
-    magic: 0.5,
-    mana: 5,
-  },
+  growth: undeadGrowth,
   
   bonuses: {
     critRate: 5,
@@ -43,6 +47,7 @@ export const UNDEAD_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Skeleton: balanced warrior type
 export const SKELETON_TYPE: CreatureTypeTemplate = {
   ...UNDEAD_TYPE,
   type: CreatureType.UNDEAD,
@@ -55,13 +60,13 @@ export const SKELETON_TYPE: CreatureTypeTemplate = {
   baseDex: 20,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1.8,
-    defense: 1,
-    dex: 1.5,
-    magic: 0,
-    mana: 0,
+    vit: 1.03,    // +3% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.03, // +3% DEF per level
+    dex: 1.04,    // +4% DEX per level
+    magic: 1.02,  // +2% MAG per level
+    mana: 1.03,   // +3% MANA per level
   },
   
   bonuses: {
@@ -74,6 +79,7 @@ export const SKELETON_TYPE: CreatureTypeTemplate = {
   description: 'Animated skeleton of a fallen warrior',
 };
 
+// Zombie: very tanky, slow, high life steal
 export const ZOMBIE_TYPE: CreatureTypeTemplate = {
   ...UNDEAD_TYPE,
   type: CreatureType.UNDEAD,
@@ -86,13 +92,13 @@ export const ZOMBIE_TYPE: CreatureTypeTemplate = {
   baseDex: 8,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1.5,
-    defense: 0.8,
-    dex: 0.5,
-    magic: 0,
-    mana: 0,
+    vit: 1.05,    // +5% VIT per level (very tanky)
+    hp: 1.04,     // +4% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.03, // +3% DEF per level
+    dex: 1.02,    // +2% DEX per level (slow)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -106,6 +112,7 @@ export const ZOMBIE_TYPE: CreatureTypeTemplate = {
   description: 'Undead monster infected with disease',
 };
 
+// Ghost: very fast, high magic, ethereal
 export const GHOST_TYPE: CreatureTypeTemplate = {
   ...UNDEAD_TYPE,
   type: CreatureType.SPIRIT,
@@ -120,13 +127,13 @@ export const GHOST_TYPE: CreatureTypeTemplate = {
   baseMana: 100,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 2,
-    defense: 0.3,
-    dex: 2.5,
-    magic: 1.5,
-    mana: 15,
+    vit: 1.02,    // +2% VIT per level (fragile)
+    hp: 1.01,     // +1% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.01, // +1% DEF per level (ethereal)
+    dex: 1.06,    // +6% DEX per level (fast)
+    magic: 1.06,  // +6% MAG per level (magic user)
+    mana: 1.06,   // +6% MANA per level
   },
   
   bonuses: {
@@ -139,6 +146,7 @@ export const GHOST_TYPE: CreatureTypeTemplate = {
   description: 'Ethereal spirit that haunts the living',
 };
 
+// Lich: boss-level undead mage
 export const LICH_TYPE: CreatureTypeTemplate = {
   ...UNDEAD_TYPE,
   type: CreatureType.ABERRATION,
@@ -153,13 +161,13 @@ export const LICH_TYPE: CreatureTypeTemplate = {
   baseMana: 350,
   
   growth: {
-    vit: 1.5,
-    hp: 0,
-    attack: 3,
-    defense: 1.5,
-    dex: 2,
-    magic: 4,
-    mana: 40,
+    vit: 1.05,    // +5% VIT per level (boss-level)
+    hp: 1.04,     // +4% HP per level
+    attack: 1.06, // +6% ATK per level
+    defense: 1.04, // +4% DEF per level
+    dex: 1.04,    // +4% DEX per level
+    magic: 1.08,  // +8% MAG per level (very high magic growth)
+    mana: 1.08,   // +8% MANA per level
   },
   
   bonuses: {

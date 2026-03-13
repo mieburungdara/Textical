@@ -2,10 +2,23 @@
  * Base Slime
  * 
  * The most basic slime creature.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
+ * Values must be >= 1.0 (1.0 = no change, >1.0 = increase)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, CreatureVisuals, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, CreatureVisuals, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Exponential growth rates for slimes (slow, weak creatures)
+const slimeGrowth: CreatureGrowthRates = {
+  vit: 1.02,     // +2% VIT per level
+  hp: 1.02,      // +2% HP per level
+  attack: 1.03,  // +3% ATK per level
+  defense: 1.02, // +2% DEF per level
+  dex: 1.02,     // +2% DEX per level
+  magic: 1.0,    // No magic (base is 0)
+  mana: 1.0,     // No mana (base is 0)
+};
 
 export const baseSlime: CreatureTemplate = {
   id: 'base_slime',
@@ -17,23 +30,15 @@ export const baseSlime: CreatureTemplate = {
   // Slimes are small
   size: SizeCategory.SMALL,
   
-  baseHp: 10,  // Reduced to match expected HP formula
-  baseVit: 5,
+  baseHp: 30,
+  baseVit: 3,
   baseAttack: 5,
   baseDefense: 2,
   baseDex: 10,
   baseMagic: 0,
   baseMana: 0,
   
-  growth: {
-    vit: 1,
-    hp: 0,
-    attack: 0.8,
-    defense: 0.3,
-    dex: 1,
-    magic: 0,
-    mana: 0,
-  },
+  growth: slimeGrowth,
   
   critRateBonus: 2,
   critDamageBonus: 0.3,

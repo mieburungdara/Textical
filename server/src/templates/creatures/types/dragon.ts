@@ -2,9 +2,21 @@
  * Dragon Type Template
  * 
  * Base stats for dragon-type creatures: dragons, drakes, wyverns, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
+
+// Dragons: very high stats all around, strongest creature type
+const dragonGrowth: CreatureGrowthRates = {
+  vit: 1.05,     // +5% VIT per level (tanky)
+  hp: 1.04,      // +4% HP bonus per level
+  attack: 1.06,  // +6% ATK per level (high damage)
+  defense: 1.05, // +5% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.05,   // +5% MAG per level
+  mana: 1.05,    // +5% MANA per level
+};
 
 export const DRAGON_TYPE: CreatureTypeTemplate = {
   type: CreatureType.DRAGON,
@@ -18,15 +30,7 @@ export const DRAGON_TYPE: CreatureTypeTemplate = {
   baseMagic: 20,
   baseMana: 200,
   
-  growth: {
-    vit: 3,
-    hp: 0,
-    attack: 4,
-    defense: 3,
-    dex: 2,
-    magic: 3,
-    mana: 25,
-  },
+  growth: dragonGrowth,
   
   bonuses: {
     critRate: 12,
@@ -44,6 +48,7 @@ export const DRAGON_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Dragon Whelp: younger, less stats but faster
 export const DRAGON_WHELP_TYPE: CreatureTypeTemplate = {
   ...DRAGON_TYPE,
   type: CreatureType.DRAGON,
@@ -58,13 +63,13 @@ export const DRAGON_WHELP_TYPE: CreatureTypeTemplate = {
   baseMana: 150,
   
   growth: {
-    vit: 2,
-    hp: 0,
-    attack: 3,
-    defense: 2,
-    dex: 2,
-    magic: 2,
-    mana: 20,
+    vit: 1.04,    // +4% VIT per level
+    hp: 1.03,     // +3% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.04, // +4% DEF per level
+    dex: 1.05,    // +5% DEX per level (faster than adults)
+    magic: 1.04,  // +4% MAG per level
+    mana: 1.04,   // +4% MANA per level
   },
   
   bonuses: {
@@ -77,6 +82,7 @@ export const DRAGON_WHELP_TYPE: CreatureTypeTemplate = {
   description: 'Young dragon learning to use its power',
 };
 
+// Ancient Dragon: world boss level
 export const ANCIENT_DRAGON_TYPE: CreatureTypeTemplate = {
   ...DRAGON_TYPE,
   type: CreatureType.DRAGON,
@@ -91,13 +97,13 @@ export const ANCIENT_DRAGON_TYPE: CreatureTypeTemplate = {
   baseMana: 700,
   
   growth: {
-    vit: 25,
-    hp: 0,
-    attack: 12,
-    defense: 10,
-    dex: 5,
-    magic: 10,
-    mana: 80,
+    vit: 1.08,    // +8% VIT per level (massive)
+    hp: 1.06,     // +6% HP per level
+    attack: 1.08, // +8% ATK per level (massive)
+    defense: 1.07, // +7% DEF per level
+    dex: 1.05,    // +5% DEX per level
+    magic: 1.07,  // +7% MAG per level
+    mana: 1.07,   // +7% MANA per level
   },
   
   bonuses: {

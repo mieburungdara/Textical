@@ -2,10 +2,22 @@
  * Base Skeleton
  * 
  * The most basic skeleton creature.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Skeleton growth: moderate, balanced
+const skeletonGrowth: CreatureGrowthRates = {
+  vit: 1.03,     // +3% VIT per level
+  hp: 1.02,      // +2% HP per level
+  attack: 1.04,  // +4% ATK per level
+  defense: 1.03, // +3% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.0,    // No magic (base is 0)
+  mana: 1.0,     // No mana (base is 0)
+};
 
 export const baseSkeleton: CreatureTemplate = {
   id: 'base_skeleton',
@@ -28,15 +40,7 @@ export const baseSkeleton: CreatureTemplate = {
   baseMagic: 0,
   baseMana: 0,
   
-  growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1.8,
-    defense: 1,
-    dex: 1.5,
-    magic: 0,
-    mana: 0,
-  },
+  growth: skeletonGrowth,
   
   critRateBonus: 5,
   critDamageBonus: 0.4,

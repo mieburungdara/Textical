@@ -13,6 +13,10 @@
  */
 
 import { Unit } from '../../combat/TickCost.js';
+import { 
+  calculateHp, 
+  calculateMana 
+} from './SecondaryStats.js';
 
 // ========== PRIMARY STAT TYPES ==========
 
@@ -55,19 +59,15 @@ export const PRIMARY_STAT_LIMITS = {
 
 /**
  * Calculate Max HP from VIT
- * Formula: HP = VIT * 10
+ * Uses SecondaryStats.calculateHp for consistent limits
  */
-export function calculateMaxHp(vit: number): number {
-  return vit * 10;
-}
+export { calculateHp as calculateMaxHp };
 
 /**
- * Calculate Max Mana from MAG
- * Formula: Mana = MAG * 10
+ * Calculate Max Mana from MAG  
+ * Uses SecondaryStats.calculateMana for consistent limits
  */
-export function calculateMaxMana(mag: number): number {
-  return mag * 10;
-}
+export { calculateMana as calculateMaxMana };
 
 /**
  * Calculate tick needed for action based on DEX
@@ -88,9 +88,9 @@ export function applyPrimaryStatsToUnit(unit: Unit, stats: PrimaryStats): void {
   unit.magic = stats.mag;
   
   // Derived stats
-  unit.maxHp = calculateMaxHp(stats.vit);
+  unit.maxHp = calculateHp(stats.vit);
   unit.hp = unit.maxHp;
-  unit.maxMana = calculateMaxMana(stats.mag);
+  unit.maxMana = calculateMana(stats.mag);
   unit.mana = unit.maxMana;
 }
 

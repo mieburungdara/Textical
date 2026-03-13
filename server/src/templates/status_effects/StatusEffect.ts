@@ -43,6 +43,8 @@ export enum StatusEffectType {
   INVULNERABLE = 'invulnerable',
   REFLECT = 'reflect',
   SHIELD = 'shield',
+  INVISIBLE = 'invisible',       // Cannot be targeted, but CAN take AOE damage
+  PHASED = 'phased',             // Can pass through enemies, but CAN take damage
 }
 
 export enum StatusEffectCategory {
@@ -112,6 +114,14 @@ export interface StatusEffectData {
   preventsAction?: boolean;    // Unit cannot act (stun, freeze, sleep)
   preventsCast?: boolean;      // Unit cannot use magic/skills (silence)
   preventsMovement?: boolean; // Unit cannot move (root)
+  preventsBeingAttacked?: boolean; // Unit cannot be attacked at all (FREEZE only)
+  
+  // Targeting flags (for INVISIBLE/PHASED)
+  preventsTargeting?: boolean;  // Unit cannot be targeted by enemies (INVISIBLE - but CAN take AOE damage)
+  allowsPassThrough?: boolean; // Unit can pass through enemies (PHASED)
+  completelyImmune?: boolean;  // Unit takes NO damage at all (FREEZE - ice shield)
+  // NOTE: preventsTargeting/allowsPassThrough - unit CAN still take damage from AOE/skills
+  // NOTE: completelyImmune - unit takes NO damage whatsoever (even DoT, AOE, anything)
   
   // Visual/Audio
   particleEffect?: string;
@@ -170,6 +180,10 @@ export interface StatusEffectTemplate {
   preventsAction?: boolean;
   preventsCast?: boolean;
   preventsMovement?: boolean;
+  preventsBeingAttacked?: boolean; // Cannot be attacked (FREEZE only)
+  preventsTargeting?: boolean;  // Cannot be targeted
+  allowsPassThrough?: boolean;  // Can pass through enemies
+  completelyImmune?: boolean;   // Takes NO damage at all (FREEZE)
   
   // Assets
   particleEffect?: string;
@@ -291,14 +305,20 @@ export function tickStatusEffects(unit: Unit): void {
       // Apply effect based on type
       switch (template.type) {
         case StatusEffectType.DAMAGE_OVER_TIME:
-          if (template.damage) {
+          // BUG FIX: Check if unit can be attacked (not invulnerable/frozen)
+          // and if unit is alive before applying DoT damage
+          if (template.damage && canBeAttacked(unit)) {
             const damage = template.damage * effect.stacks;
-            unit.hp = Math.max(1, unit.hp - damage);
+            // Don't kill unit - cap at 1 HP minimum if alive
+            if (unit.hp > 0) {
+              unit.hp = Math.max(1, unit.hp - damage);
+            }
           }
           break;
           
         case StatusEffectType.HEAL_OVER_TIME:
-          if (template.heal) {
+          // BUG FIX: Only heal if unit is alive and can be attacked
+          if (template.heal && unit.hp > 0) {
             const heal = template.heal * effect.stacks;
             unit.hp = Math.min(unit.maxHp, unit.hp + heal);
           }
@@ -367,6 +387,299 @@ export function canCast(unit: Unit): boolean {
   );
   
   return !silenceEffect;
+}
+
+// ========== IMMUNITY SYSTEM ==========
+
+/**
+ * Check if unit is immune to a specific status effect
+ * Unit is immune if it has a matching immunity effect active
+ */
+export function isImmuneTo(unit: Unit, statusEffectId: string): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) {
+    return false;
+  }
+  
+  const statusTemplate = REGISTRY[statusEffectId];
+  if (!statusTemplate) return false;
+  
+  // Check for specific immunity
+  for (const effect of unit.statusEffects) {
+    const effectTemplate = REGISTRY[effect.templateId];
+    if (!effectTemplate) continue;
+    
+    // Check for matching immunity
+    if (effectTemplate.category === StatusEffectCategory.SPECIAL) {
+      // Map status effect type to immunity
+      const immunityMap: Record<string, string[]> = {
+        [StatusEffectType.STUN]: ['immune_stun', 'invulnerable'],
+        [StatusEffectType.FREEZE]: ['immune_freeze', 'invulnerable'],
+        [StatusEffectType.SLEEP]: ['immune_sleep', 'invulnerable'],
+        [StatusEffectType.SILENCE]: ['immune_silence', 'invulnerable'],
+        [StatusEffectType.ROOT]: ['immune_root', 'invulnerable'],
+        [StatusEffectType.DAMAGE_OVER_TIME]: ['immune_dot', 'invulnerable'],
+        [StatusEffectType.INVISIBLE]: ['immune_invisible'],
+      };
+      
+      const immuneIds = immunityMap[statusTemplate.type] || [];
+      if (immuneIds.includes(effectTemplate.id)) {
+        return true;
+      }
+      
+      // If has general invulnerable, immune to most things
+      if (effectTemplate.type === StatusEffectType.INVULNERABLE && 
+          statusTemplate.category !== StatusEffectCategory.BUFF) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Check if unit can be targeted by enemies
+ * Returns false if unit is INVISIBLE, INVULNERABLE, or FROZEN
+ */
+export function canBeTargeted(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) {
+    return true;
+  }
+  
+  for (const effect of unit.statusEffects) {
+    const effectTemplate = REGISTRY[effect.templateId];
+    if (!effectTemplate) continue;
+    
+    // INVISIBLE, INVULNERABLE, or FREEZE cannot be targeted
+    if (effectTemplate.type === StatusEffectType.INVISIBLE ||
+        effectTemplate.type === StatusEffectType.INVULNERABLE ||
+        effectTemplate.type === StatusEffectType.FREEZE) {
+      return false;
+    }
+    
+    // Check explicit flags
+    if (effectTemplate.preventsTargeting === true) {
+      return false;
+    }
+    
+    // If preventsBeingAttacked is true, also cannot be targeted
+    if (effectTemplate.preventsBeingAttacked === true) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * Check if unit can be attacked (take ANY damage)
+ * Returns false if unit is FROZEN (completely untargetable)
+ * - INVISIBLE: Can still take AOE damage, so canBeAttacked = true
+ * - FREEZE: Cannot be targeted at all, so canBeAttacked = false
+ * - INVULNERABLE: Cannot be targeted, so canBeAttacked = false
+ */
+export function canBeAttacked(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) {
+    return true;
+  }
+  
+  for (const effect of unit.statusEffects) {
+    const effectTemplate = REGISTRY[effect.templateId];
+    if (!effectTemplate) continue;
+    
+    // FREEZE - completely cannot be attacked
+    if (effectTemplate.type === StatusEffectType.FREEZE) {
+      return false;
+    }
+    
+    // INVULNERABLE - cannot be attacked
+    if (effectTemplate.type === StatusEffectType.INVULNERABLE) {
+      return false;
+    }
+    
+    // If explicitly marked as preventsBeingAttacked
+    if (effectTemplate.preventsBeingAttacked === true) {
+      return false;
+    }
+    
+    // If completely immune (FREEZE) - takes no damage at all
+    if (effectTemplate.completelyImmune === true) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * Check if unit is completely immune to ALL damage
+ * Returns true if unit has completelyImmune flag (FREEZE)
+ * - Unit takes NO damage whatsoever - not from attacks, DoT, AOE, or anything
+ */
+export function isCompletelyImmune(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) {
+    return false;
+  }
+  
+  for (const effect of unit.statusEffects) {
+    const effectTemplate = REGISTRY[effect.templateId];
+    if (!effectTemplate) continue;
+    
+    // FREEZE - completely immune to all damage
+    if (effectTemplate.completelyImmune === true) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Check if unit can pass through enemies (PHASED)
+ */
+export function canPassThrough(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) {
+    return false;
+  }
+  
+  for (const effect of unit.statusEffects) {
+    const effectTemplate = REGISTRY[effect.templateId];
+    if (!effectTemplate) continue;
+    
+    if (effectTemplate.type === StatusEffectType.PHASED ||
+        effectTemplate.allowsPassThrough === true) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// ========== DISPEL SYSTEM ==========
+
+/**
+ * Remove a specific status effect from unit
+ */
+export function removeStatusEffect(unit: Unit, statusEffectId: string): boolean {
+  if (!unit.statusEffects) return false;
+  
+  const index = unit.statusEffects.findIndex(
+    e => e.templateId === statusEffectId
+  );
+  
+  if (index >= 0) {
+    unit.statusEffects.splice(index, 1);
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Remove all status effects of a specific category
+ */
+export function dispelByCategory(unit: Unit, category: StatusEffectCategory): number {
+  if (!unit.statusEffects) return 0;
+  
+  let removed = 0;
+  unit.statusEffects = unit.statusEffects.filter(effect => {
+    const template = REGISTRY[effect.templateId];
+    if (template?.category === category) {
+      removed++;
+      return false; // Remove
+    }
+    return true; // Keep
+  });
+  
+  return removed;
+}
+
+/**
+ * Remove all debuffs from unit (enemy-applied effects)
+ * Keeps buffs (positive effects)
+ */
+export function dispelDebuffs(unit: Unit): number {
+  if (!unit.statusEffects) return 0;
+  
+  let removed = 0;
+  unit.statusEffects = unit.statusEffects.filter(effect => {
+    const template = REGISTRY[effect.templateId];
+    if (!template) return true;
+    
+    // Keep buffs, remove debuffs and control effects
+    if (template.category === StatusEffectCategory.BUFF || 
+        template.category === StatusEffectCategory.HOT) {
+      return true; // Keep
+    }
+    
+    removed++;
+    return false; // Remove
+  });
+  
+  return removed;
+}
+
+/**
+ * Remove all buffs from unit (for cleanse effects)
+ */
+export function dispelBuffs(unit: Unit): number {
+  if (!unit.statusEffects) return 0;
+  
+  let removed = 0;
+  unit.statusEffects = unit.statusEffects.filter(effect => {
+    const template = REGISTRY[effect.templateId];
+    if (!template) return true;
+    
+    // Keep debuffs, remove buffs
+    if (template.category === StatusEffectCategory.DEBUFF || 
+        template.category === StatusEffectCategory.CONTROL ||
+        template.category === StatusEffectCategory.DOT) {
+      return true; // Keep
+    }
+    
+    removed++;
+    return false; // Remove
+  });
+  
+  return removed;
+}
+
+/**
+ * Remove all status effects (full dispel)
+ */
+export function dispelAll(unit: Unit): number {
+  if (!unit.statusEffects) return 0;
+  
+  const count = unit.statusEffects.length;
+  unit.statusEffects = [];
+  return count;
+}
+
+/**
+ * Check if unit has any debuffs
+ */
+export function hasDebuffs(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) return false;
+  
+  return unit.statusEffects.some(effect => {
+    const template = REGISTRY[effect.templateId];
+    return template?.category === StatusEffectCategory.DEBUFF ||
+           template?.category === StatusEffectCategory.CONTROL ||
+           template?.category === StatusEffectCategory.DOT;
+  });
+}
+
+/**
+ * Check if unit has any buffs
+ */
+export function hasBuffs(unit: Unit): boolean {
+  if (!unit.statusEffects || unit.statusEffects.length === 0) return false;
+  
+  return unit.statusEffects.some(effect => {
+    const template = REGISTRY[effect.templateId];
+    return template?.category === StatusEffectCategory.BUFF ||
+           template?.category === StatusEffectCategory.HOT;
+  });
 }
 
 // ========== REGISTRY ==========

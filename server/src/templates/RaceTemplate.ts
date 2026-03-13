@@ -67,10 +67,41 @@ export interface RaceTemplate {
   description: string;
 }
 
+// ========== CLASS MULTIPLIERS FOR JOB CHANGES ==========
+// When a player changes jobs (promotes), apply a multiplier to all stats
+// This gives players a sense of progression when they advance
+
+export enum JobTier {
+  NOVICE = 'novice',       
+  FIRST_JOB = 'first_job',   
+  SECOND_JOB = 'second_job', 
+  MASTER = 'master',       
+}
+
+// Multiplier applied when advancing to a new job tier
+// Example: Novice (1.0) → Fighter (1.2x) → Knight (1.3x) → Grandmaster (1.5x)
+export const JOB_TIER_MULTIPLIERS: Record<JobTier, number> = {
+  [JobTier.NOVICE]: 1.0,       // Base - no multiplier
+  [JobTier.FIRST_JOB]: 1.2,    // +20% stats when promoted to first job
+  [JobTier.SECOND_JOB]: 1.3,   // +30% stats when promoted to second job
+  [JobTier.MASTER]: 1.5,       // +50% stats when promoted to master
+};
+
 // ========== FACTORY FUNCTION ==========
 
 /**
  * Create a unit from class + race with level scaling
+ * 
+ * @param classId - The class template ID (e.g., 'swordsman', 'mage')
+ * @param level - The character's level
+ * @param id - Unique identifier for the unit
+ * @param options - Optional parameters:
+ *   - customName: Override the default name
+ *   - raceId: Race template ID (default: 'human')
+ *   - classTemplates: Override class templates
+ *   - raceTemplates: Override race templates
+ *   - previousJobTier: The previous job tier (for job change bonuses)
+ *   - currentJobTier: The current job tier (determines multiplier)
  */
 export function createUnitFromClass(
   classId: string,
@@ -81,6 +112,8 @@ export function createUnitFromClass(
     raceId?: string;
     classTemplates?: Record<string, any>;
     raceTemplates?: Record<string, any>;
+    previousJobTier?: JobTier;
+    currentJobTier?: JobTier;
   }
 ): Unit {
   const templates = options?.classTemplates || {};
@@ -107,9 +140,22 @@ export function createUnitFromClass(
     vit: 1.03, attack: 1.03, defense: 1.03, dex: 1.03, magic: 1.03
   };
   
+  // ========== JOB TIER MULTIPLIER ==========
+  // Apply multiplier based on job tier
+  const currentTier = options?.currentJobTier || (classTemplate.jobTier as JobTier) || JobTier.NOVICE;
+  const previousTier = options?.previousJobTier || JobTier.NOVICE;
+  
+  // Calculate the cumulative multiplier from previous job tier to current
+  const previousMultiplier = JOB_TIER_MULTIPLIERS[previousTier] || 1.0;
+  const currentMultiplier = JOB_TIER_MULTIPLIERS[currentTier] || 1.0;
+  
+  // The bonus multiplier is the ratio of current to previous (e.g., 1.2/1.0 = 1.2)
+  const jobMultiplier = currentMultiplier / previousMultiplier;
+  
   // ========== EXPONENTIAL GROWTH FORMULA ==========
   // stat = (classBase * raceGrowthRate^levelOffset) + raceFlatBonus
-  // Example: ATK = 15 × 1.05^9 + 5 = 28 at level 10
+  // Then multiply by job tier bonus
+  // Example: ATK = 15 × 1.05^9 + 5 = 28 at level 10, then ×1.2 = 34
   
   // Get class base stats at level 1
   const classBaseVit = classTemplate.baseVit;
@@ -126,11 +172,20 @@ export function createUnitFromClass(
   const grownMagic = classBaseMagic * Math.pow(growth.magic, levelOffset);
   
   // Then add race flat modifiers (not scaled by level)
-  const vit = Math.floor(grownVit + raceMod.vit);
-  const attack = Math.floor(grownAttack + raceMod.attack);
-  const defense = Math.floor(grownDefense + raceMod.defense);
-  const dex = Math.floor(grownDex + raceMod.dex);
-  const magic = Math.floor(grownMagic + raceMod.magic);
+  let vit = Math.floor(grownVit + raceMod.vit);
+  let attack = Math.floor(grownAttack + raceMod.attack);
+  let defense = Math.floor(grownDefense + raceMod.defense);
+  let dex = Math.floor(grownDex + raceMod.dex);
+  let magic = Math.floor(grownMagic + raceMod.magic);
+  
+  // Apply job tier multiplier (only if not base novice)
+  if (jobMultiplier > 1.0) {
+    vit = Math.floor(vit * jobMultiplier);
+    attack = Math.floor(attack * jobMultiplier);
+    defense = Math.floor(defense * jobMultiplier);
+    dex = Math.floor(dex * jobMultiplier);
+    magic = Math.floor(magic * jobMultiplier);
+  }
   
   // Calculate derived stats (HP = VIT * 10, MANA = MAGIC * 10)
   const hp = vit * 10;

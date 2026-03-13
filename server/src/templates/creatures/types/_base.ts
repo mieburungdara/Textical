@@ -8,5 +8,6 @@ export {
   CreatureType, 
   CreatureTypeTemplate, 
   CreatureStatGrowth, 
-  CreatureCombatBonuses 
+  CreatureCombatBonuses,
+  CreatureGrowthRates
 } from '../CreatureBase.js';

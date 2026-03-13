@@ -6,6 +6,7 @@
  * - Type: Control effect
  * - Stacks: None (refreshes duration)
  * - Duration: 3 ticks
+ * - NOTE: Unlike Freeze, unit CAN still be attacked while stunned
  */
 
 import { StatusEffectTemplate, StatusEffectType, StatusEffectCategory, StackBehavior } from './StatusEffect.js';
@@ -13,7 +14,7 @@ import { StatusEffectTemplate, StatusEffectType, StatusEffectCategory, StackBeha
 export const stun: StatusEffectTemplate = {
   id: 'stun',
   name: 'Stun',
-  description: 'Cannot act. Duration refreshes if stunned again.',
+  description: 'Cannot act, but CAN still be attacked.',
   icon: '💫',
   color: '#FF922B',
   

@@ -2,10 +2,22 @@
  * Base Dragon
  * 
  * The most basic dragon creature.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Dragon growth: high stats all around
+const dragonGrowth: CreatureGrowthRates = {
+  vit: 1.04,     // +4% VIT per level
+  hp: 1.03,      // +3% HP per level
+  attack: 1.05,  // +5% ATK per level
+  defense: 1.04, // +4% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.04,   // +4% MAG per level
+  mana: 1.04,    // +4% MANA per level
+};
 
 export const baseDragon: CreatureTemplate = {
   id: 'base_dragon',
@@ -28,15 +40,7 @@ export const baseDragon: CreatureTemplate = {
   baseMagic: 15,
   baseMana: 100,
   
-  growth: {
-    vit: 2,
-    hp: 0,
-    attack: 3,
-    defense: 2,
-    dex: 1.5,
-    magic: 2,
-    mana: 15,
-  },
+  growth: dragonGrowth,
   
   critRateBonus: 8,
   critDamageBonus: 0.5,

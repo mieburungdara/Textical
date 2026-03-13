@@ -2,10 +2,22 @@
  * Skeleton Mage
  * 
  * Undead magic user.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Skeleton mage growth: high magic emphasis
+const skeletonMageGrowth: CreatureGrowthRates = {
+  vit: 1.02,     // +2% VIT per level (fragile)
+  hp: 1.01,      // +1% HP per level
+  attack: 1.03,  // +3% ATK per level
+  defense: 1.02, // +2% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.05,   // +5% MAG per level (magic user)
+  mana: 1.05,    // +5% MANA per level
+};
 
 export const skeletonMage: CreatureTemplate = {
   id: 'skeleton_mage',
@@ -28,15 +40,7 @@ export const skeletonMage: CreatureTemplate = {
   baseMagic: 15,  // +15
   baseMana: 150,
   
-  growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1.2,
-    defense: 0.5,
-    dex: 1.5,
-    magic: 2,
-    mana: 20,
-  },
+  growth: skeletonMageGrowth,
   
   critRateBonus: 8,
   critDamageBonus: 0.4,

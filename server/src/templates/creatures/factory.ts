@@ -281,14 +281,18 @@ export function createCreature(options: CreateCreatureOptions): Unit {
   const baseMana = template.baseMana;
   const baseHp = template.baseHp;
   
-  // Apply growth
-  const vit = baseVit + (template.growth.vit * levelOffset);
-  const attack = baseAttack + (template.growth.attack * levelOffset);
-  const defense = baseDefense + (template.growth.defense * levelOffset);
-  const dex = baseDex + (template.growth.dex * levelOffset);
-  const magic = baseMagic + (template.growth.magic * levelOffset);
-  const mana = baseMana + (template.growth.mana * levelOffset);
-  const hp = baseHp + (template.growth.hp * levelOffset);
+  // ========== EXPONENTIAL GROWTH FORMULA ==========
+  // stat = base * growthRate^levelOffset
+  // Example: ATK = 10 × 1.05^9 = 15.58 at level 10
+  
+  const growth = template.growth;
+  const vit = baseVit * Math.pow(growth.vit, levelOffset);
+  const attack = baseAttack * Math.pow(growth.attack, levelOffset);
+  const defense = baseDefense * Math.pow(growth.defense, levelOffset);
+  const dex = baseDex * Math.pow(growth.dex, levelOffset);
+  const magic = baseMagic * Math.pow(growth.magic, levelOffset);
+  const mana = baseMana * Math.pow(growth.mana, levelOffset);
+  const hp = baseHp * Math.pow(growth.hp, levelOffset);
   
   // Calculate derived stats with multipliers
   const finalHp = Math.floor((vit * 10 + hp) * totalMultiplier);

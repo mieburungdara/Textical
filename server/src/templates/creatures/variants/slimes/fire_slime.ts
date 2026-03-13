@@ -2,11 +2,23 @@
  * Fire Slime
  * 
  * Elemental slime with fire properties.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
 import { ElementType } from '../../../elements/index.js';
+
+// Fire slime growth: moderate with magic emphasis
+const fireSlimeGrowth: CreatureGrowthRates = {
+  vit: 1.03,     // +3% VIT per level
+  hp: 1.02,      // +2% HP per level
+  attack: 1.04,  // +4% ATK per level
+  defense: 1.02, // +2% DEF per level
+  dex: 1.03,     // +3% DEX per level
+  magic: 1.04,   // +4% MAG per level
+  mana: 1.04,    // +4% MANA per level
+};
 
 export const fireSlime: CreatureTemplate = {
   id: 'fire_slime',
@@ -25,15 +37,7 @@ export const fireSlime: CreatureTemplate = {
   baseMagic: 5,
   baseMana: 30,
   
-  growth: {
-    vit: 1,
-    hp: 0,
-    attack: 0.9,
-    defense: 0.4,
-    dex: 1,
-    magic: 0.8,
-    mana: 5,
-  },
+  growth: fireSlimeGrowth,
   
   critRateBonus: 3,
   critDamageBonus: 0.4,

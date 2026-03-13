@@ -2,9 +2,21 @@
  * Demon Type Template
  * 
  * Base stats for demon-type creatures: demons, demon lords, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
+
+// Demons: high attack, high magic, high life steal
+const demonGrowth: CreatureGrowthRates = {
+  vit: 1.04,     // +4% VIT per level
+  hp: 1.03,      // +3% HP bonus per level
+  attack: 1.06,  // +6% ATK per level (high damage)
+  defense: 1.04, // +4% DEF per level
+  dex: 1.05,     // +5% DEX per level
+  magic: 1.05,   // +5% MAG per level
+  mana: 1.05,    // +5% MANA per level
+};
 
 export const DEMON_TYPE: CreatureTypeTemplate = {
   type: CreatureType.DEMON,
@@ -18,15 +30,7 @@ export const DEMON_TYPE: CreatureTypeTemplate = {
   baseMagic: 20,
   baseMana: 200,
   
-  growth: {
-    vit: 2,
-    hp: 15,
-    attack: 4,
-    defense: 1.5,
-    dex: 3,
-    magic: 3,
-    mana: 25,
-  },
+  growth: demonGrowth,
   
   bonuses: {
     critRate: 15,
@@ -44,6 +48,7 @@ export const DEMON_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Demon Lord: boss-level demon
 export const DEMON_LORD_TYPE: CreatureTypeTemplate = {
   ...DEMON_TYPE,
   type: CreatureType.DEMON,
@@ -58,13 +63,13 @@ export const DEMON_LORD_TYPE: CreatureTypeTemplate = {
   baseMana: 550,
   
   growth: {
-    vit: 10,
-    hp: 100,
-    attack: 8,
-    defense: 6,
-    dex: 4,
-    magic: 7,
-    mana: 70,
+    vit: 1.07,    // +7% VIT per level (boss-level)
+    hp: 1.05,     // +5% HP per level
+    attack: 1.08, // +8% ATK per level
+    defense: 1.06, // +6% DEF per level
+    dex: 1.05,    // +5% DEX per level
+    magic: 1.07,  // +7% MAG per level
+    mana: 1.07,   // +7% MANA per level
   },
   
   bonuses: {

@@ -1,11 +1,13 @@
 /**
  * Freeze Status Effect Template
  * 
- * Unable to act, increased defense.
+ * Completely frozen in ice - cannot act, move, cast, OR receive ANY damage.
  * - Source: Ice skills
  * - Type: Control effect + stat buff
  * - Stacks: None (refreshes duration)
  * - Duration: 4 ticks
+ * - NOTE: Unlike Stun, unit is COMPLETELY IMMUNE to ALL damage while frozen
+ *         No attacks, no DoT, no AOE - nothing can damage a frozen unit
  */
 
 import { StatusEffectTemplate, StatusEffectType, StatusEffectCategory, StatAffected, StackBehavior } from './StatusEffect.js';
@@ -13,7 +15,7 @@ import { StatusEffectTemplate, StatusEffectType, StatusEffectCategory, StatAffec
 export const freeze: StatusEffectTemplate = {
   id: 'freeze',
   name: 'Freeze',
-  description: 'Cannot act. Defense increased by 50% but cannot move or attack.',
+  description: 'Frozen in ice. Cannot act, move, cast, or receive ANY damage. Defense +50%.',
   icon: '❄️',
   color: '#74C0FC',
   
@@ -30,6 +32,9 @@ export const freeze: StatusEffectTemplate = {
   
   preventsAction: true,
   preventsMovement: true,
+  preventsBeingAttacked: true,  // Cannot be attacked
+  preventsTargeting: true,     // Cannot be targeted (already covered by canBeTargeted)
+  completelyImmune: true,      // Key difference! No damage at all - ice shield
   
   particleEffect: 'ice_crystal',
   soundEffect: 'frozen',

@@ -98,14 +98,71 @@ export interface Unit {
   // Position (for grid-based combat)
   position?: Position;         // Current position on grid
   
+  // Skills - array of skill IDs the unit can use
+  skillIds?: string[];
+  
   // Status Effects
   statusEffects?: StatusEffectInstance[];
+  
+  // Inventory - consumable items available in combat
+  inventory?: {
+    itemId: string;
+    quantity: number;
+  }[];
+  
+  // Level Progression
+  progression?: {
+    level: number;
+    currentXp: number;
+    totalXp: number;
+    xpCurve?: string;
+  };
 }
 
 // Position interface for grid-based combat
 export interface Position {
   x: number;  // Column (0-based)
   y: number;  // Row (0-based)
+}
+
+// ========== WIN CONDITIONS ==========
+
+/** Win condition types for N-team battles */
+export enum WinCondition {
+  /** Default - last team standing wins */
+  LAST_STANDING = 'last_standing',
+  /** Most units alive when time runs out */
+  TIME_LIMIT = 'time_limit',
+  /** First team to get a kill wins */
+  FIRST_BLOOD = 'first_blood',
+  /** Team with most total kills wins */
+  TOTAL_KILLS = 'total_kills',
+  /** Team with most total damage dealt wins */
+  TOTAL_DAMAGE = 'total_damage',
+  /** First team to eliminate all enemies wins */
+  ANNIHILATION = 'annihilation',
+  /** Team with highest combined HP% when time runs out */
+  SURVIVAL = 'survival',
+  /** King of the hill - control point for longest */
+  KING_HILL = 'king_hill',
+}
+
+/** Battle configuration for N-team combat */
+export interface BattleConfig {
+  /** Number of teams */
+  teams: Unit[][];
+  /** Win condition type */
+  winCondition?: WinCondition;
+  /** Maximum ticks before match ends */
+  maxTicks?: number;
+  /** Capture point position (for KING_HILL) */
+  capturePoint?: { x: number; y: number };
+  /** Capture radius (for KING_HILL) */
+  captureRadius?: number;
+  /** Minimum kills to win (for TOTAL_KILLS) */
+  minKillsToWin?: number;
+  /** Seed for deterministic results */
+  seed?: string;
 }
 
 export interface StatusEffect {
@@ -121,6 +178,7 @@ export interface StatusEffect {
 export interface UnitState extends Unit {
   currentHp: number;
   isAlive: boolean;
+  teamIndex?: number;  // Track which team this unit belongs to
 }
 
 // ========== TRAIT COMBAT HELPERS ==========
@@ -246,12 +304,39 @@ export interface CombatAction {
   targetId: string;
   targetName: string;
   actionType: string;
+  
+  // Damage/Heal data - for UI sync
   damage?: number;
+  targetCurrentHp?: number;    // ✅ Absolute HP after damage (for UI bar)
+  targetMaxHp?: number;        // ✅ Max HP (for UI bar calculation)
+  actorCurrentHp?: number;     // ✅ Current HP of actor (for lifesteal visualization)
   heal?: number;
+  
+  // Animation - tells Godot which animation to play
+  animationTrigger?: string;    // ✅ Exact animation name (e.g., "slash", "thrust", "fireball")
+  skillId?: string;              // ✅ Which skill was used
+  
+  // Position - for knockback, teleport, dash effects
+  actorPosition?: Position;      // ✅ Actor position after action
+  targetPosition?: Position;     // ✅ Target position after action (for knockback)
+  positionDelta?: Position;      // ✅ How far target moved
+  
+  // Metadata
   effect?: string;
   isCrit: boolean;
   isMiss: boolean;
   isDodge: boolean;
+  isKill?: boolean;               // ✅ For death animation trigger
+}
+
+/** Stats tracked per team for win conditions */
+export interface TeamStats {
+  kills: number;
+  deaths: number;
+  damageDealt: number;
+  damageTaken: number;
+  capturePoints: number;  // For KING_HILL
+  highestKillTick: number;  // For FIRST_BLOOD
 }
 
 export interface CombatResult {
@@ -259,16 +344,79 @@ export interface CombatResult {
   totalTicks: number;
   logs: CombatAction[];
   finalState: {
-    playerTeam: UnitState[];
-    enemyTeam: UnitState[];
+    playerTeam?: UnitState[];
+    enemyTeam?: UnitState[];
+    teams?: UnitState[][];  // For N-team combat
+    teamStats?: TeamStats[];  // Stats per team (kills, deaths, damage, etc.)
   };
   rewards?: CombatRewards;
+  winningTeams?: number[];  // For N-team combat: indices of winning teams
+  replay?: {
+    version: string;
+    winner: 'player' | 'enemy' | 'draw';
+    totalTicks: number;
+    seed: string;
+    units: {
+      id: string;
+      name: string;
+      level: number;
+      maxHp: number;
+      attack: number;
+      defense: number;
+      speed: number;
+      magic: number;
+      attackRange: number;
+      moveRange: number;
+      team: 'player' | 'enemy';
+    }[];
+    initialPositions: Record<string, { x: number; y: number }>;
+    events: {
+      tick: number;
+      eventType: string;
+      unitId?: string;
+      unitName?: string;
+      targetId?: string;
+      targetName?: string;
+      actionType?: string;
+      damage?: number;
+      heal?: number;
+      effect?: string;
+      skillId?: string;
+      position?: { x: number; y: number };
+      oldPosition?: { x: number; y: number };
+      hp?: number;
+      maxHp?: number;
+      level?: number;
+      oldLevel?: number;
+      winner?: 'player' | 'enemy' | 'draw';
+      isCrit?: boolean;
+      isMiss?: boolean;
+      isDodge?: boolean;
+      isKill?: boolean;
+    }[];
+    finalState: {
+      playerTeam: { id: string; hp: number; alive: boolean; level: number }[];
+      enemyTeam: { id: string; hp: number; alive: boolean; level: number }[];
+    };
+    rewards?: {
+      experience: number;
+      gold: number;
+      drops: string[];
+      levelUps: { unitId: string; oldLevel: number; newLevel: number }[];
+    };
+  };
 }
 
 export interface CombatRewards {
   experience: number;
   gold: number;
   drops: string[];
+  levelUps?: {
+    unitId: string;
+    oldLevel: number;
+    newLevel: number;
+    statIncreases: { stat: string; oldValue: number; newValue: number }[];
+  }[];
 }
 
 // ========== ACTION TYPES ==========

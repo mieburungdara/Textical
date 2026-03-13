@@ -2,10 +2,22 @@
  * Dragon Mage
  * 
  * Dragon with magical abilities.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Dragon mage growth: high magic, elite-level
+const dragonMageGrowth: CreatureGrowthRates = {
+  vit: 1.04,     // +4% VIT per level
+  hp: 1.03,      // +3% HP per level
+  attack: 1.04,   // +4% ATK per level
+  defense: 1.03, // +3% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.06,   // +6% MAG per level (high magic)
+  mana: 1.06,    // +6% MANA per level
+};
 
 export const dragonMage: CreatureTemplate = {
   id: 'dragon_mage',
@@ -28,15 +40,7 @@ export const dragonMage: CreatureTemplate = {
   baseMagic: 35,
   baseMana: 350,
   
-  growth: {
-    vit: 2,
-    hp: 0,
-    attack: 2.5,
-    defense: 1.5,
-    dex: 2,
-    magic: 4,
-    mana: 40,
-  },
+  growth: dragonMageGrowth,
   
   critRateBonus: 10,
   critDamageBonus: 0.6,

@@ -2,11 +2,23 @@
  * Lich
  * 
  * Boss - Powerful undead mage who traded soul for immortality.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
 import { ElementType } from '../../../elements/index.js';
+
+// Lich growth: boss-level undead mage
+const lichGrowth: CreatureGrowthRates = {
+  vit: 1.05,     // +5% VIT per level (boss)
+  hp: 1.04,      // +4% HP per level
+  attack: 1.05,  // +5% ATK per level
+  defense: 1.04, // +4% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.07,   // +7% MAG per level (very high magic)
+  mana: 1.07,    // +7% MANA per level
+};
 
 export const lich: CreatureTemplate = {
   id: 'lich',
@@ -31,15 +43,7 @@ export const lich: CreatureTemplate = {
   baseMagic: 40,
   baseMana: 400,
   
-  growth: {
-    vit: 2,
-    hp: 0,
-    attack: 4,
-    defense: 2,
-    dex: 2,
-    magic: 5,
-    mana: 50,
-  },
+  growth: lichGrowth,
   
   critRateBonus: 20,
   critDamageBonus: 1.0,

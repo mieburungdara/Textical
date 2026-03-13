@@ -2,18 +2,21 @@
  * Beast Type Template
  * 
  * Base stats for beast-type creatures: slimes, wolves, bats, spiders, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
 
-const beastGrowth: CreatureStatGrowth = {
-  vit: 1,
-  hp: 5,
-  attack: 1.2,
-  defense: 0.4,
-  dex: 2,
-  magic: 0,
-  mana: 0,
+// Beast-type creatures: fast, moderate stats
+// Growth: balanced with emphasis on DEX
+const beastGrowth: CreatureGrowthRates = {
+  vit: 1.03,     // +3% VIT per level
+  hp: 1.02,      // +2% HP bonus per level
+  attack: 1.04,  // +4% ATK per level
+  defense: 1.02, // +2% DEF per level
+  dex: 1.05,     // +5% DEX per level (fast)
+  magic: 1.0,    // No magic growth
+  mana: 1.0,     // No mana growth
 };
 
 const beastBonuses: CreatureCombatBonuses = {
@@ -43,6 +46,7 @@ export const BEAST_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Slime: slow, weak, but numerous
 export const SLIME_TYPE: CreatureTypeTemplate = {
   ...BEAST_TYPE,
   type: CreatureType.BEAST,
@@ -55,13 +59,13 @@ export const SLIME_TYPE: CreatureTypeTemplate = {
   baseDex: 10,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 0.8,
-    defense: 0.3,
-    dex: 1,
-    magic: 0,
-    mana: 0,
+    vit: 1.02,    // +2% VIT per level (slow)
+    hp: 1.01,     // +1% HP bonus per level
+    attack: 1.03, // +3% ATK per level
+    defense: 1.02, // +2% DEF per level
+    dex: 1.02,    // +2% DEX per level (slow)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -73,6 +77,7 @@ export const SLIME_TYPE: CreatureTypeTemplate = {
   description: 'Gelatinous blob that oozes around',
 };
 
+// Wolf: fast, high crit
 export const WOLF_TYPE: CreatureTypeTemplate = {
   ...BEAST_TYPE,
   type: CreatureType.BEAST,
@@ -85,13 +90,13 @@ export const WOLF_TYPE: CreatureTypeTemplate = {
   baseDex: 30,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1.5,
-    defense: 0.5,
-    dex: 2.5,
-    magic: 0,
-    mana: 0,
+    vit: 1.03,    // +3% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.02, // +2% DEF per level
+    dex: 1.06,    // +6% DEX per level (very fast)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -103,6 +108,7 @@ export const WOLF_TYPE: CreatureTypeTemplate = {
   description: 'Pack hunter with sharp fangs',
 };
 
+// Spider: very fast, high crit
 export const SPIDER_TYPE: CreatureTypeTemplate = {
   ...BEAST_TYPE,
   type: CreatureType.BUG,
@@ -115,13 +121,13 @@ export const SPIDER_TYPE: CreatureTypeTemplate = {
   baseDex: 40,
   
   growth: {
-    vit: 1,
-    hp: 6,
-    attack: 2,
-    defense: 0.5,
-    dex: 4,
-    magic: 0,
-    mana: 0,
+    vit: 1.03,    // +3% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.02, // +2% DEF per level
+    dex: 1.07,    // +7% DEX per level (very fast)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {

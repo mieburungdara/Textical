@@ -2,10 +2,22 @@
  * Ancient Dragon
  * 
  * Boss - The most powerful dragon.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// Ancient dragon growth: world boss level
+const ancientDragonGrowth: CreatureGrowthRates = {
+  vit: 1.06,     // +6% VIT per level (world boss)
+  hp: 1.05,      // +5% HP per level
+  attack: 1.07,  // +7% ATK per level
+  defense: 1.06, // +6% DEF per level
+  dex: 1.05,     // +5% DEX per level
+  magic: 1.06,   // +6% MAG per level
+  mana: 1.06,    // +6% MANA per level
+};
 
 export const ancientDragon: CreatureTemplate = {
   id: 'ancient_dragon',
@@ -28,15 +40,7 @@ export const ancientDragon: CreatureTemplate = {
   baseMagic: 60,
   baseMana: 500,
   
-  growth: {
-    vit: 8,
-    hp: 0,
-    attack: 10,
-    defense: 6,
-    dex: 3,
-    magic: 8,
-    mana: 60,
-  },
+  growth: ancientDragonGrowth,
   
   critRateBonus: 20,
   critDamageBonus: 1.0,

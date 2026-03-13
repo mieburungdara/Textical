@@ -148,7 +148,7 @@ export enum CreatureTier {
   TIER_5 = 5,  // Very Hard / Boss (Level 41-50)
 }
 
-// ========== STAT GROWTH ==========
+// ========== STAT GROWTH (LEGACY - LINEAR) ==========
 
 export interface CreatureStatGrowth {
   vit: number;       // VIT per level
@@ -158,6 +158,20 @@ export interface CreatureStatGrowth {
   dex: number;       // DEX per level
   magic: number;     // MAG per level
   mana: number;      // Additional Mana per level
+}
+
+// ========== EXPONENTIAL GROWTH RATES ==========
+// New system: stat = base * growthRate^(level-1)
+// Each creature type has unique growth rates for each stat
+
+export interface CreatureGrowthRates {
+  vit: number;      // HP growth per level (e.g., 1.03 = +3%)
+  hp: number;       // Additional HP multiplier per level
+  attack: number;   // ATK growth per level
+  defense: number;  // DEF growth per level
+  dex: number;      // DEX growth per level
+  magic: number;    // MAG growth per level
+  mana: number;     // Mana multiplier per level
 }
 
 // ========== COMBAT BONUSES ==========
@@ -190,8 +204,9 @@ export interface CreatureTypeTemplate {
   baseMagic: number;
   baseMana: number;
   
-  // Growth per level
-  growth: CreatureStatGrowth;
+  // Growth per level - using exponential formula
+  // stat = base * growthRate^(level-1)
+  growth: CreatureGrowthRates;
   
   // Combat bonuses
   bonuses: CreatureCombatBonuses;
@@ -262,8 +277,9 @@ export interface CreatureTemplate {
   baseMagic: number;
   baseMana: number;
   
-  // Growth per level
-  growth: CreatureStatGrowth;
+  // Growth per level - using exponential formula
+  // stat = base * growthRate^(level-1)
+  growth: CreatureGrowthRates;
   
   // Combat bonuses
   critRateBonus: number;

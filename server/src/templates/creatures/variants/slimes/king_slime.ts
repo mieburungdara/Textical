@@ -2,10 +2,22 @@
  * King Slime
  * 
  * Boss slime - royal ruler of slimes.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory } from '../../CreatureBase.js';
+import { CreatureTemplate, CreatureType, CreatureTier, CreatureRank, UnitTrait, SizeCategory, CreatureGrowthRates } from '../../CreatureBase.js';
 import { WeaponType } from '../../../items/index.js';
+
+// King slime growth: boss-level
+const kingSlimeGrowth: CreatureGrowthRates = {
+  vit: 1.05,     // +5% VIT per level (boss)
+  hp: 1.04,      // +4% HP per level
+  attack: 1.05,  // +5% ATK per level
+  defense: 1.04, // +4% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.04,   // +4% MAG per level
+  mana: 1.04,    // +4% MANA per level
+};
 
 export const kingSlime: CreatureTemplate = {
   id: 'king_slime',
@@ -28,15 +40,7 @@ export const kingSlime: CreatureTemplate = {
   baseMagic: 10,
   baseMana: 100,
   
-  growth: {
-    vit: 3,
-    hp: 0,
-    attack: 3,
-    defense: 2,
-    dex: 1.5,
-    magic: 1.5,
-    mana: 15,
-  },
+  growth: kingSlimeGrowth,
   
   critRateBonus: 10,
   critDamageBonus: 0.6,

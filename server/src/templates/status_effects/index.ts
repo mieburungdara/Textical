@@ -27,7 +27,22 @@ import {
   canCast,
   getStatusEffect,
   getAllStatusEffects,
-  getStatusEffectsByCategoryType
+  getStatusEffectsByCategoryType,
+  // Immunity system
+  isImmuneTo,
+  canBeTargeted,
+  canBeAttacked,
+  isCompletelyImmune,
+  canPassThrough,
+  
+  // Dispel system
+  removeStatusEffect,
+  dispelByCategory,
+  dispelDebuffs,
+  dispelBuffs,
+  dispelAll,
+  hasDebuffs,
+  hasBuffs
 } from './StatusEffect.js';
 
 // ========== ELEMENT-BASED STATUS EFFECTS ==========
@@ -88,6 +103,31 @@ REGISTRY[shield.id] = shield;
 import { haste } from './haste.js';
 REGISTRY[haste.id] = haste;
 
+// ========== SPECIAL STATUS EFFECTS ==========
+
+// Invisibility & Phase
+import { invisible } from './invisible.js';
+REGISTRY[invisible.id] = invisible;
+
+import { phased } from './phased.js';
+REGISTRY[phased.id] = phased;
+
+// Immunity
+import { immuneStun } from './immunity.js';
+REGISTRY[immuneStun.id] = immuneStun;
+
+import { immunePoison } from './immunity.js';
+REGISTRY[immunePoison.id] = immunePoison;
+
+import { immuneCurse } from './immunity.js';
+REGISTRY[immuneCurse.id] = immuneCurse;
+
+import { immuneSilence } from './immunity.js';
+REGISTRY[immuneSilence.id] = immuneSilence;
+
+import { immuneAll } from './immunity.js';
+REGISTRY[immuneAll.id] = immuneAll;
+
 // ========== EXPORTS ==========
 
 // Re-export everything from StatusEffect.ts
@@ -115,6 +155,22 @@ export {
   getAllStatusEffects,
   getStatusEffectsByCategoryType,
   
+  // Immunity system
+  isImmuneTo,
+  canBeTargeted,
+  canBeAttacked,
+  isCompletelyImmune,
+  canPassThrough,
+  
+  // Dispel system
+  removeStatusEffect,
+  dispelByCategory,
+  dispelDebuffs,
+  dispelBuffs,
+  dispelAll,
+  hasDebuffs,
+  hasBuffs,
+  
   // Individual templates
   burn,
   wet,
@@ -131,6 +187,15 @@ export {
   regen,
   shield,
   haste,
+  
+  // Special
+  invisible,
+  phased,
+  immuneStun,
+  immunePoison,
+  immuneCurse,
+  immuneSilence,
+  immuneAll,
 };
 
 // ========== CONVENIENCE EXPORTS ==========

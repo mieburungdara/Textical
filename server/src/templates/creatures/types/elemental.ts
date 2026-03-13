@@ -2,9 +2,21 @@
  * Elemental Type Template
  * 
  * Base stats for elemental creatures: fire elemental, water elemental, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
+
+// Elementals: moderate stats, high magic
+const elementalGrowth: CreatureGrowthRates = {
+  vit: 1.03,     // +3% VIT per level
+  hp: 1.02,      // +2% HP bonus per level
+  attack: 1.04,  // +4% ATK per level
+  defense: 1.02, // +2% DEF per level
+  dex: 1.04,     // +4% DEX per level
+  magic: 1.05,   // +5% MAG per level (magic users)
+  mana: 1.05,    // +5% MANA per level
+};
 
 export const ELEMENTAL_TYPE: CreatureTypeTemplate = {
   type: CreatureType.ELEMENTAL,
@@ -18,15 +30,7 @@ export const ELEMENTAL_TYPE: CreatureTypeTemplate = {
   baseMagic: 15,
   baseMana: 150,
   
-  growth: {
-    vit: 1,
-    hp: 8,
-    attack: 2.5,
-    defense: 0.8,
-    dex: 2,
-    magic: 2,
-    mana: 15,
-  },
+  growth: elementalGrowth,
   
   bonuses: {
     critRate: 10,
@@ -42,6 +46,7 @@ export const ELEMENTAL_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Fire Elemental: high attack, fire resistance
 export const FIRE_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   ...ELEMENTAL_TYPE,
   type: CreatureType.ELEMENTAL,
@@ -56,13 +61,13 @@ export const FIRE_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   baseMana: 150,
   
   growth: {
-    vit: 1,
-    hp: 8,
-    attack: 2.5,
-    defense: 0.8,
-    dex: 2,
-    magic: 2,
-    mana: 15,
+    vit: 1.03,    // +3% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.05, // +5% ATK per level (high damage)
+    defense: 1.02, // +2% DEF per level
+    dex: 1.04,    // +4% DEX per level
+    magic: 1.05,  // +5% MAG per level
+    mana: 1.05,   // +5% MANA per level
   },
   
   bonuses: {
@@ -76,6 +81,7 @@ export const FIRE_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   description: 'Embodiment of fire',
 };
 
+// Water Elemental: high magic, tanky
 export const WATER_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   ...ELEMENTAL_TYPE,
   type: CreatureType.ELEMENTAL,
@@ -90,13 +96,13 @@ export const WATER_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   baseMana: 180,
   
   growth: {
-    vit: 1,
-    hp: 10,
-    attack: 2,
-    defense: 1,
-    dex: 2,
-    magic: 2.5,
-    mana: 20,
+    vit: 1.04,    // +4% VIT per level (tanky)
+    hp: 1.03,     // +3% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.03, // +3% DEF per level
+    dex: 1.04,    // +4% DEX per level
+    magic: 1.05,  // +5% MAG per level
+    mana: 1.06,   // +6% MANA per level (high mana)
   },
   
   bonuses: {
@@ -110,6 +116,7 @@ export const WATER_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   description: 'Embodiment of water',
 };
 
+// Earth Elemental: very tanky, high defense
 export const EARTH_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   ...ELEMENTAL_TYPE,
   type: CreatureType.ELEMENTAL,
@@ -124,13 +131,13 @@ export const EARTH_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   baseMana: 100,
   
   growth: {
-    vit: 2,
-    hp: 15,
-    attack: 3,
-    defense: 2,
-    dex: 1,
-    magic: 1,
-    mana: 10,
+    vit: 1.05,    // +5% VIT per level (very tanky)
+    hp: 1.04,     // +4% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.05, // +5% DEF per level (very defensive)
+    dex: 1.02,    // +2% DEX per level (slow)
+    magic: 1.03,  // +3% MAG per level
+    mana: 1.03,   // +3% MANA per level
   },
   
   bonuses: {
@@ -144,6 +151,7 @@ export const EARTH_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   description: 'Embodiment of earth',
 };
 
+// Wind Elemental: very fast, high evasion
 export const WIND_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   ...ELEMENTAL_TYPE,
   type: CreatureType.ELEMENTAL,
@@ -158,13 +166,13 @@ export const WIND_ELEMENTAL_TYPE: CreatureTypeTemplate = {
   baseMana: 120,
   
   growth: {
-    vit: 1,
-    hp: 5,
-    attack: 2,
-    defense: 0.5,
-    dex: 3,
-    magic: 1.5,
-    mana: 12,
+    vit: 1.02,    // +2% VIT per level (fragile)
+    hp: 1.01,     // +1% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.01, // +1% DEF per level (fragile)
+    dex: 1.06,    // +6% DEX per level (very fast)
+    magic: 1.04,  // +4% MAG per level
+    mana: 1.04,   // +4% MANA per level
   },
   
   bonuses: {

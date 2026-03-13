@@ -2,9 +2,21 @@
  * Humanoid Type Template
  * 
  * Base stats for humanoid creatures: goblins, orcs, humans, elves, dwarves, etc.
+ * Uses exponential growth: stat = base * growthRate^(level-1)
  */
 
-import { CreatureType, CreatureTypeTemplate, CreatureStatGrowth, CreatureCombatBonuses } from './_base.js';
+import { CreatureType, CreatureTypeTemplate, CreatureCombatBonuses, CreatureGrowthRates } from './_base.js';
+
+// Humanoid: balanced stats, versatile
+const humanoidGrowth: CreatureGrowthRates = {
+  vit: 1.03,     // +3% VIT per level
+  hp: 1.02,      // +2% HP bonus per level
+  attack: 1.03,  // +3% ATK per level
+  defense: 1.03, // +3% DEF per level
+  dex: 1.03,     // +3% DEX per level
+  magic: 1.03,   // +3% MAG per level
+  mana: 1.03,    // +3% MANA per level
+};
 
 export const HUMANOID_TYPE: CreatureTypeTemplate = {
   type: CreatureType.HUMANOID,
@@ -18,15 +30,7 @@ export const HUMANOID_TYPE: CreatureTypeTemplate = {
   baseMagic: 5,
   baseMana: 50,
   
-  growth: {
-    vit: 1,
-    hp: 5,
-    attack: 1,
-    defense: 0.5,
-    dex: 1,
-    magic: 0.5,
-    mana: 5,
-  },
+  growth: humanoidGrowth,
   
   bonuses: {
     critRate: 5,
@@ -41,6 +45,7 @@ export const HUMANOID_TYPE: CreatureTypeTemplate = {
 
 // ========== VARIANTS ==========
 
+// Goblin: fast, evasive, weak
 export const GOBLIN_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.HUMANOID,
@@ -53,13 +58,13 @@ export const GOBLIN_TYPE: CreatureTypeTemplate = {
   baseDex: 25,
   
   growth: {
-    vit: 1,
-    hp: 5,
-    attack: 1.2,
-    defense: 0.4,
-    dex: 2,
-    magic: 0,
-    mana: 0,
+    vit: 1.02,    // +2% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.02, // +2% DEF per level
+    dex: 1.05,    // +5% DEX per level (fast)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -71,6 +76,7 @@ export const GOBLIN_TYPE: CreatureTypeTemplate = {
   description: 'Small green humanoid, mischievous and greedy',
 };
 
+// Orc: high ATK, tanky
 export const ORC_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.HUMANOID,
@@ -83,13 +89,13 @@ export const ORC_TYPE: CreatureTypeTemplate = {
   baseDex: 15,
   
   growth: {
-    vit: 1,
-    hp: 10,
-    attack: 2,
-    defense: 1.5,
-    dex: 1,
-    magic: 0,
-    mana: 0,
+    vit: 1.04,    // +4% VIT per level
+    hp: 1.03,     // +3% HP per level
+    attack: 1.05, // +5% ATK per level (high damage)
+    defense: 1.04, // +4% DEF per level
+    dex: 1.03,    // +3% DEX per level
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -102,6 +108,7 @@ export const ORC_TYPE: CreatureTypeTemplate = {
   description: 'Brutish green-skinned warrior',
 };
 
+// Human: balanced, versatile
 export const HUMAN_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.HUMANOID,
@@ -116,13 +123,13 @@ export const HUMAN_TYPE: CreatureTypeTemplate = {
   baseMana: 50,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 1,
-    defense: 0.5,
-    dex: 1,
-    magic: 0.5,
-    mana: 5,
+    vit: 1.03,    // +3% VIT per level
+    hp: 1.02,     // +2% HP per level
+    attack: 1.03, // +3% ATK per level
+    defense: 1.03, // +3% DEF per level
+    dex: 1.03,    // +3% DEX per level
+    magic: 1.03,  // +3% MAG per level
+    mana: 1.03,   // +3% MANA per level
   },
   
   bonuses: {
@@ -134,6 +141,7 @@ export const HUMAN_TYPE: CreatureTypeTemplate = {
   description: 'Versatile and adaptable beings',
 };
 
+// Elf: high DEX, high magic
 export const ELF_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.HUMANOID,
@@ -148,13 +156,13 @@ export const ELF_TYPE: CreatureTypeTemplate = {
   baseMana: 80,
   
   growth: {
-    vit: 1,
-    hp: 0,
-    attack: 0.8,
-    defense: 0.4,
-    dex: 2,
-    magic: 1,
-    mana: 10,
+    vit: 1.02,    // +2% VIT per level
+    hp: 1.01,     // +1% HP per level
+    attack: 1.03, // +3% ATK per level
+    defense: 1.02, // +2% DEF per level
+    dex: 1.05,    // +5% DEX per level (very fast)
+    magic: 1.04,   // +4% MAG per level
+    mana: 1.04,    // +4% MANA per level
   },
   
   bonuses: {
@@ -166,6 +174,7 @@ export const ELF_TYPE: CreatureTypeTemplate = {
   description: 'Graceful beings with keen senses',
 };
 
+// Dwarf: high DEF, high VIT
 export const DWARF_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.HUMANOID,
@@ -178,13 +187,13 @@ export const DWARF_TYPE: CreatureTypeTemplate = {
   baseDex: 8,
   
   growth: {
-    vit: 1.5,
-    hp: 0,
-    attack: 1.2,
-    defense: 1.5,
-    dex: 0.5,
-    magic: 0,
-    mana: 0,
+    vit: 1.04,    // +4% VIT per level
+    hp: 1.03,     // +3% HP per level
+    attack: 1.04, // +4% ATK per level
+    defense: 1.05, // +5% DEF per level (very tanky)
+    dex: 1.02,    // +2% DEX per level (slow)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
@@ -197,6 +206,7 @@ export const DWARF_TYPE: CreatureTypeTemplate = {
   description: 'Stout and hardy underground dwellers',
 };
 
+// Troll: giant, very tanky, regenerates
 export const TROLL_TYPE: CreatureTypeTemplate = {
   ...HUMANOID_TYPE,
   type: CreatureType.GIANT,
@@ -209,13 +219,13 @@ export const TROLL_TYPE: CreatureTypeTemplate = {
   baseDex: 10,
   
   growth: {
-    vit: 2,
-    hp: 18,
-    attack: 3,
-    defense: 2,
-    dex: 1,
-    magic: 0,
-    mana: 0,
+    vit: 1.05,    // +5% VIT per level (very tanky)
+    hp: 1.04,     // +4% HP per level
+    attack: 1.05, // +5% ATK per level
+    defense: 1.04, // +4% DEF per level
+    dex: 1.02,    // +2% DEX per level (slow)
+    magic: 1.0,   // No magic
+    mana: 1.0,    // No mana
   },
   
   bonuses: {
