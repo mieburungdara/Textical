@@ -1,0 +1,55 @@
+# Godot-specific ignores
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+scripts/
+shaders/
+scenes/
+shapes/
+collision/
+environment/
+materials/
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores
+.mono/
+data_*/
+mono_crash.*.json
+
+# Node.js and npm
+node_modules/
+npm-debug.log
+dist/
+server/addons/
+server/README.md
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.os
+*.obj
+*.bc
+*.pyc
+*.pyo
+__pycache__/
+
+# Various temporary files
+*.swp
+*~
+.~lock.*
+
+.vscode/
+TRASH.md
+UPDATE.md
+CLAUDE.md
+AGENTS.md
+examples/
+.claude/
+.mcp.json
+opencode.json
