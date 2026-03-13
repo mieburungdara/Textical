@@ -1,38 +1,79 @@
-[gd_scene format=3 uid="uid://vc51qj06drni"]
+[gd_scene load_steps=12 format=3 uid="uid://vc51qj06drni"]
 
-[ext_resource type="PackedScene" uid="uid://cwpdydqyt48op" path="res://scenes/GlobalHUD.tscn" id="1"]
-[ext_resource type="Script" path="res://scripts/GameScene.gd" id="2"]
-[ext_resource type="PackedScene" uid="uid://rxku7mcdqorr" path="res://scenes/HeroRoster.tscn" id="3"]
-[ext_resource type="PackedScene" uid="uid://bju3xshxaes6s" path="res://scenes/HeroDetail.tscn" id="4"]
-[ext_resource type="PackedScene" uid="uid://8ih5t4sqgnaq" path="res://scenes/InventoryUI.tscn" id="5"]
-[ext_resource type="PackedScene" uid="uid://bxk7t9mq2p3r" path="res://scenes/QuestBoardUI.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://scenes/ShopUI.tscn" id="7"]
+[ext_resource type="Script" uid="uid://ci1gabtuio1jh" path="res://scripts/GameScene.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://cwpdydqyt48op" path="res://scenes/GlobalHUD.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://rxku7mcdqorr" path="res://scenes/HeroRoster.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://bju3xshxaes6s" path="res://scenes/HeroDetail.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://8ih5t4sqgnaq" path="res://scenes/InventoryUI.tscn" id="6"]
+[ext_resource type="PackedScene" uid="uid://bxk7uamq2p3r" path="res://scenes/QuestBoardUI.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ShopUI.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/BlacksmithUI.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://scenes/TownHallUI.tscn" id="10"]
+[ext_resource type="Script" path="res://scripts/BuildingPanel.gd" id="10"]
 
-[node name="GameScene" type="Node2D"]
-script = ExtResource("2")
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.122, 0.161, 0.216, 1)
 
-[node name="GlobalHUD" parent="." instance=ExtResource("1")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dim"]
+bg_color = Color(0, 0, 0, 0.55)
 
-[node name="GameView" type="Node2D" parent="."]
+[node name="GameScene" type="Control"]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 48.0
-offset_bottom = -64.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+script = ExtResource("2")
 
-[node name="HeroRoster" parent="." instance=ExtResource("3")]
+[node name="GameView" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="HeroDetail" parent="." instance=ExtResource("4")]
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="DimOverlay" type="Panel" parent="UILayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dim")
+mouse_filter = 2
 visible = false
 
-[node name="InventoryUI" parent="." instance=ExtResource("5")]
+[node name="OverlayContainer" type="Control" parent="UILayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="QuestBoardUI" parent="." instance=ExtResource("6")]
+[node name="HeroRoster" parent="UILayer/OverlayContainer" instance=ExtResource("4")]
+visible = false
 
-[node name="ShopUI" parent="." instance=ExtResource("7")]
+[node name="HeroDetail" parent="UILayer/OverlayContainer" instance=ExtResource("5")]
+visible = false
 
-[node name="BlacksmithUI" parent="." instance=ExtResource("9")]
+[node name="InventoryUI" parent="UILayer/OverlayContainer" instance=ExtResource("6")]
+visible = false
 
-[node name="TownHallUI" parent="." instance=ExtResource("10")]
+[node name="QuestBoardUI" parent="UILayer/OverlayContainer" instance=ExtResource("7")]
+visible = false
+
+[node name="ShopUI" parent="UILayer/OverlayContainer" instance=ExtResource("8")]
+visible = false
+
+[node name="BlacksmithUI" parent="UILayer/OverlayContainer" instance=ExtResource("9")]
+visible = false
+
+[node name="BuildingPanel" parent="." instance=ExtResource("10")]
+
+[node name="GlobalHUD" parent="." instance=ExtResource("3")]
+layer = 10

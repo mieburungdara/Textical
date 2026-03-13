@@ -1,123 +1,114 @@
 extends Node
-class_name LocationManager
+# class_name LocationManager  # Autoload - no class_name needed
 
 ## Manages scene transitions between game locations
+## Uses LocationStateMachine for state management
 ## Singleton pattern - accessible from anywhere
 
-# Location types
-enum LocationType {
-    VILLAGE,
-    FOREST,
-    DUNGEON,
-    CITADEL,
-}
+# Reference to state machine
+var _state_machine: LocationStateMachine = null
 
-# Current location
-var current_location: LocationType = LocationType.VILLAGE
-var current_floor: int = 1
+# Current location - returns LocationType enum for backward compatibility
+var current_location: LocationType:
+	get: return _state_machine.get_current_state() as LocationType
+
+var current_floor: int:
+	get: return _state_machine.get_current_floor()
+
 const MAX_FLOOR: int = 100
 
-# Location metadata (optimized - use const where possible)
-const LOCATION_DATA: Dictionary = {
-    LocationType.VILLAGE: {
-        "name": "Solara Village",
-        "description": "A peaceful village in the Solara Plains",
-        "is_safe": true,
-        "can_rest": true,
-        "can_shop": true,
-        "can_quest": true,
-        "exits": [LocationType.FOREST, LocationType.CITADEL]
-    },
-    LocationType.FOREST: {
-        "name": "Darkwood Forest",
-        "description": "A mysterious forest filled with creatures",
-        "is_safe": false,
-        "exits": [LocationType.VILLAGE, LocationType.DUNGEON]
-    },
-    LocationType.DUNGEON: {
-        "name": "Iron Depths",
-        "description": "Floor %d - Ancient mines beneath the mountains",
-        "is_safe": false,
-        "exits": [LocationType.FOREST]
-    },
-    LocationType.CITADEL: {
-        "name": "Solara Citadel",
-        "description": "The royal castle of the kingdom",
-        "is_safe": true,
-        "can_quest": true,
-        "exits": [LocationType.VILLAGE]
-    }
+# Legacy LocationType enum for compatibility
+enum LocationType {
+	VILLAGE,
+	FOREST,
+	DUNGEON,
+	CITADEL,
 }
 
+# Signals (forwarded from state machine)
 signal location_changed(from_location: LocationType, to_location: LocationType)
 signal floor_changed(from_floor: int, to_floor: int)
 
+
 func _ready() -> void:
-    process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
+	# Initialize state machine
+	_state_machine = LocationStateMachine.new()
+	_state_machine.name = "StateMachine"
+	add_child(_state_machine)
+	
+	# Connect state machine signals to our signals
+	_state_machine.state_changed.connect(_on_state_changed)
+	_state_machine.floor_changed.connect(_on_floor_changed)
+	
+	print("[LocationManager] Initialized with LocationStateMachine")
+
+
+# =============================================================================
+# Forwarded Methods (for backward compatibility)
+# =============================================================================
 
 func get_current_location_data() -> Dictionary:
-    var data = LOCATION_DATA.get(current_location, {}).duplicate(true)
-    if current_location == LocationType.DUNGEON:
-        data["description"] = data["description"] % current_floor
-    return data
+	return _state_machine.get_current_state_config()
+
 
 func get_location_name(location: LocationType) -> String:
-    var data = LOCATION_DATA.get(location, {})
-    var name = data.get("name", "Unknown")
-    if location == LocationType.DUNGEON:
-        name = name + " F%d" % current_floor
-    return name
+	var config = _state_machine.get_state_config(location as LocationStateMachine.State)
+	var name = config.get("name", "Unknown")
+	if location == LocationType.DUNGEON:
+		name = name + " F%d" % current_floor
+	return name
+
 
 func is_safe_zone() -> bool:
-    return LOCATION_DATA.get(current_location, {}).get("is_safe", false)
+	return _state_machine.is_safe_zone()
+
 
 func can_travel_to(location: LocationType) -> bool:
-    var exits = get_exits()
-    return location in exits
+	return _state_machine.can_transition_to(location as LocationStateMachine.State)
+
 
 func travel_to(location: LocationType) -> bool:
-    if not can_travel_to(location):
-        push_warning("[LocationManager] Cannot travel from %s to %s" % [current_location, location])
-        return false
-    
-    var from_location = current_location
-    current_location = location
-    
-    # Reset floor when entering dungeon from outside
-    if location == LocationType.DUNGEON:
-        current_floor = 1
-    
-    # Emit signal - GameScene will handle view switching
-    location_changed.emit(from_location, location)
-    return true
+	return _state_machine.transition_to(location as LocationStateMachine.State)
+
 
 func exit_dungeon() -> bool:
-    if current_location != LocationType.DUNGEON:
-        return false
-    return travel_to(LocationType.FOREST)
+	return _state_machine.exit_dungeon()
+
 
 func go_up_floor() -> bool:
-    if current_location != LocationType.DUNGEON:
-        return false
-    if current_floor >= MAX_FLOOR:
-        push_warning("[LocationManager] Already at max floor: %d" % MAX_FLOOR)
-        return false
-    
-    var from_floor = current_floor
-    current_floor += 1
-    floor_changed.emit(from_floor, current_floor)
-    return true
+	return _state_machine.go_up_floor()
+
 
 func go_down_floor() -> bool:
-    if current_location != LocationType.DUNGEON:
-        return false
-    if current_floor <= 1:
-        return exit_dungeon()
-    
-    var from_floor = current_floor
-    current_floor -= 1
-    floor_changed.emit(from_floor, current_floor)
-    return true
+	return _state_machine.go_down_floor()
+
 
 func get_exits() -> Array:
-    return LOCATION_DATA.get(current_location, {}).get("exits", [])
+	# Convert State array to LocationType array for backward compatibility
+	var state_exits = _state_machine.get_allowed_exits()
+	var result: Array[LocationType] = []
+	for state in state_exits:
+		result.append(state as LocationType)
+	return result
+
+
+# =============================================================================
+# Signal Handlers
+# =============================================================================
+
+func _on_state_changed(from_state: LocationStateMachine.State, to_state: LocationStateMachine.State) -> void:
+	location_changed.emit(from_state as LocationType, to_state as LocationType)
+
+
+func _on_floor_changed(from_floor: int, to_floor: int) -> void:
+	floor_changed.emit(from_floor, to_floor)
+
+
+# =============================================================================
+# Debug
+# =============================================================================
+
+func debug_print() -> void:
+	_state_machine.debug_print()
