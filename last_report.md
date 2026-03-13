@@ -1,85 +1,43 @@
-# Creatures Folder - Modular Creature Data
+# Interactive Buildings UI - Development Report
 
 ## Summary
+Completed Interactive Buildings UI for Textical RPG game. All building UIs have been created and integrated.
 
-Created a dedicated `creatures/` folder for creature data, following the same pattern as `classes/` and `races/` folders. This makes the system more modular and flexible.
+## Completed Tasks
 
-## Folder Structure
+### Building UIs Created
+1. **ShopUI** - Buy items with categories (Weapons, Armor, Consumables, Materials)
+2. **InnUI** - Rest/heal party (50% HP for 25g/hero, 100% HP for 50g/hero)
+3. **BlacksmithUI** - Upgrade equipment (10% per level, max level 10)
+4. **TownHallUI** - Manage heroes and enter combat
 
-```
-server/src/templates/creatures/
-├── CreatureBase.ts      # Base interfaces and types
-├── slimes.ts           # Slime family (base + variants)
-├── skeletons.ts        # Skeleton family (base + variants)
-├── wolves.ts          # (to be added)
-├── goblins.ts         # (to be added)
-├── humans.ts          # (to be added)
-├── dragons.ts         # (to be added)
-└── index.ts           # Central export
-```
+### Integration
+- All building UIs integrated into GameScene
+- Building buttons now open respective UIs
+- Fixed HeroDetail → Inventory callback after equip
 
-## What Was Implemented
+### Files Created/Modified
 
-### CreatureBase.ts
-- `CreatureType` enum (BEAST, UNDEAD, DRAGON, etc.)
-- `CreatureRank` enum (NORMAL, ELITE, BOSS, etc.)
-- `CreatureTier` enum (TIER_1-5)
-- `CreatureTemplate` interface
-- `RANK_MULTIPLIERS` and `TIER_SCALING`
+**New Scenes:**
+- client/scenes/ShopUI.tscn
+- client/scenes/InnUI.tscn
+- client/scenes/BlacksmithUI.tscn
+- client/scenes/TownHallUI.tscn
 
-### slimes.ts
-```
-base_slime
-├── fire_slime (+element)
-├── water_slime (+element)
-├── ice_slime (+element)
-├── dark_slime (+element)
-├── king_slime (BOSS)
-└── slime_archer (+class)
-```
+**New Scripts:**
+- client/scripts/ShopUI.gd
+- client/scripts/InnUI.gd
+- client/scripts/BlacksmithUI.gd
+- client/scripts/TownHallUI.gd
 
-### skeletons.ts
-```
-base_skeleton
-├── skeleton_warrior (+class)
-├── skeleton_archer (+class)
-├── skeleton_mage (+class)
-├── skeleton_knight (+class)
-├── skeleton_assassin (+class)
-├── fire_skeleton (+element)
-├── dark_skeleton (+element)
-└── lich (BOSS)
-```
+**Modified:**
+- client/scenes/GameScene.tscn - Added building UI references
+- client/scripts/GameScene.gd - Connected building buttons to UIs
+- client/scripts/InventoryUI.gd - Fixed equip callback
+- client/docs/plan_later.md - Updated status
 
-### index.ts
-- `CREATURE_TEMPLATES` - Registry of all creatures
-- `getCreatureTemplate(id)` - Get by ID
-- `getCreaturesByType(type)` - Filter by type
-- `getBossCreatures()` - Get all bosses
-
-## Test Results (35 tests passing)
-
-```
-✓ Slime variants: Slime, Fire Slime, King Slime
-  - Fire Slime abilities: acid_splash, fireball, flame_touch
-  - King Slime legendary drops: king_slime_mount
-✓ Skeleton variants: Skeleton, Skeleton Warrior, Skeleton Archer, Lich
-  - Archer abilities: bone_club, aimed_shot, piercing_arrow, volley
-  - Lich abilities: dark_bolt, fireball, ice_bolt, summon_undead, soul_drain, immortality
-✓ Creatures by type: BEAST=3, UNDEAD=7
-✓ Boss creatures: King Slime, Lich
-```
-
-## Benefits
-
-1. **Modular** - Each creature family in separate file
-2. **Scalable** - Easy to add new creatures
-3. **Organized** - Clear folder structure
-4. **Flexible** - Can customize each creature individually
-5. **Query Functions** - Built-in filters (by type, rank, tier)
-
-## Next Steps
-
-- Add more creature families (wolves, goblins, humans, dragons, etc.)
-- Create more class/element variants
-- Add helper functions for spawning creatures
+## Remaining Tasks
+- Server Database Integration (API, Socket.IO)
+- Dungeon Encounter System
+- Combat Integration
+- Full Consumables implementation
