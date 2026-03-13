@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://vc51qj06drni"]
+
+[ext_resource type="PackedScene" uid="uid://cwpdydqyt48op" path="res://scenes/GlobalHUD.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/GameScene.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://rxku7mcdqorr" path="res://scenes/HeroRoster.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://bju3xshxaes6s" path="res://scenes/HeroDetail.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://8ih5t4sqgnaq" path="res://scenes/InventoryUI.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://bxk7t9mq2p3r" path="res://scenes/QuestBoardUI.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ShopUI.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/BlacksmithUI.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/TownHallUI.tscn" id="10"]
+
+[node name="GameScene" type="Node2D"]
+script = ExtResource("2")
+
+[node name="GlobalHUD" parent="." instance=ExtResource("1")]
+
+[node name="GameView" type="Node2D" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 48.0
+offset_bottom = -64.0
+
+[node name="HeroRoster" parent="." instance=ExtResource("3")]
+
+[node name="HeroDetail" parent="." instance=ExtResource("4")]
+visible = false
+
+[node name="InventoryUI" parent="." instance=ExtResource("5")]
+
+[node name="QuestBoardUI" parent="." instance=ExtResource("6")]
+
+[node name="ShopUI" parent="." instance=ExtResource("7")]
+
+[node name="BlacksmithUI" parent="." instance=ExtResource("9")]
+
+[node name="TownHallUI" parent="." instance=ExtResource("10")]

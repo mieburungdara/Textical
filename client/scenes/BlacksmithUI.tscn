@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://blacksmith_ui_001"]
+
+[ext_resource type="Script" path="res://scripts/BlacksmithUI.gd" id="1"]
+
+[node name="BlacksmithUI" type="Panel"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+script = ExtResource("1")
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Header" type="PanelContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainContainer/Header"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⚒️ BLACKSMITH - UPGRADE EQUIPMENT"
+horizontal_alignment = 1
+
+[node name="GoldLabel" type="Label" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+text = "💰 0"
+
+[node name="CloseButton" type="Button" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+text = "X"
+
+[node name="Content" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HeroPanel" type="VBoxContainer" parent="MainContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeroLabel" type="Label" parent="MainContainer/Content/HeroPanel"]
+layout_mode = 2
+text = "Select Hero:"
+horizontal_alignment = 1
+
+[node name="HeroDropdown" type="OptionButton" parent="MainContainer/Content/HeroPanel"]
+layout_mode = 2
+
+[node name="EquipmentPanel" type="VBoxContainer" parent="MainContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EquipmentLabel" type="Label" parent="MainContainer/Content/EquipmentPanel"]
+layout_mode = 2
+text = "Equipment:"
+horizontal_alignment = 1
+
+[node name="EquipmentList" type="VBoxContainer" parent="MainContainer/Content/EquipmentPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="UpgradePanel" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainContainer/UpgradePanel"]
+layout_mode = 2
+text = "Select equipment to see upgrade info"
+horizontal_alignment = 1
+
+[node name="UpgradeCost" type="Label" parent="MainContainer/UpgradePanel"]
+layout_mode = 2
+text = "Upgrade Cost: 0 gold"
+horizontal_alignment = 1
+
+[node name="UpgradeEffect" type="Label" parent="MainContainer/UpgradePanel"]
+layout_mode = 2
+text = "Effect: +10% per level"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="UpgradeBtn" type="Button" parent="MainContainer/Buttons"]
+layout_mode = 2
+text = "⬆️ UPGRADE"
+
+[node name="MessageLabel" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1

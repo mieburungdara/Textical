@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://shop_ui_001"]
+
+[ext_resource type="Script" path="res://scripts/ShopUI.gd" id="1"]
+
+[node name="ShopUI" type="Panel"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -280.0
+offset_right = 400.0
+offset_bottom = 280.0
+script = ExtResource("1")
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Header" type="PanelContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainContainer/Header"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏪 SHOP"
+horizontal_alignment = 1
+
+[node name="GoldLabel" type="Label" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+text = "💰 0"
+
+[node name="CloseButton" type="Button" parent="MainContainer/Header/HBox"]
+layout_mode = 2
+text = "X"
+
+[node name="CategoryBar" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WeaponsBtn" type="Button" parent="MainContainer/CategoryBar"]
+layout_mode = 2
+text = "⚔️ Weapons"
+
+[node name="ArmorBtn" type="Button" parent="MainContainer/CategoryBar"]
+layout_mode = 2
+text = "🛡️ Armor"
+
+[node name="ConsumablesBtn" type="Button" parent="MainContainer/CategoryBar"]
+layout_mode = 2
+text = "🧪 Consumables"
+
+[node name="MaterialsBtn" type="Button" parent="MainContainer/CategoryBar"]
+layout_mode = 2
+text = "📦 Materials"
+
+[node name="Content" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemGrid" type="ScrollContainer" parent="MainContainer/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemGridContainer" type="GridContainer" parent="MainContainer/Content/ItemGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemDetailPanel" type="PanelContainer" parent="MainContainer/Content"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="DetailContent" type="VBoxContainer" parent="MainContainer/Content/ItemDetailPanel"]
+layout_mode = 2
+
+[node name="ItemName" type="Label" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+text = "Select an item"
+
+[node name="ItemType" type="Label" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+text = ""
+
+[node name="ItemStats" type="VBoxContainer" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+
+[node name="PriceLabel" type="Label" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+text = "Price: 0 gold"
+
+[node name="Spacer" type="Control" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BuyButton" type="Button" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+text = "🛒 BUY"
+
+[node name="SellButton" type="Button" parent="MainContainer/Content/ItemDetailPanel/DetailContent"]
+layout_mode = 2
+text = "💰 SELL"
+
+[node name="MessageLabel" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "Welcome to the shop!"
+horizontal_alignment = 1
