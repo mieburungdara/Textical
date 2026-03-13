@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import logger from '../utils/logger.js';
 
 export class Database {
   private prisma: PrismaClient;
@@ -10,9 +11,9 @@ export class Database {
   async connect(): Promise<void> {
     try {
       await this.prisma.$connect();
-      console.log('Database connection successful');
+      logger.info('Database connection successful');
     } catch (error) {
-      console.error('Database connection failed:', error);
+      logger.error('Database connection failed:', error);
       throw error;
     }
   }

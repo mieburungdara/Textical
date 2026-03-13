@@ -1,8 +1,8 @@
 # Godot
-godot/.godot/**
-godot/addons/**
-godot/*.import
-godot/*.log
+client/.godot/**
+client/addons/**
+client/*.import
+client/*.log
 
 # Godot MCP Server (for AI integration)
 godot_mcp/node_modules/**
@@ -25,6 +25,6 @@ node_modules
 .kilocode
 
 # OLD
-#OLD_BACKUP/
+OLD_BACKUP/
 node_modules
 server/node_modules
