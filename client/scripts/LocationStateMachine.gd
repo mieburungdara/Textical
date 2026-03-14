@@ -255,14 +255,14 @@ func exit_dungeon() -> bool:
 
 ## Called when entering a state
 ## @param state State the state being entered
-func _on_enter_state(state: State) -> void:
+func _on_enter_state(_state: State) -> void:
 	# Override in subclass or connect to state_entered signal
 	pass
 
 
 ## Called when exiting a state
 ## @param state State the state being exited
-func _on_exit_state(state: State) -> void:
+func _on_exit_state(_state: State) -> void:
 	# Override in subclass or connect to state_exited signal
 	pass
 
@@ -329,12 +329,12 @@ func can_rest() -> bool:
 ## Get display name for current state
 func get_display_name() -> String:
 	var config = get_state_config(_current_state)
-	var name = config.get("name", "Unknown")
+	var state_name = config.get("name", "Unknown")
 	
 	if _current_state == State.DUNGEON:
-		name = name + " F%d" % _current_floor
+		state_name = state_name + " F%d" % _current_floor
 	
-	return config.get("emoji", "") + " " + name
+	return config.get("emoji", "") + " " + state_name
 
 
 ## Get state color

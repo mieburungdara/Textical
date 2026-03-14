@@ -79,7 +79,7 @@ func _create_ui() -> void:
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
-	close_btn.pressed.connect(hide)
+	close_btn.pressed.connect(close_panel)
 	header.add_child(close_btn)
 
 	# Description
@@ -118,7 +118,7 @@ func show_building(building_name: String) -> void:
 	for action in actions:
 		_add_action_button(action.get("label", ""), action.get("callback", ""))
 
-	show()
+	open_panel()
 	_is_visible = true
 
 
@@ -142,18 +142,18 @@ func _add_action_button(label: String, callback_name: String) -> void:
 	
 	# Connect to this object's method
 	if has_method(callback_name):
-		btn.pressed.connect(callable(self, callback_name))
+		btn.pressed.connect(Callable(self, callback_name))
 
 
 ## Show the panel
-func show() -> void:
+func open_panel() -> void:
 	if _panel:
 		_panel.visible = true
 		_is_visible = true
 
 
 ## Hide the panel
-func hide() -> void:
+func close_panel() -> void:
 	if _panel:
 		_panel.visible = false
 		_is_visible = false
@@ -166,7 +166,7 @@ func is_open() -> bool:
 
 ## Close the panel
 func close() -> void:
-	hide()
+	close_panel()
 
 
 # =============================================================================
