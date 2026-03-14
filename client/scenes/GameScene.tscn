@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://vc51qj06drni"]
+[gd_scene load_steps=11 format=3 uid="uid://vc51qj06drni"]
 
 [ext_resource type="Script" uid="uid://ci1gabtuio1jh" path="res://scripts/GameScene.gd" id="2"]
 [ext_resource type="PackedScene" uid="uid://cwpdydqyt48op" path="res://scenes/GlobalHUD.tscn" id="3"]
@@ -73,7 +73,8 @@ visible = false
 [node name="BlacksmithUI" parent="UILayer/OverlayContainer" instance=ExtResource("9")]
 visible = false
 
-[node name="BuildingPanel" parent="." instance=ExtResource("10")]
+[node name="BuildingPanel" type="Control" parent="."]
+script = ExtResource("10")
 
 [node name="GlobalHUD" parent="." instance=ExtResource("3")]
 layer = 10
