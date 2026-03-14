@@ -10,7 +10,7 @@ extends Control
 
 signal building_clicked(building_name: String)
 
-var buildings: Array[Dictionary] = []
+var buildings: Array = []
 var _building_cards: Array[Control] = []
 
 
@@ -19,8 +19,8 @@ var _building_cards: Array[Control] = []
 # =============================================================================
 
 ## Create building cards from buildings array
-## @param buildings_array Array[Dictionary] building data
-func _create_building_cards(buildings_array: Array[Dictionary]) -> void:
+## @param buildings_array Array building data
+func _create_building_cards(buildings_array: Array) -> void:
 	buildings = buildings_array
 	_building_cards.clear()
 	
